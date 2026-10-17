@@ -94,6 +94,9 @@ signal patient_fed(patient_id: int, feeder_id: int)
 signal contract_offered(contract_id: int)
 signal contract_fulfilled(contract_id: int)
 signal contract_failed(contract_id: int, reason: String)
+# region progression
+signal xp_awarded(colonist_id: int, skill_id: String, amount: float, reason: String)
+signal wave_repelled(wave_index: int)
 # endregion
 # region perks
 signal perk_learned(colonist_id: int, perk_id: String)

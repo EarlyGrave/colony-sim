@@ -55,6 +55,8 @@ var needs: NeedsSystem
 var farming: FarmingSystem
 # region contracts
 var contracts: ContractSystem
+# region progression
+var progression: ProgressionSystem
 # endregion
 # region perks
 var perks: PerkSystem
@@ -118,6 +120,7 @@ func _init_systems() -> void:
 	perks = PerkSystem.new(self)  # region perks
 	contracts = ContractSystem.new(self)  # region contracts
 	quality = QualitySystem.new(self)  # region quality
+	progression = ProgressionSystem.new(self)  # region progression
 
 
 func _place_starting_colony() -> void:
@@ -309,6 +312,7 @@ func dispose() -> void:
 	if perks != null:  # region perks
 		perks.sim = null
 	perks = null
+	progression = null  # region progression
 	if mood != null:  # region mood
 		mood.sim = null
 	mood = null

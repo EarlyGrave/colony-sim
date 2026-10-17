@@ -86,7 +86,13 @@ func spent(c: Colonist, skill: String) -> int:
 
 
 func points_available(c: Colonist, skill: String) -> int:
-	return maxi(0, floori(float(level_in(c, skill)) / float(levels_per_point())) - spent(c, skill))
+	# Points are earned per levels_per_point boundary crossed after joining: a
+	# colonist who joins at level 3 (lpp 2) gets the next point at level 4.
+	var lpp := float(levels_per_point())
+	var gained := floori(float(level_in(c, skill)) / lpp)
+	if c.skills != null:
+		gained -= floori(float(c.skills.join_level(skill)) / lpp)
+	return maxi(0, gained - spent(c, skill))
 
 
 ## Skill levels needed per perk point (data: levels_per_point).

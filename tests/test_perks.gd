@@ -1,5 +1,6 @@
 extends TestCase
 ## Perks: data validity, points, learning rules, actives, caps, respec, replay.
+const Scenario := preload("res://tests/scenario.gd")
 
 
 func _sim_with_colonist() -> Array:
@@ -7,6 +8,7 @@ func _sim_with_colonist() -> Array:
 	var c := sim.colonists.spawn(Vector2i(4, 4))
 	for s: String in c.skills.levels:
 		c.skills.levels[s] = 10
+	c.skills.join_levels.clear()  # tests grant levels directly: baseline 0
 	return [sim, c]
 
 
@@ -240,8 +242,19 @@ func test_respec() -> void:
 	assert_false(sim.respec_perks(c.id))  # nothing to forget
 
 
+## Defs where everybody joins at level 0 and levels come after one xp.
+func _fast_defs() -> Defs:
+	var d := peaceful_defs()
+	d.skills["init"]["level_max"] = 0
+	d.skills["xp_base"] = 1
+	d.skills["xp_step"] = 0
+	return d
+
+
 func _play(sim: Simulation) -> void:
 	var c: Colonist = sim.colonists.list[0]
+	Scenario.designate_nearest_deposits(sim, 10)
+	sim.run_ticks(600)
 	var skill := ""
 	for s: String in c.skills.levels:
 		if c.skills.level(s) >= 2:
@@ -256,12 +269,12 @@ func _play(sim: Simulation) -> void:
 
 
 func test_save_load_replay() -> void:
-	var sim := make_sim(21, true, 24, 24, peaceful_defs())
+	var sim := make_sim(21, true, 24, 24, _fast_defs())
 	_play(sim)
 	var c: Colonist = sim.colonists.list[0]
 	assert_true(c.perks != null)
 	assert_eq(c.perks.learned.size(), 1)
-	var res := SaveGame.load_json(SaveGame.to_json(sim), make_bus(), peaceful_defs())
+	var res := SaveGame.load_json(SaveGame.to_json(sim), make_bus(), _fast_defs())
 	assert_true(res["ok"], str(res["error"]))
 	var sim2: Simulation = res["sim"]
 	_sims.append(sim2)
@@ -270,8 +283,8 @@ func test_save_load_replay() -> void:
 
 
 func test_deterministic() -> void:
-	var a := make_sim(33, true, 24, 24, peaceful_defs())
-	var b := make_sim(33, true, 24, 24, peaceful_defs())
+	var a := make_sim(33, true, 24, 24, _fast_defs())
+	var b := make_sim(33, true, 24, 24, _fast_defs())
 	_play(a)
 	_play(b)
 	assert_eq(SaveGame.state_hash(a), SaveGame.state_hash(b))
