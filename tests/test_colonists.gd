@@ -27,7 +27,7 @@ func test_colonist_hauls_item_around_wall() -> void:
 	assert_eq(c.carry_count, 0)
 
 
-func test_three_colonists_never_stuck_1000_ticks() -> void:
+func test_colonists_never_stuck_1000_ticks() -> void:
 	var sim := make_sim(2024)
 	var center := sim.map_center()
 	# Scatter loose ore around the landing site.
@@ -42,7 +42,7 @@ func test_three_colonists_never_stuck_1000_ticks() -> void:
 		for c in sim.colonists.list:
 			max_stuck[0] = maxi(max_stuck[0], c.stuck_ticks))
 	sim.run_ticks(1000)
-	assert_eq(sim.colonists.list.size(), 3)
+	assert_eq(sim.colonists.list.size(), int(sim.defs.balance["colony"]["colonists"]))
 	assert_lt(max_stuck[0], 20, "a colonist stood still on a path")
 	assert_eq(sim.items.count_stored("essence_ore"), sim.items.count_on_ground("essence_ore"), "loose ore left")
 	assert_eq(sim.items.count_world("essence_ore"), sim.ledger.balance_of("essence_ore"))
@@ -95,3 +95,14 @@ func test_partial_carry_is_delivered_after_dst_fills() -> void:
 	_zone_rect(sim, Vector2i(1, 12), Vector2i(2, 1))
 	sim.run_ticks(2500)
 	assert_eq(sim.items.count_stored("essence_ore"), 60)
+
+
+func test_floor_sleep_after_walking_job_has_no_stale_path() -> void:
+	# Regression: a colonist that went to sleep on the floor kept the previous
+	# job's path and counted as "standing still on a path" for hundreds of ticks.
+	var sim := make_sim(31, false, 16, 16, peaceful_defs())
+	var c := sim.colonists.spawn(Vector2i(2, 2))
+	c.move_toward(Vector2i(10, 10), sim)
+	assert_false(c.path.is_empty())
+	sim.jobs._start(c, SleepJob.new(-1))
+	assert_true(c.path.is_empty())

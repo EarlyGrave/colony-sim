@@ -112,6 +112,7 @@ func _turret_needing_urgent_repair(c: Colonist) -> Building:
 func _start(c: Colonist, j: Job) -> void:
 	for k in j.reservations:
 		reserved[k] = c.id
+	c.clear_path()  # a stale path from the previous job is not progress
 	c.job = j
 
 
@@ -125,6 +126,7 @@ func end_job(c: Colonist, status: int, mark_unreachable := true) -> void:
 		if reserved.get(k, -1) == c.id:
 			reserved.erase(k)
 	j.on_end(c, sim)
+	c.clear_path()
 	c.job = null
 	if status == Job.Status.FAILED and mark_unreachable and j.fail_key != "":
 		c.unreachable[j.fail_key] = sim.tick + int(sim.defs.balance["colonist"]["unreachable_cooldown_ticks"])
