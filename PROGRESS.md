@@ -40,6 +40,19 @@ Tests: 56 green.
   broken machines, world tints green as contamination grows.
 - [x] HUD buttons with icons.
 
+## Session 3 — E9 (contracts & architecture), owner-limited to ~13 min
+- [x] Audit: 56 tests green on `claude/colony-sim-godot-4jftsm` (same as end of
+  session 2); no code changes needed before E9.
+- [ ] E9 deliverables (docs only, see `docs/agents/*/E9-report*.md`):
+  `docs/ARCHITECTURE.md`, `docs/contracts/{items-inventory,recipes-buildings,
+  colonists-needs-jobs,combat-weapons,research-events-save}.md`,
+  `art/STYLE.md`, `docs/economy/resources-and-chains.md`, QA baseline report.
+  Status per file is in the handoff: `docs/handoff/session-2026-10-17-handoff.md`.
+- Decisions D20–D24 added.
+- Next session: finish/verify any "(draft, unfinished)" contract, then start
+  E10 (items, stacks, inventory, storage filters/priorities) per
+  `docs/contracts/items-inventory.md`.
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics, pushed, CI green, NOT yet merged to `main` (owner merges on request;

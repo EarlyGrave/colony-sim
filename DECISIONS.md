@@ -104,3 +104,32 @@ mining marker. Drawn 2x with nearest filtering. Re-run the script after
 editing it; commit the PNGs (and their `.import` files).
 Cosmetic-only state (turret aim, hit flashes, death particles, smoke) lives in
 `WorldView`, never in the sim.
+
+## D20. Stage E9 is documentation only: contracts before code
+`docs/ARCHITECTURE.md` (audit of the current code) and `docs/contracts/*.md`
+(one file per domain: items/inventory, recipes/buildings, colonists/needs/jobs,
+combat/weapons, research/events/save) are written before any E10+ code, in
+parallel by small agents that each own one new file. No code or data touched in
+E9, so the stage can never break tests. Alternative: write contracts inside the
+code as comments — harder to review and to hand to parallel agents.
+
+## D21. Keep existing item ids `refined_essence` / `waste`
+The E9–E22 prompt names them `essence_refined` / `toxic_waste`. Renaming buys
+nothing and would touch data, sim, view, tests and sprites. New content uses
+the prompt's ids as given (`iron_ore`, `mech_parts`, `ammo_basic`…).
+
+## D22. Agent reports live in `docs/agents/<agent>/<stage>-report*.md`
+The architect's E9 work is split into topical reports (`E9-report-<topic>.md`)
+because several agents wrote architect contracts in parallel. Significant
+decisions are copied here with a link to the report.
+
+## D23. Ammo: turrets consume `ammo_basic`, colonist firearms do not (E17)
+From the prompt; recorded so combat/economy agents do not re-decide it. The
+ammo supply line (hauling or conveyor to turrets) is the defense ↔ automation
+link; `turret` becomes ammo-fed, `heavy_turret` is added.
+
+## D24. Session 3 ran under an owner-set hard stop
+Owner allowed ~13 minutes. Every agent got a wall-clock deadline and the rule
+"a partial draft marked '(draft, unfinished)' beats nothing"; the orchestrator
+reserved the last minutes for tests, commit, push and the handoff file.
+Unfinished drafts are listed in `PROGRESS.md` and the handoff.
