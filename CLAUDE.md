@@ -75,7 +75,7 @@ Shared test scenarios: `tests/scenario.gd`.
   Every stage adds tests for its acceptance criteria. Use `make_sim()`
   (auto-disposed) and `peaceful_defs()` when a test is not about creatures.
   The runner fails a test on ANY engine/script error (custom `Logger`).
-- Small meaningful commits; push after each stage; **never push with failing tests.**
+- Small meaningful commits; **commit and push after every significant change** (each merged agent branch, balance pass, doc update) — owner request; **never push with failing tests.**
 - UI scale: stretch mode "disabled" + `content_scale_factor = devicePixelRatio * 0.85`
   (set in `GameController._apply_ui_scale`), so buttons keep physical size on phones.
 - UI is touch-first: big buttons (≥ 64 px), no hover, no right click,
