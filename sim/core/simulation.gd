@@ -63,6 +63,7 @@ var contracts: ContractSystem
 var progression: ProgressionSystem
 # region idle-work
 var idle_work: IdleWorkSystem
+var mutation: MutationSystem  # region mutation
 # endregion
 # region perks
 var perks: PerkSystem
@@ -136,6 +137,7 @@ func _init_systems() -> void:
 	ammo = AmmoSystem.new(self)  # region ammo
 	debt = DebtSystem.new(self)  # region debt
 	idle_work = IdleWorkSystem.new(self)  # region idle-work
+	mutation = MutationSystem.new(self)  # region mutation
 
 
 func _place_starting_colony() -> void:
@@ -180,6 +182,7 @@ func step() -> void:
 	mood.tick()  # region mood
 	threats.tick()
 	contamination.tick()
+	mutation.tick()  # region mutation
 	crises.tick()  # region crises
 	storyteller.tick()
 	if colonists.alive_count() == 0 and not colonists.list.is_empty():
@@ -469,4 +472,11 @@ func set_patrol_route(points: Array) -> void:
 func set_patrol_route_text(text: String) -> void:
 	_record("set_patrol_route_text", [text])  # save-load
 	idle_work.set_route(IdleWorkSystem.parse_route(text))
+# endregion
+
+# region mutation
+## Spends refined essence to clean the contamination field around `c`.
+func purify_cell(c: Vector2i) -> bool:
+	_record("purify_cell", [c])  # save-load
+	return mutation.purify(c)
 # endregion

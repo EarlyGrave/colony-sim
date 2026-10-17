@@ -40,6 +40,7 @@ const INSPECTOR_SECTIONS: Array = [
 	# slot 5
 	["mood", "res://view/panels/sections/mood_section.gd"],
 	["debt", "res://view/panels/sections/debt_section.gd"],
+	["mutation", "res://view/panels/sections/mutation_section.gd"],
 	# slot 6
 ]
 

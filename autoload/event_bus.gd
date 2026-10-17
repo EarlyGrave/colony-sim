@@ -121,4 +121,7 @@ signal patrol_route_changed(count: int)
 # endregion
 # region meta
 signal run_ended(summary: Dictionary)
+# region mutation
+signal cell_mutated(cell: Vector2i)
+signal cell_purified(cell: Vector2i)
 # endregion

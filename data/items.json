@@ -11,6 +11,12 @@
 		"stack": 50,
 		"value": 4.0
 	},
+	"essence_bloom": {
+		"name": "Цветок эссенции",
+		"color": "#8cff9a",
+		"stack": 20,
+		"value": 6.0
+	},
 	"machine_parts": {
 		"name": "Детали",
 		"color": "#c0c0c8",

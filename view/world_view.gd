@@ -137,6 +137,7 @@ func _draw() -> void:
 	if sim == null:
 		return
 	_draw_zones()
+	_draw_contamination_field()  # region mutation
 	_draw_designations()
 	_draw_plants()  # region needs
 	_draw_items()
@@ -424,4 +425,21 @@ func _draw_night() -> void:
 	var col := Color(str(cfg["night_tint"]))
 	col.a = float(cfg["night_tint_alpha"]) * dark
 	draw_rect(Rect2(Vector2.ZERO, world_size()), col)
+# endregion
+
+# region mutation
+## Green wash by cell contamination; mutated cells go purple-green.
+func _draw_contamination_field() -> void:
+	var mut := sim.mutation
+	var tainted: float = mut.tainted_threshold()
+	var mutated: float = mut.mutated_threshold()
+	for i in mut.field.size():
+		var v := mut.field[i]
+		if v < tainted * 0.4:
+			continue
+		var c := Vector2i(i % sim.map.width, i / sim.map.width)
+		var col := Color(0.35, 0.8, 0.25, clampf(v / maxf(mutated, 0.01), 0.0, 1.0) * 0.28)
+		if v >= mutated:
+			col = Color(0.6, 0.25, 0.8, 0.32)
+		draw_rect(Rect2(cell_to_world(c), Vector2(TILE, TILE)), col)
 # endregion
