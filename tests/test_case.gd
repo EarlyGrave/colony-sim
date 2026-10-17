@@ -6,6 +6,7 @@ const EventBusScript := preload("res://autoload/event_bus.gd")
 
 var failures: Array[String] = []
 var _owned_nodes: Array[Node] = []
+var _sims: Array[Simulation] = []
 
 
 func before_each() -> void:
@@ -13,6 +14,9 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	for s in _sims:
+		s.dispose()
+	_sims.clear()
 	for n in _owned_nodes:
 		if is_instance_valid(n):
 			n.free()
@@ -24,6 +28,18 @@ func make_bus() -> Node:
 	var bus: Node = EventBusScript.new()
 	_owned_nodes.append(bus)
 	return bus
+
+
+## Simulation on a fresh bus, disposed automatically after the test.
+## `generate`: full new game; otherwise an empty w x h ground map.
+func make_sim(seed_value: int, generate := true, w := 24, h := 24, defs: Defs = null) -> Simulation:
+	var sim := Simulation.new(seed_value, make_bus(), defs)
+	if generate:
+		sim.start_new_game()
+	else:
+		sim.start_empty(w, h)
+	_sims.append(sim)
+	return sim
 
 
 func fail(msg: String) -> void:

@@ -65,3 +65,79 @@ func _paint_cell(c: Vector2i) -> void:
 
 func _process(_delta: float) -> void:
 	queue_redraw()
+
+
+func _draw() -> void:
+	if sim == null:
+		return
+	_draw_zones()
+	_draw_designations()
+	_draw_items()
+	_draw_buildings()
+	_draw_colonists()
+
+
+func _draw_zones() -> void:
+	for zone_id: String in sim.items.zone_cells:
+		var col := Color(sim.defs.zones[zone_id]["color"])
+		col.a = 0.35
+		for c: Vector2i in sim.items.zone_cells[zone_id]:
+			draw_rect(Rect2(cell_to_world(c) + Vector2(1, 1), Vector2(TILE - 2, TILE - 2)), col)
+
+
+func _draw_designations() -> void:
+	var m := sim.map
+	for i in m.mine_designated.size():
+		if m.mine_designated[i] != 0:
+			var p := cell_to_world(Vector2i(i % m.width, i / m.width))
+			draw_line(p + Vector2(6, 6), p + Vector2(TILE - 6, TILE - 6), Color(1, 0.85, 0.3), 3.0)
+			draw_line(p + Vector2(TILE - 6, 6), p + Vector2(6, TILE - 6), Color(1, 0.85, 0.3), 3.0)
+
+
+func _draw_items() -> void:
+	for c: Vector2i in sim.items.stacks:
+		var st: Dictionary = sim.items.stacks[c]
+		var col := Color(sim.defs.items[st["item"]]["color"])
+		var frac := clampf(float(st["count"]) / sim.defs.item_stack(st["item"]), 0.15, 1.0)
+		var s := lerpf(8.0, TILE - 8.0, frac)
+		var p := cell_to_world(c) + Vector2(TILE - s, TILE - s) * 0.5
+		draw_rect(Rect2(p, Vector2(s, s)), col)
+		draw_rect(Rect2(p, Vector2(s, s)), Color(0, 0, 0, 0.6), false, 1.0)
+
+
+func _draw_buildings() -> void:
+	for b: Building in sim.buildings.list:
+		var r := Rect2(cell_to_world(b.cell) + Vector2(2, 2), Vector2(b.size) * TILE - Vector2(4, 4))
+		var col := Color(b.def["color"])
+		if b.broken:
+			col = col.darkened(0.55)
+		draw_rect(r, col)
+		draw_rect(r, Color(0, 0, 0, 0.8), false, 2.0)
+		# HP bar (top) and condition bar (bottom) for machines.
+		_bar(Rect2(r.position + Vector2(2, 2), Vector2(r.size.x - 4, 5)), b.hp / b.max_hp, Color(0.85, 0.2, 0.2))
+		if b.is_machine():
+			_bar(Rect2(r.position + Vector2(2, r.size.y - 7), Vector2(r.size.x - 4, 5)), b.condition / 100.0, Color(0.9, 0.75, 0.2))
+		if not b.recipe.is_empty() and b.progress > 0:
+			var f := float(b.progress) / int(b.recipe["work_ticks"])
+			draw_arc(r.get_center(), 10, -PI / 2, -PI / 2 + TAU * f, 24, Color.WHITE, 3.0)
+		if b.broken:
+			draw_line(r.position, r.end, Color(1, 0.3, 0.2), 3.0)
+			draw_line(Vector2(r.end.x, r.position.y), Vector2(r.position.x, r.end.y), Color(1, 0.3, 0.2), 3.0)
+
+
+func _draw_colonists() -> void:
+	for c: Colonist in sim.colonists.list:
+		if not c.alive or c.hidden:
+			continue
+		var p := c.visual_pos() * TILE + Vector2(TILE, TILE) * 0.5
+		draw_circle(p, TILE * 0.36, Color(0.95, 0.9, 0.8))
+		draw_arc(p, TILE * 0.36, 0, TAU, 20, Color(0.1, 0.1, 0.1), 2.0)
+		if c.carry_count > 0:
+			draw_rect(Rect2(p + Vector2(4, -14), Vector2(10, 10)), Color(sim.defs.items[c.carry_item]["color"]))
+		if c.hp < c.max_hp:
+			_bar(Rect2(p + Vector2(-12, 14), Vector2(24, 4)), c.hp / c.max_hp, Color(0.85, 0.2, 0.2))
+
+
+func _bar(r: Rect2, frac: float, col: Color) -> void:
+	draw_rect(r, Color(0, 0, 0, 0.6))
+	draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(frac, 0.0, 1.0), r.size.y)), col)

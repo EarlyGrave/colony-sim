@@ -2,9 +2,7 @@ extends TestCase
 
 
 func _gen(seed_value: int) -> Simulation:
-	var sim := Simulation.new(seed_value, make_bus())
-	sim.start_new_game()
-	return sim
+	return make_sim(seed_value)
 
 
 func test_same_seed_same_map() -> void:
@@ -58,8 +56,7 @@ func test_every_ground_tile_reachable_from_center() -> void:
 
 
 func test_depleting_deposit_opens_tile() -> void:
-	var sim := Simulation.new(1, make_bus())
-	sim.start_empty(8, 8)
+	var sim := make_sim(1, false, 8, 8)
 	sim.map.set_tile(Vector2i(4, 4), MapGrid.Tile.DEPOSIT, 7)
 	sim.pathfinder.refresh_cell(Vector2i(4, 4))
 	assert_false(sim.map.is_passable(Vector2i(4, 4)))
