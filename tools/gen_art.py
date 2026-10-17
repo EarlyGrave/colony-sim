@@ -25,6 +25,8 @@ PAL = {
     # creatures
     "r": "#c83a2c", "R": "#8a2018",
     "p": "#7a2a4a", "P": "#4e1830", "y": "#ffd23a",
+    "a": "#8fcf3a", "A": "#4f8a1e",  # spitter acid green
+    "d": "#9a7b4f", "D": "#5e4a2c",  # burrower earth
     # metal
     "m": "#7c8794", "M": "#4f5866", "l": "#b8c2cc", "t": "#4fb3a9",
 }
@@ -136,6 +138,44 @@ def creatures():
         "..kkkk..",
     ])
     save(grid(brute), "brute")
+    spitter = mirror([
+        "........",
+        "....kkkk",
+        "...kaaaa",
+        "..kaaaaA",
+        "..kawawA",
+        "..kaaaaa",
+        "..kaakkk",
+        "...kayyy",
+        "..kaaaaA",
+        ".kaaaAAA",
+        ".kaaaaAA",
+        "..kaaAAk",
+        "..kaakk.",
+        ".kk.kk..",
+        ".k..k...",
+        "........",
+    ])
+    save(grid(spitter), "spitter")
+    burrower = mirror([
+        "........",
+        "........",
+        "...kk...",
+        "..kddkkk",
+        ".kddddDD",
+        ".kdwdwDD",
+        "kddddddd",
+        "kdddkkkk",
+        "kddkyyyy",
+        "kdddkkkk",
+        ".kdddDDD",
+        ".kkddDDD",
+        "..kkdDDD",
+        "...kkkkk",
+        "........",
+        "........",
+    ])
+    save(grid(burrower), "burrower")
 
 
 # --- Turret ---------------------------------------------------------------------

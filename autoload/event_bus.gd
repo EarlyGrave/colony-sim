@@ -53,3 +53,10 @@ signal story_event(event_id: String, text: String)
 signal skill_leveled(colonist_id: int, skill_id: String, level: int)
 signal work_priority_changed(colonist_id: int, work_type: String, priority: int)
 # endregion
+
+# region raids
+signal raid_started(raid_id: String, points: float, unit_count: int)
+signal raid_tremor(cell: Vector2i, ticks_left: int, text: String)
+signal raid_burrowed(cell: Vector2i, count: int)
+signal raid_retreat(raid_id: String)
+# endregion

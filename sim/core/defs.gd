@@ -21,6 +21,10 @@ var skills: Dictionary = {}
 var health: Dictionary = {}
 # endregion
 
+# region raids
+var raids: Dictionary = {}
+# endregion
+
 static var _default: Defs = null
 
 
@@ -48,6 +52,9 @@ func load_from(dir: String) -> void:
 	# region health
 	health = _load_json(dir + "health.json")
 	# endregion
+	# region raids
+	raids = _load_json(dir + "raids.json")
+	# endregion
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -67,6 +74,9 @@ func duplicate_defs() -> Defs:
 	d.skills = skills.duplicate(true)
 	# region health
 	d.health = health.duplicate(true)
+	# endregion
+	# region raids
+	d.raids = raids.duplicate(true)
 	# endregion
 	return d
 
