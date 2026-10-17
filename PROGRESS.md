@@ -50,6 +50,9 @@ Tests: 56 green.
   QA baseline report. Cross-check of contracts: `docs/contracts/README.md`
   (10 inconsistencies to resolve before E10 code).
 - [x] `tests/test_long_sim.gd`: 10 000 ticks, conservation + determinism.
+- [x] `docs/contracts/RECONCILIATION.md` (proposed rulings on the 10
+  inconsistencies), `docs/economy/items.proposed.json` (36 items, ready for
+  E10), `docs/agents/qa/E10-test-plan.md` (draft).
 
 Tests: 57 green. Handoff: `docs/handoff/session-2026-10-17-handoff.md`.
 - Decisions D20–D24 added.
