@@ -27,7 +27,7 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 			status = "без дела"
 	add_line(box, "Занят: " + status)
 	if c.carry_count > 0:
-		add_line(box, "Несёт: %s × %d" % [sim.defs.items[c.carry_item]["name"], c.carry_count])
+		add_line(box, "Несёт: %s%s × %d" % [sim.defs.items[c.carry_item]["name"], "" if c.carry_quality == "" else " (%s)" % sim.quality.quality_name(c.carry_quality), c.carry_count])
 	if not c.alive:
 		return
 	if c.combat != null and c.combat.drafted:

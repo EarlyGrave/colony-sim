@@ -21,7 +21,8 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 			lines.append("Грунт")
 	var st := sim.items.get_stack(c)
 	if not st.is_empty():
-		lines.append("%s × %d" % [sim.defs.items[st["item"]]["name"], st["count"]])
+		var qn := "" if st.get("q", "") == "" else " (%s)" % sim.quality.quality_name(str(st["q"]))
+		lines.append("%s%s × %d" % [sim.defs.items[st["item"]]["name"], qn, st["count"]])
 	var z := sim.map.get_zone(c)
 	if z != "":
 		lines.append("Зона: " + str(sim.defs.zones[z]["name"]))

@@ -22,7 +22,7 @@ func find(c: Colonist) -> Job:
 			if d >= best_d:
 				continue
 			for item: String in b.output:
-				var dst := js._storage_for(item, b.cell, c)
+				var dst := js._storage_for(item, b.cell, c, str(b.next_run(item, 1)["q"]))
 				if dst.x >= 0:
 					best = js._haul(HaulJob.Src.BUILDING_OUT, JobSystem.NO_CELL, b.id, HaulJob.Dst.CELL, dst, -1, item, int(b.output[item]))
 					best.reservations.append(key)
@@ -47,7 +47,7 @@ func find(c: Colonist) -> Job:
 		if b != null and feed > 0:
 			job = js._haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.BUILDING_IN, JobSystem.NO_CELL, b.id, item, feed)
 		else:
-			var dst := js._storage_for(item, cell, c) if not sim.items.is_stored(cell) else sim.items.better_storage(cell, func(x: Vector2i) -> bool:
+			var dst := js._storage_for(item, cell, c, sim.items.quality_at(cell)) if not sim.items.is_stored(cell) else sim.items.better_storage(cell, func(x: Vector2i) -> bool:
 				return not js._free(c, "dst:%d,%d" % [x.x, x.y]))  # region crafting: priority moves
 			if dst.x >= 0:
 				job = js._haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.CELL, dst, -1, item, count)

@@ -30,33 +30,35 @@ func count_at(c: Vector2i) -> int:
 
 
 ## How many of `item_id` can still be put on cell `c`.
-func space_for(c: Vector2i, item_id: String) -> int:
+func space_for(c: Vector2i, item_id: String, q := "") -> int:
 	if not sim.cell_free_for_items(c):
 		return 0
 	if not stacks.has(c):
 		return sim.defs.item_stack(item_id)
-	if stacks[c]["item"] != item_id:
+	if stacks[c]["item"] != item_id or stacks[c].get("q", "") != q:
 		return 0
 	return sim.defs.item_stack(item_id) - int(stacks[c]["count"])
 
 
 ## Adds up to `n` items on one cell. Returns how many were added.
-func add_at(c: Vector2i, item_id: String, n: int) -> int:
-	var k := mini(n, space_for(c, item_id))
+func add_at(c: Vector2i, item_id: String, n: int, q := "") -> int:
+	var k := mini(n, space_for(c, item_id, q))
 	if k <= 0:
 		return 0
 	if stacks.has(c):
 		stacks[c]["count"] += k
 	else:
 		stacks[c] = {"item": item_id, "count": k}
+		if q != "":
+			stacks[c]["q"] = q
 	return k
 
 
 ## Puts all `n` items on the map near `c`, spilling to the nearest free cells.
 ## Returns the number that could not be placed (0 unless the map is full).
-func drop(c: Vector2i, item_id: String, n: int) -> int:
+func drop(c: Vector2i, item_id: String, n: int, q := "") -> int:
 	var left := n
-	left -= add_at(c, item_id, left)
+	left -= add_at(c, item_id, left, q)
 	if left <= 0:
 		return 0
 	var seen := {c: true}
@@ -71,7 +73,7 @@ func drop(c: Vector2i, item_id: String, n: int) -> int:
 				continue
 			seen[nb] = true
 			if sim.map.is_passable(nb):
-				left -= add_at(nb, item_id, left)
+				left -= add_at(nb, item_id, left, q)
 				queue.append(nb)
 	if left > 0:
 		# No room anywhere reachable: the items are lost, but accounted for.
@@ -80,6 +82,11 @@ func drop(c: Vector2i, item_id: String, n: int) -> int:
 
 
 ## Removes up to `n` items from a cell. Returns how many were taken.
+## Quality of the stack on `c` ("" = normal / untracked).
+func quality_at(c: Vector2i) -> String:
+	return str(stacks[c].get("q", "")) if stacks.has(c) else ""
+
+
 func take_at(c: Vector2i, n: int) -> int:
 	if not stacks.has(c):
 		return 0
@@ -159,7 +166,7 @@ func set_zone(c: Vector2i, zone_id: String) -> void:
 
 ## Nearest zone cell that accepts `item_id` and has room, skipping cells
 ## for which `is_blocked(cell)` is true. Vector2i(-1, -1) if none.
-func find_storage_cell(item_id: String, near: Vector2i, is_blocked: Callable) -> Vector2i:
+func find_storage_cell(item_id: String, near: Vector2i, is_blocked: Callable, q := "") -> Vector2i:
 	var best := Vector2i(-1, -1)
 	var best_d := 1 << 30
 	var best_pr := -1  # region crafting: higher storage priority wins
@@ -171,7 +178,7 @@ func find_storage_cell(item_id: String, near: Vector2i, is_blocked: Callable) ->
 			if pr < best_pr or not sim.storage.accepts(c, item_id):
 				continue
 			var d := c.distance_squared_to(near)
-			if (pr == best_pr and d >= best_d) or space_for(c, item_id) <= 0 or is_blocked.call(c):
+			if (pr == best_pr and d >= best_d) or space_for(c, item_id, q) <= 0 or is_blocked.call(c):
 				continue
 			if not sim.pathfinder.reachable(near, c):
 				continue
@@ -193,7 +200,7 @@ func better_storage(c: Vector2i, is_blocked: Callable) -> Vector2i:
 	if not sim.storage.has_custom_priority():
 		return Vector2i(-1, -1)
 	var item := item_at(c)
-	var dst := find_storage_cell(item, c, is_blocked)
+	var dst := find_storage_cell(item, c, is_blocked, quality_at(c))
 	if dst.x >= 0 and sim.storage.priority(dst) > sim.storage.priority(c):
 		return dst
 	return Vector2i(-1, -1)

@@ -15,6 +15,8 @@ var broken := false
 var destroyed := false
 var input: Dictionary = {}  # item -> count
 var output: Dictionary = {}  # item -> count
+## region quality: item -> Array[String], one quality per output unit (FIFO), tracked items only.
+var output_q: Dictionary = {}
 var recipe: Dictionary = {}
 var recipe_id := ""
 var progress := 0
@@ -90,9 +92,24 @@ func take_output(item_id: String, n: int) -> int:
 	var k := mini(n, int(output.get(item_id, 0)))
 	if k > 0:
 		output[item_id] -= k
+		if output_q.has(item_id):  # region quality
+			output_q[item_id] = output_q[item_id].slice(k)
+			if output_q[item_id].is_empty():
+				output_q.erase(item_id)
 		if output[item_id] <= 0:
 			output.erase(item_id)
 	return k
+
+
+## region quality: quality of the next output unit and how many leading units share it.
+func next_run(item_id: String, n: int) -> Dictionary:
+	var qs: Array = output_q.get(item_id, [])
+	if qs.is_empty():
+		return {"q": "", "count": mini(n, int(output.get(item_id, 0)))}
+	var k := 1
+	while k < mini(n, qs.size()) and qs[k] == qs[0]:
+		k += 1
+	return {"q": qs[0], "count": k}
 
 
 func output_total() -> int:

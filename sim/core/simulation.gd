@@ -55,6 +55,7 @@ var needs: NeedsSystem
 var farming: FarmingSystem
 # region perks
 var perks: PerkSystem
+var quality: QualitySystem  # region quality
 # endregion
 # endregion
 
@@ -112,6 +113,7 @@ func _init_systems() -> void:
 	farming = FarmingSystem.new(self)
 	# endregion
 	perks = PerkSystem.new(self)  # region perks
+	quality = QualitySystem.new(self)  # region quality
 
 
 func _place_starting_colony() -> void:

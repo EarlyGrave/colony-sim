@@ -148,7 +148,7 @@ func assign(c: Colonist) -> Job:
 		if j != null:
 			return j
 		# Nowhere to put it: drop it here and carry on.
-		sim.items.drop(c.cell, c.carry_item, c.carry_count)
+		sim.items.drop(c.cell, c.carry_item, c.carry_count, c.carry_quality)
 		c.carry_item = ""
 		c.carry_count = 0
 	for t in work_order(c):
@@ -198,7 +198,7 @@ func _deliver_carried(c: Colonist) -> Job:
 	var b := _building_needing(c.carry_item, c.cell, c)
 	if b != null:
 		return _haul(HaulJob.Src.CARRIED, NO_CELL, -1, HaulJob.Dst.BUILDING_IN, NO_CELL, b.id, c.carry_item, c.carry_count)
-	var dst := _storage_for(c.carry_item, c.cell, c)
+	var dst := _storage_for(c.carry_item, c.cell, c, c.carry_quality)
 	if dst.x < 0:
 		return null
 	return _haul(HaulJob.Src.CARRIED, NO_CELL, -1, HaulJob.Dst.CELL, dst, -1, c.carry_item, c.carry_count)
@@ -223,9 +223,9 @@ func _haul(src: int, src_cell: Vector2i, src_b: int, dst: int, dst_cell: Vector2
 	return j
 
 
-func _storage_for(item: String, near: Vector2i, c: Colonist) -> Vector2i:
+func _storage_for(item: String, near: Vector2i, c: Colonist, q := "") -> Vector2i:
 	return sim.items.find_storage_cell(item, near, func(cell: Vector2i) -> bool:
-		return not _free(c, "dst:%d,%d" % [cell.x, cell.y]))
+		return not _free(c, "dst:%d,%d" % [cell.x, cell.y]), q)
 
 
 ## "Ore reserve" rule: how much of `want` may leave `cell` for a building input.

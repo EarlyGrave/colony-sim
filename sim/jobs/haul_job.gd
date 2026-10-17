@@ -55,21 +55,30 @@ func _pick_up(c: Colonist, sim: Simulation) -> bool:
 	var want := amount
 	if c.carry_count > 0 and c.carry_item != item:
 		return false
+	var q := ""
 	var cap := int(sim.defs.balance["colonist"]["carry_capacity"]) - c.carry_count
 	want = mini(want, cap)
 	var got := 0
 	if src == Src.GROUND:
 		if sim.items.item_at(src_cell) != item:
 			return false
+		q = sim.items.quality_at(src_cell)
+		if c.carry_count > 0 and c.carry_quality != q:
+			return false
 		got = sim.items.take_at(src_cell, want)
 	else:
 		var b: Building = sim.buildings.get_by_id(src_building)
 		if b == null:
 			return false
-		got = b.take_output(item, want)
+		var run := b.next_run(item, want)
+		q = str(run["q"])
+		if c.carry_count > 0 and c.carry_quality != q:
+			return false
+		got = b.take_output(item, mini(want, int(run["count"])))
 	if got <= 0:
 		return false
 	c.carry_item = item
+	c.carry_quality = q
 	c.carry_count += got
 	return true
 
@@ -79,7 +88,7 @@ func _deliver(c: Colonist, sim: Simulation) -> void:
 		return
 	var put := 0
 	if dst == Dst.CELL:
-		put = sim.items.add_at(dst_cell, c.carry_item, c.carry_count)
+		put = sim.items.add_at(dst_cell, c.carry_item, c.carry_count, c.carry_quality)
 	else:
 		var b: Building = sim.buildings.get_by_id(dst_building)
 		if b != null:

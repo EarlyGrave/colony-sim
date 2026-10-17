@@ -1,0 +1,18 @@
+{
+	"_comment": "Item quality. tracked = base item ids whose crafted units carry a quality. Normal is stored implicitly as empty string. Roll: score = base + crafting_level*per_level + perk craft_quality*perk_scale + bench bonus + triangular noise*noise; level i is reached when score >= thresholds[i-1] (thresholds has len(levels)-1 entries).",
+	"tracked": ["machine_parts"],
+	"skill": "crafting",
+	"levels": [
+		{"id": "poor", "name": "Плохое", "mult": 0.6},
+		{"id": "normal", "name": "Обычное", "mult": 1.0},
+		{"id": "good", "name": "Хорошее", "mult": 1.3},
+		{"id": "excellent", "name": "Отличное", "mult": 1.7},
+		{"id": "masterwork", "name": "Шедевр", "mult": 2.5}
+	],
+	"thresholds": [0.2, 0.7, 0.95, 1.2],
+	"base": 0.5,
+	"per_level": 0.05,
+	"perk_scale": 1.0,
+	"noise": 0.4,
+	"bench_bonus": {"workbench": 0.0}
+}
