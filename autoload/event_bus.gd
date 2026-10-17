@@ -73,4 +73,9 @@ signal blueprint_completed(blueprint_id: int, building_id: int)
 signal event_choice_posted(uid: int, text: String)
 signal event_choice_resolved(uid: int, accepted: bool)
 signal colonist_joined(colonist_id: int)
+# region raids
+signal raid_started(raid_id: String, points: float, unit_count: int)
+signal raid_tremor(cell: Vector2i, ticks_left: int, text: String)
+signal raid_burrowed(cell: Vector2i, count: int)
+signal raid_retreat(raid_id: String)
 # endregion

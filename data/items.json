@@ -1,6 +1,6 @@
 {
-	"essence_ore": {"name": "Руда эссенции", "color": "#7a5cc2", "stack": 50},
-	"refined_essence": {"name": "Очищенная эссенция", "color": "#d36bff", "stack": 50},
-	"machine_parts": {"name": "Детали", "color": "#c0c0c8", "stack": 25},
-	"waste": {"name": "Отходы", "color": "#7fbf3f", "stack": 50, "contaminates": true}
+	"essence_ore": {"name": "Руда эссенции", "color": "#7a5cc2", "stack": 50, "value": 1.0},
+	"refined_essence": {"name": "Очищенная эссенция", "color": "#d36bff", "stack": 50, "value": 4.0},
+	"machine_parts": {"name": "Детали", "color": "#c0c0c8", "stack": 25, "value": 8.0},
+	"waste": {"name": "Отходы", "color": "#7fbf3f", "stack": 50, "value": 0.0, "contaminates": true}
 }

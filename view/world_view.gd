@@ -25,7 +25,7 @@ var _particles: Array = []  # [pos, vel, life, max_life, color, size]
 
 
 func _ready() -> void:
-	for n in ["colonist", "colonist_engineer", "colonist_sick", "colonist_engineer_sick", "crawler", "brute",
+	for n in ["colonist", "colonist_engineer", "colonist_sick", "colonist_engineer_sick", "crawler", "brute", "spitter", "burrower",
 			"turret_base", "turret_barrel", "refinery", "capsule", "item_ore", "item_refined", "item_waste",
 			"designation_mine", "wall", "door"]:
 		_tex[n] = load(SPR + n + ".png")

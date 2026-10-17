@@ -18,6 +18,15 @@ var wave_end_tick := 0
 ## Where the next wave will come from; decided when the wave is scheduled.
 var next_spawn_origin := Vector2i(-1, -1)
 var _warned := false
+## Current raid (see data/raids.json); "" when no wave is active.
+var raid_id := ""
+var raid_total := 0
+var raid_dead := 0
+var retreating := false
+## Tests / scenarios: force the next raid type regardless of points.
+var force_raid_id := ""
+## Burrowers waiting for the tremor to end: {tick, building, cell, units}.
+var pending_drop: Dictionary = {}
 var enemies: Array[Enemy] = []
 var kills := 0
 ## Recent turret shots for the view: [from: Vector2, to: Vector2, tick: int]
@@ -47,12 +56,74 @@ func awaken() -> void:
 	sim.bus.threat_awakened.emit()
 
 
-## Threat budget of a wave: the colony's growth is what calls the creatures.
-func wave_strength(index: int) -> float:
+## Wealth of the colony: stored items, building costs and colonists.
+func colony_wealth() -> float:
+	var w := 0.0
+	for item: String in sim.defs.items:
+		w += float(sim.defs.items[item].get("value", 0.0)) * sim.items.count_world(item)
+	for b in sim.buildings.list:
+		for item: String in b.def.get("cost", {}):
+			w += float(sim.defs.items.get(item, {}).get("value", 0.0)) * int(b.def["cost"][item])
+	return w + float(cfg["colonist_value"]) * sim.colonists.alive_count()
+
+
+## Raid points: the colony's wealth and growth is what calls the creatures.
+func raid_points(index: int) -> float:
 	return float(cfg["base_strength"]) \
 		+ float(cfg["per_wave"]) * (index - 1) \
+		+ float(cfg["per_wealth"]) * colony_wealth() \
 		+ float(cfg["per_refined"]) * sim.ledger.get_count("recipe:refined_essence") \
 		+ float(cfg["per_contamination"]) * sim.contamination.level
+
+
+## Kept API name (balance_report, tests).
+func wave_strength(index: int) -> float:
+	return raid_points(index)
+
+
+## Weighted pick among raid types whose min_points the budget reaches.
+func pick_raid_type(points: float) -> String:
+	var ids: Array[String] = []
+	var total := 0.0
+	for id: String in sim.defs.raids:
+		var r: Dictionary = sim.defs.raids[id]
+		if float(r["min_points"]) <= points:
+			ids.append(id)
+			total += float(r["weight"])
+	if ids.is_empty():
+		return ""
+	var roll := sim.rng.randf() * total
+	for id in ids:
+		roll -= float(sim.defs.raids[id]["weight"])
+		if roll < 0.0:
+			return id
+	return ids[-1]
+
+
+## Spends `points` on units of the raid type; returns enemy ids in spawn order.
+func compose_raid(id: String, points: float) -> Array[String]:
+	var units: Array = sim.defs.raids[id]["units"]
+	var out: Array[String] = []
+	var budget := points
+	for guard in 200:
+		var opts: Array = []
+		var total := 0.0
+		for u: Dictionary in units:
+			if float(sim.defs.enemies[u["enemy"]]["threat_cost"]) <= budget:
+				opts.append(u)
+				total += float(u["weight"])
+		if opts.is_empty():
+			break
+		var roll := sim.rng.randf() * total
+		var pick: Dictionary = opts[-1]
+		for u: Dictionary in opts:
+			roll -= float(u["weight"])
+			if roll < 0.0:
+				pick = u
+				break
+		budget -= float(sim.defs.enemies[pick["enemy"]]["threat_cost"])
+		out.append(str(pick["enemy"]))
+	return out
 
 
 func tick() -> void:
@@ -68,7 +139,9 @@ func tick() -> void:
 			_tick_leaving(e)
 		else:
 			_tick_enemy(e)
-	if wave_active and (_attackers() == 0 or sim.tick >= wave_end_tick):
+	if wave_active and not pending_drop.is_empty() and sim.tick >= int(pending_drop["tick"]):
+		_do_drop()
+	if wave_active and (_attackers() == 0 and pending_drop.is_empty() or sim.tick >= wave_end_tick):
 		end_wave()
 	while not shots.is_empty() and sim.tick - int(shots[0][2]) > 3:
 		shots.pop_front()
@@ -78,29 +151,69 @@ func start_wave() -> void:
 	wave_index += 1
 	wave_active = true
 	wave_end_tick = sim.tick + int(cfg["wave_duration_ticks"])
-	var strength := wave_strength(wave_index)
+	var strength := raid_points(wave_index)
 	var origin := next_spawn_origin if next_spawn_origin.x >= 0 else _pick_spawn_origin()
-	var budget := strength if origin.x >= 0 else 0.0
-	var guard := 200
-	while guard > 0:
-		guard -= 1
-		var options: Array[String] = []
-		for id: String in sim.defs.enemies:
-			var d: Dictionary = sim.defs.enemies[id]
-			if float(d["threat_cost"]) <= budget and int(d.get("min_wave", 1)) <= wave_index:
-				options.append(id)
-		if options.is_empty():
-			break
-		var pick := options[sim.rng.randi_range(0, options.size() - 1)]
-		budget -= float(sim.defs.enemies[pick]["threat_cost"])
-		_spawn(pick, _spawn_cell_near(origin))
+	raid_id = (force_raid_id if force_raid_id != "" else pick_raid_type(strength)) if origin.x >= 0 else ""
+	raid_total = 0
+	raid_dead = 0
+	retreating = false
+	pending_drop = {}
+	if raid_id != "":
+		var r: Dictionary = sim.defs.raids[raid_id]
+		var units := compose_raid(raid_id, strength)
+		raid_total = units.size()
+		if str(r["spawn"]) == "drop" and not sim.buildings.list.is_empty():
+			var b: Building = sim.buildings.list[sim.rng.randi_range(0, sim.buildings.list.size() - 1)]
+			var ticks := int(r["tremor_ticks"])
+			pending_drop = {"tick": sim.tick + ticks, "building": b.id, "cell": b.cell, "units": units}
+			sim.bus.raid_tremor.emit(b.cell, ticks, str(r.get("warning_text", "")))
+		else:
+			for id in units:
+				_spawn(id, _spawn_cell_near(origin))
+		sim.bus.raid_started.emit(raid_id, strength, raid_total)
 	_alarm_before_wave = sim.alarm
 	sim.set_alarm(true)
 	sim.bus.wave_started.emit(wave_index, strength)
 
 
+## Burrowers surface around the targeted building after the tremor.
+func _do_drop() -> void:
+	var d := pending_drop
+	pending_drop = {}
+	var r: Dictionary = sim.defs.raids[raid_id]
+	var center: Vector2i = d["cell"]
+	var b := sim.buildings.get_by_id(int(d["building"]))
+	if b != null:
+		center = b.cell
+	var scatter := int(r.get("drop_scatter", 2))
+	for id: String in d["units"]:
+		var c := center
+		for attempt in 16:
+			var t := center + Vector2i(sim.rng.randi_range(-scatter, scatter), sim.rng.randi_range(-scatter, scatter))
+			if sim.map.is_passable(t) and not sim.buildings.occupied(t):
+				c = t
+				break
+		_spawn(id, c)
+	sim.bus.raid_burrowed.emit(center, (d["units"] as Array).size())
+
+
+## Morale-lite: when too many fall the survivors turn back.
+func _check_morale() -> void:
+	if retreating or raid_id == "" or raid_total <= 0 or not pending_drop.is_empty():
+		return
+	var frac := float(sim.defs.raids[raid_id].get("retreat_fraction", cfg["retreat_fraction"]))
+	if float(raid_dead) / float(raid_total) > frac:
+		retreating = true
+		for e in enemies:
+			e.leaving = true
+			e.clear_path()
+		sim.bus.raid_retreat.emit(raid_id)
+
+
 func end_wave() -> void:
 	wave_active = false
+	raid_id = ""
+	pending_drop = {}
 	for e in enemies:
 		e.leaving = true
 		e.clear_path()
@@ -262,6 +375,9 @@ func damage_enemy(e: Enemy, amount: float) -> void:
 	if e.hp <= 0.0 and enemies.has(e):
 		enemies.erase(e)
 		kills += 1
+		if wave_active:
+			raid_dead += 1
+			_check_morale()
 		sim.bus.enemy_killed.emit(e.id)
 
 

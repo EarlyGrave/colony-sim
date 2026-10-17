@@ -32,6 +32,10 @@ var crafting: Dictionary = {}
 var weapons: Dictionary = {}
 # endregion
 
+# region raids
+var raids: Dictionary = {}
+# endregion
+
 static var _default: Defs = null
 
 
@@ -70,6 +74,9 @@ func load_from(dir: String) -> void:
 	# region combat
 	weapons = _load_json(dir + "weapons.json")
 	# endregion
+	# region raids
+	raids = _load_json(dir + "raids.json")
+	# endregion
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -100,6 +107,9 @@ func duplicate_defs() -> Defs:
 	d.crafting = crafting.duplicate(true)
 	# region combat
 	d.weapons = weapons.duplicate(true)
+	# endregion
+	# region raids
+	d.raids = raids.duplicate(true)
 	# endregion
 	return d
 
