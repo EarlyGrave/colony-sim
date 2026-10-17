@@ -12,6 +12,7 @@ extends RefCounted
 
 const PANELS: Array = [
 	# slot 1
+	["work", "Работа", "res://view/panels/work_panel.gd"],
 	# slot 2
 	# slot 3
 	# slot 4
@@ -24,6 +25,7 @@ const INSPECTOR_SECTIONS: Array = [
 	["building", "res://view/panels/sections/building_section.gd"],
 	["cell", "res://view/panels/sections/cell_section.gd"],
 	# slot 1
+	["health", "res://view/panels/sections/health_section.gd"],
 	# slot 2
 	# slot 3
 	# slot 4

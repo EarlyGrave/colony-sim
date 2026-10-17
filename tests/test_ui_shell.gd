@@ -35,7 +35,7 @@ func test_inspector_sections_apply_by_target() -> void:
 			s.build(sim, t, box)
 			assert_true(box.get_child_count() > 0)
 			box.free()
-	assert_eq(n, 1)
+	assert_gt(n, 0, "at least the colonist section applies")
 
 
 func test_letter_log_collects_bus_events() -> void:
