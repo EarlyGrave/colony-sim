@@ -41,6 +41,8 @@ func try_attack(c: Colonist, e: Enemy) -> bool:
 	var dist := Vector2(c.cell).distance_to(Vector2(e.cell))
 	if dist > float(w["range"]):
 		return false
+	if str(w["kind"]) == "ranged" and not sim.ammo.rifle_try_fire(c):  # region ammo
+		return false
 	c.combat.next_attack_tick = sim.tick + maxi(1, roundi(float(w["cooldown_ticks"]) / maxf(0.1, 1.0 + sim.perks.mod(c, "attack_speed"))))  # region perks
 	var skill := str(w["skill"])
 	if str(w["kind"]) == "ranged":

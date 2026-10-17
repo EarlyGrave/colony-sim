@@ -1,0 +1,8 @@
+{
+	"_comment": "Ammunition. Turrets hold a buffer, rifles draw from the colonist's pouch (refilled from a nearby stockpile).",
+	"item": "essence_rounds",
+	"turret": {"capacity": 40, "initial": 40, "refill_below": 0.6, "per_shot": 1, "conserve_range": 3.0},
+	"pouch": {"capacity": 20, "initial": 20, "per_shot": 1.0, "refill_range": 8.0},
+	"policies": ["normal", "conserve"],
+	"default_policy": "normal"
+}

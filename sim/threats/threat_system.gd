@@ -421,6 +421,8 @@ func _tick_turrets() -> void:
 				target = e
 		if target == null:
 			continue
+		if sim.ammo != null and not sim.ammo.turret_try_fire(b, best_d):  # region ammo
+			continue
 		b.turret_cooldown = int(t["cooldown_ticks"])
 		shots.append([from, target.visual_pos(), sim.tick])
 		damage_enemy(target, float(t["damage"]))

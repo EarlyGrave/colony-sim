@@ -90,6 +90,9 @@ signal colonist_rescued(patient_id: int, carrier_id: int)
 signal colonist_tended(patient_id: int, doctor_id: int, injuries: int)
 signal patient_fed(patient_id: int, feeder_id: int)
 # endregion
+# region ammo
+signal ammo_depleted(kind: String, id: int)  # kind: "turret" | "colonist"
+# endregion
 # region perks
 signal perk_learned(colonist_id: int, perk_id: String)
 signal perk_used(colonist_id: int, perk_id: String)

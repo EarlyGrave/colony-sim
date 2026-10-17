@@ -77,6 +77,8 @@ func place(def_id: String, c: Vector2i, pay := true) -> Building:
 		occupancy[p] = b.id
 	if b.def.get("blocks_movement", false):  # region construction
 		_block(b, true)
+	if sim.ammo != null:  # region ammo
+		sim.ammo.init_building(b)
 	sim.bus.building_placed.emit(b.id)
 	return b
 
@@ -208,6 +210,8 @@ func _remove(b: Building) -> void:
 		for item: String in buf:
 			sim.items.drop(b.cell, item, int(buf[item]))
 		buf.clear()
+	if sim.ammo != null:  # region ammo
+		sim.ammo.spill(b)
 	if b.def.get("shelter", false):
 		for c in sim.colonists.list:
 			if c.hidden and b.contains(c.cell):

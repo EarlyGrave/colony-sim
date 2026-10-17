@@ -102,5 +102,5 @@ static func state_hash(sim: Simulation) -> int:
 	for col in sim.colonists.list:
 		parts.append([col.id, col.cell, col.hp, col.alive, col.carry_item, col.carry_count, col.perks.learned if col.perks != null else []])
 	for b in sim.buildings.list:
-		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output])
+		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output, b.ammo, b.ammo_policy])  # region ammo
 	return var_to_str(parts).hash()

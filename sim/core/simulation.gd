@@ -55,6 +55,7 @@ var needs: NeedsSystem
 var farming: FarmingSystem
 # region perks
 var perks: PerkSystem
+var ammo: AmmoSystem  # region ammo
 # endregion
 # endregion
 
@@ -112,6 +113,7 @@ func _init_systems() -> void:
 	farming = FarmingSystem.new(self)
 	# endregion
 	perks = PerkSystem.new(self)  # region perks
+	ammo = AmmoSystem.new(self)  # region ammo
 
 
 func _place_starting_colony() -> void:
@@ -297,6 +299,7 @@ func dispose() -> void:
 	contamination = null
 	threats = null
 	storyteller = null
+	ammo = null  # region ammo
 	if perks != null:  # region perks
 		perks.sim = null
 	perks = null
@@ -385,6 +388,12 @@ func answer_event(event_uid: int, accept: bool) -> bool:
 	return storyteller.answer(event_uid, accept)
 # endregion
 
+
+# region ammo
+func set_turret_ammo_policy(building_id: int, policy: String) -> bool:
+	_record("set_turret_ammo_policy", [building_id, policy])  # save-load
+	return ammo.set_policy(building_id, policy)
+# endregion
 
 # region perks
 func learn_perk(colonist_id: int, perk_id: String) -> bool:

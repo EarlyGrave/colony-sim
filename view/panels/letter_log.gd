@@ -55,6 +55,8 @@ func bind(p_sim: Simulation, bus: Object) -> void:
 			e["panel"] = "perks"
 			e["colonist_id"] = id
 			e["skill"] = skill_id)
+	_listen("ammo_depleted", func(kind: String = "", id: int = 0) -> void:  # region ammo
+		add("Кончились патроны: %s." % (_building_name(id) if kind == "turret" else _colonist_name(id)), "bad"))
 	_listen("forecast_revealed", func() -> void: add("Открыт прогноз конца планеты.", "info"))
 
 
