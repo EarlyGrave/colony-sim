@@ -3,6 +3,8 @@ extends GamePanel
 ## Inspector for a tapped colonist / building / cell. Content comes from the
 ## sections registered in PanelRegistry.INSPECTOR_SECTIONS.
 
+signal panel_requested(panel_id: String, colonist_id: int)
+
 var target: Dictionary = {}
 var _sections: Array[InspectorSection] = []
 
@@ -25,6 +27,7 @@ func build() -> void:
 func refresh() -> void:
 	if sim == null:
 		return
+	target["request_panel"] = func(pid: String, cid: int) -> void: panel_requested.emit(pid, cid)
 	var fresh := VBoxContainer.new()
 	fresh.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for s in _sections:

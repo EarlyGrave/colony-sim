@@ -4,6 +4,8 @@ extends GamePanel
 
 signal show_cell_requested(cell: Vector2i)
 
+signal panel_requested(panel_id: String, colonist_id: int, skill: String)
+
 var letters: LetterLog
 var _shown := -1
 
@@ -42,6 +44,16 @@ func refresh() -> void:
 			day = int(e["tick"]) / sim.ticks_per_day + 1
 			hour = int(e["tick"]) % sim.ticks_per_day * 24 / sim.ticks_per_day
 		var l := add_line("д%d %02d:00  %s" % [day, hour, e["text"]], col)
+		if e.has("panel"):
+			var pid: String = e["panel"]
+			var cid: int = int(e.get("colonist_id", -1))
+			var sk: String = str(e.get("skill", ""))
+			var pb := Button.new()
+			pb.text = "Открыть"
+			pb.custom_minimum_size = Vector2(0, 64)
+			pb.focus_mode = Control.FOCUS_NONE
+			pb.pressed.connect(func() -> void: panel_requested.emit(pid, cid, sk))
+			content.add_child(pb)
 		if e.has("cell"):
 			var cell: Vector2i = e["cell"]
 			var b := Button.new()

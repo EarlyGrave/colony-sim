@@ -48,6 +48,13 @@ func bind(p_sim: Simulation, bus: Object) -> void:
 		add("Срыв у %s: %s." % [_colonist_name(id), kind], "bad", _colonist_cell(id)))
 	_listen("colonist_starving", func(id: int = 0) -> void:
 		add("Голодает: %s." % _colonist_name(id), "warn", _colonist_cell(id)))
+	_listen("perk_point_available", func(id: int = 0, skill_id: String = "", _pts: int = 0) -> void:
+		var lbl: String = str(sim.defs.skills["skills"].get(skill_id, {}).get("label", skill_id))
+		var e := add("У %s новое очко: %s" % [_colonist_name(id), lbl], "info")
+		if not e.is_empty():
+			e["panel"] = "perks"
+			e["colonist_id"] = id
+			e["skill"] = skill_id)
 	_listen("forecast_revealed", func() -> void: add("Открыт прогноз конца планеты.", "info"))
 
 
@@ -61,9 +68,11 @@ func unbind() -> void:
 	sim = null
 
 
-func add(text: String, level := "info", cell: Variant = null) -> void:
+## Returns the stored entry (callers may add keys such as "panel"), {} if empty text.
+## Note: letter_added is emitted before such keys are added, which is fine for toasts.
+func add(text: String, level := "info", cell: Variant = null) -> Dictionary:
 	if text == "":
-		return
+		return {}
 	var entry := {"text": text, "tick": sim.tick if sim else 0, "level": level}
 	if cell is Vector2i:
 		entry["cell"] = cell
@@ -72,6 +81,7 @@ func add(text: String, level := "info", cell: Variant = null) -> void:
 		entries.pop_back()
 	unread += 1
 	letter_added.emit(entry)
+	return entry
 
 
 func mark_read() -> void:

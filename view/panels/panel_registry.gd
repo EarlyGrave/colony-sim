@@ -17,6 +17,7 @@ const PANELS: Array = [
 	["draft", "Бой", "res://view/panels/draft_panel.gd"],
 	["events", "События", "res://view/panels/event_choice.gd"],
 	# slot 3
+	["perks", "Перки", "res://view/panels/perk_panel.gd"],
 	# slot 4
 	# slot 5
 	# slot 6
@@ -34,6 +35,7 @@ const INSPECTOR_SECTIONS: Array = [
 	# slot 3
 	["zone", "res://view/panels/sections/zone_section.gd"],
 	# slot 4
+	["perks", "res://view/panels/sections/perks_section.gd"],
 	# slot 5
 	["mood", "res://view/panels/sections/mood_section.gd"],
 	# slot 6

@@ -113,7 +113,19 @@ func _make_card(c: Colonist) -> Dictionary:
 		icon.custom_minimum_size = Vector2(40, 40)
 		st_l.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 		st_l.add_theme_font_size_override("font_size", 12)
-	return {"icon": icon, "name": name_l, "bar": bar, "job": job_l, "state": st_l}
+	var badge := Label.new()
+	badge.text = "*"
+	badge.add_theme_font_size_override("font_size", 20)
+	badge.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+	badge.add_theme_color_override("font_outline_color", Color.BLACK)
+	badge.add_theme_constant_override("outline_size", 6)
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	badge.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	badge.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	badge.visible = false
+	btn.add_child(badge)
+	return {"icon": icon, "name": name_l, "bar": bar, "job": job_l, "state": st_l, "badge": badge}
 
 
 func _small_label(parent: Control, size: int) -> Label:
@@ -149,6 +161,13 @@ func _update_card(c: Colonist, w: Dictionary) -> void:
 		sprite += "_sick"
 	(w["icon"] as TextureRect).texture = load(SPR + sprite + ".png")
 	(w["name"] as Label).text = c.display_name
+	var pts := 0
+	if sim.perks != null:
+		for sk: String in sim.defs.skills["skills"]:
+			pts += sim.perks.points_available(c, sk)
+	var badge := w["badge"] as Label
+	badge.visible = pts > 0
+	badge.text = "*%d" % pts
 	(w["bar"] as ProgressBar).value = c.hp / c.max_hp
 	var job_l := w["job"] as Label
 	var st := _state_of(c)
