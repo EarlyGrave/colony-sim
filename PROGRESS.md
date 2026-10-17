@@ -62,7 +62,7 @@ Tests: 57 green. Handoff: `docs/handoff/session-2026-10-17-handoff.md`.
 
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
-  + graphics, pushed, CI green, NOT yet merged to `main` (owner merges on request;
+  + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
   PR #1 with E0–E8 is already merged, Pages deploy works).
 - Ideas proposed to owner (not chosen yet): "ore reserve" rule (refinery eats
   all ore), wave direction warning, rule "stop refining above contamination X",
