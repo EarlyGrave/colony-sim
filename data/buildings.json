@@ -133,5 +133,20 @@
 		},
 		"buildable": true,
 		"bed": true
+	},
+	"training_dummy": {
+		"name": "Тренировочный манекен",
+		"size": [
+			1,
+			1
+		],
+		"color": "#a0855b",
+		"max_hp": 60,
+		"cost": {
+			"essence_ore": 3
+		},
+		"build_work": 30,
+		"buildable": true,
+		"threat_priority": 0
 	}
 }

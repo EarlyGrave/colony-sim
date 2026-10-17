@@ -42,6 +42,7 @@ func test_recipe_is_data_driven() -> void:
 	defs.recipes["refine_essence"]["inputs"] = {"essence_ore": 4}
 	defs.recipes["refine_essence"]["outputs"] = {"refined_essence": 2, "waste": 1}
 	defs.recipes["refine_essence"]["work_ticks"] = 20
+	defs.idle_work["cleanup"]["max_scrub_fraction"] = 0.0  # count the waste, do not scrub it
 	var sim := _setup(defs, 8)
 	sim.run_ticks(800)
 	assert_eq(sim.buildings.refined_batches, 2)

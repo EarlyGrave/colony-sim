@@ -1,0 +1,34 @@
+{
+	"_comment": "Always-available low-priority work (cleanup / patrol / training). Ticks, cells, xp. Scrubbing total is capped at max_scrub_fraction of the gross contamination (D23).",
+	"cleanup": {
+		"radius": 16,
+		"work_ticks": 40,
+		"contamination_per_scrub": 0.12,
+		"waste_per_scrub": 1,
+		"max_scrub_fraction": 0.4,
+		"illness_chance": 0.12,
+		"illness_id": "toxic_fallout",
+		"illness_severity": 8.0,
+		"illness_ticks": 250
+	},
+	"patrol": {
+		"auto_radius": 9,
+		"auto_points": 8,
+		"legs_per_job": 3,
+		"cooldown_ticks": 300,
+		"scan_every": 5,
+		"detect_radius": 9.0,
+		"xp_per_tick": 0.04,
+		"vigil_window_ticks": 400,
+		"vigil_bonus_ticks": 40,
+		"spot_bonus_ticks": 60,
+		"max_spot_bonus_ticks": 180
+	},
+	"training": {
+		"building": "training_dummy",
+		"skills": ["melee", "shooting"],
+		"chunk_ticks": 120,
+		"xp_per_tick": 0.1,
+		"daily_xp_cap": 30.0
+	}
+}

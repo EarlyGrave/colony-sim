@@ -11,6 +11,7 @@ func _colony(seed_value: int, turrets: int) -> Simulation:
 		defs.events.erase(id)  # arrivals are covered by test_arrivals
 	defs.crises["crises"].clear()  # crises are covered by test_crises
 	defs.debt["due_days"] = 100000  # prison breaks are covered by test_debt
+	defs.idle_work["cleanup"]["illness_chance"] = 0.0  # scrubbing sickness is covered by test_idle_work
 	var sim := make_sim(seed_value, true, 24, 24, defs)
 	Scenario.standard_colony(sim, turrets)
 	return sim

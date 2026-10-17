@@ -114,4 +114,8 @@ signal perk_point_available(colonist_id: int, skill_id: String, points: int)
 # region crises
 signal crisis_started(crisis_id: String, text: String)
 signal crisis_resolved(crisis_id: String, option_id: String, by_timeout: bool)
+# region idle-work
+signal patrol_spotted(colonist_id: int, cell: Vector2i, enemies: int)
+signal waste_scrubbed(colonist_id: int, cell: Vector2i, amount: float)
+signal patrol_route_changed(count: int)
 # endregion

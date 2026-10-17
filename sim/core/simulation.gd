@@ -61,6 +61,8 @@ var farming: FarmingSystem
 var contracts: ContractSystem
 # region progression
 var progression: ProgressionSystem
+# region idle-work
+var idle_work: IdleWorkSystem
 # endregion
 # region perks
 var perks: PerkSystem
@@ -129,6 +131,7 @@ func _init_systems() -> void:
 	progression = ProgressionSystem.new(self)  # region progression
 	ammo = AmmoSystem.new(self)  # region ammo
 	debt = DebtSystem.new(self)  # region debt
+	idle_work = IdleWorkSystem.new(self)  # region idle-work
 
 
 func _place_starting_colony() -> void:
@@ -323,6 +326,9 @@ func dispose() -> void:
 		crises.sim = null
 	crises = null
 	ammo = null  # region ammo
+	if idle_work != null:  # region idle-work
+		idle_work.sim = null
+	idle_work = null  # region idle-work
 	if perks != null:  # region perks
 		perks.sim = null
 	perks = null
@@ -475,4 +481,18 @@ func set_quota(colonist_id: int, per_day: int) -> bool:
 func choose_payoff(colonist_id: int, stay: bool) -> bool:
 	_record("choose_payoff", [colonist_id, stay])  # save-load
 	return debt.choose_payoff(colonists.get_by_id(colonist_id), stay)
+# region idle-work
+## Player-set patrol route (empty array = automatic ring around the base).
+## Recorded as text because the save log holds only scalars and Vector2i.
+func set_patrol_route(points: Array) -> void:
+	var parts: PackedStringArray = []
+	for p: Vector2i in points:
+		parts.append("%d,%d" % [p.x, p.y])
+	set_patrol_route_text(";".join(parts))
+
+
+## Same as `set_patrol_route`, points as "x,y;x,y" (the form saved in the command log).
+func set_patrol_route_text(text: String) -> void:
+	_record("set_patrol_route_text", [text])  # save-load
+	idle_work.set_route(IdleWorkSystem.parse_route(text))
 # endregion

@@ -141,7 +141,7 @@ func tick() -> void:
 	if awakened and not wave_active and sim.tick >= next_wave_tick:
 		start_wave()
 	if awakened and not wave_active and not _warned \
-			and next_wave_tick - sim.tick < int(cfg["warning_ticks"]):
+			and next_wave_tick - sim.tick < int(cfg["warning_ticks"]) + sim.idle_work.warning_bonus():  # region idle-work
 		_warned = true
 		sim.bus.wave_incoming.emit(next_spawn_origin, next_wave_tick - sim.tick)
 	_tick_turrets()

@@ -68,6 +68,30 @@
 			"label": "Ремесло",
 			"skill": "crafting",
 			"givers": []
+		},
+		"cleanup": {
+			"label": "Уборка",
+			"skill": "",
+			"default_priority": 4,
+			"givers": [
+				"scrub"
+			]
+		},
+		"patrol": {
+			"label": "Патруль",
+			"skill": "",
+			"default_priority": 4,
+			"givers": [
+				"patrol"
+			]
+		},
+		"training": {
+			"label": "Тренировка",
+			"skill": "",
+			"default_priority": 4,
+			"givers": [
+				"train"
+			]
 		}
 	}
 }
