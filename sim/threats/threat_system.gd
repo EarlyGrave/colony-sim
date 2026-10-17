@@ -33,11 +33,15 @@ var kills := 0
 var shots: Array = []
 var _next_id := 1
 var _alarm_before_wave := false
+## Own stream for raid type/composition/origin (D24): the same seed brings the same
+## waves whatever the player does, so play-style comparisons are not luck.
+var wave_rng := RandomNumberGenerator.new()
 
 
 func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	cfg = sim.defs.balance["threat"]
+	wave_rng.seed = sim.seed_value ^ 0x57A7E
 	sim.listen(sim.bus.first_refine_done, awaken)
 	sim.listen(sim.bus.item_mined, _on_item_mined)
 
@@ -103,7 +107,7 @@ func pick_raid_type(points: float) -> String:
 			total += float(r["weight"])
 	if ids.is_empty():
 		return ""
-	var roll := sim.rng.randf() * total
+	var roll := wave_rng.randf() * total
 	for id in ids:
 		roll -= float(sim.defs.raids[id]["weight"])
 		if roll < 0.0:
@@ -125,7 +129,7 @@ func compose_raid(id: String, points: float) -> Array[String]:
 				total += float(u["weight"])
 		if opts.is_empty():
 			break
-		var roll := sim.rng.randf() * total
+		var roll := wave_rng.randf() * total
 		var pick: Dictionary = opts[-1]
 		for u: Dictionary in opts:
 			roll -= float(u["weight"])
@@ -268,8 +272,8 @@ func _pick_spawn_origin() -> Vector2i:
 	var w := sim.map.width
 	var h := sim.map.height
 	for attempt in 200:
-		var side := sim.rng.randi_range(0, 3)
-		var t := sim.rng.randi_range(0, (w if side < 2 else h) - 1)
+		var side := wave_rng.randi_range(0, 3)
+		var t := wave_rng.randi_range(0, (w if side < 2 else h) - 1)
 		var c: Vector2i
 		match side:
 			0: c = Vector2i(t, 0)

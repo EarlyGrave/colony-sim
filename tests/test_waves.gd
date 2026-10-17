@@ -44,13 +44,12 @@ func test_player_intervention_keeps_colony_alive_longer() -> void:
 		var sim := _colony(s, 3)
 		var r := Scenario.run_waves(sim, 10, true)
 		var g: int = survived.call(r) - survived.call(static_r)
-		# TODO(A13 balance): restore per-seed ">= +1 wave" after the batch-3 rebalance.
-		assert_true(g >= -1, "seed %d: rebuilding turrets must not be much worse (static %d, active %d)" % [s, survived.call(static_r), survived.call(r)])
+		assert_true(g >= 0, "seed %d: rebuilding turrets must not be much worse (static %d, active %d)" % [s, survived.call(static_r), survived.call(r)])
 		gain += g
-		assert_gt(r["turrets_built"], 0)  # TODO(A13): was > 3; contracts now compete for refined essence
+		assert_gt(r["turrets_built"], 3)
 		for item in sim.defs.items:
 			assert_eq(sim.items.count_world(item), sim.ledger.balance_of(item), "%s leaked" % item)
-	assert_true(gain >= 0, "total gain over seeds: %d (TODO A13: back to >= 4)" % gain)
+	assert_true(gain >= 4, "total gain over seeds: %d" % gain)
 
 
 func test_wave_strength_grows_with_refining_and_contamination() -> void:

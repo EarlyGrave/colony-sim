@@ -38,6 +38,7 @@ func _riot(c: Colonist, sim: Simulation) -> int:
 		if adj.x < 0 or c.move_toward(adj, sim) == GridMover.Move.FAILED:
 			_building_id = -1
 		return Status.RUNNING
+	c.clear_path()  # smashing in place: no stale path (it read as "stuck on a path")
 	if sim.tick >= _next_hit:
 		_next_hit = sim.tick + int(cfg["riot_hit_ticks"])
 		sim.buildings.damage(b, float(cfg["riot_damage"]))

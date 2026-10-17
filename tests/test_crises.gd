@@ -70,6 +70,8 @@ func test_dead_lands_endure_poisons_edges() -> void:
 	sim.run_ticks(2)
 	assert_true(sim.resolve_crisis("dead_lands", "endure"))
 	var c: Colonist = sim.colonists.list[0]
+	sim.jobs.end_job(c, Job.Status.FAILED, false)  # drop the job assigned during the first ticks
+	c.path.clear()
 	c.cell = Vector2i(1, 1)
 	c.idle_until = sim.tick + 1000000  # keep them on the toxic edge (no idle work)
 	assert_true(sim.crises.toxic_cell(c.cell))

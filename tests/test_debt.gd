@@ -202,3 +202,18 @@ func test_save_load_and_determinism() -> void:
 	sim2.run_ticks(200)
 	assert_eq(SaveGame.state_hash(sim2), SaveGame.state_hash(sim))
 	assert_eq(sim2.debt.state_of(c2).despair, sim.debt.state_of(c).despair)
+
+
+func test_riot_smashing_leaves_no_stale_path() -> void:
+	var sim := _sim(3)
+	var c: Colonist = sim.colonists.list[0]
+	sim.debt.cfg["escape_weight"] = 0.0
+	var bed := sim.place_instant("bed", sim.map_center() + Vector2i(-3, 4))
+	assert_true(bed != null)
+	_despair(sim, c)
+	sim.mood._roll_break(c, sim.mood.state_of(c))
+	var worst := 0
+	for i in int(sim.defs.debt["riot_ticks"]):
+		sim.step()
+		worst = maxi(worst, c.stuck_ticks)
+	assert_lt(worst, 50, "rioter standing at a building keeps a stale path")
