@@ -7,6 +7,8 @@ var list: Array[Building] = []
 var occupancy: Dictionary = {}  # Vector2i -> building id
 var refined_batches := 0
 var first_refine_done := false
+## Operator of the batch being finished (read by ContaminationSystem on batch_refined).
+var batch_operator: Colonist = null
 var _next_id := 1
 # region construction
 var blueprints: Array[Blueprint] = []
@@ -94,26 +96,47 @@ func may_operate(b: Building) -> bool:
 
 
 ## Returns true when a batch completed this tick.
-func work(b: Building, steps := 1) -> bool:
+func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 	if not b.can_run_recipe() or steps <= 0:
 		return false
 	b.progress += steps
 	if b.progress < int(b.recipe["work_ticks"]):
 		return false
 	b.progress = 0
+	# region perks
+	var saved_item := ""
+	var craft_save := -sim.perks.mod(operator, "craft_input")
+	if craft_save > 0.0 and sim.rng.randf() < craft_save:
+		for item in b.recipe["inputs"]:  # first ingredient is spared one unit
+			saved_item = str(item)
+			break
+	# endregion
 	for item in b.recipe["inputs"]:
 		var n := int(b.recipe["inputs"][item])
+		if item == saved_item:
+			n = maxi(0, n - 1)  # stays in the input buffer, never consumed
 		b.input[item] -= n
 		if b.input[item] <= 0:
 			b.input.erase(item)
 		sim.ledger.record_consumed(item, n, "recipe")
 	for item in b.recipe["outputs"]:
 		var n := int(b.recipe["outputs"][item])
+		# region perks
+		if sim.defs.items[item].get("contaminates", false):
+			if sim.perks.consume_flag(operator, "no_waste_next_batch"):
+				n = 0
+			else:
+				n = PerkHooks.scaled(operator, "waste_mult", float(n), 1.0 + sim.perks.mod(operator, "waste_mult"))
+		if n <= 0:
+			continue
+		# endregion
 		b.output[item] = int(b.output.get(item, 0)) + n
 		sim.ledger.record_produced(item, n, "recipe")
 	refined_batches += 1
 	wear(b, float(b.def.get("wear_per_batch", 0.0)))
+	batch_operator = operator  # region perks
 	sim.bus.batch_refined.emit(b.id, b.recipe_id)
+	batch_operator = null
 	if not first_refine_done:
 		first_refine_done = true
 		sim.bus.first_refine_done.emit()
@@ -272,17 +295,30 @@ func cancel_blueprint(bp: Blueprint) -> bool:
 
 
 ## Turns a fully supplied blueprint into a building; materials are consumed now.
-func complete_blueprint(bp: Blueprint) -> Building:
+func complete_blueprint(bp: Blueprint, builder: Colonist = null) -> Building:
 	if bp == null or not bp.has_all_materials():
 		return null
 	_drop_blueprint(bp)
+	var refunds: Dictionary = {}  # region perks
 	for item: String in bp.def["cost"]:
 		var n := int(bp.def["cost"][item])
-		sim.ledger.record_consumed(item, n, "construction")
+		# region perks: build_cost spares a fraction of the materials (returned to the ground)
+		var save_frac := -sim.perks.mod(builder, "build_cost")
+		var spared := mini(n, PerkHooks.scaled(builder, "build_cost", float(n), save_frac)) if save_frac > 0.0 else 0
+		refunds[item] = spared
+		# endregion
+		sim.ledger.record_consumed(item, n - spared, "construction")
 	bp.delivered.clear()
 	var b := place(bp.def_id, bp.cell, false)
 	if b == null:  # cannot happen: the cells were reserved
 		return null
+	# region perks
+	b.max_hp *= 1.0 + sim.perks.mod(builder, "building_hp")
+	b.hp = b.max_hp
+	for item: String in refunds:
+		if int(refunds[item]) > 0:
+			sim.items.drop(b.cell, item, int(refunds[item]))
+	# endregion
 	sim.bus.blueprint_completed.emit(bp.id, b.id)
 	return b
 

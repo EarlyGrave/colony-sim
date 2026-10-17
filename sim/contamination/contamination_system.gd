@@ -21,7 +21,7 @@ func _init(p_sim: Simulation) -> void:
 
 
 func _on_batch_refined(_building_id: int, _recipe_id: String) -> void:
-	level += float(_cfg["per_batch"])
+	level += float(_cfg["per_batch"]) * maxf(0.0, 1.0 + sim.perks.mod(sim.buildings.batch_operator, "contamination_per_batch"))  # region perks
 
 
 func _on_first_refine() -> void:

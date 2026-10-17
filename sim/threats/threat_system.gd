@@ -69,11 +69,22 @@ func colony_wealth() -> float:
 
 ## Raid points: the colony's wealth and growth is what calls the creatures.
 func raid_points(index: int) -> float:
-	return float(cfg["base_strength"]) \
+	return _attract_mult() * (float(cfg["base_strength"]) \
 		+ float(cfg["per_wave"]) * (index - 1) \
 		+ float(cfg["per_wealth"]) * colony_wealth() \
 		+ float(cfg["per_refined"]) * sim.ledger.get_count("recipe:refined_essence") \
-		+ float(cfg["per_contamination"]) * sim.contamination.level
+		+ float(cfg["per_contamination"]) * sim.contamination.level)
+
+
+## Perk threat_attract: mean over living colonists, applied to the whole raid budget.
+func _attract_mult() -> float:
+	var sum := 0.0
+	var n := 0
+	for c in sim.colonists.list:
+		if c.alive:
+			sum += sim.perks.mod(c, "threat_attract")
+			n += 1
+	return maxf(0.0, 1.0 + sum / float(n)) if n > 0 else 1.0
 
 
 ## Kept API name (balance_report, tests).
@@ -316,6 +327,11 @@ func _tick_enemy(e: Enemy) -> void:
 			e.clear_path()
 			if e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
+				# region perks: dodge_chance avoids melee hits
+				var dodge := sim.perks.mod(c, "dodge_chance")
+				if dodge > 0.0 and not e.def.get("ranged", false) and sim.rng.randf() < dodge:
+					return
+				# endregion
 				sim.health.apply_damage(c, float(e.def["damage"]), "", str(e.def.get("damage_kind", "bite")))  # region health
 		elif e.move_toward(c.cell, sim) == GridMover.Move.FAILED:
 			e.retarget_at = sim.tick + 5

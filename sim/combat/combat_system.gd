@@ -22,6 +22,7 @@ func hit_chance(c: Colonist, w: Dictionary, dist: float) -> float:
 		p -= float(cfg["range_penalty"]) * maxf(0.0, dist - 1.0)
 	if c.health != null:
 		p *= clampf(c.health.manipulation, 0.0, 1.0)
+	p += sim.perks.mod(c, "hit_chance")  # region perks
 	return clampf(p, float(cfg["hit_min"]), float(cfg["hit_max"]))
 
 
@@ -40,12 +41,20 @@ func try_attack(c: Colonist, e: Enemy) -> bool:
 	var dist := Vector2(c.cell).distance_to(Vector2(e.cell))
 	if dist > float(w["range"]):
 		return false
-	c.combat.next_attack_tick = sim.tick + int(w["cooldown_ticks"])
+	c.combat.next_attack_tick = sim.tick + maxi(1, roundi(float(w["cooldown_ticks"]) / maxf(0.1, 1.0 + sim.perks.mod(c, "attack_speed"))))  # region perks
 	var skill := str(w["skill"])
 	if str(w["kind"]) == "ranged":
 		sim.threats.shots.append([Vector2(c.cell), e.visual_pos(), sim.tick])
-	if sim.rng.randf() < hit_chance(c, w, dist):
-		sim.threats.damage_enemy(e, float(w["damage"]))
+	# region perks
+	var dmg := float(w["damage"])
+	if str(w["kind"]) == "melee":
+		dmg *= 1.0 + sim.perks.mod(c, "melee_damage")
+	var aimed := sim.perks.consume_flag(c, "aimed_shot")
+	if aimed:
+		dmg *= 1.5
+	# endregion
+	if aimed or sim.rng.randf() < hit_chance(c, w, dist):
+		sim.threats.damage_enemy(e, dmg)
 	if c.skills.add_xp(sim.defs, skill, float(cfg["xp_per_attack"])):
 		sim.bus.skill_leveled.emit(c.id, skill, c.skills.level(skill))
 	return true

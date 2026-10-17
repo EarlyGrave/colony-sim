@@ -7,6 +7,8 @@ enum Move { ARRIVED, MOVING, FAILED }
 var cell: Vector2i
 var move_ticks := 3
 var move_t := 0
+## Fractional movement progress from speed bonuses.
+var move_frac := 0.0
 var path: Array[Vector2i] = []
 var goal := Vector2i(-1, -1)
 
@@ -24,6 +26,7 @@ func move_toward(target: Vector2i, sim: Simulation) -> int:
 		if path.is_empty():
 			return Move.FAILED
 	move_t += 1
+	move_t += _bonus_steps(sim)
 	if move_t < move_ticks:
 		return Move.MOVING
 	move_t = 0
@@ -37,6 +40,22 @@ func move_toward(target: Vector2i, sim: Simulation) -> int:
 		clear_path()
 		return Move.ARRIVED
 	return Move.MOVING
+
+
+## Extra (or fewer) movement ticks gained this tick; 0 without bonuses.
+func _bonus_steps(sim: Simulation) -> int:
+	var g := move_gain(sim)
+	if is_equal_approx(g, 1.0):
+		return 0
+	move_frac += g - 1.0
+	var n := floori(move_frac)
+	move_frac -= n
+	return n
+
+
+## Movement speed factor (1.0 = normal). Colonists override (perks).
+func move_gain(_sim: Simulation) -> float:
+	return 1.0
 
 
 func clear_path() -> void:

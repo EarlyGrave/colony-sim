@@ -24,12 +24,12 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	_work += sim.jobs.work_tick(c, "mining")
+	_work += sim.jobs.work_tick(c, "mining") * maxf(0.0, 1.0 + sim.perks.mod(c, "mining_speed"))  # region perks
 	if _work < int(sim.defs.balance["mining"]["work_ticks"]):
 		return Status.RUNNING
 	var cfg: Dictionary = sim.defs.balance["mining"]
 	var item: String = cfg["item"]
-	var got := sim.map.take_from_deposit(target, int(cfg["yield"]))
+	var got := sim.map.take_from_deposit(target, PerkHooks.scaled(c, "ore_yield", float(cfg["yield"]), 1.0 + sim.perks.mod(c, "ore_yield")))  # region perks
 	if got > 0:
 		sim.ledger.record_produced(item, got, "mining")
 		sim.items.drop(c.cell, item, got)

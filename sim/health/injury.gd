@@ -11,6 +11,9 @@ var bleed: float
 var pain: float
 var tended := false
 var tend_quality := 0.0
+## Perk bonuses of the doctor who tended it (heal_speed, infection_chance).
+var heal_bonus := 0.0
+var infection_bonus := 0.0
 ## Illness only: severity lost per tick (so the duration is data driven).
 var heal_per_tick := 0.0
 var label := ""
