@@ -34,6 +34,15 @@ var storyteller: Storyteller
 var health: HealthSystem
 # endregion
 
+# region save-load
+## SAVE/LOAD CONTRACT: every player command method MUST call
+## `_record("method_name", [args...])` as its FIRST line (args: ints, bools,
+## strings, Vector2i only). Saves are command logs replayed on a fresh sim
+## (see sim/core/save_game.gd), so an unrecorded command is lost on load.
+var command_log: Array = []  # [tick, name, args]
+var replaying := false
+# endregion
+
 var _connections: Array = []  # [signal, callable] pairs made on the bus
 
 
@@ -144,12 +153,14 @@ func cell_free_for_items(c: Vector2i) -> bool:
 # --- Player commands ------------------------------------------------------------
 
 func designate_mine(c: Vector2i, on: bool) -> void:
+	_record("designate_mine", [c, on])  # save-load
 	if map.in_bounds(c):
 		map.set_mine_designated(c, on)
 
 
 ## zone_id "" clears the zone. Returns false if the cell can't hold a zone.
 func set_zone(c: Vector2i, zone_id: String) -> bool:
+	_record("set_zone", [c, zone_id])  # save-load
 	if not map.in_bounds(c):
 		return false
 	if zone_id != "" and (not map.is_passable(c) or buildings.occupied(c) or not defs.zones.has(zone_id)):
@@ -165,6 +176,7 @@ func can_place_building(def_id: String, c: Vector2i) -> String:
 
 
 func place_building(def_id: String, c: Vector2i) -> Building:
+	_record("place_building", [def_id, c])  # save-load
 	if can_place_building(def_id, c) != "":
 		return null
 	return buildings.place(def_id, c)
@@ -172,10 +184,12 @@ func place_building(def_id: String, c: Vector2i) -> Building:
 
 ## Player command: removes the building at `c` and refunds part of its cost.
 func deconstruct(c: Vector2i) -> bool:
+	_record("deconstruct", [c])  # save-load
 	return buildings.deconstruct(c)
 
 
 func set_rule(rule_id: String, on: bool) -> void:
+	_record("set_rule", [rule_id, on])  # save-load
 	if not rules.has(rule_id) or rules[rule_id] == on:
 		return
 	rules[rule_id] = on
@@ -187,10 +201,18 @@ func is_rule_on(rule_id: String) -> bool:
 
 
 func set_alarm(on: bool) -> void:
+	_record("set_alarm", [on])  # save-load
 	if alarm == on:
 		return
 	alarm = on
 	bus.alarm_changed.emit(on)
+
+
+# region save-load
+func _record(cmd: String, args: Array) -> void:
+	if not replaying:
+		command_log.append([tick, cmd, args])
+# endregion
 
 
 # --- Bus helpers ------------------------------------------------------------------
@@ -228,6 +250,7 @@ func dispose() -> void:
 # region jobs-core
 ## Work priority of one colonist: 0 = off, 1 (first) .. work.json max_priority.
 func set_work_priority(colonist_id: int, work_type: String, p: int) -> bool:
+	_record("set_work_priority", [colonist_id, work_type, p])  # save-load
 	var c := colonists.get_by_id(colonist_id)
 	if c == null or not defs.work["types"].has(work_type):
 		return false

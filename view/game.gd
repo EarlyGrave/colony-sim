@@ -37,6 +37,7 @@ func _ready() -> void:
 	hud.colonist_card_pressed.connect(_select_colonist)
 	EventBus.game_over.connect(func(reason: String) -> void: hud.show_game_over(reason))
 	new_game(_initial_seed())
+	_setup_save_load()  # save-load
 
 
 ## Scales the whole 2D/UI by screen density so touch targets keep a physical
@@ -209,3 +210,78 @@ func _select_colonist(id: int, center := true) -> void:
 				camera.position = col.visual_pos() * WorldView.TILE + Vector2(WorldView.TILE, WorldView.TILE) * 0.5
 			hud.show_inspector({"kind": "colonist", "colonist": col, "building": null, "cell": col.cell})
 			return
+
+
+# region save-load
+var _continue_btn: Button
+var _loading := false
+
+
+## Loads user://autosave.json by replaying its command log.
+func load_game() -> void:
+	if _loading:
+		return
+	var text := SaveStore.read_text()
+	if text == "":
+		hud.show_message("Нет сохранения.", 3.0)
+		return
+	_loading = true
+	var prev_speed := speed
+	set_speed(0)
+	hud.show_message("Загрузка…", 60.0)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var res := SaveGame.load_json(text, EventBus)
+	_loading = false
+	if not res["ok"]:
+		set_speed(prev_speed)
+		hud.show_message("Не удалось загрузить сохранение (%s)." % res["error"], 5.0)
+		return
+	if sim:
+		world.unbind()
+		sim.dispose()
+	sim = res["sim"]
+	world.bind(sim)
+	world.pending_corner = Vector2i(-1, -1)
+	world.selected_cell = Vector2i(-1, -1)
+	hud.bind(sim)
+	camera.world_size = world.world_size()
+	camera.position = WorldView.cell_to_world(sim.map_center())
+	_accum = 0.0
+	set_speed(1)
+	_update_continue()
+	hud.show_message("Игра загружена.", 3.0)
+
+
+func autosave() -> void:
+	if sim != null and sim.game_over_reason == "" and not _loading:
+		SaveStore.write(sim)
+
+
+func _setup_save_load() -> void:
+	EventBus.day_started.connect(func(_d: int) -> void: autosave())
+	var layer := CanvasLayer.new()
+	layer.layer = 50
+	add_child(layer)
+	_continue_btn = Button.new()
+	_continue_btn.text = "Продолжить"
+	_continue_btn.custom_minimum_size = Vector2(260, 80)
+	_continue_btn.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_continue_btn.position.y -= 120
+	_continue_btn.focus_mode = Control.FOCUS_NONE
+	_continue_btn.pressed.connect(load_game)
+	layer.add_child(_continue_btn)
+	EventBus.game_over.connect(func(_r: String) -> void: _update_continue())
+	_update_continue()
+
+
+func _update_continue() -> void:
+	_continue_btn.visible = SaveStore.has_save() and (sim == null or sim.tick < 50 or sim.game_over_reason != "")
+
+
+func _notification(what: int) -> void:
+	# Page hidden / app paused or unfocused: save immediately (web tab hide
+	# triggers focus-out in Godot's web platform).
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		autosave()
+# endregion
