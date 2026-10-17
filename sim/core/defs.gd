@@ -22,6 +22,8 @@ var health: Dictionary = {}
 # endregion
 # region mood
 var mood: Dictionary = {}
+# region crafting
+var crafting: Dictionary = {}
 # endregion
 
 static var _default: Defs = null
@@ -53,6 +55,8 @@ func load_from(dir: String) -> void:
 	# endregion
 	# region mood
 	mood = _load_json(dir + "mood.json")
+	# region crafting
+	crafting = _load_json(dir + "crafting.json")
 	# endregion
 
 
@@ -76,6 +80,8 @@ func duplicate_defs() -> Defs:
 	# endregion
 	# region mood
 	d.mood = mood.duplicate(true)
+	# region crafting
+	d.crafting = crafting.duplicate(true)
 	# endregion
 	return d
 

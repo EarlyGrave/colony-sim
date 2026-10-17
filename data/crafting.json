@@ -1,0 +1,6 @@
+{
+	"modes": ["count", "until", "forever"],
+	"priorities": ["low", "normal", "high"],
+	"default_priority": 1,
+	"default_bill_target": 3
+}

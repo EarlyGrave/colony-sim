@@ -19,6 +19,10 @@ var recipe: Dictionary = {}
 var recipe_id := ""
 var progress := 0
 var turret_cooldown := 0
+# region crafting
+## Ingredients wanted by active bills (item -> true); refreshed by BillSystem.
+var bill_items: Dictionary = {}
+# endregion
 
 
 func _init(p_id: int, p_def_id: String, p_def: Dictionary, p_cell: Vector2i, recipes: Dictionary) -> void:
@@ -62,12 +66,14 @@ func distance_to(p: Vector2) -> float:
 
 
 func is_machine() -> bool:
-	return def.has("recipe") or def.has("turret")
+	return def.has("recipe") or def.has("turret") or def.has("bills")
 
 
 # --- Production buffers -------------------------------------------------------
 
 func input_space(item_id: String) -> int:
+	if bill_items.has(item_id):  # region crafting
+		return int(def["input_capacity"]) - int(input.get(item_id, 0))
 	if recipe.is_empty() or not recipe["inputs"].has(item_id):
 		return 0
 	return int(def["input_capacity"]) - int(input.get(item_id, 0))

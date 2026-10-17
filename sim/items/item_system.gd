@@ -94,7 +94,7 @@ func take_at(c: Vector2i, n: int) -> int:
 func is_stored(c: Vector2i) -> bool:
 	if not stacks.has(c):
 		return false
-	return sim.defs.zone_accepts(sim.map.get_zone(c), stacks[c]["item"])
+	return cell_accepts(c, stacks[c]["item"])
 
 
 func count_on_ground(item_id: String) -> int:
@@ -162,15 +162,39 @@ func set_zone(c: Vector2i, zone_id: String) -> void:
 func find_storage_cell(item_id: String, near: Vector2i, is_blocked: Callable) -> Vector2i:
 	var best := Vector2i(-1, -1)
 	var best_d := 1 << 30
+	var best_pr := -1  # region crafting: higher storage priority wins
 	for zone_id in zone_cells:
 		if not sim.defs.zone_accepts(zone_id, item_id):
 			continue
 		for c: Vector2i in zone_cells[zone_id]:
+			var pr := sim.storage.priority(c)
+			if pr < best_pr or not sim.storage.accepts(c, item_id):
+				continue
 			var d := c.distance_squared_to(near)
-			if d >= best_d or space_for(c, item_id) <= 0 or is_blocked.call(c):
+			if (pr == best_pr and d >= best_d) or space_for(c, item_id) <= 0 or is_blocked.call(c):
 				continue
 			if not sim.pathfinder.reachable(near, c):
 				continue
 			best = c
 			best_d = d
+			best_pr = pr
 	return best
+
+
+# region crafting
+## True if `c` is in a zone of a type that accepts the item and its filter allows it.
+func cell_accepts(c: Vector2i, item_id: String) -> bool:
+	return sim.defs.zone_accepts(sim.map.get_zone(c), item_id) and sim.storage.accepts(c, item_id)
+
+
+## Storage cell with a strictly higher priority than stored stack `c`, or
+## (-1, -1). Only meaningful when priorities differ.
+func better_storage(c: Vector2i, is_blocked: Callable) -> Vector2i:
+	if not sim.storage.has_custom_priority():
+		return Vector2i(-1, -1)
+	var item := item_at(c)
+	var dst := find_storage_cell(item, c, is_blocked)
+	if dst.x >= 0 and sim.storage.priority(dst) > sim.storage.priority(c):
+		return dst
+	return Vector2i(-1, -1)
+# endregion

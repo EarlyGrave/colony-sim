@@ -44,6 +44,9 @@ var mood: MoodSystem
 ## (see sim/core/save_game.gd), so an unrecorded command is lost on load.
 var command_log: Array = []  # [tick, name, args]
 var replaying := false
+# region crafting
+var crafting: BillSystem
+var storage: StorageSettings
 # endregion
 
 var _connections: Array = []  # [signal, callable] pairs made on the bus
@@ -89,6 +92,9 @@ func _init_systems() -> void:
 	# endregion
 	# region mood
 	mood = MoodSystem.new(self)
+	# region crafting
+	storage = StorageSettings.new(self)
+	crafting = BillSystem.new(self)
 	# endregion
 
 
@@ -120,6 +126,7 @@ func step() -> void:
 	if game_over_reason != "":
 		return
 	tick += 1
+	crafting.tick()  # region crafting
 	colonists.tick()
 	health.tick()  # region health
 	mood.tick()  # region mood
@@ -255,6 +262,31 @@ func dispose() -> void:
 	if mood != null:  # region mood
 		mood.sim = null
 	mood = null
+
+
+# region crafting
+## Adds a bill to a bills building. Returns the bill id or -1.
+func add_bill(building_id: int, recipe_id: String, mode: String, target: int) -> int:
+	return crafting.add_bill(buildings.get_by_id(building_id), recipe_id, mode, target)
+
+
+func remove_bill(building_id: int, bill_id: int) -> bool:
+	return crafting.remove_bill(buildings.get_by_id(building_id), bill_id)
+
+
+func update_bill(building_id: int, bill_id: int, mode: String, target: int, paused: bool) -> bool:
+	return crafting.update_bill(buildings.get_by_id(building_id), bill_id, mode, target, paused)
+
+
+## Filter/priority apply to the whole connected zone group containing `c`.
+func set_zone_filter(c: Vector2i, item_id: String, allowed: bool) -> bool:
+	return storage.set_filter(c, item_id, allowed)
+
+
+## 0 = low, 1 = normal, 2 = high (data/crafting.json "priorities").
+func set_zone_priority(c: Vector2i, priority: int) -> bool:
+	return storage.set_priority(c, priority)
+# endregion
 
 
 # region jobs-core

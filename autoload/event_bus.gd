@@ -48,6 +48,9 @@ signal injury_added(colonist_id: int, part: String, kind: String, severity: floa
 # region mood
 signal mood_break_started(colonist_id: int, kind: String)
 signal thought_added(colonist_id: int, thought_id: String)
+# region crafting
+signal bills_changed(building_id: int)
+signal zone_settings_changed(cell: Vector2i)
 # endregion
 
 # --- Game flow ---
