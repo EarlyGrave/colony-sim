@@ -1,0 +1,46 @@
+{
+	"inspection_notice": {
+		"name": "Инспекция",
+		"weight": 2, "min_day": 4, "harmful": true, "max_per_game": 3,
+		"requires": [],
+		"text": "По радио: «Через два дня прибудет инспекция. Проверим склад. Улыбайтесь — камеры пишут».",
+		"then": {"step": "inspection_arrive", "delay_days": 2.0}
+	},
+	"escape_rumors": {
+		"name": "Слухи о побеге",
+		"weight": 2, "min_day": 3, "harmful": true, "max_per_game": 3,
+		"requires": ["debtors"],
+		"text": "По баракам ползут слухи, что с планеты есть выход. Охранники подозрительно ухмыляются.",
+		"effects": [{"op": "despair", "amount": 12.0}, {"op": "thought", "who": "all", "id": "escape_rumors"}],
+		"then": {"step": "rumors_fade", "delay_days": 1.5}
+	},
+	"smuggler_signal": {
+		"name": "Сигнал контрабандистов",
+		"weight": 2, "min_day": 4, "harmful": false, "max_per_game": 4,
+		"requires": ["essence"],
+		"text": "Ночью на частоте охраны чей-то голос: «Есть что почище? Беру по двойной цене. Только тихо».",
+		"then": {"step": "smuggler_offer", "delay_days": 0.4}
+	},
+	"new_prisoners": {
+		"name": "Этап с долгами",
+		"weight": 2, "min_day": 3, "harmful": false, "max_per_game": 3,
+		"requires": ["room"],
+		"count": [1, 2],
+		"text": "Баржа сбросила этап: {target}. Каждому прилагается счёт за доставку.",
+		"effects": [{"op": "prisoners"}]
+	},
+	"metropolis_decree": {
+		"name": "Указ Метрополии",
+		"weight": 2, "min_day": 5, "harmful": false, "max_per_game": 4,
+		"requires": [],
+		"text": "Указ Метрополии огласили между обедом и перекличкой.",
+		"then": {"step": "decree_effect", "delay_days": 0.1}
+	},
+	"letter_home": {
+		"name": "Письмо из дома",
+		"weight": 2, "min_day": 3, "harmful": false, "max_per_game": 4,
+		"requires": [],
+		"text": "{target} получил письмо из дома. Цензор вычеркнул почти всё, кроме слов «ждём» и «не пиши».",
+		"effects": [{"op": "thought", "who": "random", "id": "letter_home"}]
+	}
+}

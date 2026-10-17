@@ -24,6 +24,13 @@ func refresh() -> void:
 	for p: Dictionary in sim.storyteller.pending:
 		var c: Colonist = p["colonist"]
 		add_line(str(p["text"]), Color(1.0, 0.85, 0.4)).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if c == null:  # storyteller chain choice (no colonist attached)
+			var crow := HBoxContainer.new()
+			content.add_child(crow)
+			var cuid := int(p["uid"])
+			_button(crow, str(p["yes_label"]), func() -> void: sim.answer_event(cuid, true))
+			_button(crow, str(p["no_label"]), func() -> void: sim.answer_event(cuid, false))
+			continue
 		add_line("%s, %d лет. %s" % [c.display_name, int(c.bio.get("age", 0)), c.bio.get("backstory", "")])
 		var tn := ColonistGenerator.trait_names(sim, c)
 		if not tn.is_empty():

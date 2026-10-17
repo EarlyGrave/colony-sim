@@ -46,6 +46,7 @@ func make_sim(seed_value: int, generate := true, w := 24, h := 24, defs: Defs = 
 static func peaceful_defs() -> Defs:
 	var d := Defs.get_default().duplicate_defs()
 	d.balance["threat"]["enabled"] = false
+	d.event_chains["random_enabled"] = false  # prison events/complications are opt-in in tests
 	return d
 
 

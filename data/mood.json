@@ -17,6 +17,9 @@
 		"despair_1": {"label": "Долг давит", "value": -6, "duration_days": 0.2},
 		"despair_2": {"label": "Отчаяние", "value": -14, "duration_days": 0.2},
 		"riot_witness": {"label": "Бунт в колонии", "value": -8, "duration_days": 2.0},
+		"letter_home": {"label": "Письмо из дома", "value": 10, "duration_days": 2.0},
+		"escape_rumors": {"label": "Слухи о побеге", "value": -5, "duration_days": 1.5},
+		"inspection_praise": {"label": "Инспектор доволен", "value": 5, "duration_days": 2.0},
 		"freedman": {"label": "Свободный человек", "value": 8, "duration_days": 0.0}
 	}
 }
