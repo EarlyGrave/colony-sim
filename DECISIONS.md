@@ -154,3 +154,11 @@ A game-designer agent reviews the build against the design pillars.
 ## D21. Balance pass after designer review
 Contamination made heavier and waves more tied to refining (see PROGRESS).
 Deconstruction reuses `building_destroyed` (does not end the game).
+
+## D22. Owner answers for the RimWorld batch (session 2)
+1. Stress/mood: basic version now (mood from needs/injuries/deaths, one breakdown type).
+2. Research and trade: later.
+3. Food: growing zones + stove with a simple recipe.
+4. Enemies: creatures only for now; armed humans come later with factions.
+5. Save/load: yes (autosave in browser + load).
+6. Colonist death is permanent.
