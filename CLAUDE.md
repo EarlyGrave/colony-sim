@@ -59,10 +59,11 @@ Godot binary for a fresh cloud session: see README "Local setup".
 | `sim/buildings` | `Building`, `BuildingSystem` | recipes, wear/broken, damage/destroy (buffers spill) |
 | `sim/contamination` | `ContaminationSystem`, `ForecastModel` | |
 | `sim/threats` | `ThreatSystem`, `Enemy` | waves, targeting, turrets |
-| `sim/storyteller` | `Storyteller` | stub: narrates via `story_event` |
+| `sim/storyteller` | `Storyteller` | events from data/events.json, one broken link at a time |
 | `view` | `GameController`, `WorldView`, `CameraController`, `Hud` | |
 
-Balance numbers: `data/balance.json`. `tools/balance_report.gd` prints wave
+Balance numbers: `data/balance.json`. Player rules: `data/rules.json` +
+`Simulation.set_rule()`. Storyteller events: `data/events.json`. `tools/balance_report.gd` prints wave
 outcomes for several seeds (`godot --headless --path . -s tools/balance_report.gd`).
 Shared test scenarios: `tests/scenario.gd`.
 

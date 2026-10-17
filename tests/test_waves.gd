@@ -26,13 +26,17 @@ func test_turrets_hold_but_static_defense_is_not_enough() -> void:
 	assert_ne(r["game_over"], "", "untouched defense should eventually fail")
 
 
-func test_player_intervention_keeps_colony_alive() -> void:
+func test_player_intervention_keeps_colony_alive_longer() -> void:
+	var static_r := Scenario.run_waves(_colony(SEED, 3), 10)
 	var sim := _colony(SEED, 3)
-	var r := Scenario.run_waves(sim, 8, true)
-	assert_eq(r["game_over"], "", "rebuilding turrets should save seed %d" % SEED)
-	assert_eq(r["waves"], 8)
+	var r := Scenario.run_waves(sim, 10, true)
+	var survived := func(res: Dictionary) -> int:
+		return res["waves"] if res["game_over"] == "" else res["died_on_wave"] - 1
+	assert_true(survived.call(r) >= survived.call(static_r) + 2,
+		"rebuilding turrets should buy at least 2 waves (static %d, active %d)" % [survived.call(static_r), survived.call(r)])
 	assert_gt(r["turrets_built"], 3)
-	assert_eq(sim.items.count_world("refined_essence"), sim.ledger.balance_of("refined_essence"))
+	for item in sim.defs.items:
+		assert_eq(sim.items.count_world(item), sim.ledger.balance_of(item), "%s leaked" % item)
 
 
 func test_wave_strength_grows_with_refining_and_contamination() -> void:

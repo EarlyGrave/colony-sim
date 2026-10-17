@@ -16,11 +16,25 @@ Verified in headless Chromium (Playwright): a full game from start to colony
 death played with touch taps only (seed 42: mining → dump → refinery → 3x →
 turrets → capsule destroyed on wave 3).
 
+## Session 2
+- [x] E9 Storyteller: data/events.json — lightning (breaks a machine), sickness
+  (colonist out for half a day, never the last one), cave-in (seals designated
+  ore). A new event only when nothing is broken/sick and no wave is near.
+- [x] E10 Rule "При налёте инженер чинит турели" (data/rules.json, HUD toggle):
+  one engineer (blue ring) leaves the shelter to fix broken / badly damaged
+  turrets, then hides again.
+- [x] E11 Balance: turret costs 10 refined essence (was 10 ore + 4 refined):
+  the bot starved on ore while refined piled up. Now: no turrets → falls on
+  wave 2; 3 static turrets → wave 4–5; rebuilding turrets → wave 7–8.
+  Engineer rule: mixed effect across seeds (risk under fire) — fine for now.
+- Stress deliberately postponed (owner's call). "Склад" target stays = capsule.
+
+Tests: 56 green.
+
 ## Next
 - Merge to `main` so CI deploys the build to GitHub Pages (see "Needs owner").
-- Balance: with player intervention only seed 1 of 5 survives 8 waves in the
-  crude bot (`tools/balance_report.gd`); the bot runs out of refined essence.
-  Consider cheaper turrets or turret cost in ore only.
+- Refinery hogs all ore: an "ore reserve" rule (keep N ore for construction).
+- Wave direction warning; more rules (e.g. "stop refining when contamination > X").
 - Repair costs / maintenance rules; deconstruct tool; wave direction warning.
 - Storyteller events that break one link (design pillar 2).
 - Stress & breakdowns (out of scope for this slice).

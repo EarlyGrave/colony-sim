@@ -76,3 +76,21 @@ drag, so dragging always pans.
 ## D14. UI scale from devicePixelRatio
 Stretch mode `disabled`, `content_scale_factor = dpr * 0.85` (min 1). A fixed
 1280×720 canvas_items base made buttons ~22 CSS px on a portrait phone.
+
+## D15. Storyteller: one broken link at a time
+Events (data/events.json) fire on a few daily checks with a chance, only when
+the colony is "whole": nothing broken, nobody sick, no wave active or imminent.
+Uses the single sim RNG (determinism preserved; balance re-tuned after).
+
+## D16. Rules as data + JobSystem hooks
+`data/rules.json` declares rules with defaults; `Simulation.rules` holds state,
+`set_rule()` is the command. First rule implemented as a JobSystem override for
+engineers. Later rules plug in the same way (or via a rule-evaluator system once
+there are several).
+
+## D17. Turret cost = refined essence only
+Ties defense to refining (core dilemma) and fixes ore starvation found by the
+balance bot.
+
+## D18. Stress postponed, capsule stays the "storage" target
+Owner decision, session 2.

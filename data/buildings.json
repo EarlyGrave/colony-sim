@@ -28,7 +28,7 @@
 		"size": [1, 1],
 		"color": "#5f9ea0",
 		"max_hp": 120,
-		"cost": {"essence_ore": 10, "refined_essence": 4},
+		"cost": {"refined_essence": 10},
 		"buildable": true,
 		"turret": {"range": 6.5, "damage": 9, "cooldown_ticks": 8},
 		"wear_per_shot": 1.2,

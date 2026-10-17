@@ -12,8 +12,6 @@ const HINTS := {
 	"stockpile": "Склад: нажми два угла области.",
 	"waste_dump": "Свалка отходов: нажми два угла области. Отходы там заражают слабее.",
 	"clear_zone": "Убрать зону: нажми два угла области.",
-	"refinery": "Установка (20 руды): нажми, где поставить (2×2).",
-	"turret": "Турель (10 руды + 4 эссенции): нажми, где поставить.",
 }
 
 var sim: Simulation
@@ -117,7 +115,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _on_tool_selected(t: String) -> void:
 	tool = t
 	world.pending_corner = Vector2i(-1, -1)
-	hud.show_message(HINTS.get(t, ""), 5.0)
+	if t in BUILD_TOOLS:
+		var def: Dictionary = sim.defs.buildings[t]
+		var cost: Array[String] = []
+		for item in def["cost"]:
+			cost.append("%s ×%d" % [str(sim.defs.items[item]["name"]).to_lower(), def["cost"][item]])
+		hud.show_message("%s (%s): нажми, где поставить (%d×%d)." % [def["name"], ", ".join(cost), def["size"][0], def["size"][1]], 5.0)
+	else:
+		hud.show_message(HINTS.get(t, ""), 5.0)
 
 
 func _on_tapped(world_pos: Vector2) -> void:
