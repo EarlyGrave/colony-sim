@@ -143,6 +143,7 @@ func _draw() -> void:
 	_draw_colonists()
 	_draw_enemies()
 	_draw_shots()
+	_draw_wave_warning()
 	_draw_particles()
 	_draw_selection()
 
@@ -300,6 +301,29 @@ func _on_enemy_killed(id: int) -> void:
 		var a := randf() * TAU
 		_particles.append([p, Vector2(cos(a), sin(a)) * randf_range(30, 90), 0.0, randf_range(0.3, 0.6),
 			Color(0.75, 0.15, 0.12) if i % 2 == 0 else Color(0.35, 0.08, 0.1), randf_range(2.0, 4.0)])
+
+
+func _draw_wave_warning() -> void:
+	var t: ThreatSystem = sim.threats
+	if not t.awakened or t.next_spawn_origin.x < 0:
+		return
+	if not t.wave_active and t.next_wave_tick - sim.tick >= int(t.cfg["warning_ticks"]):
+		return
+	var o := t.next_spawn_origin
+	var c := Vector2(o) * TILE + Vector2(TILE, TILE) * 0.5
+	# Arrow points inward, from the nearest map edge toward the center.
+	var inward := Vector2(sim.map_center() - o).normalized()
+	if o.x == 0 or o.x == sim.map.width - 1:
+		inward = Vector2(1.0 if o.x == 0 else -1.0, 0.0)
+	else:
+		inward = Vector2(0.0, 1.0 if o.y == 0 else -1.0)
+	var pulse := 0.5 + 0.5 * sin(_time * 6.0)
+	var col := Color(1.0, 0.15, 0.1, 0.45 + 0.5 * pulse)
+	var side := Vector2(-inward.y, inward.x)
+	var tip := c + inward * TILE * (1.2 + 0.4 * pulse)
+	var base := c - inward * TILE * 0.2
+	draw_colored_polygon(PackedVector2Array([tip, base + side * TILE * 0.6, base - side * TILE * 0.6]), col)
+	draw_circle(c, TILE * (0.5 + 0.3 * pulse), Color(col, 0.3))
 
 
 func _draw_shots() -> void:

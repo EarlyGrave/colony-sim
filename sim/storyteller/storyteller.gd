@@ -20,6 +20,8 @@ func _init(p_sim: Simulation) -> void:
 		_say("awakened", "Из-под земли доносится скрежет. Твари проснулись."))
 	sim.listen(sim.bus.wave_started, func(i: int, _s: float) -> void:
 		_say("wave", "Волна %d! Колонисты бегут в капсулу." % i))
+	sim.listen(sim.bus.wave_incoming, func(origin: Vector2i, _t: int) -> void:
+		_say("wave_incoming", "Твари идут с %s!" % sim.threats.side_name(origin)))
 	sim.listen(sim.bus.building_broken, func(id: int) -> void:
 		var b := sim.buildings.get_by_id(id)
 		if b:

@@ -62,6 +62,7 @@
 		"turret_aggro_range": 4.0,
 		"retarget_ticks": 20,
 		"spawn_scatter": 3,
+		"warning_ticks": 200,
 		"turret_target_bonus": 1000.0,
 		"priority_weight": 100.0
 	}
