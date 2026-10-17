@@ -168,3 +168,7 @@ Per-skill perk points (points = skill level − perks bought in that skill); ski
 starting levels 0–4; respec allowed for refined essence; active perks manual only;
 total waste/contamination reduction from perks capped at 40%; passion affects xp only;
 no vibration — letter + badge. Plan: docs/prompter_inbox.md §12.
+
+## D24. Sub-streams of randomness allowed
+New systems may use their own RandomNumberGenerator seeded deterministically from the sim seed
+(e.g. contracts) so adding a system doesn't shift existing random streams. Still fully deterministic.
