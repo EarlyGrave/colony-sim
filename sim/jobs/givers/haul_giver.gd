@@ -46,8 +46,9 @@ func find(c: Colonist) -> Job:
 			feed = js._reserve_limited(item, cell, mini(count, b.input_space(item)))
 		if b != null and feed > 0:
 			job = js._haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.BUILDING_IN, JobSystem.NO_CELL, b.id, item, feed)
-		elif not sim.items.is_stored(cell):
-			var dst := js._storage_for(item, cell, c)
+		else:
+			var dst := js._storage_for(item, cell, c) if not sim.items.is_stored(cell) else sim.items.better_storage(cell, func(x: Vector2i) -> bool:
+				return not js._free(c, "dst:%d,%d" % [x.x, x.y]))  # region crafting: priority moves
 			if dst.x >= 0:
 				job = js._haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.CELL, dst, -1, item, count)
 		if job != null:

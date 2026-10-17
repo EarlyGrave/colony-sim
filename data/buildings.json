@@ -24,6 +24,18 @@
 		"wear_per_batch": 12,
 		"threat_priority": 3
 	},
+	"workbench": {
+		"name": "Верстак",
+		"size": [2, 1],
+		"color": "#8a6a3a",
+		"max_hp": 150,
+		"cost": {"essence_ore": 15},
+		"buildable": true,
+		"bills": true,
+		"input_capacity": 10,
+		"output_capacity": 20,
+		"threat_priority": 3
+	},
 	"turret": {
 		"name": "Турель",
 		"size": [1, 1],

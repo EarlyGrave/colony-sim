@@ -45,6 +45,11 @@ signal colonist_downed(colonist_id: int)
 signal injury_added(colonist_id: int, part: String, kind: String, severity: float)
 # endregion
 
+# region crafting
+signal bills_changed(building_id: int)
+signal zone_settings_changed(cell: Vector2i)
+# endregion
+
 # --- Game flow ---
 signal game_over(reason: String)
 signal story_event(event_id: String, text: String)
