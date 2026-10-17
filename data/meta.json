@@ -1,0 +1,28 @@
+{
+	"_comment": "Meta-progression between runs: legacy weights, unlock shop, next-batch rules. Capabilities, not raw power.",
+	"legacy": {
+		"per_day": 1.0,
+		"per_contract": 3,
+		"per_essence_delivered": 0.1,
+		"per_prisoner_freed": 2,
+		"per_prisoner_stayed": 1,
+		"per_perk_learned": 1,
+		"debt_points_weight": 1.0,
+		"min_days_for_award": 1
+	},
+	"next_batch": {
+		"contamination_keep": 0.5,
+		"min_days": 3
+	},
+	"scout_cells": 12,
+	"unlocks": {
+		"rule_raid_engineer": {"name": "Знание: инженер чинит турели", "desc": "Правило «Инженер» включено со старта.", "cost": 6, "kind": "start_rule", "rule": "raid_engineer"},
+		"rule_refine_cap": {"name": "Знание: лимит заражения", "desc": "Правило «Лимит заражения» включено со старта.", "cost": 8, "kind": "start_rule", "rule": "refine_cap"},
+		"rule_ore_reserve": {"name": "Знание: резерв руды", "desc": "Правило «Резерв руды» включено со старта.", "cost": 5, "kind": "start_rule", "rule": "ore_reserve"},
+		"skill_xp": {"name": "Опыт прошлых смен", "desc": "Каждый колонист стартует с лишним опытом в лучшем навыке.", "cost": 10, "kind": "start_xp", "amount": 40.0},
+		"forecast": {"name": "Карты планеты", "desc": "Прогноз конца планеты открыт сразу.", "cost": 12, "kind": "reveal_forecast"},
+		"scout": {"name": "Разведзонд", "desc": "Ближайшая руда отмечена для добычи с самого начала.", "cost": 8, "kind": "scout"},
+		"crate_food": {"name": "Ящик: провизия", "desc": "Дополнительные припасы еды при посадке.", "cost": 5, "kind": "crate", "items": {"raw_food": 30}},
+		"crate_parts": {"name": "Ящик: детали", "desc": "Запас деталей для первых построек.", "cost": 9, "kind": "crate", "items": {"machine_parts": 10}}
+	}
+}

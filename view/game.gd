@@ -38,8 +38,8 @@ func _ready() -> void:
 	hud.colonist_card_pressed.connect(_select_colonist)
 	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
 		camera.position = WorldView.cell_to_world(cell))
-	EventBus.game_over.connect(func(reason: String) -> void: hud.show_game_over(reason))
-	new_game(_initial_seed())
+	EventBus.game_over.connect(_on_game_over_meta)  # region meta
+	new_game(_initial_seed(), MetaStore.load_state().make_opts())  # region meta
 	_setup_save_load()  # save-load
 
 
@@ -73,11 +73,40 @@ func _random_seed() -> int:
 	return int(Time.get_unix_time_from_system() * 1000.0) % 1000000
 
 
-func new_game(seed_value: int) -> void:
+# region meta
+var _meta_layer: CanvasLayer
+
+
+func _on_game_over_meta(_reason: String) -> void:
+	var meta := MetaStore.load_state()
+	meta.record_run(sim.run_summary)
+	MetaStore.save_state(meta)
+	_close_meta()
+	_meta_layer = CanvasLayer.new()
+	_meta_layer.layer = 60
+	add_child(_meta_layer)
+	var scr := MetaScreen.new(meta, sim.run_summary)
+	scr.new_link.connect(func(o: Dictionary) -> void:
+		_close_meta()
+		new_game(_random_seed(), o))
+	scr.next_batch.connect(func(s: int, o: Dictionary) -> void:
+		_close_meta()
+		new_game(s, o))
+	_meta_layer.add_child(scr)
+
+
+func _close_meta() -> void:
+	if _meta_layer != null:
+		_meta_layer.queue_free()
+		_meta_layer = null
+# endregion
+
+
+func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	if sim:
 		world.unbind()
 		sim.dispose()
-	sim = Simulation.new(seed_value, EventBus)
+	sim = Simulation.new(seed_value, EventBus, null, opts)  # region meta
 	sim.start_new_game()
 	combat_selected = -1  # region combat
 	world.bind(sim)
