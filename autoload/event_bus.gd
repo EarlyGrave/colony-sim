@@ -39,6 +39,11 @@ signal colonist_died(colonist_id: int)
 signal alarm_changed(active: bool)
 signal rule_changed(rule_id: String, on: bool)
 
+# region health
+signal colonist_downed(colonist_id: int)
+signal injury_added(colonist_id: int, part: String, kind: String, severity: float)
+# endregion
+
 # --- Game flow ---
 signal game_over(reason: String)
 signal story_event(event_id: String, text: String)

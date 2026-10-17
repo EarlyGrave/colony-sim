@@ -13,6 +13,9 @@ var hidden := false
 var sick_until := 0
 ## Engineers can be sent to repair turrets during raids (rule "raid_engineer").
 var engineer := false
+# region health
+var health: HealthState = null
+# endregion
 
 var job: Job = null
 var idle_until := 0
@@ -35,7 +38,7 @@ func _init(p_id: int, p_name: String, p_cell: Vector2i, cfg: Dictionary) -> void
 
 
 func is_sick(now: int) -> bool:
-	return sick_until > now
+	return sick_until > now or (health != null and health.is_sick())  # region health
 
 
 func is_unreachable(key: String, now: int) -> bool:

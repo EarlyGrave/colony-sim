@@ -30,6 +30,9 @@ var buildings: BuildingSystem
 var contamination: ContaminationSystem
 var threats: ThreatSystem
 var storyteller: Storyteller
+# region health
+var health: HealthSystem
+# endregion
 
 var _connections: Array = []  # [signal, callable] pairs made on the bus
 
@@ -69,6 +72,9 @@ func _init_systems() -> void:
 	contamination = ContaminationSystem.new(self)
 	threats = ThreatSystem.new(self)
 	storyteller = Storyteller.new(self)
+	# region health
+	health = HealthSystem.new(self)
+	# endregion
 
 
 func _place_starting_colony() -> void:
@@ -100,6 +106,7 @@ func step() -> void:
 		return
 	tick += 1
 	colonists.tick()
+	health.tick()  # region health
 	threats.tick()
 	contamination.tick()
 	storyteller.tick()
@@ -198,7 +205,7 @@ func dispose() -> void:
 			sig.disconnect(pair[1])
 	_connections.clear()
 	# Break RefCounted cycles (systems hold a reference back to the sim).
-	for sys: Object in [items, colonists, jobs, buildings, contamination, threats, storyteller]:
+	for sys: Object in [items, colonists, jobs, buildings, contamination, threats, storyteller, health]:
 		if sys != null:
 			sys.set("sim", null)
 	if colonists:
@@ -211,3 +218,4 @@ func dispose() -> void:
 	contamination = null
 	threats = null
 	storyteller = null
+	health = null
