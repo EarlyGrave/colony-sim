@@ -3,6 +3,8 @@ extends Job
 ## Stand at a production building and run its recipe until one batch is done.
 
 var building_id: int
+## Fractional work progress carried between ticks (skill speed).
+var _acc := 0.0
 
 
 func _init(p_id: int) -> void:
@@ -19,7 +21,10 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	return Status.DONE if sim.buildings.work(b) else Status.RUNNING
+	_acc += sim.jobs.work_tick(c, "operating")
+	var steps := int(_acc)
+	_acc -= steps
+	return Status.DONE if sim.buildings.work(b, steps) else Status.RUNNING
 
 
 func describe() -> String:

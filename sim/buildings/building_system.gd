@@ -74,10 +74,10 @@ func place(def_id: String, c: Vector2i, pay := true) -> Building:
 
 ## One tick of operator work on a production building.
 ## Returns true when a batch completed this tick.
-func work(b: Building) -> bool:
-	if not b.can_run_recipe():
+func work(b: Building, steps := 1) -> bool:
+	if not b.can_run_recipe() or steps <= 0:
 		return false
-	b.progress += 1
+	b.progress += steps
 	if b.progress < int(b.recipe["work_ticks"]):
 		return false
 	b.progress = 0

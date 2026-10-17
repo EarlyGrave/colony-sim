@@ -1,0 +1,20 @@
+{
+	"_comment": "Skill levels 0..max_level. Work speed multiplier = 1 + speed_per_level * level. XP to go from level L to L+1 = xp_base + xp_step * L. Passion multiplies XP gain.",
+	"max_level": 20,
+	"xp_base": 100,
+	"xp_step": 20,
+	"xp_per_work_tick": 1.0,
+	"speed_per_level": 0.05,
+	"passion_xp": {"none": 1.0, "minor": 1.5, "major": 2.0},
+	"init": {"level_min": 0, "level_max": 8, "minor_chance": 0.25, "major_chance": 0.1},
+	"skills": {
+		"mining": {"label": "Добыча"},
+		"construction": {"label": "Стройка"},
+		"crafting": {"label": "Ремесло"},
+		"shooting": {"label": "Стрельба"},
+		"melee": {"label": "Ближний бой"},
+		"medicine": {"label": "Медицина"},
+		"plants": {"label": "Растения"},
+		"operating": {"label": "Установки"}
+	}
+}

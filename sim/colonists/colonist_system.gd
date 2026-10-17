@@ -19,6 +19,9 @@ func spawn(cell: Vector2i) -> Colonist:
 	var nm := NAMES[sim.rng.randi_range(0, NAMES.size() - 1)]
 	var c := Colonist.new(_next_id, nm, cell, sim.defs.balance["colonist"])
 	_next_id += 1
+	# region jobs-core
+	c.skills = Skills.create(sim.defs, sim.rng)
+	# endregion
 	list.append(c)
 	return c
 

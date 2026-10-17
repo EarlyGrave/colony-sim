@@ -4,7 +4,7 @@ extends Job
 
 var target: Vector2i
 var _stand := Vector2i(-1, -1)
-var _work := 0
+var _work := 0.0
 
 
 func _init(p_target: Vector2i) -> void:
@@ -24,7 +24,7 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	_work += 1
+	_work += sim.jobs.work_tick(c, "mining")
 	if _work < int(sim.defs.balance["mining"]["work_ticks"]):
 		return Status.RUNNING
 	var cfg: Dictionary = sim.defs.balance["mining"]

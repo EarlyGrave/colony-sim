@@ -14,6 +14,10 @@ var jobs: Dictionary = {}
 var balance: Dictionary = {}
 var events: Dictionary = {}
 var rules: Dictionary = {}
+# region jobs-core
+var work: Dictionary = {}
+var skills: Dictionary = {}
+# endregion
 
 static var _default: Defs = null
 
@@ -36,6 +40,10 @@ func load_from(dir: String) -> void:
 	balance = _load_json(dir + "balance.json")
 	events = _load_json(dir + "events.json")
 	rules = _load_json(dir + "rules.json")
+	# region jobs-core
+	work = _load_json(dir + "work.json")
+	skills = _load_json(dir + "skills.json")
+	# endregion
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -50,6 +58,10 @@ func duplicate_defs() -> Defs:
 	d.balance = balance.duplicate(true)
 	d.events = events.duplicate(true)
 	d.rules = rules.duplicate(true)
+	# region jobs-core
+	d.work = work.duplicate(true)
+	d.skills = skills.duplicate(true)
+	# endregion
 	return d
 
 

@@ -1,0 +1,16 @@
+{
+	"_comment": "Work types in giver order (earlier = tried first within one priority). Priorities: 1 (first) .. 4, 0 = off. Each giver id must be registered in sim/jobs/giver_registry.gd.",
+	"default_priority": 3,
+	"max_priority": 4,
+	"types": {
+		"repair": {"label": "Ремонт", "skill": "construction", "givers": ["repair"]},
+		"operating": {"label": "Установки", "skill": "operating", "givers": ["operate"]},
+		"hauling": {"label": "Перенос", "skill": "", "givers": ["haul"]},
+		"mining": {"label": "Добыча", "skill": "mining", "givers": ["mine"]},
+		"construction": {"label": "Стройка", "skill": "construction", "givers": []},
+		"crafting": {"label": "Ремесло", "skill": "crafting", "givers": []},
+		"cooking": {"label": "Кухня", "skill": "crafting", "givers": []},
+		"growing": {"label": "Посевы", "skill": "plants", "givers": []},
+		"doctoring": {"label": "Лечение", "skill": "medicine", "givers": []}
+	}
+}

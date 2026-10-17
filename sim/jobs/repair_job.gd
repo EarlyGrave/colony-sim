@@ -3,7 +3,7 @@ extends Job
 ## Walk to a damaged / worn / broken building and fix it.
 
 var building_id: int
-var _work := 0
+var _work := 0.0
 
 
 func _init(p_id: int) -> void:
@@ -20,7 +20,7 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	_work += 1
+	_work += sim.jobs.work_tick(c, "repair")
 	if _work < int(sim.defs.balance["repair"]["work_ticks"]):
 		return Status.RUNNING
 	sim.buildings.repair(b)
