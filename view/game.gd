@@ -27,6 +27,7 @@ var _accum := 0.0
 
 
 func _ready() -> void:
+	_apply_ui_scale()
 	camera.tapped.connect(_on_tapped)
 	hud.tool_selected.connect(_on_tool_selected)
 	hud.speed_selected.connect(set_speed)
@@ -35,6 +36,17 @@ func _ready() -> void:
 	EventBus.story_event.connect(func(_id: String, text: String) -> void: hud.show_message(text, 5.0))
 	EventBus.game_over.connect(func(reason: String) -> void: hud.show_game_over(reason))
 	new_game(_initial_seed())
+
+
+## Scales the whole 2D/UI by screen density so touch targets keep a physical
+## size: ~0.85 CSS px per logical px on phones/tablets, 1:1 on desktop.
+func _apply_ui_scale() -> void:
+	var dpr := DisplayServer.screen_get_scale()
+	if OS.has_feature("web"):
+		var v: Variant = JavaScriptBridge.eval("window.devicePixelRatio || 1")
+		if v != null:
+			dpr = float(v)
+	get_tree().root.content_scale_factor = clampf(dpr * 0.85, 1.0, 4.0)
 
 
 func _exit_tree() -> void:

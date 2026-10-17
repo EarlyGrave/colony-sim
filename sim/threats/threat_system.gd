@@ -8,10 +8,6 @@ extends RefCounted
 ## (data/balance.json "threat"). Creatures spawn at a map edge, go for key
 ## buildings (by `threat_priority`), and maul colonists caught in the open.
 
-const COLONIST_AGGRO := 5.0
-const TURRET_AGGRO := 4.0
-const RETARGET_TICKS := 20
-
 var sim: Simulation
 var cfg: Dictionary
 var awakened := false
@@ -24,6 +20,7 @@ var kills := 0
 ## Recent turret shots for the view: [from: Vector2, to: Vector2, tick: int]
 var shots: Array = []
 var _next_id := 1
+var _alarm_before_wave := false
 
 
 func _init(p_sim: Simulation) -> void:
@@ -75,7 +72,7 @@ func start_wave() -> void:
 	wave_end_tick = sim.tick + int(cfg["wave_duration_ticks"])
 	var strength := wave_strength(wave_index)
 	var origin := _pick_spawn_origin()
-	var budget := strength
+	var budget := strength if origin.x >= 0 else 0.0
 	var guard := 200
 	while guard > 0:
 		guard -= 1
@@ -89,6 +86,7 @@ func start_wave() -> void:
 		var pick := options[sim.rng.randi_range(0, options.size() - 1)]
 		budget -= float(sim.defs.enemies[pick]["threat_cost"])
 		_spawn(pick, _spawn_cell_near(origin))
+	_alarm_before_wave = sim.alarm
 	sim.set_alarm(true)
 	sim.bus.wave_started.emit(wave_index, strength)
 
@@ -99,7 +97,7 @@ func end_wave() -> void:
 		e.leaving = true
 		e.clear_path()
 	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * sim.ticks_per_day)
-	sim.set_alarm(false)
+	sim.set_alarm(_alarm_before_wave)
 	sim.bus.wave_ended.emit(wave_index)
 
 
@@ -128,12 +126,22 @@ func _pick_spawn_origin() -> Vector2i:
 			_: c = Vector2i(w - 1, t)
 		if sim.pathfinder.reachable(c, home):
 			return c
-	return home
+	# Deterministic fallback: first reachable edge cell.
+	for x in w:
+		for y in [0, h - 1]:
+			if sim.pathfinder.reachable(Vector2i(x, y), home):
+				return Vector2i(x, y)
+	for y in h:
+		for x in [0, w - 1]:
+			if sim.pathfinder.reachable(Vector2i(x, y), home):
+				return Vector2i(x, y)
+	return Vector2i(-1, -1)
 
 
 func _spawn_cell_near(origin: Vector2i) -> Vector2i:
+	var r := int(cfg["spawn_scatter"])
 	for attempt in 12:
-		var c := origin + Vector2i(sim.rng.randi_range(-3, 3), sim.rng.randi_range(-3, 3))
+		var c := origin + Vector2i(sim.rng.randi_range(-r, r), sim.rng.randi_range(-r, r))
 		if sim.pathfinder.reachable(c, origin):
 			return c
 	return origin
@@ -152,7 +160,7 @@ func _tick_enemy(e: Enemy) -> void:
 	e.attack_cd = maxi(0, e.attack_cd - 1)
 	if sim.tick >= e.retarget_at or not _target_valid(e):
 		_choose_target(e)
-		e.retarget_at = sim.tick + RETARGET_TICKS
+		e.retarget_at = sim.tick + int(cfg["retarget_ticks"])
 	if e.target_kind == Enemy.Target.NONE:
 		return
 	var range_ := float(e.def["attack_range"])
@@ -164,7 +172,7 @@ func _tick_enemy(e: Enemy) -> void:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
 				sim.buildings.damage(b, float(e.def["damage"]))
 		elif e.move_toward(b.nearest_cell_to(e.cell), sim) == GridMover.Move.FAILED:
-			e.retarget_at = sim.tick
+			e.retarget_at = sim.tick + 5
 	else:
 		var c := sim.colonists.get_by_id(e.target_id)
 		if Vector2(c.cell).distance_to(Vector2(e.cell)) <= range_:
@@ -175,7 +183,7 @@ func _tick_enemy(e: Enemy) -> void:
 				if c.hp <= 0.0:
 					sim.colonists.kill(c)
 		elif e.move_toward(c.cell, sim) == GridMover.Move.FAILED:
-			e.retarget_at = sim.tick
+			e.retarget_at = sim.tick + 5
 
 
 func _tick_leaving(e: Enemy) -> void:
@@ -196,7 +204,7 @@ func _target_valid(e: Enemy) -> bool:
 func _choose_target(e: Enemy) -> void:
 	var pos := Vector2(e.cell)
 	# 1) Colonists caught in the open nearby.
-	var best_d := COLONIST_AGGRO
+	var best_d := float(cfg["colonist_aggro_range"])
 	e.target_kind = Enemy.Target.NONE
 	for c in sim.colonists.list:
 		if c.alive and not c.hidden:
@@ -213,10 +221,10 @@ func _choose_target(e: Enemy) -> void:
 	for b in sim.buildings.list:
 		var d := b.distance_to(pos)
 		var score: float
-		if b.def.has("turret") and d <= TURRET_AGGRO:
-			score = 1000.0 - d
+		if b.def.has("turret") and d <= float(cfg["turret_aggro_range"]):
+			score = float(cfg["turret_target_bonus"]) - d
 		else:
-			score = float(b.def.get("threat_priority", 0)) * 100.0 - d
+			score = float(b.def.get("threat_priority", 0)) * float(cfg["priority_weight"]) - d
 		if score > best_score:
 			best_score = score
 			best = b
@@ -247,6 +255,8 @@ func _tick_turrets() -> void:
 		var target: Enemy = null
 		var best_d := float(t["range"])
 		for e in enemies:
+			if e.leaving:
+				continue
 			var d := Vector2(e.cell).distance_to(from)
 			if d <= best_d:
 				best_d = d

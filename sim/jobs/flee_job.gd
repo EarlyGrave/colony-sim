@@ -8,9 +8,12 @@ var building_id: int
 func _init(p_id: int) -> void:
 	type = "flee"
 	building_id = p_id
+	fail_key = "flee"
 
 
 func tick(c: Colonist, sim: Simulation) -> int:
+	if not sim.alarm:
+		return Status.DONE
 	var b := sim.buildings.get_by_id(building_id)
 	if b == null:
 		return Status.FAILED

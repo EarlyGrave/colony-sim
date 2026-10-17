@@ -48,13 +48,35 @@ Godot binary for a fresh cloud session: see README "Local setup".
   `set_zone`, `place_building`, `set_alarm`…), never by poking system
   internals from the view. This keeps future replays/saves possible.
 
+## Layout of systems
+| dir | main classes | notes |
+|---|---|---|
+| `sim/core` | `Simulation`, `Defs`, `Ledger` | tick order: colonists → threats → contamination → storyteller |
+| `sim/map` | `MapGrid`, `MapGenerator`, `Pathfinder`, `GridMover` | AStarGrid2D + connected components for O(1) reachability |
+| `sim/items` | `ItemSystem` | one stack per cell; zones = storage; `drop()` spills, records "lost" if no room |
+| `sim/colonists` | `Colonist`, `ColonistSystem` | |
+| `sim/jobs` | `JobSystem` + `*Job` | work-giver style; reservations by string key; flee overrides on alarm |
+| `sim/buildings` | `Building`, `BuildingSystem` | recipes, wear/broken, damage/destroy (buffers spill) |
+| `sim/contamination` | `ContaminationSystem`, `ForecastModel` | |
+| `sim/threats` | `ThreatSystem`, `Enemy` | waves, targeting, turrets |
+| `sim/storyteller` | `Storyteller` | stub: narrates via `story_event` |
+| `view` | `GameController`, `WorldView`, `CameraController`, `Hud` | |
+
+Balance numbers: `data/balance.json`. `tools/balance_report.gd` prints wave
+outcomes for several seeds (`godot --headless --path . -s tools/balance_report.gd`).
+Shared test scenarios: `tests/scenario.gd`.
+
 ## Conventions
 - Code, comments, commit messages: English. Reports to the owner: Russian.
 - Static typing everywhere it is cheap (`var x: int`, typed arrays).
 - Tabs for indentation (Godot default).
 - Tests: `tests/test_*.gd`, extend `TestCase`, methods `test_*`.
-  Every stage adds tests for its acceptance criteria.
+  Every stage adds tests for its acceptance criteria. Use `make_sim()`
+  (auto-disposed) and `peaceful_defs()` when a test is not about creatures.
+  The runner fails a test on ANY engine/script error (custom `Logger`).
 - Small meaningful commits; push after each stage; **never push with failing tests.**
+- UI scale: stretch mode "disabled" + `content_scale_factor = devicePixelRatio * 0.85`
+  (set in `GameController._apply_ui_scale`), so buttons keep physical size on phones.
 - UI is touch-first: big buttons (≥ 64 px), no hover, no right click,
   pan/zoom with fingers and mouse. Mouse events with
   `device == InputEvent.DEVICE_ID_EMULATION` are touch duplicates — ignore them

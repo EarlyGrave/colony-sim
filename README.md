@@ -5,8 +5,14 @@ essence ore (safe) and refine it (dangerous: waste contaminates the planet and
 draws creature waves). Godot 4.7 / GDScript, web build on GitHub Pages.
 
 ## Play
-Latest build of `main`: `https://<owner>.github.io/colony-sim/` (GitHub Pages,
-updated automatically by CI on every push to `main`).
+Latest build of `main`: https://earlygrave.github.io/colony-sim/ (GitHub Pages,
+updated automatically by CI on every push to `main`). Add `?seed=42` to the
+URL for a fixed map.
+
+How to play (touch or mouse): drag to pan, pinch / wheel to zoom.
+Bottom bar tools: **Добыча** (two taps = area of ore to mine), **Склад**,
+**Свалка** (waste dump), **Установка** (refinery), **Турель**, **Тревога**
+(colonists hide in the capsule). Top: speed `|| 1x 2x 3x`.
 
 ## Local setup
 ```bash

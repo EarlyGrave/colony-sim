@@ -74,7 +74,8 @@ func drop(c: Vector2i, item_id: String, n: int) -> int:
 				left -= add_at(nb, item_id, left)
 				queue.append(nb)
 	if left > 0:
-		push_error("ItemSystem.drop: no room for %d %s" % [left, item_id])
+		# No room anywhere reachable: the items are lost, but accounted for.
+		sim.ledger.record_consumed(item_id, left, "lost")
 	return left
 
 

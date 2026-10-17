@@ -6,7 +6,6 @@ extends RefCounted
 ## Priorities come from data/jobs.json. Within one priority the nearest
 ## candidate wins. Fleeing overrides everything while the alarm is on.
 
-const IDLE_RETRY_TICKS := 10
 const NO_CELL := Vector2i(-1, -1)
 
 var sim: Simulation
@@ -14,10 +13,12 @@ var sim: Simulation
 var reserved: Dictionary = {}
 ## Provider methods sorted by priority (highest first).
 var _providers: Array[Callable] = []
+var _idle_retry: int
 
 
 func _init(p_sim: Simulation) -> void:
 	sim = p_sim
+	_idle_retry = int(sim.defs.balance["colonist"]["idle_retry_ticks"])
 	var table := {
 		"repair": _find_repair,
 		"operate": _find_operate,
@@ -32,7 +33,7 @@ func _init(p_sim: Simulation) -> void:
 
 
 func tick_colonist(c: Colonist) -> void:
-	if sim.alarm and not c.hidden and (c.job == null or c.job.type != "flee"):
+	if sim.alarm and not c.hidden and (c.job == null or c.job.type != "flee") and not c.is_unreachable("flee", sim.tick):
 		var shelter := sim.buildings.find_shelter(c.cell) if sim.buildings else null
 		if shelter != null:
 			end_job(c, Job.Status.FAILED, false)
@@ -46,7 +47,7 @@ func tick_colonist(c: Colonist) -> void:
 			return
 		var j := assign(c)
 		if j == null:
-			c.idle_until = sim.tick + IDLE_RETRY_TICKS
+			c.idle_until = sim.tick + _idle_retry
 			return
 		_start(c, j)
 	var before := c.cell
@@ -75,7 +76,7 @@ func end_job(c: Colonist, status: int, mark_unreachable := true) -> void:
 	c.job = null
 	if status == Job.Status.FAILED and mark_unreachable and j.fail_key != "":
 		c.unreachable[j.fail_key] = sim.tick + int(sim.defs.balance["colonist"]["unreachable_cooldown_ticks"])
-		c.idle_until = sim.tick + IDLE_RETRY_TICKS
+		c.idle_until = sim.tick + _idle_retry
 
 
 func is_reserved(key: String) -> bool:

@@ -27,11 +27,13 @@ func tick(c: Colonist, sim: Simulation) -> int:
 	_work += 1
 	if _work < int(sim.defs.balance["mining"]["work_ticks"]):
 		return Status.RUNNING
-	var got := sim.map.take_from_deposit(target, int(sim.defs.balance["mining"]["yield"]))
+	var cfg: Dictionary = sim.defs.balance["mining"]
+	var item: String = cfg["item"]
+	var got := sim.map.take_from_deposit(target, int(cfg["yield"]))
 	if got > 0:
-		sim.ledger.record_produced("essence_ore", got, "mining")
-		sim.items.drop(c.cell, "essence_ore", got)
-		sim.bus.item_mined.emit(target, "essence_ore", got)
+		sim.ledger.record_produced(item, got, "mining")
+		sim.items.drop(c.cell, item, got)
+		sim.bus.item_mined.emit(target, item, got)
 	return Status.DONE
 
 

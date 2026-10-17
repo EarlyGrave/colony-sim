@@ -137,9 +137,10 @@ func destroy(b: Building) -> void:
 		for item: String in buf:
 			sim.items.drop(b.cell, item, int(buf[item]))
 		buf.clear()
-	for c in sim.colonists.list:
-		if c.hidden and c.job == null:
-			c.hidden = false
+	if b.def.get("shelter", false):
+		for c in sim.colonists.list:
+			if c.hidden and b.contains(c.cell):
+				c.hidden = false
 	sim.bus.building_destroyed.emit(b.id)
 	if b.def.get("critical", false):
 		sim.end_game("hq_destroyed")

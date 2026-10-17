@@ -18,9 +18,9 @@ func move_toward(target: Vector2i, sim: Simulation) -> int:
 		clear_path()
 		return Move.ARRIVED
 	if goal != target or path.is_empty():
+		# Keep move_t: a chaser re-pathing every tick must still make steps.
 		goal = target
 		path = sim.pathfinder.find_path(cell, target)
-		move_t = 0
 		if path.is_empty():
 			return Move.FAILED
 	move_t += 1

@@ -20,9 +20,11 @@
 		"max_hp": 100,
 		"move_ticks": 3,
 		"carry_capacity": 10,
-		"unreachable_cooldown_ticks": 200
+		"unreachable_cooldown_ticks": 200,
+		"idle_retry_ticks": 10
 	},
 	"mining": {
+		"item": "essence_ore",
 		"work_ticks": 30,
 		"yield": 5
 	},
@@ -48,6 +50,12 @@
 		"base_strength": 2.5,
 		"per_wave": 2.0,
 		"per_refined": 0.05,
-		"per_contamination": 0.15
+		"per_contamination": 0.15,
+		"colonist_aggro_range": 5.0,
+		"turret_aggro_range": 4.0,
+		"retarget_ticks": 20,
+		"spawn_scatter": 3,
+		"turret_target_bonus": 1000.0,
+		"priority_weight": 100.0
 	}
 }

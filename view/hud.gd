@@ -45,22 +45,27 @@ func _ready() -> void:
 	root.theme = _make_theme()
 	add_child(root)
 
-	# --- Top bar: stats + speed ---
+	# --- Top bar: stats + speed (wraps on narrow screens) ---
 	var top := PanelContainer.new()
 	top.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	root.add_child(top)
-	var top_row := HBoxContainer.new()
-	top_row.add_theme_constant_override("separation", 12)
-	top.add_child(top_row)
+	var top_flow := HFlowContainer.new()
+	top_flow.add_theme_constant_override("h_separation", 12)
+	top_flow.add_theme_constant_override("v_separation", 4)
+	top.add_child(top_flow)
 	var labels := VBoxContainer.new()
 	labels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	labels.custom_minimum_size.x = 300
 	labels.add_theme_constant_override("separation", 0)
-	top_row.add_child(labels)
+	top_flow.add_child(labels)
 	_stats = _label(labels)
 	_forecast = _label(labels)
 	_threat = _label(labels)
+	var speed_row := HBoxContainer.new()
+	speed_row.add_theme_constant_override("separation", 8)
+	top_flow.add_child(speed_row)
 	for i in 4:
-		var b := _button(top_row, "||" if i == 0 else "%dx" % i, Vector2(72, 72))
+		var b := _button(speed_row, "||" if i == 0 else "%dx" % i, Vector2(72, 64))
 		b.toggle_mode = true
 		b.pressed.connect(func() -> void: speed_selected.emit(i))
 		_speed_buttons.append(b)
@@ -91,10 +96,13 @@ func _ready() -> void:
 
 	# --- Message line above the bottom bar ---
 	_message = Label.new()
-	_message.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_message.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_message.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_message.position.y -= BTN_MIN.y + 30
+	_message.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_message.offset_left = 12
+	_message.offset_right = -12
+	_message.offset_top = -(BTN_MIN.y + 110)
+	_message.offset_bottom = -(BTN_MIN.y + 24)
+	_message.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message.add_theme_color_override("font_outline_color", Color.BLACK)
 	_message.add_theme_constant_override("outline_size", 6)
@@ -169,15 +177,15 @@ func _process(_delta: float) -> void:
 	if sim == null:
 		return
 	var it := sim.items
-	_stats.text = "День %d   Руда %d   Эссенция %d   Отходы %d   Колонистов %d" % [
+	_stats.text = "День %d · Руда %d · Эссенция %d · Отходы %d · Люди %d" % [
 		sim.day() + 1, it.count_stored("essence_ore"), it.count_stored("refined_essence"),
 		it.count_world("waste"), sim.colonists.alive_count()]
 	var cont := sim.contamination
 	if cont.revealed:
 		var f := cont.forecast()
-		_forecast.text = "Заражение %.1f%%   Прогноз конца: ~%.0f ± %.0f дн." % [cont.fraction() * 100.0, f["days"], f["error"]]
+		_forecast.text = "Заражение %.1f%% · Конец через ~%.0f ± %.0f дн." % [cont.fraction() * 100.0, f["days"], f["error"]]
 	else:
-		_forecast.text = "Заражение %.1f%%   Прогноз конца: неизвестен" % (cont.fraction() * 100.0)
+		_forecast.text = "Заражение %.1f%% · Прогноз конца неизвестен" % (cont.fraction() * 100.0)
 	_threat.text = _threat_text()
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
 	if _message.text != "" and Time.get_ticks_msec() / 1000.0 > _message_until:
@@ -193,12 +201,12 @@ func _threat_text() -> String:
 	if not t.awakened:
 		return "Твари спят"
 	var ticks := t.next_wave_tick - sim.tick
-	return "Следующая волна через %.1f ч (сила ~%.0f)" % [ticks * 24.0 / sim.ticks_per_day, t.wave_strength(t.wave_index + 1)]
+	return "Волна через %.1f ч, сила ~%.0f" % [ticks * 24.0 / sim.ticks_per_day, t.wave_strength(t.wave_index + 1)]
 
 
 func _label(parent: Control) -> Label:
 	var l := Label.new()
-	l.clip_text = true
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	parent.add_child(l)
 	return l
 
@@ -214,7 +222,7 @@ func _button(parent: Control, text: String, min_size: Vector2) -> Button:
 
 func _make_theme() -> Theme:
 	var th := Theme.new()
-	th.default_font_size = 22
+	th.default_font_size = 20
 	var panel := StyleBoxFlat.new()
 	panel.bg_color = Color(0.06, 0.06, 0.08, 0.82)
 	panel.set_content_margin_all(8)

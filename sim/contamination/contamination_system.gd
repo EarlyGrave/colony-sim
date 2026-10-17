@@ -51,10 +51,13 @@ func waste_units() -> float:
 		var zone := sim.map.get_zone(c)
 		var f := float(sim.defs.zones[zone]["waste_emission_factor"]) if zone != "" else 1.0
 		s += f * int(st["count"])
-	for col in sim.colonists.list:
-		if col.carry_item == "waste":
-			s += col.carry_count
-	s += sim.buildings.count_item("waste")
+	for item_id: String in sim.defs.items:
+		if not sim.defs.items[item_id].get("contaminates", false):
+			continue
+		for col in sim.colonists.list:
+			if col.carry_item == item_id:
+				s += col.carry_count
+		s += sim.buildings.count_item(item_id)
 	return s
 
 

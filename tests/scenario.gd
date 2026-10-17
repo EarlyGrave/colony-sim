@@ -74,10 +74,12 @@ static func run_waves(sim: Simulation, max_waves: int, intervene := false, max_t
 	var built := [0]
 	if intervene:
 		var base := sim.buildings.count_of("turret")
+		var player_rng := RandomNumberGenerator.new()
+		player_rng.seed = sim.seed_value
 		sim.bus.wave_ended.connect(func(i: int) -> void:
 			var want := base + i
 			while sim.buildings.count_of("turret") < want:
-				var angle := sim.rng.randf() * TAU
+				var angle := player_rng.randf() * TAU
 				var near := sim.map_center() + Vector2i(roundi(cos(angle) * 5.0), roundi(sin(angle) * 5.0))
 				var spot := find_spot(sim, "turret", near, 0)
 				if sim.place_building("turret", spot) == null:
