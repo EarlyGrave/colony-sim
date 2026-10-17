@@ -74,6 +74,7 @@ func complete_scrub(c: Colonist, cell: Vector2i) -> void:
 	var amount := minf(float(cl["contamination_per_scrub"]), sim.contamination.level)
 	sim.contamination.level -= amount
 	scrubbed_total += amount
+	sim.mutation.scrub_at(cell)  # region mutation
 	sim.bus.waste_scrubbed.emit(c.id, cell, amount)
 	if sim.health != null and _rng.randf() < float(cl["illness_chance"]):
 		sim.health.add_illness(c, str(cl["illness_id"]), float(cl["illness_severity"]), int(cl["illness_ticks"]))

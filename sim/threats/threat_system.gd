@@ -303,6 +303,11 @@ func _spawn(def_id: String, c: Vector2i) -> Enemy:
 	var e := Enemy.new(_next_id, def_id, sim.defs.enemies[def_id], c)
 	_next_id += 1
 	enemies.append(e)
+	# region mutation: creatures born on mutated ground are tougher
+	if sim.mutation.is_mutated(c):
+		e.max_hp *= 1.0 + float(sim.defs.mutation["enemy_hp_bonus"])
+		e.hp = e.max_hp
+	# endregion
 	return e
 
 
@@ -322,7 +327,7 @@ func _tick_enemy(e: Enemy) -> void:
 			e.clear_path()
 			if e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
-				sim.buildings.damage(b, float(e.def["damage"]))
+				sim.buildings.damage(b, float(e.def["damage"]) * sim.mutation.enemy_damage_mult(e.cell))
 		elif _approach_building(e, b) == GridMover.Move.FAILED:
 			e.retarget_at = sim.tick + 5
 	else:
@@ -336,7 +341,7 @@ func _tick_enemy(e: Enemy) -> void:
 				if dodge > 0.0 and not e.def.get("ranged", false) and sim.rng.randf() < dodge:
 					return
 				# endregion
-				sim.health.apply_damage(c, float(e.def["damage"]), "", str(e.def.get("damage_kind", "bite")))  # region health
+				sim.health.apply_damage(c, float(e.def["damage"]) * sim.mutation.enemy_damage_mult(e.cell), "", str(e.def.get("damage_kind", "bite")))  # region health
 		elif e.move_toward(c.cell, sim) == GridMover.Move.FAILED:
 			e.retarget_at = sim.tick + 5
 

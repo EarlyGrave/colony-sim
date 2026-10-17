@@ -119,3 +119,7 @@ signal patrol_spotted(colonist_id: int, cell: Vector2i, enemies: int)
 signal waste_scrubbed(colonist_id: int, cell: Vector2i, amount: float)
 signal patrol_route_changed(count: int)
 # endregion
+# region mutation
+signal cell_mutated(cell: Vector2i)
+signal cell_purified(cell: Vector2i)
+# endregion

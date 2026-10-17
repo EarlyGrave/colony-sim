@@ -60,6 +60,7 @@ func harvest(c: Vector2i, harvester: Colonist = null) -> int:
 	if sim.perks.consume_flag(harvester, "double_harvest"):
 		n *= 2
 	# endregion
+	n = maxi(1, roundi(n * sim.mutation.yield_mult(c)))  # region mutation
 	var item: String = def["item"]
 	sim.ledger.record_produced(item, n, "farming")
 	sim.items.drop(c, item, n)
@@ -77,6 +78,14 @@ func tick() -> void:
 		if sim.map.get_zone(c) != ZONE:
 			dead.append(c)  # zone removed: the crop is gone
 		elif light >= float(sim.defs.plants[p.def_id]["min_daylight"]):
+			# region mutation: tainted soil slows growth
+			var gm := sim.mutation.growth_mult(c)
+			if gm < 1.0:
+				p.taint_acc += gm
+				if p.taint_acc < 1.0:
+					continue
+				p.taint_acc -= 1.0
+			# endregion
 			p.growth += 1
 			if p.grow_bonus != 0.0:  # region perks
 				p.grow_acc += p.grow_bonus
