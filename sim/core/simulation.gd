@@ -30,6 +30,7 @@ var buildings: BuildingSystem
 var contamination: ContaminationSystem
 var threats: ThreatSystem
 var storyteller: Storyteller
+var crises: CrisisSystem  # region crises
 # region health
 var health: HealthSystem
 # endregion
@@ -102,6 +103,7 @@ func _init_systems() -> void:
 	contamination = ContaminationSystem.new(self)
 	threats = ThreatSystem.new(self)
 	storyteller = Storyteller.new(self)
+	crises = CrisisSystem.new(self)  # region crises
 	# region health
 	health = HealthSystem.new(self)
 	# endregion
@@ -164,6 +166,7 @@ func step() -> void:
 	mood.tick()  # region mood
 	threats.tick()
 	contamination.tick()
+	crises.tick()  # region crises
 	storyteller.tick()
 	if colonists.alive_count() == 0 and not colonists.list.is_empty():
 		end_game("colonists_dead")
@@ -309,6 +312,9 @@ func dispose() -> void:
 	if contracts != null:  # region contracts
 		contracts.sim = null
 	contracts = null
+	if crises != null:  # region crises
+		crises.sim = null
+	crises = null
 	if perks != null:  # region perks
 		perks.sim = null
 	perks = null
@@ -390,6 +396,11 @@ func order_move(colonist_id: int, cell: Vector2i) -> bool:
 func order_attack(colonist_id: int, enemy_id: int) -> bool:
 	_record("order_attack", [colonist_id, enemy_id])  # save-load
 	return combat.order_attack(colonists.get_by_id(colonist_id), enemy_id)
+# region crises
+func resolve_crisis(crisis_id: String, option_id: String) -> bool:
+	_record("resolve_crisis", [crisis_id, option_id])  # save-load
+	return crises.resolve(crisis_id, option_id)
+# endregion
 # region arrivals
 ## Answers a pending storyteller choice (wanderer: join or not; pod survivor:
 ## rescue or leave). Returns false for an unknown uid.

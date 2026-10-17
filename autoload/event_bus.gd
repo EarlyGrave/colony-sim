@@ -103,3 +103,7 @@ signal perk_learned(colonist_id: int, perk_id: String)
 signal perk_used(colonist_id: int, perk_id: String)
 signal perk_point_available(colonist_id: int, skill_id: String, points: int)
 # endregion
+# region crises
+signal crisis_started(crisis_id: String, text: String)
+signal crisis_resolved(crisis_id: String, option_id: String, by_timeout: bool)
+# endregion

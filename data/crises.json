@@ -1,0 +1,70 @@
+{
+	"settings": {
+		"toxic_interval_ticks": 120,
+		"toxic_severity": 0.6,
+		"toxic_duration_ticks": 300
+	},
+	"crises": {
+		"siege": {
+			"name": "Осада",
+			"threshold": 0.5,
+			"timeout_ticks": 1200,
+			"default_option": "endure",
+			"text": "Планета заражена наполовину. Твари чуют гниль и стягиваются к колонии. Что делать?",
+			"options": {
+				"endure": {
+					"label": "Держать оборону",
+					"text": "Налёты станут чаще и сильнее на несколько дней.",
+					"duration_days": 4.0,
+					"mods": {"raid_points_mult": 1.4, "raid_interval_mult": 0.7}
+				},
+				"appease": {
+					"label": "Откупиться эссенцией",
+					"text": "Надзиратели берут очищенную эссенцию и сдерживают планету: заражение падает, налёты откладываются.",
+					"cost": {"refined_essence": 10},
+					"contamination_delta": -6.0,
+					"delay_wave_days": 1.5
+				}
+			}
+		},
+		"dead_lands": {
+			"name": "Мёртвые земли",
+			"threshold": 0.75,
+			"timeout_ticks": 1200,
+			"default_option": "evacuate",
+			"text": "Края карты стали ядовитыми. Колонисты вне безопасной зоны заболевают.",
+			"options": {
+				"evacuate": {
+					"label": "Эвакуировать склад",
+					"text": "Треть руды и отходов со склада потеряна, зато границы остаются безопасными.",
+					"lose_fraction": {"essence_ore": 0.33, "waste": 0.33}
+				},
+				"endure": {
+					"label": "Терпеть яд",
+					"text": "Окраины карты ядовиты до конца игры: любой, кто там окажется, заболеет.",
+					"toxic_edge_depth": 5
+				}
+			}
+		},
+		"last_stand": {
+			"name": "Последний рубеж",
+			"threshold": 0.9,
+			"timeout_ticks": 1200,
+			"default_option": "halt",
+			"text": "Планета при смерти. Остановить переработку или выжать из неё всё до конца?",
+			"options": {
+				"halt": {
+					"label": "Остановить переработку",
+					"text": "Очистка заблокирована на несколько дней.",
+					"duration_days": 3.0,
+					"mods": {"refine_lock": 1.0}
+				},
+				"overdrive": {
+					"label": "Форсаж",
+					"text": "Вдвое больше эссенции с партии, но заражение растёт втрое быстрее.",
+					"mods": {"refine_output_mult": 2.0, "refine_contam_mult": 3.0}
+				}
+			}
+		}
+	}
+}
