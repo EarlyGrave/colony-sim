@@ -8,8 +8,11 @@ const VERSION := 1
 
 
 static func defs_hash(defs: Defs) -> int:
-	var parts: Array = [defs.items, defs.buildings, defs.recipes, defs.zones, defs.enemies,
-		defs.jobs, defs.balance, defs.events, defs.rules, defs.work, defs.skills, defs.health]
+	# Every Dictionary property of Defs, so new data files are covered automatically.
+	var parts: Array = []
+	for p in defs.get_property_list():
+		if p["type"] == TYPE_DICTIONARY and (p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE):
+			parts.append([p["name"], defs.get(p["name"])])
 	return JSON.stringify(parts, "", true).hash()
 
 
