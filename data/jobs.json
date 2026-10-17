@@ -1,0 +1,8 @@
+{
+	"_comment": "Higher priority wins. Ties broken by distance.",
+	"flee": 100,
+	"repair": 60,
+	"operate": 50,
+	"haul": 40,
+	"mine": 30
+}
