@@ -53,6 +53,9 @@ var combat: CombatSystem
 var clock: WorldClock
 var needs: NeedsSystem
 var farming: FarmingSystem
+# region idle-work
+var idle_work: IdleWorkSystem
+# endregion
 # region perks
 var perks: PerkSystem
 # endregion
@@ -112,6 +115,7 @@ func _init_systems() -> void:
 	farming = FarmingSystem.new(self)
 	# endregion
 	perks = PerkSystem.new(self)  # region perks
+	idle_work = IdleWorkSystem.new(self)  # region idle-work
 
 
 func _place_starting_colony() -> void:
@@ -297,6 +301,9 @@ func dispose() -> void:
 	contamination = null
 	threats = null
 	storyteller = null
+	if idle_work != null:  # region idle-work
+		idle_work.sim = null
+	idle_work = null  # region idle-work
 	if perks != null:  # region perks
 		perks.sim = null
 	perks = null
@@ -400,4 +407,20 @@ func use_perk(colonist_id: int, perk_id: String) -> bool:
 func respec_perks(colonist_id: int) -> bool:
 	_record("respec_perks", [colonist_id])  # save-load
 	return perks.respec(colonists.get_by_id(colonist_id))
+# endregion
+
+# region idle-work
+## Player-set patrol route (empty array = automatic ring around the base).
+## Recorded as text because the save log holds only scalars and Vector2i.
+func set_patrol_route(points: Array) -> void:
+	var parts: PackedStringArray = []
+	for p: Vector2i in points:
+		parts.append("%d,%d" % [p.x, p.y])
+	set_patrol_route_text(";".join(parts))
+
+
+## Same as `set_patrol_route`, points as "x,y;x,y" (the form saved in the command log).
+func set_patrol_route_text(text: String) -> void:
+	_record("set_patrol_route_text", [text])  # save-load
+	idle_work.set_route(IdleWorkSystem.parse_route(text))
 # endregion

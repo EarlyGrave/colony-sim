@@ -95,3 +95,8 @@ signal perk_learned(colonist_id: int, perk_id: String)
 signal perk_used(colonist_id: int, perk_id: String)
 signal perk_point_available(colonist_id: int, skill_id: String, points: int)
 # endregion
+# region idle-work
+signal patrol_spotted(colonist_id: int, cell: Vector2i, enemies: int)
+signal waste_scrubbed(colonist_id: int, cell: Vector2i, amount: float)
+signal patrol_route_changed(count: int)
+# endregion

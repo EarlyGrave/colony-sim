@@ -28,7 +28,7 @@ static func create(defs: Defs, rng: RandomNumberGenerator) -> Skills:
 		else:
 			s.passions[id] = Passion.NONE
 	for t: String in defs.work["types"]:
-		s.priorities[t] = int(defs.work["default_priority"])
+		s.priorities[t] = int(defs.work["types"][t].get("default_priority", defs.work["default_priority"]))  # region idle-work
 	return s
 
 

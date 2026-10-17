@@ -67,7 +67,7 @@ func test_reservation_prevents_double_assignment() -> void:
 	_zone_rect(sim, Vector2i(12, 12), Vector2i(2, 2))
 	sim.step()
 	assert_true(a.job is HaulJob)
-	assert_true(b.job == null, "second colonist took the same stack")
+	assert_false(b.job is HaulJob, "second colonist took the same stack")
 
 
 func test_unreachable_item_does_not_trap_colonist() -> void:

@@ -44,7 +44,8 @@ func test_signal_fires_once_per_wave_before_start() -> void:
 		sim.step()
 	assert_eq(_incoming.size(), 1, "exactly one warning")
 	assert_eq(_incoming[0][0], origin)
-	assert_true(_incoming[0][1] <= warn)
+	var cfg: Dictionary = sim.defs.idle_work["patrol"]  # patrol vigil / spotting may extend the lead
+	assert_true(_incoming[0][1] <= warn + int(cfg["vigil_bonus_ticks"]) + int(cfg["max_spot_bonus_ticks"]))
 	# Next wave gets its own warning and a fresh origin decision.
 	sim.threats.end_wave()
 	var n := _incoming.size()
