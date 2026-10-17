@@ -101,7 +101,7 @@ func fire(id: String) -> bool:
 		"sickness":
 			var cs := _healthy_colonists()
 			var c: Colonist = cs[sim.rng.randi_range(0, cs.size() - 1)]
-			c.sick_until = sim.tick + int(e["duration_ticks"])
+			sim.health.add_illness(c, "fever", 1.0, int(e["duration_ticks"]))  # region health
 			target = c.display_name
 		"cave_in":
 			var ds := _designated_deposits()

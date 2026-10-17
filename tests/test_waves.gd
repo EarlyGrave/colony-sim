@@ -104,7 +104,7 @@ func test_turret_kills_enemy_in_range() -> void:
 func test_enemy_catches_walking_colonist() -> void:
 	var sim := make_sim(9, false, 30, 10, peaceful_defs())
 	var c := sim.colonists.spawn(Vector2i(4, 5))
-	c.hp = 10.0
+	sim.health.apply_damage(c, 96.0, "torso", "bruise")  # nearly dead: one more bite kills
 	c.carry_item = "essence_ore"
 	c.carry_count = 5
 	sim.ledger.record_produced("essence_ore", 5, "test")

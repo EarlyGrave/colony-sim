@@ -17,6 +17,8 @@ var rules: Dictionary = {}
 # region jobs-core
 var work: Dictionary = {}
 var skills: Dictionary = {}
+# region health
+var health: Dictionary = {}
 # endregion
 
 static var _default: Defs = null
@@ -43,6 +45,8 @@ func load_from(dir: String) -> void:
 	# region jobs-core
 	work = _load_json(dir + "work.json")
 	skills = _load_json(dir + "skills.json")
+	# region health
+	health = _load_json(dir + "health.json")
 	# endregion
 
 
@@ -61,6 +65,8 @@ func duplicate_defs() -> Defs:
 	# region jobs-core
 	d.work = work.duplicate(true)
 	d.skills = skills.duplicate(true)
+	# region health
+	d.health = health.duplicate(true)
 	# endregion
 	return d
 

@@ -23,6 +23,8 @@ func _init(p_sim: Simulation) -> void:
 
 
 func tick_colonist(c: Colonist) -> void:
+	if c.health != null and (c.health.downed or not sim.health.can_act(c)):
+		return  # region health: downed / hurt colonists lose the tick
 	if _engineer_on_duty(c):
 		_tick_engineer(c)
 		return

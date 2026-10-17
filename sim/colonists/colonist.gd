@@ -16,6 +16,8 @@ var engineer := false
 # region jobs-core
 ## Skills and work priorities (set by ColonistSystem.spawn).
 var skills: Skills = null
+# region health
+var health: HealthState = null
 # endregion
 
 var job: Job = null
@@ -39,7 +41,7 @@ func _init(p_id: int, p_name: String, p_cell: Vector2i, cfg: Dictionary) -> void
 
 
 func is_sick(now: int) -> bool:
-	return sick_until > now
+	return sick_until > now or (health != null and health.is_sick())  # region health
 
 
 func is_unreachable(key: String, now: int) -> bool:

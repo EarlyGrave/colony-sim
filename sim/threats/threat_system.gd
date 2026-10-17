@@ -201,9 +201,7 @@ func _tick_enemy(e: Enemy) -> void:
 			e.clear_path()
 			if e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
-				c.hp -= float(e.def["damage"])
-				if c.hp <= 0.0:
-					sim.colonists.kill(c)
+				sim.health.apply_damage(c, float(e.def["damage"]), "", str(e.def.get("damage_kind", "bite")))  # region health
 		elif e.move_toward(c.cell, sim) == GridMover.Move.FAILED:
 			e.retarget_at = sim.tick + 5
 
