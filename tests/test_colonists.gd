@@ -85,7 +85,9 @@ func test_unreachable_item_does_not_trap_colonist() -> void:
 
 
 func test_partial_carry_is_delivered_after_dst_fills() -> void:
-	var sim := make_sim(6, false, 16, 16)
+	var defs := peaceful_defs()
+	defs.balance["storyteller"]["enabled"] = false
+	var sim := make_sim(6, false, 16, 16, defs)
 	sim.colonists.spawn(Vector2i(1, 1))
 	# 60 ore but storage cells hold 50 each: needs two cells and several trips.
 	sim.items.add_at(Vector2i(8, 8), "essence_ore", 50)

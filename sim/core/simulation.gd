@@ -351,4 +351,9 @@ func order_move(colonist_id: int, cell: Vector2i) -> bool:
 func order_attack(colonist_id: int, enemy_id: int) -> bool:
 	_record("order_attack", [colonist_id, enemy_id])  # save-load
 	return combat.order_attack(colonists.get_by_id(colonist_id), enemy_id)
+# region arrivals
+## Answers a pending storyteller choice (wanderer: join or not; pod survivor:
+## rescue or leave). Returns false for an unknown uid.
+func answer_event(event_uid: int, accept: bool) -> bool:
+	return storyteller.answer(event_uid, accept)
 # endregion

@@ -4,20 +4,87 @@
 		"name": "Молния",
 		"weight": 3,
 		"min_day": 2,
-		"text": "Молния ударила в постройку «{target}» — машина сломана, нужен ремонт."
+		"text": "Молния ударила в постройку «{target}» — машина сломана, нужен ремонт.",
+		"max_per_game": 2,
+		"harmful": true
 	},
 	"sickness": {
 		"name": "Лихорадка",
 		"weight": 3,
 		"min_day": 2,
 		"duration_ticks": 360,
-		"text": "{target} слёг с лихорадкой и полдня не сможет работать."
+		"text": "{target} слёг с лихорадкой и полдня не сможет работать.",
+		"harmful": true
 	},
 	"cave_in": {
 		"name": "Обвал",
 		"weight": 2,
 		"min_day": 3,
 		"max_cells": 3,
-		"text": "Обвал засыпал часть месторождения — руда потеряна."
+		"text": "Обвал засыпал часть месторождения — руда потеряна.",
+		"harmful": true
+	},
+	"wanderer": {
+		"name": "Странник",
+		"weight": 3,
+		"min_day": 1,
+		"harmful": false,
+		"kind": "choice",
+		"text": "{target} подошёл к периметру и просит принять его в колонию. Откройте вкладку «События»."
+	},
+	"pod_crash": {
+		"name": "Спасательная капсула",
+		"weight": 2,
+		"min_day": 2,
+		"harmful": false,
+		"kind": "survivor",
+		"damage": [
+			18,
+			30
+		],
+		"tend_delay_ticks": 60,
+		"max_per_game": 3,
+		"text": "Рядом упала спасательная капсула: {target} ранен. Откройте вкладку «События», чтобы спасти."
+	},
+	"transport_drop": {
+		"name": "Этап",
+		"weight": 2,
+		"min_day": 3,
+		"harmful": false,
+		"count": [
+			1,
+			2
+		],
+		"max_per_game": 3,
+		"text": "Охрана сбросила новых заключённых: к колонии присоединились {target}."
+	},
+	"toxic_fallout": {
+		"name": "Токсичные осадки",
+		"weight": 3,
+		"min_day": 2,
+		"harmful": true,
+		"contamination_fraction": 0.3,
+		"duration_ticks": 300,
+		"severity": 0.8,
+		"max_per_game": 4,
+		"text": "Токсичные осадки: заболели {target}."
+	},
+	"cargo_pod": {
+		"name": "Грузовая капсула",
+		"weight": 3,
+		"min_day": 1,
+		"harmful": false,
+		"max_per_game": 6,
+		"items": {
+			"essence_ore": [
+				8,
+				16
+			],
+			"raw_food": [
+				6,
+				12
+			]
+		},
+		"text": "С орбиты упала грузовая капсула с припасами: {target}."
 	}
 }

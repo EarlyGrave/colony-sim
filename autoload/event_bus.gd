@@ -69,4 +69,8 @@ signal blueprint_placed(blueprint_id: int)
 signal blueprint_progress(blueprint_id: int)
 signal blueprint_cancelled(blueprint_id: int)
 signal blueprint_completed(blueprint_id: int, building_id: int)
+# region arrivals
+signal event_choice_posted(uid: int, text: String)
+signal event_choice_resolved(uid: int, accepted: bool)
+signal colonist_joined(colonist_id: int)
 # endregion

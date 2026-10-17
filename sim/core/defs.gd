@@ -19,6 +19,10 @@ var work: Dictionary = {}
 var skills: Dictionary = {}
 # region health
 var health: Dictionary = {}
+# region arrivals
+var arrivals: Dictionary = {}
+var names: Dictionary = {}
+var traits: Dictionary = {}
 # endregion
 # region mood
 var mood: Dictionary = {}
@@ -54,6 +58,10 @@ func load_from(dir: String) -> void:
 	skills = _load_json(dir + "skills.json")
 	# region health
 	health = _load_json(dir + "health.json")
+	# region arrivals
+	arrivals = _load_json(dir + "arrivals.json")
+	names = _load_json(dir + "names.json")
+	traits = _load_json(dir + "traits.json")
 	# endregion
 	# region mood
 	mood = _load_json(dir + "mood.json")
@@ -81,6 +89,10 @@ func duplicate_defs() -> Defs:
 	d.skills = skills.duplicate(true)
 	# region health
 	d.health = health.duplicate(true)
+	# region arrivals
+	d.arrivals = arrivals.duplicate(true)
+	d.names = names.duplicate(true)
+	d.traits = traits.duplicate(true)
 	# endregion
 	# region mood
 	d.mood = mood.duplicate(true)

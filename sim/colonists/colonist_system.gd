@@ -30,6 +30,19 @@ func spawn(cell: Vector2i) -> Colonist:
 	return c
 
 
+# region arrivals
+func alloc_id() -> int:
+	_next_id += 1
+	return _next_id - 1
+
+
+## Adds an already built colonist (arrivals) to the colony.
+func add(c: Colonist) -> void:
+	list.append(c)
+	sim.bus.colonist_joined.emit(c.id)
+# endregion
+
+
 func tick() -> void:
 	for c in list:
 		if c.alive:

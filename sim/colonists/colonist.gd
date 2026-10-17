@@ -16,6 +16,9 @@ var engineer := false
 # region jobs-core
 ## Skills and work priorities (set by ColonistSystem.spawn).
 var skills: Skills = null
+# region arrivals
+## Generated bio: age, backstory, traits (ids), work_speed multiplier.
+var bio: Dictionary = {}
 # region health
 var health: HealthState = null
 # endregion

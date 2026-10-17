@@ -6,7 +6,10 @@ const SEED := 1
 
 
 func _colony(seed_value: int, turrets: int) -> Simulation:
-	var sim := make_sim(seed_value)
+	var defs := Defs.get_default().duplicate_defs()
+	for id in ["wanderer", "pod_crash", "transport_drop", "toxic_fallout", "cargo_pod"]:
+		defs.events.erase(id)  # arrivals are covered by test_arrivals
+	var sim := make_sim(seed_value, true, 24, 24, defs)
 	Scenario.standard_colony(sim, turrets)
 	return sim
 
