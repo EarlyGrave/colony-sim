@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[node name="Game" type="Node2D"]
+
+[node name="Label" type="Label" parent="."]
+offset_left = 40.0
+offset_top = 40.0
+text = "Колони-сим: каркас"

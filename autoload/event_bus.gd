@@ -1,0 +1,43 @@
+extends Node
+## Global event bus. Systems talk to each other through these signals.
+##
+## The game uses the autoload instance. Tests create their own instance with
+## `preload("res://autoload/event_bus.gd").new()` so simulations stay isolated.
+## The simulation never reaches for the autoload by name: it receives a bus
+## in its constructor.
+
+# --- Time ---
+signal tick_advanced(tick: int)
+signal day_started(day: int)
+
+# --- Map / designations ---
+signal tile_changed(cell: Vector2i)
+signal designation_changed(cell: Vector2i)
+signal zone_changed(cell: Vector2i)
+
+# --- Items ---
+signal item_mined(cell: Vector2i, item_id: String, amount: int)
+
+# --- Buildings / production ---
+signal building_placed(building_id: int)
+signal building_destroyed(building_id: int)
+signal building_broken(building_id: int)
+signal building_repaired(building_id: int)
+signal batch_refined(building_id: int, recipe_id: String)
+signal first_refine_done()
+
+# --- Contamination ---
+signal contamination_changed(level: float)
+signal forecast_revealed()
+
+# --- Threats ---
+signal threat_awakened()
+signal wave_started(wave_index: int, strength: float)
+signal wave_ended(wave_index: int)
+signal enemy_killed(enemy_id: int)
+signal colonist_died(colonist_id: int)
+signal alarm_changed(active: bool)
+
+# --- Game flow ---
+signal game_over(reason: String)
+signal story_event(event_id: String, text: String)
