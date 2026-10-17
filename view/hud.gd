@@ -9,6 +9,7 @@ signal alarm_toggled(on: bool)
 signal rule_toggled(rule_id: String, on: bool)
 signal new_game_requested()
 signal colonist_card_pressed(colonist_id: int)
+signal focus_cell_requested(cell: Vector2i)
 
 const TOAST_MAX_QUEUE := 4
 const PANEL_REFRESH := 0.25
@@ -84,37 +85,40 @@ func _ready() -> void:
 	var top := PanelContainer.new()
 	_stack.add_child(top)
 	var top_flow := HFlowContainer.new()
-	top_flow.add_theme_constant_override("h_separation", 12)
+	top_flow.add_theme_constant_override("h_separation", 6)
 	top_flow.add_theme_constant_override("v_separation", 4)
 	top.add_child(top_flow)
 	var labels := VBoxContainer.new()
 	labels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	labels.custom_minimum_size.x = 300
+	labels.custom_minimum_size.x = 430
 	labels.add_theme_constant_override("separation", 0)
 	top_flow.add_child(labels)
 	_clock = _label(labels)
 	_clock.visible = false
 	_stats = _label(labels)
 	_forecast = _label(labels)
+	_forecast.add_theme_font_size_override("font_size", 16)
 	_threat = _label(labels)
 	var speed_row := HBoxContainer.new()
-	speed_row.add_theme_constant_override("separation", 8)
+	speed_row.add_theme_constant_override("separation", 4)
 	top_flow.add_child(speed_row)
 	for i in 4:
-		var b := _button(speed_row, "||" if i == 0 else "%dx" % i, Vector2(72, 64))
+		var b := _button(speed_row, "||" if i == 0 else "%dx" % i, Vector2(56, 64))
 		b.toggle_mode = true
 		b.pressed.connect(func() -> void: speed_selected.emit(i))
 		_speed_buttons.append(b)
 
 	# --- Panel bar (letters + registered panels) ---
 	var panel_row := HBoxContainer.new()
-	panel_row.add_theme_constant_override("separation", 8)
+	panel_row.add_theme_constant_override("separation", 4)
 	top_flow.add_child(panel_row)
-	_letters_btn = _button(panel_row, "Письма", Vector2(104, 64))
+	_letters_btn = _button(panel_row, "Письма", Vector2(84, 64))
+	_letters_btn.add_theme_font_size_override("font_size", 17)
 	_letters_btn.pressed.connect(func() -> void: toggle_panel("letters"))
 	for e: Array in PanelRegistry.panel_entries():
 		var pid: String = e[0]
-		var pb := _button(panel_row, str(e[1]), Vector2(104, 64))
+		var pb := _button(panel_row, str(e[1]), Vector2(84, 64))
+		pb.add_theme_font_size_override("font_size", 17)
 		pb.pressed.connect(func() -> void: toggle_panel(pid))
 		_panel_buttons[pid] = pb
 
@@ -266,6 +270,7 @@ func toggle_panel(id: String) -> void:
 	if id == "letters":
 		var lp := LettersPanel.new()
 		lp.bind_log(_letters)
+		lp.show_cell_requested.connect(func(c: Vector2i) -> void: focus_cell_requested.emit(c))
 		p = lp
 	else:
 		p = PanelRegistry.make_panel(id)
@@ -326,17 +331,17 @@ func _process(delta: float) -> void:
 	if sim == null:
 		return
 	var it := sim.items
-	var tpd := sim.ticks_per_day
-	_clock.text = "День %d, %02d:00" % [sim.day() + 1, sim.tick % tpd * 24 / tpd]
-	_stats.text = _clock.text + " · Руда %d · Эссенция %d · Отходы %d · Люди %d" % [
+	var night: bool = sim.clock.is_night()
+	_clock.text = "%s %d, %02d:%02d" % ["Ночь" if night else "День", sim.day() + 1, sim.clock.hour_int(), int(fposmod(sim.clock.hour(), 1.0) * 60.0)]
+	_stats.text = _clock.text + " · Руда %d · Эсс. %d · Отх. %d · Люди %d" % [
 		it.count_stored("essence_ore"), it.count_stored("refined_essence"),
 		it.count_world("waste"), sim.colonists.alive_count()]
 	var cont := sim.contamination
 	if cont.revealed:
 		var f := cont.forecast()
-		_forecast.text = "Заражение %.1f%% · Конец через ~%.0f ± %.0f дн." % [cont.fraction() * 100.0, f["days"], f["error"]]
+		_forecast.text = "Заражение %.1f%% · конец ~%.0f±%.0f дн." % [cont.fraction() * 100.0, f["days"], f["error"]]
 	else:
-		_forecast.text = "Заражение %.1f%% · Прогноз конца неизвестен" % (cont.fraction() * 100.0)
+		_forecast.text = "Заражение %.1f%% · прогноз неизвестен" % (cont.fraction() * 100.0)
 	_threat.text = ""
 	_threat.visible = false
 	_forecast.text += " · " + _threat_text()
@@ -373,7 +378,8 @@ func _threat_text() -> String:
 
 func _label(parent: Control) -> Label:
 	var l := Label.new()
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.clip_text = true
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	parent.add_child(l)
 	return l
 

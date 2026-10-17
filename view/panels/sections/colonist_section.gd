@@ -28,3 +28,24 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 	add_line(box, "Занят: " + status)
 	if c.carry_count > 0:
 		add_line(box, "Несёт: %s × %d" % [sim.defs.items[c.carry_item]["name"], c.carry_count])
+	if not c.alive:
+		return
+	if c.combat != null and c.combat.drafted:
+		add_line(box, "В боевой готовности", Color(1.0, 0.8, 0.3))
+	if c.health != null and c.health.downed:
+		add_line(box, "Без сознания", Color(1.0, 0.4, 0.4))
+	if c.needs != null:
+		add_line(box, "Еда %d%%" % roundi(c.needs.food * 100.0))
+		add_bar(box, c.needs.food, Color(0.9, 0.7, 0.2))
+		add_line(box, "Отдых %d%%" % roundi(c.needs.rest * 100.0))
+		add_bar(box, c.needs.rest, Color(0.4, 0.6, 0.95))
+	if c.mood != null:
+		add_line(box, "Настроение %d / 100" % roundi(c.mood.value))
+	if c.skills != null and not c.skills.levels.is_empty():
+		var ids: Array = c.skills.levels.keys()
+		ids.sort_custom(func(a: String, b: String) -> bool: return c.skills.level(a) > c.skills.level(b))
+		var parts: PackedStringArray = []
+		for sid: String in ids.slice(0, 3):
+			var nm: String = str(sim.defs.skills["skills"].get(sid, {}).get("label", sid))
+			parts.append("%s %d" % [nm, c.skills.level(sid)])
+		add_line(box, "Навыки: " + ", ".join(parts))
