@@ -39,6 +39,7 @@ var perk_carry: Dictionary = {}
 var job: Job = null
 var idle_until := 0
 var carry_item := ""
+var carry_quality := ""  # region quality
 var carry_count := 0
 ## job key -> tick until which that target is considered unreachable
 var unreachable: Dictionary = {}

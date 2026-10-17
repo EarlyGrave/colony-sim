@@ -131,6 +131,12 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 			continue
 		# endregion
 		b.output[item] = int(b.output.get(item, 0)) + n
+		if sim.quality.tracked(item):  # region quality
+			var q := sim.quality.roll(item, operator, b.def_id)
+			if not b.output_q.has(item):
+				b.output_q[item] = []
+			for i in n:
+				b.output_q[item].append(q)
 		sim.ledger.record_produced(item, n, "recipe")
 	refined_batches += 1
 	wear(b, float(b.def.get("wear_per_batch", 0.0)))

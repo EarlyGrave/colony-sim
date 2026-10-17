@@ -242,7 +242,7 @@ func _on_downed(c: Colonist) -> void:
 	sim.jobs.end_job(c, Job.Status.FAILED)
 	c.clear_path()
 	if c.carry_count > 0:
-		sim.items.drop(c.cell, c.carry_item, c.carry_count)
+		sim.items.drop(c.cell, c.carry_item, c.carry_count, c.carry_quality)
 		c.carry_item = ""
 		c.carry_count = 0
 	sim.bus.colonist_downed.emit(c.id)

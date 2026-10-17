@@ -69,7 +69,7 @@ func kill(c: Colonist) -> void:
 		return
 	sim.jobs.end_job(c, Job.Status.FAILED)
 	if c.carry_count > 0:
-		sim.items.drop(c.cell, c.carry_item, c.carry_count)
+		sim.items.drop(c.cell, c.carry_item, c.carry_count, c.carry_quality)
 		c.carry_item = ""
 		c.carry_count = 0
 	c.alive = false

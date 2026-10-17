@@ -58,6 +58,7 @@ var contracts: ContractSystem
 # endregion
 # region perks
 var perks: PerkSystem
+var quality: QualitySystem  # region quality
 # endregion
 # endregion
 
@@ -116,6 +117,7 @@ func _init_systems() -> void:
 	# endregion
 	perks = PerkSystem.new(self)  # region perks
 	contracts = ContractSystem.new(self)  # region contracts
+	quality = QualitySystem.new(self)  # region quality
 
 
 func _place_starting_colony() -> void:
