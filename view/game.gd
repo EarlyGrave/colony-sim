@@ -19,6 +19,13 @@ func _ready() -> void:
 	new_game(_initial_seed())
 
 
+func _exit_tree() -> void:
+	if sim:
+		world.unbind()
+		sim.dispose()
+		sim = null
+
+
 func _initial_seed() -> int:
 	if OS.has_feature("web"):
 		var s: Variant = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('seed')")
