@@ -49,6 +49,10 @@ var crafting: BillSystem
 var storage: StorageSettings
 # region combat
 var combat: CombatSystem
+# region needs
+var clock: WorldClock
+var needs: NeedsSystem
+var farming: FarmingSystem
 # endregion
 
 var _connections: Array = []  # [signal, callable] pairs made on the bus
@@ -99,6 +103,10 @@ func _init_systems() -> void:
 	crafting = BillSystem.new(self)
 	# region combat
 	combat = CombatSystem.new(self)
+	# region needs
+	clock = WorldClock.new(self)
+	needs = NeedsSystem.new(self)
+	farming = FarmingSystem.new(self)
 	# endregion
 
 
@@ -135,6 +143,8 @@ func step() -> void:
 		return
 	tick += 1
 	crafting.tick()  # region crafting
+	needs.tick()  # region needs
+	farming.tick()  # region needs
 	colonists.tick()
 	health.tick()  # region health
 	mood.tick()  # region mood
@@ -315,6 +325,15 @@ func set_zone_priority(c: Vector2i, priority: int) -> bool:
 	_record("set_zone_priority", [c, priority])  # save-load
 	return storage.set_priority(c, priority)
 # endregion
+	health = null
+	# region needs
+	for sys: Object in [needs, farming, clock]:
+		if sys != null:
+			sys.set("sim", null)
+	needs = null
+	farming = null
+	clock = null
+	# endregion
 
 
 # region jobs-core

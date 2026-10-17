@@ -1,4 +1,28 @@
 {
-	"stockpile": {"name": "Склад", "color": "#3f6fbf", "accepts": ["essence_ore", "refined_essence", "machine_parts"], "waste_emission_factor": 1.0},
-	"waste_dump": {"name": "Свалка отходов", "color": "#6f8f2f", "accepts": ["waste"], "waste_emission_factor": 0.5}
+	"stockpile": {
+		"name": "Склад",
+		"color": "#3f6fbf",
+		"accepts": [
+			"essence_ore",
+			"refined_essence",
+			"machine_parts",
+			"raw_food",
+			"meal"
+		],
+		"waste_emission_factor": 1.0
+	},
+	"waste_dump": {
+		"name": "Свалка отходов",
+		"color": "#6f8f2f",
+		"accepts": [
+			"waste"
+		],
+		"waste_emission_factor": 0.5
+	},
+	"growing": {
+		"name": "Грядки",
+		"color": "#5fa83a",
+		"accepts": [],
+		"waste_emission_factor": 1.0
+	}
 }

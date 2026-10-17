@@ -1,7 +1,10 @@
 {
 	"hq": {
 		"name": "Капсула",
-		"size": [2, 2],
+		"size": [
+			2,
+			2
+		],
 		"color": "#c9a227",
 		"max_hp": 500,
 		"cost": {},
@@ -13,10 +16,15 @@
 	},
 	"refinery": {
 		"name": "Установка",
-		"size": [2, 2],
+		"size": [
+			2,
+			2
+		],
 		"color": "#b0446b",
 		"max_hp": 250,
-		"cost": {"essence_ore": 20},
+		"cost": {
+			"essence_ore": 20
+		},
 		"build_work": 120,
 		"buildable": true,
 		"recipe": "refine_essence",
@@ -27,10 +35,15 @@
 	},
 	"workbench": {
 		"name": "Верстак",
-		"size": [2, 1],
+		"size": [
+			2,
+			1
+		],
 		"color": "#8a6a3a",
 		"max_hp": 150,
-		"cost": {"essence_ore": 15},
+		"cost": {
+			"essence_ore": 15
+		},
 		"buildable": true,
 		"bills": true,
 		"input_capacity": 10,
@@ -39,22 +52,36 @@
 	},
 	"turret": {
 		"name": "Турель",
-		"size": [1, 1],
+		"size": [
+			1,
+			1
+		],
 		"color": "#5f9ea0",
 		"max_hp": 120,
-		"cost": {"refined_essence": 10},
+		"cost": {
+			"refined_essence": 10
+		},
 		"build_work": 80,
 		"buildable": true,
-		"turret": {"range": 6.5, "damage": 9, "cooldown_ticks": 8},
+		"turret": {
+			"range": 6.5,
+			"damage": 9,
+			"cooldown_ticks": 8
+		},
 		"wear_per_shot": 1.2,
 		"threat_priority": 1
 	},
 	"wall": {
 		"name": "Стена",
-		"size": [1, 1],
+		"size": [
+			1,
+			1
+		],
 		"color": "#6b6258",
 		"max_hp": 150,
-		"cost": {"essence_ore": 2},
+		"cost": {
+			"essence_ore": 2
+		},
 		"build_work": 40,
 		"buildable": true,
 		"blocks_movement": true,
@@ -63,12 +90,48 @@
 	},
 	"door": {
 		"name": "Дверь",
-		"size": [1, 1],
+		"size": [
+			1,
+			1
+		],
 		"color": "#8a6a40",
 		"max_hp": 80,
-		"cost": {"essence_ore": 3},
+		"cost": {
+			"essence_ore": 3
+		},
 		"build_work": 50,
 		"buildable": true,
 		"threat_priority": 0.5
+	},
+	"stove": {
+		"name": "Печь",
+		"size": [
+			1,
+			1
+		],
+		"color": "#a0522d",
+		"max_hp": 80,
+		"cost": {
+			"essence_ore": 10
+		},
+		"buildable": true,
+		"recipe": "cook_meal",
+		"work_type": "cooking",
+		"input_capacity": 4,
+		"output_capacity": 6
+	},
+	"bed": {
+		"name": "Кровать",
+		"size": [
+			1,
+			1
+		],
+		"color": "#6a7fb0",
+		"max_hp": 50,
+		"cost": {
+			"essence_ore": 8
+		},
+		"buildable": true,
+		"bed": true
 	}
 }

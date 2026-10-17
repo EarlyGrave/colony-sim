@@ -4,13 +4,14 @@ extends Node
 ## wires view + HUD. Player input becomes Simulation commands here.
 
 const MAX_TICKS_PER_FRAME := 40
-const RECT_TOOLS := ["mine", "stockpile", "waste_dump", "clear_zone"]
-const BUILD_TOOLS := ["refinery", "turret", "wall", "door", "workbench"]  # wall/door: region construction
+const RECT_TOOLS := ["mine", "stockpile", "waste_dump", "clear_zone", "growing"]
+const BUILD_TOOLS := ["refinery", "turret", "wall", "door", "workbench", "stove", "bed"]
 const HINTS := {
 	"inspect": "Нажми на клетку, чтобы посмотреть, что там.",
 	"mine": "Добыча: нажми два угла области с рудой (фиолетовое).",
 	"stockpile": "Склад: нажми два угла области.",
 	"waste_dump": "Свалка отходов: нажми два угла области. Отходы там заражают слабее.",
+	"growing": "Грядки: нажми два угла области. Колонисты посеют и соберут клубни.",
 	"clear_zone": "Убрать зону: нажми два угла области.",
 }
 

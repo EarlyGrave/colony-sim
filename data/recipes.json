@@ -1,15 +1,37 @@
 {
 	"refine_essence": {
 		"name": "Очистка эссенции",
-		"inputs": {"essence_ore": 10},
-		"outputs": {"refined_essence": 3, "waste": 4},
+		"inputs": {
+			"essence_ore": 10
+		},
+		"outputs": {
+			"refined_essence": 3,
+			"waste": 4
+		},
 		"work_ticks": 100
 	},
 	"machine_parts": {
 		"name": "Детали механизмов",
-		"inputs": {"refined_essence": 2, "essence_ore": 3},
-		"outputs": {"machine_parts": 1},
+		"inputs": {
+			"refined_essence": 2,
+			"essence_ore": 3
+		},
+		"outputs": {
+			"machine_parts": 1
+		},
 		"work_ticks": 80,
-		"benches": ["workbench"]
+		"benches": [
+			"workbench"
+		]
+	},
+	"cook_meal": {
+		"name": "Готовка похлёбки",
+		"inputs": {
+			"raw_food": 2
+		},
+		"outputs": {
+			"meal": 1
+		},
+		"work_ticks": 60
 	}
 }

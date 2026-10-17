@@ -35,6 +35,11 @@ var weapons: Dictionary = {}
 # region raids
 var raids: Dictionary = {}
 # endregion
+# region needs
+var time: Dictionary = {}
+var needs: Dictionary = {}
+var plants: Dictionary = {}
+# endregion
 
 static var _default: Defs = null
 
@@ -77,6 +82,11 @@ func load_from(dir: String) -> void:
 	# region raids
 	raids = _load_json(dir + "raids.json")
 	# endregion
+	# region needs
+	time = _load_json(dir + "time.json")
+	needs = _load_json(dir + "needs.json")
+	plants = _load_json(dir + "plants.json")
+	# endregion
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -110,6 +120,11 @@ func duplicate_defs() -> Defs:
 	# endregion
 	# region raids
 	d.raids = raids.duplicate(true)
+	# endregion
+	# region needs
+	d.time = time.duplicate(true)
+	d.needs = needs.duplicate(true)
+	d.plants = plants.duplicate(true)
 	# endregion
 	return d
 

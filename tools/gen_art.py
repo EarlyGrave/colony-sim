@@ -413,6 +413,126 @@ def walls():
     d.point((9, 8), fill=rgba("#e0b030"))
     d.point((5, 8), fill=rgba("#e0b030"))
     save(img, "door")
+# region needs
+def food_art():
+    """Bed, stove, crops and the two food items."""
+    pal = {**PAL, "c": "#6a7fb0", "C": "#8fa3d0", "q": "#d9d2c2", "d": "#a0522d", "D": "#6e3a1f",
+           "f": "#e8742a", "F": "#ffd23a", "n": "#4c8a2a", "N": "#8fbf4a", "u": "#c9a46a", "U": "#8a6a3a",
+           "j": "#d98a4a", "J": "#f2b676"}
+    bed = grid([
+        "................",
+        "................",
+        "kkkkkkkkkkkkkkkk",
+        "kDDDDDDDDDDDDDDk",
+        "kDccccccccccqqDk",
+        "kDcCCCccccccqqDk",
+        "kDccccccccccqqDk",
+        "kDcCCCccccccqqDk",
+        "kDccccccccccqqDk",
+        "kDccccccccccqqDk",
+        "kDDDDDDDDDDDDDDk",
+        "kkkkkkkkkkkkkkkk",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], pal)
+    save(bed, "bed")
+    stove = grid([
+        "................",
+        "...kkkkkkkkkk...",
+        "..kMMMMMMMMMMk..",
+        "..kMllllllllMk..",
+        "..kMlkkkkkklMk..",
+        "..kMlkffFfklMk..",
+        "..kMlkfFFfklMk..",
+        "..kMlkkkkkklMk..",
+        "..kMllllllllMk..",
+        "..kMMMMMMMMMMk..",
+        "..kMkMMMMMMkMk..",
+        "...kkkkkkkkkk...",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], pal)
+    save(stove, "stove")
+    young = grid([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "......n.n.......",
+        ".....nNn.nN.....",
+        "......nN.Nn.....",
+        "......nnnn......",
+        ".......nn.......",
+        ".......DD.......",
+        "................",
+        "................",
+        "................",
+    ], pal)
+    save(young, "plant_young")
+    ripe = grid([
+        "................",
+        "................",
+        "....n....n......",
+        "...nNn..nNn.....",
+        "..nNnnNnnNn.....",
+        "...nnNnnnn......",
+        "....nnNnn.......",
+        "...nuu.nn.uu....",
+        "..nuUUu.nuUUu...",
+        "..nuuuu.nuuuu...",
+        "...nnn.nn.nn....",
+        ".......nn.......",
+        ".......DD.......",
+        "................",
+        "................",
+        "................",
+    ], pal)
+    save(ripe, "plant_ripe")
+    raw = grid([
+        "................",
+        "................",
+        "................",
+        "................",
+        ".....kkkk.......",
+        "...kkuuuukk.....",
+        "..kuuUuuuuuk....",
+        "..kuuuuuUuuk.kk.",
+        "...kuuuuuuukuuk.",
+        "....kkuuUuukuuk.",
+        "......kkkkkkkk..",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], pal)
+    save(raw, "item_raw_food")
+    meal = grid([
+        "................",
+        "................",
+        "................",
+        "................",
+        "...kkkkkkkkkk...",
+        "..kqqqqqqqqqqk..",
+        "..kqjJjjjJjjqk..",
+        "..kqjjjjjjjjqk..",
+        "...kqjjjJjjqk...",
+        "....kqqqqqqk....",
+        ".....kkkkkk.....",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], pal)
+    save(meal, "item_meal")
 # endregion
 
 
@@ -427,6 +547,7 @@ def main():
     items()
     pickaxe()
     terrain()
+    food_art()  # region needs
     print("sprites written to", os.path.normpath(OUT))
 
 

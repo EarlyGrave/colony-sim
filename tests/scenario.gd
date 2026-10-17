@@ -13,6 +13,15 @@ static func standard_colony(sim: Simulation, turrets: int) -> void:
 		for x in 3:
 			sim.set_zone(dump + Vector2i(x, y), "waste_dump")
 	designate_nearest_deposits(sim, 10)
+	# region needs
+	# A sensible player also sleeps and eats: beds and a food reserve (the
+	# farming loop has its own tests, here it would only steal labour).
+	for i in 3:
+		sim.buildings.place("bed", find_spot(sim, "bed", center + Vector2i(-3 + i, 8), 0), false)
+	var food_at := center + Vector2i(3, -1)
+	sim.ledger.record_produced("raw_food", 100, "test")
+	sim.items.drop(food_at, "raw_food", 100)
+	# endregion
 	# Turrets in a ring around the capsule and refinery.
 	for i in turrets:
 		var angle := TAU * i / maxi(turrets, 1)

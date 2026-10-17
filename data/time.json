@@ -1,0 +1,11 @@
+{
+	"_comment": "Day clock. Hour of day = start_hour + 24 * (tick % ticks_per_day) / ticks_per_day. Daylight ramps 0..1 between dawn and dusk.",
+	"start_hour": 6.0,
+	"dawn_start": 5.0,
+	"dawn_end": 7.0,
+	"dusk_start": 18.0,
+	"dusk_end": 20.0,
+	"night_daylight": 0.35,
+	"night_tint": "#0a1238",
+	"night_tint_alpha": 0.5
+}

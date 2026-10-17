@@ -78,4 +78,10 @@ signal raid_started(raid_id: String, points: float, unit_count: int)
 signal raid_tremor(cell: Vector2i, ticks_left: int, text: String)
 signal raid_burrowed(cell: Vector2i, count: int)
 signal raid_retreat(raid_id: String)
+# region needs
+signal colonist_ate(colonist_id: int, item_id: String)
+signal colonist_slept(colonist_id: int, in_bed: bool)
+signal colonist_starving(colonist_id: int)
+signal plant_sown(cell: Vector2i, plant_id: String)
+signal plant_harvested(cell: Vector2i, item_id: String, amount: int)
 # endregion

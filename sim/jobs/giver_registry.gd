@@ -12,6 +12,9 @@ static func create_all(sim: Simulation) -> Dictionary:
 	list.append(RepairGiver.new(sim))
 	list.append(DeliverMaterialsGiver.new(sim))  # region construction
 	list.append(BuildGiver.new(sim))  # region construction
+	list.append(OperateGiver.new(sim, "cook", "cooking"))  # region needs
+	list.append(SowGiver.new(sim))  # region needs
+	list.append(HarvestGiver.new(sim))  # region needs
 	# --- end of registrations ---
 	var out: Dictionary = {}
 	for g in list:

@@ -67,6 +67,13 @@
 			"pain": 0.0,
 			"heal": 0.0,
 			"infectable": false
+		},
+		"starvation": {
+			"name": "Голод",
+			"bleed": 0.0,
+			"pain": 0.3,
+			"heal": 0.0005,
+			"infectable": false
 		}
 	},
 	"pain_scale": 100.0,
