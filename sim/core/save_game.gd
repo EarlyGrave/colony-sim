@@ -100,7 +100,7 @@ static func state_hash(sim: Simulation) -> int:
 	for c in sim.items.stacks:
 		parts.append([c, sim.items.stacks[c]])
 	for col in sim.colonists.list:
-		parts.append([col.id, col.cell, col.hp, col.alive, col.carry_item, col.carry_count])
+		parts.append([col.id, col.cell, col.hp, col.alive, col.carry_item, col.carry_count, col.perks.learned if col.perks != null else []])
 	for b in sim.buildings.list:
 		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output])
 	return var_to_str(parts).hash()

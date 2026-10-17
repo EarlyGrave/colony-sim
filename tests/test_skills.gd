@@ -17,8 +17,8 @@ func _ticks_to_first_ore(level: int) -> int:
 
 func test_higher_skill_finishes_faster() -> void:
 	var slow := _ticks_to_first_ore(0)
-	var fast := _ticks_to_first_ore(20)
-	assert_lt(fast, slow, "level 20 (%d) should beat level 0 (%d)" % [fast, slow])
+	var fast := _ticks_to_first_ore(10)
+	assert_lt(fast, slow, "level 10 (%d) should beat level 0 (%d)" % [fast, slow])
 	assert_lt(slow, 600)
 
 
@@ -54,11 +54,11 @@ func test_passion_multiplies_xp() -> void:
 func test_level_capped() -> void:
 	var defs := Defs.get_default()
 	var s := Skills.new()
-	s.levels["mining"] = 19
+	s.levels["mining"] = 9
 	s.xp["mining"] = 0.0
 	s.passions["mining"] = Skills.Passion.NONE
 	s.add_xp(defs, "mining", 1.0e6)
-	assert_eq(s.level("mining"), 20)
+	assert_eq(s.level("mining"), 10)
 
 
 func test_speed_multiplier_grows_with_level() -> void:
@@ -66,7 +66,7 @@ func test_speed_multiplier_grows_with_level() -> void:
 	var s := Skills.new()
 	s.levels["mining"] = 0
 	assert_near(s.speed_mult(defs, "mining"), 1.0, 0.0001)
-	s.levels["mining"] = 20
+	s.levels["mining"] = 10
 	assert_gt(s.speed_mult(defs, "mining"), 1.5)
 	assert_near(s.speed_mult(defs, ""), 1.0, 0.0001)
 

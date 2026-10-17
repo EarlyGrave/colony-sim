@@ -4,7 +4,7 @@
 		"start_weapon": "prison_shiv",
 		"engineer_weapon": "rifle",
 		"hit_base": 0.5,
-		"hit_per_skill": 0.04,
+		"hit_per_skill": 0.08,
 		"range_penalty": 0.03,
 		"hit_min": 0.05,
 		"hit_max": 0.95,

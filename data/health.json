@@ -102,7 +102,7 @@
 	"tend": {
 		"default_quality": 0.5,
 		"base_quality": 0.3,
-		"per_skill_level": 0.035
+		"per_skill_level": 0.07
 	},
 	"illnesses": {
 		"fever": {

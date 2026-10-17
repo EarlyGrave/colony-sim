@@ -1,0 +1,477 @@
+{
+	"_comment": "Perks: 4 per skill. passive: effects {stat: additive value}; active: cooldown_ticks + active {id, params}. Read only via sim.perks.mod()/has(). caps: lower bound of the summed stat. respec_cost: item consumed from storage.",
+	"caps": {
+		"waste_mult": -0.4,
+		"contamination_per_batch": -0.4
+	},
+	"respec_cost": {
+		"item": "refined_essence",
+		"count": 2
+	},
+	"perks": [
+		{
+			"skill": "mining",
+			"id": "miner_pace",
+			"name": "Крепкая кирка",
+			"desc": "Добыча быстрее на 15%.",
+			"type": "passive",
+			"skill_level": 1,
+			"requires": [],
+			"effects": {
+				"mining_speed": 0.15
+			}
+		},
+		{
+			"skill": "mining",
+			"id": "quiet_dig",
+			"name": "Тихая выработка",
+			"desc": "Шум добычи привлекает на 20% меньше тварей.",
+			"type": "passive",
+			"skill_level": 3,
+			"requires": [
+				"miner_pace"
+			],
+			"effects": {
+				"threat_attract": -0.2
+			}
+		},
+		{
+			"skill": "mining",
+			"id": "rich_vein",
+			"name": "Богатая жила",
+			"desc": "Шанс +20% к добыче руды с жилы.",
+			"type": "passive",
+			"skill_level": 6,
+			"requires": [
+				"miner_pace"
+			],
+			"effects": {
+				"ore_yield": 0.2
+			}
+		},
+		{
+			"skill": "mining",
+			"id": "sprint",
+			"name": "Рывок",
+			"desc": "Скорость движения +60% на 10 секунд.",
+			"type": "active",
+			"skill_level": 8,
+			"requires": [
+				"quiet_dig"
+			],
+			"cooldown_ticks": 1800,
+			"active": {
+				"id": "sprint",
+				"params": {
+					"move_speed": 0.6,
+					"duration": 200
+				}
+			}
+		},
+		{
+			"skill": "construction",
+			"id": "builder_hands",
+			"name": "Рукастый строитель",
+			"desc": "Стройка быстрее на 15%.",
+			"type": "passive",
+			"skill_level": 1,
+			"requires": [],
+			"effects": {
+				"build_speed": 0.15
+			}
+		},
+		{
+			"skill": "construction",
+			"id": "sturdy_build",
+			"name": "Прочная кладка",
+			"desc": "Постройки на 20% крепче.",
+			"type": "passive",
+			"skill_level": 3,
+			"requires": [
+				"builder_hands"
+			],
+			"effects": {
+				"building_hp": 0.2
+			}
+		},
+		{
+			"skill": "construction",
+			"id": "thrifty_build",
+			"name": "Бережливость",
+			"desc": "Стройка тратит на 10% меньше материалов.",
+			"type": "passive",
+			"skill_level": 6,
+			"requires": [
+				"builder_hands"
+			],
+			"effects": {
+				"build_cost": -0.1
+			}
+		},
+		{
+			"skill": "construction",
+			"id": "work_rush",
+			"name": "Аврал",
+			"desc": "Скорость работы +50% на 15 секунд.",
+			"type": "active",
+			"skill_level": 8,
+			"requires": [
+				"sturdy_build"
+			],
+			"cooldown_ticks": 2400,
+			"active": {
+				"id": "work_rush",
+				"params": {
+					"work_speed": 0.5,
+					"duration": 300
+				}
+			}
+		},
+		{
+			"skill": "crafting",
+			"id": "deft_fingers",
+			"name": "Ловкие пальцы",
+			"desc": "Ремесло быстрее на 15%.",
+			"type": "passive",
+			"skill_level": 1,
+			"requires": [],
+			"effects": {
+				"craft_speed": 0.15
+			}
+		},
+		{
+			"skill": "crafting",
+			"id": "thrifty_craft",
+			"name": "Экономный мастер",
+			"desc": "Рецепты тратят на 10% меньше сырья.",
+			"type": "passive",
+			"skill_level": 3,
+			"requires": [
+				"deft_fingers"
+			],
+			"effects": {
+				"craft_input": -0.1
+			}
+		},
+		{
+			"skill": "crafting",
+			"id": "fine_work",
+			"name": "Тонкая работа",
+			"desc": "Качество изделий +15%.",
+			"type": "passive",
+			"skill_level": 6,
+			"requires": [
+				"deft_fingers"
+			],
+			"effects": {
+				"craft_quality": 0.15
+			}
+		},
+		{
+			"skill": "crafting",
+			"id": "masterwork",
+			"name": "Шедевр",
+			"desc": "Следующее изделие - мастерской работы.",
+			"type": "active",
+			"skill_level": 8,
+			"requires": [
+				"fine_work"
+			],
+			"cooldown_ticks": 3000,
+			"active": {
+				"id": "masterwork",
+				"params": {}
+			}
+		},
+		{
+			"skill": "shooting",
+			"id": "steady_aim",
+			"name": "Твёрдая рука",
+			"desc": "Меткость +8%.",
+			"type": "passive",
+			"skill_level": 1,
+			"requires": [],
+			"effects": {
+				"hit_chance": 0.08
+			}
+		},
+		{
+			"skill": "shooting",
+			"id": "quick_draw",
+			"name": "Быстрый спуск",
+			"desc": "Скорострельность +15%.",
+			"type": "passive",
+			"skill_level": 3,
+			"requires": [
+				"steady_aim"
+			],
+			"effects": {
+				"attack_speed": 0.15
+			}
+		},
+		{
+			"skill": "shooting",
+			"id": "ammo_saver",
+			"name": "Счёт патронов",
+			"desc": "Расход патронов -20%.",
+			"type": "passive",
+			"skill_level": 6,
+			"requires": [
+				"steady_aim"
+			],
+			"effects": {
+				"ammo_use": -0.2
+			}
+		},
+		{
+			"skill": "shooting",
+			"id": "aimed_shot",
+			"name": "Прицельный выстрел",
+			"desc": "Следующий выстрел почти наверняка попадёт.",
+			"type": "active",
+			"skill_level": 8,
+			"requires": [
+				"quick_draw"
+			],
+			"cooldown_ticks": 1200,
+			"active": {
+				"id": "aimed_shot",
+				"params": {
+					"hit_chance": 0.6,
+					"duration": 300
+				}
+			}
+		},
+		{
+			"skill": "melee",
+			"id": "brawler",
+			"name": "Драчун",
+			"desc": "Урон в ближнем бою +20%.",
+			"type": "passive",
+			"skill_level": 1,
+			"requires": [],
+			"effects": {
+				"melee_damage": 0.2
+			}
+		},
+		{
+			"skill": "melee",
+			"id": "thick_skin",
+			"name": "Толстая шкура",
+			"desc": "Получаемый урон -15%.",
+			"type": "passive",
+			"skill_level": 3,
+			"requires": [
+				"brawler"
+			],
+			"effects": {
+				"damage_taken": -0.15
+			}
+		},
+		{
+			"skill": "melee",
+			"id": "footwork",
+			"name": "Игра ног",
+			"desc": "Уклонение +10%.",
+			"type": "passive",
+			"skill_level": 6,
+			"requires": [
+				"brawler"
+			],
+			"effects": {
+				"dodge_chance": 0.1
+			}
+		},
+		{
+			"skill": "melee",
+			"id": "battle_cry",
+			"name": "Боевой клич",
+			"desc": "Союзники рядом получают +15% меткости на 15 секунд.",
+			"type": "active",
+			"skill_level": 8,
+			"requires": [
+				"thick_skin"
+			],
+			"cooldown_ticks": 2400,
+			"active": {
+				"id": "battle_cry",
+				"params": {
+					"hit_chance": 0.15,
+					"duration": 300,
+					"radius": 6
+				}
+			}
+		},
+		{
+			"skill": "medicine",
+			"id": "gentle_hands",
+			"name": "Лёгкая рука",
+			"desc": "Качество лечения +15%.",
+			"type": "passive",
+			"skill_level": 1,
+			"requires": [],
+			"effects": {
+				"tend_quality": 0.15
+			}
+		},
+		{
+			"skill": "medicine",
+			"id": "fast_healer",
+			"name": "Быстрое заживление",
+			"desc": "Раны пациентов заживают на 20% быстрее.",
+			"type": "passive",
+			"skill_level": 3,
+			"requires": [
+				"gentle_hands"
+			],
+			"effects": {
+				"heal_speed": 0.2
+			}
+		},
+		{
+			"skill": "medicine",
+			"id": "sterile",
+			"name": "Стерильность",
+			"desc": "Шанс заражения у пациентов -25%.",
+			"type": "passive",
+			"skill_level": 6,
+			"requires": [
+				"gentle_hands"
+			],
+			"effects": {
+				"infection_chance": -0.25
+			}
+		},
+		{
+			"skill": "medicine",
+			"id": "instant_tend",
+			"name": "Экстренная помощь",
+			"desc": "Мгновенно перевязывает ближайшего раненого.",
+			"type": "active",
+			"skill_level": 8,
+			"requires": [
+				"fast_healer"
+			],
+			"cooldown_ticks": 2400,
+			"active": {
+				"id": "instant_tend",
+				"params": {
+					"radius": 8,
+					"quality_mult": 1.0
+				}
+			}
+		},
+		{
+			"skill": "plants",
+			"id": "green_thumb",
+			"name": "Зелёные пальцы",
+			"desc": "Работа с растениями быстрее на 15%.",
+			"type": "passive",
+			"skill_level": 1,
+			"requires": [],
+			"effects": {
+				"plant_speed": 0.15
+			}
+		},
+		{
+			"skill": "plants",
+			"id": "bountiful",
+			"name": "Урожайность",
+			"desc": "Урожай +20%.",
+			"type": "passive",
+			"skill_level": 3,
+			"requires": [
+				"green_thumb"
+			],
+			"effects": {
+				"harvest_yield": 0.2
+			}
+		},
+		{
+			"skill": "plants",
+			"id": "hardy_crops",
+			"name": "Стойкие культуры",
+			"desc": "Растения растут на 15% быстрее.",
+			"type": "passive",
+			"skill_level": 6,
+			"requires": [
+				"green_thumb"
+			],
+			"effects": {
+				"grow_speed": 0.15
+			}
+		},
+		{
+			"skill": "plants",
+			"id": "double_harvest",
+			"name": "Двойной сбор",
+			"desc": "Следующий сбор урожая удваивается.",
+			"type": "active",
+			"skill_level": 8,
+			"requires": [
+				"bountiful"
+			],
+			"cooldown_ticks": 3000,
+			"active": {
+				"id": "double_harvest",
+				"params": {}
+			}
+		},
+		{
+			"skill": "operating",
+			"id": "steady_operator",
+			"name": "Уверенный оператор",
+			"desc": "Работа на установках быстрее на 15%.",
+			"type": "passive",
+			"skill_level": 1,
+			"requires": [],
+			"effects": {
+				"operate_speed": 0.15
+			}
+		},
+		{
+			"skill": "operating",
+			"id": "clean_work",
+			"name": "Чистая работа",
+			"desc": "Отходы переработки -15%.",
+			"type": "passive",
+			"skill_level": 3,
+			"requires": [
+				"steady_operator"
+			],
+			"effects": {
+				"waste_mult": -0.15
+			}
+		},
+		{
+			"skill": "operating",
+			"id": "filters",
+			"name": "Фильтры",
+			"desc": "Заражение от партии -25%.",
+			"type": "passive",
+			"skill_level": 6,
+			"requires": [
+				"clean_work"
+			],
+			"effects": {
+				"contamination_per_batch": -0.25
+			}
+		},
+		{
+			"skill": "operating",
+			"id": "cold_start",
+			"name": "Холодный запуск",
+			"desc": "Следующая партия не даёт отходов.",
+			"type": "active",
+			"skill_level": 8,
+			"requires": [
+				"filters"
+			],
+			"cooldown_ticks": 3600,
+			"active": {
+				"id": "cold_start",
+				"params": {}
+			}
+		}
+	]
+}

@@ -53,6 +53,9 @@ var combat: CombatSystem
 var clock: WorldClock
 var needs: NeedsSystem
 var farming: FarmingSystem
+# region perks
+var perks: PerkSystem
+# endregion
 # endregion
 
 var _connections: Array = []  # [signal, callable] pairs made on the bus
@@ -108,6 +111,7 @@ func _init_systems() -> void:
 	needs = NeedsSystem.new(self)
 	farming = FarmingSystem.new(self)
 	# endregion
+	perks = PerkSystem.new(self)  # region perks
 
 
 func _place_starting_colony() -> void:
@@ -146,6 +150,7 @@ func step() -> void:
 	needs.tick()  # region needs
 	farming.tick()  # region needs
 	colonists.tick()
+	perks.tick()  # region perks
 	health.tick()  # region health
 	mood.tick()  # region mood
 	threats.tick()
@@ -292,6 +297,9 @@ func dispose() -> void:
 	contamination = null
 	threats = null
 	storyteller = null
+	if perks != null:  # region perks
+		perks.sim = null
+	perks = null
 	if mood != null:  # region mood
 		mood.sim = null
 	mood = null
@@ -375,4 +383,21 @@ func order_attack(colonist_id: int, enemy_id: int) -> bool:
 func answer_event(event_uid: int, accept: bool) -> bool:
 	_record("answer_event", [event_uid, accept])  # save-load
 	return storyteller.answer(event_uid, accept)
+# endregion
+
+
+# region perks
+func learn_perk(colonist_id: int, perk_id: String) -> bool:
+	_record("learn_perk", [colonist_id, perk_id])  # save-load
+	return perks.learn(colonists.get_by_id(colonist_id), perk_id)
+
+
+func use_perk(colonist_id: int, perk_id: String) -> bool:
+	_record("use_perk", [colonist_id, perk_id])  # save-load
+	return perks.use(colonists.get_by_id(colonist_id), perk_id)
+
+
+func respec_perks(colonist_id: int) -> bool:
+	_record("respec_perks", [colonist_id])  # save-load
+	return perks.respec(colonists.get_by_id(colonist_id))
 # endregion

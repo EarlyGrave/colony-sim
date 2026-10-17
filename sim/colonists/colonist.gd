@@ -30,6 +30,10 @@ var combat: CombatState = null
 var needs: NeedsState = null
 # endregion
 
+# region perks
+var perks: ColonistPerks = null
+# endregion
+
 var job: Job = null
 var idle_until := 0
 var carry_item := ""
