@@ -1,5 +1,7 @@
 {
 	"essence_ore": {"name": "Руда эссенции", "color": "#7a5cc2", "stack": 50},
 	"refined_essence": {"name": "Очищенная эссенция", "color": "#d36bff", "stack": 50},
-	"waste": {"name": "Отходы", "color": "#7fbf3f", "stack": 50, "contaminates": true}
+	"waste": {"name": "Отходы", "color": "#7fbf3f", "stack": 50, "contaminates": true},
+	"raw_food": {"name": "Клубни", "color": "#c9a46a", "stack": 50, "nutrition": 0.4},
+	"meal": {"name": "Похлёбка", "color": "#d98a4a", "stack": 50, "nutrition": 0.85}
 }

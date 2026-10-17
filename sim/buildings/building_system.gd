@@ -165,7 +165,7 @@ func _remove(b: Building) -> void:
 	if b.destroyed:
 		return
 	b.destroyed = true
-	for key in ["op:%d", "rep:%d", "bin:%d"]:
+	for key in ["op:%d", "rep:%d", "bin:%d", "bed:%d"]:
 		sim.jobs.reserved.erase(key % b.id)
 	list.erase(b)
 	for p in b.footprint():

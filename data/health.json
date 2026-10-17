@@ -11,6 +11,7 @@
 		"bite": {"name": "Укус", "bleed": 0.00009, "pain": 0.8, "heal": 0.003, "infectable": true},
 		"bullet": {"name": "Пулевое", "bleed": 0.00014, "pain": 0.9, "heal": 0.003, "infectable": true},
 		"burn": {"name": "Ожог", "bleed": 0.0, "pain": 1.0, "heal": 0.003, "infectable": true},
+		"starvation": {"name": "Голод", "bleed": 0.0, "pain": 0.3, "heal": 0.0005, "infectable": false},
 		"illness": {"name": "Болезнь", "bleed": 0.0, "pain": 0.0, "heal": 0.0, "infectable": false}
 	},
 	"pain_scale": 100.0,

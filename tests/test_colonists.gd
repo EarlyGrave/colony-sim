@@ -23,7 +23,7 @@ func test_colonist_hauls_item_around_wall() -> void:
 	sim.run_ticks(1000)
 	assert_eq(sim.items.count_stored("essence_ore"), 7, "ore not stored")
 	assert_eq(sim.items.count_on_ground("essence_ore"), 7)
-	assert_true(c.job == null, "colonist still busy: " + (c.job.describe() if c.job else ""))
+	assert_true(c.job == null or c.job.type == "sleep", "colonist still busy: " + (c.job.describe() if c.job else ""))  # needs: may be asleep
 	assert_eq(c.carry_count, 0)
 
 
@@ -81,7 +81,7 @@ func test_unreachable_item_does_not_trap_colonist() -> void:
 	_zone_rect(sim, Vector2i(1, 12), Vector2i(2, 2))
 	sim.run_ticks(600)
 	assert_eq(sim.items.count_stored("essence_ore"), 2, "reachable ore should still be hauled")
-	assert_true(c.job == null)
+	assert_true(c.job == null or c.job.type == "sleep")  # needs: may be asleep
 
 
 func test_partial_carry_is_delivered_after_dst_fills() -> void:

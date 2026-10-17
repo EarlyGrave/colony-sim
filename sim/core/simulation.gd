@@ -33,6 +33,11 @@ var storyteller: Storyteller
 # region health
 var health: HealthSystem
 # endregion
+# region needs
+var clock: WorldClock
+var needs: NeedsSystem
+var farming: FarmingSystem
+# endregion
 
 var _connections: Array = []  # [signal, callable] pairs made on the bus
 
@@ -75,6 +80,11 @@ func _init_systems() -> void:
 	# region health
 	health = HealthSystem.new(self)
 	# endregion
+	# region needs
+	clock = WorldClock.new(self)
+	needs = NeedsSystem.new(self)
+	farming = FarmingSystem.new(self)
+	# endregion
 
 
 func _place_starting_colony() -> void:
@@ -105,6 +115,8 @@ func step() -> void:
 	if game_over_reason != "":
 		return
 	tick += 1
+	needs.tick()  # region needs
+	farming.tick()  # region needs
 	colonists.tick()
 	health.tick()  # region health
 	threats.tick()
@@ -223,6 +235,15 @@ func dispose() -> void:
 	contamination = null
 	threats = null
 	storyteller = null
+	health = null
+	# region needs
+	for sys: Object in [needs, farming, clock]:
+		if sys != null:
+			sys.set("sim", null)
+	needs = null
+	farming = null
+	clock = null
+	# endregion
 
 
 # region jobs-core
@@ -239,4 +260,3 @@ func set_work_priority(colonist_id: int, work_type: String, p: int) -> bool:
 	bus.work_priority_changed.emit(colonist_id, work_type, p)
 	return true
 # endregion
-	health = null

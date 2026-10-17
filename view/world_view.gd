@@ -27,7 +27,7 @@ var _particles: Array = []  # [pos, vel, life, max_life, color, size]
 func _ready() -> void:
 	for n in ["colonist", "colonist_engineer", "colonist_sick", "colonist_engineer_sick", "crawler", "brute",
 			"turret_base", "turret_barrel", "refinery", "capsule", "item_ore", "item_refined", "item_waste",
-			"designation_mine"]:
+			"designation_mine", "bed", "stove", "plant_young", "plant_ripe", "item_raw_food", "item_meal"]:
 		_tex[n] = load(SPR + n + ".png")
 	for kind in [["ground", 6], ["rock", 4], ["ore", 3]]:
 		var arr: Array[Image] = []
@@ -138,6 +138,7 @@ func _draw() -> void:
 		return
 	_draw_zones()
 	_draw_designations()
+	_draw_plants()  # region needs
 	_draw_items()
 	_draw_buildings()
 	_draw_colonists()
@@ -146,6 +147,7 @@ func _draw() -> void:
 	_draw_wave_warning()
 	_draw_particles()
 	_draw_selection()
+	_draw_night()  # region needs
 
 
 func _sprite(name: String, center: Vector2, size: Vector2, flip := false, mod := Color.WHITE) -> void:
@@ -190,7 +192,8 @@ func _draw_designations() -> void:
 			_sprite("designation_mine", p + Vector2(TILE, TILE) * 0.5, Vector2(TILE, TILE) * 0.8, false, Color(1, 1, 1, 0.9))
 
 
-const ITEM_SPRITES := {"essence_ore": "item_ore", "refined_essence": "item_refined", "waste": "item_waste"}
+const ITEM_SPRITES := {"essence_ore": "item_ore", "refined_essence": "item_refined", "waste": "item_waste",
+		"raw_food": "item_raw_food", "meal": "item_meal"}
 const PILE_OFFSETS: Array[Vector2] = [Vector2(0, 3), Vector2(-6, -3), Vector2(6, -4)]
 
 
@@ -216,6 +219,8 @@ func _draw_buildings() -> void:
 				_sprite("refinery", center, r.size, false, mod)
 				if b.progress > 0 and not b.broken:
 					_smoke(r.position + Vector2(r.size.x * 0.7, 4), Color(0.5, 0.75, 0.3, 0.5))
+			"bed", "stove":  # region needs
+				_sprite(b.def_id, center, r.size, false, mod)
 			"turret":
 				_sprite("turret_base", center, r.size, false, mod)
 				var aim: float = _turret_aim.get(b.id, -PI / 2)
@@ -372,3 +377,25 @@ func _draw_selection() -> void:
 func _bar(r: Rect2, frac: float, col: Color) -> void:
 	draw_rect(r.grow(1), Color(0, 0, 0, 0.7))
 	draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(frac, 0.0, 1.0), r.size.y)), col)
+
+
+# region needs
+func _draw_plants() -> void:
+	for c: Vector2i in sim.farming.plants:
+		var p: Plant = sim.farming.plants[c]
+		var ripe := sim.farming.is_mature(p)
+		var f := sim.farming.growth_fraction(p)
+		var sz := Vector2(TILE, TILE) * (1.0 if ripe else 0.5 + 0.5 * f)
+		_sprite("plant_ripe" if ripe else "plant_young", cell_to_world(c) + Vector2(TILE, TILE) * 0.5, sz)
+
+
+## Night tint over the whole map (screen-space overlay is not needed: the world is the view).
+func _draw_night() -> void:
+	var cfg: Dictionary = sim.defs.time
+	var dark := 1.0 - sim.clock.daylight()
+	if dark <= 0.01:
+		return
+	var col := Color(str(cfg["night_tint"]))
+	col.a = float(cfg["night_tint_alpha"]) * dark
+	draw_rect(Rect2(Vector2.ZERO, world_size()), col)
+# endregion

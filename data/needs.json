@@ -1,0 +1,21 @@
+{
+	"_comment": "Colonist needs, all 0..1. Below a threshold the colonist drops work and eats / sleeps. Per-tick numbers; a day is balance.ticks_per_day ticks.",
+	"start_food": 0.9,
+	"start_rest": 0.9,
+	"retry_ticks": 20,
+	"food": {
+		"decay_per_tick": 0.0012,
+		"eat_threshold": 0.3,
+		"eat_ticks": 10,
+		"starve_interval_ticks": 50,
+		"starve_damage": 3.0
+	},
+	"rest": {
+		"decay_per_tick": 0.0007,
+		"sleep_threshold_day": 0.2,
+		"sleep_threshold_night": 0.8,
+		"gain_bed": 0.0025,
+		"gain_floor": 0.0012,
+		"wake_at": 1.0
+	}
+}

@@ -6,11 +6,11 @@
 		"repair": {"label": "Ремонт", "skill": "construction", "givers": ["repair"]},
 		"operating": {"label": "Установки", "skill": "operating", "givers": ["operate"]},
 		"hauling": {"label": "Перенос", "skill": "", "givers": ["haul"]},
+		"cooking": {"label": "Кухня", "skill": "crafting", "givers": ["cook"]},
+		"growing": {"label": "Посевы", "skill": "plants", "givers": ["sow", "harvest"]},
 		"mining": {"label": "Добыча", "skill": "mining", "givers": ["mine"]},
 		"construction": {"label": "Стройка", "skill": "construction", "givers": []},
 		"crafting": {"label": "Ремесло", "skill": "crafting", "givers": []},
-		"cooking": {"label": "Кухня", "skill": "crafting", "givers": []},
-		"growing": {"label": "Посевы", "skill": "plants", "givers": []},
 		"doctoring": {"label": "Лечение", "skill": "medicine", "givers": []}
 	}
 }

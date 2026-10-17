@@ -5,6 +5,8 @@ extends Job
 var building_id: int
 ## Fractional work progress carried between ticks (skill speed).
 var _acc := 0.0
+## Work type whose skill is trained ("operating", or "cooking" for a stove).
+var work_type := "operating"
 
 
 func _init(p_id: int) -> void:
@@ -21,7 +23,7 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	_acc += sim.jobs.work_tick(c, "operating")
+	_acc += sim.jobs.work_tick(c, work_type)
 	var steps := int(_acc)
 	_acc -= steps
 	return Status.DONE if sim.buildings.work(b, steps) else Status.RUNNING

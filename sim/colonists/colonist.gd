@@ -19,6 +19,9 @@ var skills: Skills = null
 # region health
 var health: HealthState = null
 # endregion
+# region needs
+var needs: NeedsState = null
+# endregion
 
 var job: Job = null
 var idle_until := 0
