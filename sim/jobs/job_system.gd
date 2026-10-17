@@ -250,7 +250,7 @@ func _find_operate(c: Colonist) -> Job:
 	var best_d := 1 << 30
 	for b: Building in sim.buildings.list:
 		var key := "op:%d" % b.id
-		if not b.can_run_recipe() or not _free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
+		if not sim.buildings.may_operate(b) or not _free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
 			continue
 		var d := c.cell.distance_squared_to(b.cell)
 		if d < best_d:

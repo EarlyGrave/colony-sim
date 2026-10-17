@@ -73,6 +73,19 @@ func place(def_id: String, c: Vector2i, pay := true) -> Building:
 
 
 ## One tick of operator work on a production building.
+## Rule "refine_cap": true when no NEW batch may start (contamination at the
+## player's limit). A batch already in progress is always finished.
+func refining_capped() -> bool:
+	if not sim.is_rule_on("refine_cap"):
+		return false
+	var limit := float(sim.defs.rules["refine_cap"]["max_contamination_percent"])
+	return sim.contamination.fraction() * 100.0 >= limit
+
+
+func may_operate(b: Building) -> bool:
+	return b.can_run_recipe() and (b.progress > 0 or not refining_capped())
+
+
 ## Returns true when a batch completed this tick.
 func work(b: Building) -> bool:
 	if not b.can_run_recipe():
