@@ -29,6 +29,9 @@
 		"work_ticks": 30,
 		"yield": 5
 	},
+	"construction": {
+		"refund_fraction": 0.5
+	},
 	"repair": {
 		"work_ticks": 60,
 		"threshold": 0.5

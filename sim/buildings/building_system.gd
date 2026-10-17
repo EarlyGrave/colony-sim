@@ -127,9 +127,33 @@ func damage(b: Building, amount: float) -> void:
 
 ## Removes the building. Its stored items spill onto the ground.
 func destroy(b: Building) -> void:
+	_remove(b)
+	if b.def.get("critical", false):
+		sim.end_game("hq_destroyed")
+
+
+## Player deconstruction: refunds a fraction of the cost, spills buffers.
+## Returns false if there is nothing deconstructible at `c`.
+func deconstruct(c: Vector2i) -> bool:
+	var b := at(c)
+	if b == null or not bool(b.def.get("deconstructible", true)):
+		return false
+	_remove(b)
+	var frac := float(sim.defs.balance["construction"]["refund_fraction"])
+	for item: String in b.def["cost"]:
+		var n := int(floor(int(b.def["cost"][item]) * frac))
+		if n > 0:
+			sim.ledger.record_produced(item, n, "refund")
+			sim.items.drop(b.cell, item, n)
+	return true
+
+
+func _remove(b: Building) -> void:
 	if b.destroyed:
 		return
 	b.destroyed = true
+	for key in ["op:%d", "rep:%d", "bin:%d"]:
+		sim.jobs.reserved.erase(key % b.id)
 	list.erase(b)
 	for p in b.footprint():
 		occupancy.erase(p)
@@ -142,8 +166,6 @@ func destroy(b: Building) -> void:
 			if c.hidden and b.contains(c.cell):
 				c.hidden = false
 	sim.bus.building_destroyed.emit(b.id)
-	if b.def.get("critical", false):
-		sim.end_game("hq_destroyed")
 
 
 func find_shelter(near: Vector2i) -> Building:

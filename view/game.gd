@@ -143,6 +143,11 @@ func _on_tapped(world_pos: Vector2) -> void:
 			hud.show_message("Построено: " + str(sim.defs.buildings[tool]["name"]), 3.0)
 		else:
 			hud.show_message(err, 3.0)
+	elif tool == "deconstruct":
+		if sim.deconstruct(cell):
+			hud.show_message("Снесено", 3.0)
+		else:
+			hud.show_message("Здесь нечего сносить", 3.0)
 	else:
 		world.selected_cell = cell
 		hud.show_info(_describe_cell(cell))

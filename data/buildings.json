@@ -8,6 +8,7 @@
 		"buildable": false,
 		"shelter": true,
 		"critical": true,
+		"deconstructible": false,
 		"threat_priority": 2
 	},
 	"refinery": {
