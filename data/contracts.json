@@ -15,12 +15,12 @@
 		]
 	},
 	"templates": [
-		{"id": "small_quota", "name": "Малая квота", "essence": [3, 5], "parts": [0, 0], "deadline_days": 3,
+		{"id": "small_quota", "name": "Малая квота", "essence": [3, 5], "parts": [0, 0], "deadline_days": 5,
 			"rewards": [
 				{"kind": "supplies", "items": {"meal": 6}},
 				{"kind": "raid_relief", "mult": 0.7}
 			]},
-		{"id": "big_quota", "name": "Большая квота", "essence": [6, 9], "parts": [1, 3], "deadline_days": 4,
+		{"id": "big_quota", "name": "Большая квота", "essence": [5, 8], "parts": [1, 3], "deadline_days": 5,
 			"rewards": [
 				{"kind": "supplies", "items": {"machine_parts": 4, "meal": 8}},
 				{"kind": "xp", "amount": 40.0}
