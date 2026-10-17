@@ -5,13 +5,14 @@ extends Node
 
 const MAX_TICKS_PER_FRAME := 40
 const RECT_TOOLS := ["mine", "stockpile", "waste_dump", "clear_zone", "growing"]
-const BUILD_TOOLS := ["refinery", "turret", "wall", "door", "workbench", "stove", "bed"]
+const BUILD_TOOLS := ["refinery", "turret", "wall", "door", "workbench", "stove", "bed", "training_dummy"]
 const HINTS := {
 	"inspect": "Нажми на клетку, чтобы посмотреть, что там.",
 	"mine": "Добыча: нажми два угла области с рудой (фиолетовое).",
 	"stockpile": "Склад: нажми два угла области.",
 	"waste_dump": "Свалка отходов: нажми два угла области. Отходы там заражают слабее.",
 	"growing": "Грядки: нажми два угла области. Колонисты посеют и соберут клубни.",
+	"patrol": "Патруль: нажимай клетки маршрута по порядку, затем «Готово». «Авто» — кольцо вокруг базы.",
 	"clear_zone": "Убрать зону: нажми два угла области.",
 }
 
@@ -36,6 +37,21 @@ func _ready() -> void:
 		hud.show_message(("Правило включено: " if on else "Правило выключено: ") + str(sim.defs.rules[id]["name"]), 4.0))
 	hud.new_game_requested.connect(func() -> void: new_game(_random_seed()))
 	hud.colonist_card_pressed.connect(_select_colonist)
+	hud.overlay_toggled.connect(func(on: bool) -> void: world.show_field = on)  # region batch3 ui
+	hud.patrol_undo.connect(func() -> void:
+		if not world.patrol_draft.is_empty():
+			world.patrol_draft.pop_back())
+	hud.patrol_auto.connect(func() -> void:
+		world.patrol_draft.clear()
+		sim.set_patrol_route([])
+		hud.show_message("Патруль: автоматический маршрут.", 3.0))
+	hud.patrol_done.connect(func() -> void:
+		if world.patrol_draft.is_empty():
+			hud.show_message("Сначала отметь точки маршрута.", 3.0)
+			return
+		sim.set_patrol_route(world.patrol_draft)
+		hud.show_message("Маршрут патруля сохранён: %d точек." % world.patrol_draft.size(), 3.0)
+		world.patrol_draft.clear())
 	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
 		camera.position = WorldView.cell_to_world(cell))
 	EventBus.game_over.connect(_on_game_over_meta)  # region meta
@@ -112,6 +128,7 @@ func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	world.bind(sim)
 	world.pending_corner = Vector2i(-1, -1)
 	world.selected_cell = Vector2i(-1, -1)
+	world.patrol_draft.clear()
 	hud.bind(sim)
 	camera.world_size = world.world_size()
 	camera.position = WorldView.cell_to_world(sim.map_center())
@@ -149,6 +166,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _on_tool_selected(t: String) -> void:
 	tool = t
 	world.pending_corner = Vector2i(-1, -1)
+	world.patrol_draft.clear()
 	if t in BUILD_TOOLS:
 		var def: Dictionary = sim.defs.buildings[t]
 		var cost: Array[String] = []
@@ -181,6 +199,12 @@ func _on_tapped(world_pos: Vector2) -> void:
 			hud.show_message("Заложено: " + str(sim.defs.buildings[tool]["name"]) + " (нужны материалы и стройка)", 3.0)
 		else:
 			hud.show_message(err, 3.0)
+	elif tool == "patrol":
+		if sim.map.is_passable(cell):
+			world.patrol_draft.append(cell)
+			hud.show_message("Точка %d. «Готово», когда хватит." % world.patrol_draft.size(), 2.0)
+		else:
+			hud.show_message("Сюда не пройти.", 2.0)
 	elif tool == "deconstruct":
 		if sim.deconstruct(cell):
 			hud.show_message("Снесено / план отменён", 3.0)

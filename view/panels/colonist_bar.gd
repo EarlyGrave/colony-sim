@@ -5,7 +5,7 @@ extends ScrollContainer
 signal colonist_pressed(colonist_id: int)
 
 const SPR := "res://assets/sprites/"
-const CARD := Vector2(176, 68)
+const CARD := Vector2(204, 86)
 
 var sim: Simulation
 var _row: BoxContainer
@@ -105,6 +105,7 @@ func _make_card(c: Colonist) -> Dictionary:
 	bar.add_theme_stylebox_override("fill", fill)
 	vb.add_child(bar)
 	var job_l := _small_label(vb, 14)
+	var debt_l := _small_label(vb, 13)
 	var st_l := _small_label(hb, 15)
 	st_l.clip_text = false
 	st_l.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -125,7 +126,7 @@ func _make_card(c: Colonist) -> Dictionary:
 	badge.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	badge.visible = false
 	btn.add_child(badge)
-	return {"icon": icon, "name": name_l, "bar": bar, "job": job_l, "state": st_l, "badge": badge}
+	return {"icon": icon, "name": name_l, "bar": bar, "job": job_l, "debt": debt_l, "state": st_l, "badge": badge}
 
 
 func _small_label(parent: Control, size: int) -> Label:
@@ -174,6 +175,16 @@ func _update_card(c: Colonist, w: Dictionary) -> void:
 	var st_l := w["state"] as Label
 	st_l.text = st[0]
 	st_l.add_theme_color_override("font_color", st[1])
+	var debt_l := w["debt"] as Label
+	var dst := sim.debt.state_of(c) if sim.debt != null else null
+	debt_l.visible = dst != null and (dst.remaining() > 0 or dst.pending_choice)
+	if debt_l.visible:
+		if dst.pending_choice:
+			debt_l.text = "долг выплачен: выбор!"
+			debt_l.add_theme_color_override("font_color", Color(0.5, 0.95, 0.5))
+		else:
+			debt_l.text = "до свободы: %d эссенции" % dst.remaining()
+			debt_l.add_theme_color_override("font_color", Color(0.9, 0.4, 0.3) if sim.debt.is_overdue(c) else Color(0.7, 0.6, 1.0))
 	var idle_col := Color(1.0, 0.75, 0.3)
 	if c.hidden:
 		job_l.text = "в укрытии"

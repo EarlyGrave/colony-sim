@@ -10,6 +10,10 @@ signal rule_toggled(rule_id: String, on: bool)
 signal new_game_requested()
 signal colonist_card_pressed(colonist_id: int)
 signal focus_cell_requested(cell: Vector2i)
+signal patrol_done()
+signal patrol_undo()
+signal patrol_auto()
+signal overlay_toggled(on: bool)
 
 const TOAST_MAX_QUEUE := 4
 const PANEL_REFRESH := 0.25
@@ -35,14 +39,17 @@ const TOOLS: Array = [
 	["stove", "Печь", "stove"],
 	["bed", "Кровать", "bed"],
 	# endregion
+	["training_dummy", "Манекен", ""],  # region batch3 ui
+	["patrol", "Патруль", ""],
+	["overlay", "Заражение", ""],
 ]
 const COMPACT_H := 500.0  ## logical viewport height below which the compact layout is used
 const BAR_H := 64.0
 ## Compact bottom bar: category -> [label, tool ids]. "alarm" and rule ids are handled separately.
 const CATS: Array = [
 	["zones", "Зоны", ["stockpile", "waste_dump", "clear_zone", "growing"]],
-	["build", "Стройка", ["refinery", "turret", "workbench", "wall", "door", "stove", "bed", "deconstruct"]],
-	["orders", "Приказы", ["mine", "@rules"]],
+	["build", "Стройка", ["refinery", "turret", "workbench", "wall", "door", "stove", "bed", "training_dummy", "deconstruct"]],
+	["orders", "Приказы", ["mine", "patrol", "overlay", "@rules"]],
 ]
 const REASONS := {
 	"hq_destroyed": "Капсула разрушена. Колония пала.",
@@ -92,6 +99,12 @@ var _menu_box: VBoxContainer
 var _colonist_dock: PanelContainer
 var _tool_order: Array[Button] = []
 var _inspect_btn_ref: Button
+var _forecast_bar: ForecastBar
+var _contract_btn: Button
+var _alerts: AlertCenter
+var _patrol_bar: PanelContainer
+var _legend: PanelContainer
+var _overlay_on := true
 var _bottom_inset := BTN_MIN.y + 24
 
 
@@ -125,11 +138,18 @@ func _ready() -> void:
 	_clock.visible = false
 	_stats = _label(labels)
 	_forecast = _label(labels)
-	_forecast.add_theme_font_size_override("font_size", 16)
+	_forecast.add_theme_font_size_override("font_size", 20)
+	_forecast_bar = ForecastBar.new()
+	labels.add_child(_forecast_bar)
 	_threat = _label(labels)
+	labels.move_child(_forecast_bar, _forecast.get_index() + 1)
 	var speed_row := HBoxContainer.new()
 	speed_row.add_theme_constant_override("separation", 4)
 	top_flow.add_child(speed_row)
+	_contract_btn = _button(speed_row, "Контракт", Vector2(120, 64))
+	_contract_btn.add_theme_font_size_override("font_size", 16)
+	_contract_btn.pressed.connect(func() -> void: toggle_panel("contracts"))
+	_contract_btn.visible = false
 	for i in 4:
 		var b := _button(speed_row, "||" if i == 0 else "%dx" % i, Vector2(56, 64))
 		b.toggle_mode = true
@@ -179,9 +199,17 @@ func _ready() -> void:
 	for t in TOOLS:
 		var b := _button(tools_row, t[1], BTN_MIN, t[2])
 		b.toggle_mode = true
-		b.button_group = group
 		var id: String = t[0]
-		b.pressed.connect(func() -> void: tool_selected.emit(id))
+		if id == "overlay":
+			b.set_pressed_no_signal(true)
+			b.toggled.connect(func(on: bool) -> void:
+				_overlay_on = on
+				overlay_toggled.emit(on))
+		else:
+			b.button_group = group
+			b.pressed.connect(func() -> void:
+				tool_selected.emit(id)
+				_patrol_bar.visible = id == "patrol")
 		_tool_buttons[id] = b
 		_tool_order.append(b)
 	_alarm_btn = _button(tools_row, "Тревога", BTN_MIN, "capsule")
@@ -212,6 +240,8 @@ func _ready() -> void:
 	_message.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_message)
 
+	_build_batch3_widgets(root)
+
 	# --- Game over overlay ---
 	_game_over = PanelContainer.new()
 	_game_over.set_anchors_preset(Control.PRESET_CENTER)
@@ -228,9 +258,95 @@ func _ready() -> void:
 	again.pressed.connect(func() -> void: new_game_requested.emit())
 	_game_over.visible = false
 
+	root.move_child(_alerts, -1)
 	select_tool("inspect")
 	get_viewport().size_changed.connect(_check_layout)
 	_check_layout()
+
+
+# region batch3 ui
+func _build_batch3_widgets(root: Control) -> void:
+	_forecast_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_alerts = AlertCenter.new()
+	root.add_child(_alerts)
+	# Patrol route editor controls (shown while the patrol tool is active).
+	_patrol_bar = PanelContainer.new()
+	_patrol_bar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_patrol_bar.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_patrol_bar.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_patrol_bar.visible = false
+	root.add_child(_patrol_bar)
+	var prow := HBoxContainer.new()
+	prow.add_theme_constant_override("separation", 8)
+	_patrol_bar.add_child(prow)
+	var pl := Label.new()
+	pl.text = "Маршрут: нажимай точки"
+	pl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	prow.add_child(pl)
+	_button(prow, "Назад", Vector2(96, 64)).pressed.connect(func() -> void: patrol_undo.emit())
+	_button(prow, "Готово", Vector2(112, 64)).pressed.connect(func() -> void: patrol_done.emit())
+	_button(prow, "Авто", Vector2(96, 64)).pressed.connect(func() -> void: patrol_auto.emit())
+	# Contamination overlay legend.
+	_legend = PanelContainer.new()
+	_legend.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_legend.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_legend.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_legend.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_legend)
+	var lrow := HBoxContainer.new()
+	lrow.add_theme_constant_override("separation", 6)
+	_legend.add_child(lrow)
+	for e: Array in [[Color(0.35, 0.8, 0.25, 0.8), "заражено"], [Color(0.6, 0.25, 0.8, 0.9), "мутация"]]:
+		var sw := ColorRect.new()
+		sw.color = e[0]
+		sw.custom_minimum_size = Vector2(18, 18)
+		sw.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		lrow.add_child(sw)
+		var ll := Label.new()
+		ll.text = e[1]
+		ll.add_theme_font_size_override("font_size", 16)
+		lrow.add_child(ll)
+
+
+func _update_batch3() -> void:
+	var cont := sim.contamination
+	var f := cont.fraction()
+	var ths := ForecastBar.thresholds(sim)
+	var col := ForecastBar.tint(f, ths)
+	_forecast.add_theme_color_override("font_color", col)
+	var next_name := ""
+	var next_m := 9.0
+	for id: String in sim.defs.crises["crises"]:
+		var t := float(sim.defs.crises["crises"][id]["threshold"])
+		if t > f and t - f < next_m:
+			next_m = t - f
+			next_name = str(sim.defs.crises["crises"][id]["name"])
+	if next_name != "":
+		_forecast.text += " · до «%s» %.1f%%" % [next_name, next_m * 100.0]
+	_alerts.top_inset = _stack.size.y
+	_alerts.refresh()
+	# Contract indicator: the active contract with the nearest deadline, else an open offer.
+	var best: Dictionary = {}
+	var offers := 0
+	if sim.contracts != null:
+		for c in sim.contracts.open_contracts():
+			if c["state"] == "active" and (best.is_empty() or int(c["deadline_day"]) < int(best["deadline_day"])):
+				best = c
+			elif c["state"] == "offered":
+				offers += 1
+	_contract_btn.visible = not best.is_empty() or offers > 0
+	if not best.is_empty():
+		var have := sim.items.count_stored("refined_essence")
+		_contract_btn.text = "Контракт\n%d/%d эсс · %d дн" % [mini(have, int(best["essence"])), int(best["essence"]), maxi(0, int(best["deadline_day"]) - sim.day())]
+		_contract_btn.modulate = Color(0.6, 1.0, 0.6) if sim.contracts.can_deliver(best) else Color.WHITE
+	elif offers > 0:
+		_contract_btn.text = "Контракт\nпредложен (%d)" % offers
+		_contract_btn.modulate = Color(1.0, 0.85, 0.4)
+	_legend.visible = _overlay_on
+	_legend.offset_bottom = -_bottom_inset - 4
+	_legend.offset_right = -8
+	_patrol_bar.offset_bottom = -_bottom_inset - 4
+# endregion
 
 
 ## Overlay widgets used only by the compact (small-height) layout.
@@ -390,6 +506,9 @@ func bind(p_sim: Simulation) -> void:
 	if not _letters.letter_added.is_connected(_on_letter):
 		_letters.letter_added.connect(_on_letter)
 	_colonist_bar.bind(p_sim)
+	_forecast_bar.bind(p_sim)
+	_alerts.bind(p_sim)
+	_patrol_bar.visible = false
 
 
 func select_tool(id: String) -> void:
@@ -560,6 +679,7 @@ func _process(delta: float) -> void:
 	_threat.text = ""
 	_threat.visible = false
 	_forecast.text += " · " + _threat_text()
+	_update_batch3()
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
 	for rule_id: String in _rule_buttons:
 		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
