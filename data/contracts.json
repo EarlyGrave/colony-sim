@@ -1,0 +1,29 @@
+{
+	"first_offer_day": 2,
+	"offer_interval_days": 4,
+	"offer_ttl_days": 2,
+	"max_open": 2,
+	"anger": {
+		"max": 6.0,
+		"on_fail": 1.5,
+		"on_decline": 0.75,
+		"on_fulfil": -1.0,
+		"sanction_by_anger": [
+			{"min": 0.0, "kind": "raid_mult", "mult": 1.25},
+			{"min": 2.0, "kind": "inspection", "damage": 10.0, "damage_kind": "bruise"},
+			{"min": 4.0, "kind": "raid_mult", "mult": 1.6}
+		]
+	},
+	"templates": [
+		{"id": "small_quota", "name": "Малая квота", "essence": [3, 5], "parts": [0, 0], "deadline_days": 3,
+			"rewards": [
+				{"kind": "supplies", "items": {"meal": 6}},
+				{"kind": "raid_relief", "mult": 0.7}
+			]},
+		{"id": "big_quota", "name": "Большая квота", "essence": [6, 9], "parts": [1, 3], "deadline_days": 4,
+			"rewards": [
+				{"kind": "supplies", "items": {"machine_parts": 4, "meal": 8}},
+				{"kind": "xp", "amount": 40.0}
+			]}
+	]
+}

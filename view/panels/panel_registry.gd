@@ -19,6 +19,7 @@ const PANELS: Array = [
 	# slot 3
 	["perks", "Перки", "res://view/panels/perk_panel.gd"],
 	# slot 4
+	["contracts", "Контракты", "res://view/panels/contracts_panel.gd"],
 	# slot 5
 	# slot 6
 	["save", "Меню", "res://view/panels/save_panel.gd"],

@@ -53,6 +53,9 @@ var combat: CombatSystem
 var clock: WorldClock
 var needs: NeedsSystem
 var farming: FarmingSystem
+# region contracts
+var contracts: ContractSystem
+# endregion
 # region perks
 var perks: PerkSystem
 # endregion
@@ -112,6 +115,7 @@ func _init_systems() -> void:
 	farming = FarmingSystem.new(self)
 	# endregion
 	perks = PerkSystem.new(self)  # region perks
+	contracts = ContractSystem.new(self)  # region contracts
 
 
 func _place_starting_colony() -> void:
@@ -297,6 +301,9 @@ func dispose() -> void:
 	contamination = null
 	threats = null
 	storyteller = null
+	if contracts != null:  # region contracts
+		contracts.sim = null
+	contracts = null
 	if perks != null:  # region perks
 		perks.sim = null
 	perks = null
@@ -400,4 +407,21 @@ func use_perk(colonist_id: int, perk_id: String) -> bool:
 func respec_perks(colonist_id: int) -> bool:
 	_record("respec_perks", [colonist_id])  # save-load
 	return perks.respec(colonists.get_by_id(colonist_id))
+# endregion
+
+
+# region contracts
+func accept_contract(contract_id: int) -> bool:
+	_record("accept_contract", [contract_id])  # save-load
+	return contracts.accept(contract_id)
+
+
+func decline_contract(contract_id: int) -> bool:
+	_record("decline_contract", [contract_id])  # save-load
+	return contracts.decline(contract_id)
+
+
+func deliver_contract(contract_id: int) -> bool:
+	_record("deliver_contract", [contract_id])  # save-load
+	return contracts.deliver(contract_id)
 # endregion

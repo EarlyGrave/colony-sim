@@ -38,6 +38,9 @@ var perks: Dictionary = {}
 # region raids
 var raids: Dictionary = {}
 # endregion
+# region contracts
+var contracts: Dictionary = {}
+# endregion
 # region needs
 var time: Dictionary = {}
 var needs: Dictionary = {}
@@ -88,6 +91,9 @@ func load_from(dir: String) -> void:
 	# region raids
 	raids = _load_json(dir + "raids.json")
 	# endregion
+	# region contracts
+	contracts = _load_json(dir + "contracts.json")
+	# endregion
 	# region needs
 	time = _load_json(dir + "time.json")
 	needs = _load_json(dir + "needs.json")
@@ -129,6 +135,9 @@ func duplicate_defs() -> Defs:
 	# endregion
 	# region raids
 	d.raids = raids.duplicate(true)
+	# endregion
+	# region contracts
+	d.contracts = contracts.duplicate(true)
 	# endregion
 	# region needs
 	d.time = time.duplicate(true)
