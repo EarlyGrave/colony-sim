@@ -45,6 +45,11 @@ signal colonist_downed(colonist_id: int)
 signal injury_added(colonist_id: int, part: String, kind: String, severity: float)
 # endregion
 
+# region mood
+signal mood_break_started(colonist_id: int, kind: String)
+signal thought_added(colonist_id: int, thought_id: String)
+# endregion
+
 # --- Game flow ---
 signal game_over(reason: String)
 signal story_event(event_id: String, text: String)

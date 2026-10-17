@@ -1,0 +1,18 @@
+{
+	"base": 50,
+	"check_ticks": 30,
+	"minor_threshold": 35,
+	"extreme_threshold": 15,
+	"minor_chance": 0.5,
+	"extreme_chance": 0.5,
+	"wander_ticks": 240,
+	"wander_radius": 6,
+	"thoughts": {
+		"injured": {"label": "Hurt", "value": -8, "duration_days": 0.0},
+		"colonist_died": {"label": "A colonist died", "value": -12, "duration_days": 3.0},
+		"wave_survived": {"label": "Survived the attack", "value": 6, "duration_days": 2.0},
+		"planet_doomed": {"label": "The planet is dying", "value": -5, "duration_days": 0.0},
+		"slept_on_floor": {"label": "Slept on the floor", "value": -4, "duration_days": 1.0},
+		"ate_raw": {"label": "Ate raw food", "value": -3, "duration_days": 1.0}
+	}
+}

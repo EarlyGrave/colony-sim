@@ -30,6 +30,7 @@ const INSPECTOR_SECTIONS: Array = [
 	# slot 3
 	# slot 4
 	# slot 5
+	["mood", "res://view/panels/sections/mood_section.gd"],
 	# slot 6
 ]
 

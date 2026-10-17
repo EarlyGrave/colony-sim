@@ -33,6 +33,9 @@ var storyteller: Storyteller
 # region health
 var health: HealthSystem
 # endregion
+# region mood
+var mood: MoodSystem
+# endregion
 
 var _connections: Array = []  # [signal, callable] pairs made on the bus
 
@@ -75,6 +78,9 @@ func _init_systems() -> void:
 	# region health
 	health = HealthSystem.new(self)
 	# endregion
+	# region mood
+	mood = MoodSystem.new(self)
+	# endregion
 
 
 func _place_starting_colony() -> void:
@@ -107,6 +113,7 @@ func step() -> void:
 	tick += 1
 	colonists.tick()
 	health.tick()  # region health
+	mood.tick()  # region mood
 	threats.tick()
 	contamination.tick()
 	storyteller.tick()
@@ -223,6 +230,9 @@ func dispose() -> void:
 	contamination = null
 	threats = null
 	storyteller = null
+	if mood != null:  # region mood
+		mood.sim = null
+	mood = null
 
 
 # region jobs-core
