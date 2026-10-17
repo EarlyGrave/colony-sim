@@ -12,3 +12,9 @@ Shared-file policy: prefer NEW files. Edit shared files only inside `# region <a
 - data/*.json: new entries/keys for your feature only; prefer new data/<feature>.json + loader line in defs.gd region.
 - colonist.gd: one var per component object; logic in your own files.
 Final report (<300 words): files changed, new bus signals, new commands, test count, known gaps, commit hash + branch. Do not edit PROGRESS.md.
+
+## WAVE 2 start (MANDATORY first step)
+Your worktree may be based on an old commit. Before anything else run:
+`git reset --hard claude/colony-sim-godot-4jftsm` (local branch in the shared repo), then `godot --headless --path . --import` and the test suite (should be green, ~97 tests).
+Wave-1 systems now exist: work givers (sim/jobs/givers/*, giver_registry.gd, data/work.json, skills), health (sim.health.apply_damage/tend/add_illness, downed), UI registry (view/panels/panel_registry.gd with "# slot N" markers; GamePanel; InspectorSection).
+Owner decisions: basic mood/stress yes; research/trade later; food = growing + stove; enemies = creatures only (no armed humans); save/load yes; colonist death permanent.
