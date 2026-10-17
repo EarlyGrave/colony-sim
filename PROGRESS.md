@@ -71,6 +71,21 @@ Tests: 57 green. Handoff: `docs/handoff/session-2026-10-17-handoff.md`.
   → wave 2; static 3 turrets → wave 3–4; rebuilding → wave 5–7 with contamination 30–65%.
 Tests: 73 green.
 
+## Session 2 (cont.) — RimWorld-like batch (parallel agents, prompter plan)
+- Wave 1: work givers + skills + per-colonist priorities (Work panel); health (injuries,
+  bleeding, downed, death); UI shell (panel registry, colonist bar, inspector, letters).
+- Wave 2: needs (food/rest), day/night clock, farming, stove, beds; construction by
+  blueprint + walls/doors; drafting & combat (shiv/rifle); bills/workbench + zone
+  filters/priorities; creature raids (swarm, brutes, spitters, burrowers) by points,
+  retreat; arrivals/events (wanderer, pod crash, transport drop, toxic fallout, cargo);
+  basic mood + breaks (wander, sabotage); save/load by command replay (autosave daily).
+- Follow-ups: doctor (rescue, tend, feed patients); UI polish (letters, clock, needs in
+  inspector); compact phone layout (map ~64% on 844x390); QA/balance: stuck-path fix,
+  4 colonists, first raid ~day 3 (tutorial swarm), interval 3.5 days, raid points weight
+  contamination, nonstop refining → planet death ~day 19–21.
+Tests: 173 green. Idle ~32% in a peaceful 20-day bot game (needs work).
+Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner answers pending).
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
