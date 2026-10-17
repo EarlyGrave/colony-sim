@@ -95,7 +95,7 @@ var _open_cat := ""
 var _stash: Control
 var _menu_btn: Button
 var _menu_popup: PanelContainer
-var _menu_box: VBoxContainer
+var _menu_box: GridContainer
 var _colonist_dock: PanelContainer
 var _tool_order: Array[Button] = []
 var _inspect_btn_ref: Button
@@ -376,7 +376,9 @@ func _build_compact_widgets(root: Control, group: ButtonGroup) -> void:
 	_menu_popup = PanelContainer.new()
 	_menu_popup.visible = false
 	root.add_child(_menu_popup)
-	_menu_box = VBoxContainer.new()
+	_menu_box = GridContainer.new()
+	_menu_box.add_theme_constant_override("h_separation", 6)
+	_menu_box.add_theme_constant_override("v_separation", 6)
 	_menu_popup.add_child(_menu_box)
 	_stash = Control.new()
 	_stash.visible = false
@@ -395,7 +397,7 @@ func _build_compact_widgets(root: Control, group: ButtonGroup) -> void:
 func _check_layout() -> void:
 	var h := get_viewport().get_visible_rect().size.y
 	var want := h < COMPACT_H
-	if want != _compact or _cat_popup_row.get_parent() == null:
+	if want != _compact or _cat_popup_row.get_parent() == null or _cat_row.get_parent() == null:
 		_apply_layout(want)
 
 
@@ -411,50 +413,39 @@ func _apply_layout(compact: bool) -> void:
 	_cat_popup.visible = false
 	_menu_popup.visible = false
 	for b: Button in _tool_order:
-		_reparent_to(b, _stash if compact else _tools_row)
+		_reparent_to(b, _stash)
 	for cid: String in _cat_buttons:
 		if _cat_buttons[cid].get_parent() != null:
 			_cat_buttons[cid].get_parent().remove_child(_cat_buttons[cid])
-	for b: Button in [_letters_btn] + _panel_buttons.values():
-		_reparent_to(b, _panel_row)
 	_reparent_to(_colonist_bar, _stack)
-	_colonist_dock.visible = compact
-	_menu_btn.visible = compact
-	_panel_row.visible = not compact
+	_menu_btn.visible = true
+	_panel_row.visible = false
 	if _cat_row.get_parent() != null:
 		_cat_row.get_parent().remove_child(_cat_row)
+	# Category bottom bar and "Ещё" menu on every screen size.
+	_bottom_inset = BAR_H + 22
+	_message.offset_top = -(BAR_H + 90)
+	_message.offset_bottom = -(BAR_H + 24)
+	_tools_scroll.custom_minimum_size.y = BAR_H + 4
+	_tools_row.add_theme_constant_override("separation", 6)
+	_tools_row.add_child(_cat_row)
+	_reparent_to(_tool_buttons["inspect"], _cat_row)
+	_tool_buttons["inspect"].custom_minimum_size = Vector2(110, BAR_H)
+	for cid: String in _cat_buttons:
+		_cat_row.add_child(_cat_buttons[cid])
+	_reparent_to(_alarm_btn, _cat_row)
+	_alarm_btn.custom_minimum_size = Vector2(110, BAR_H)
+	for b: Button in [_letters_btn] + _panel_buttons.values():
+		_reparent_to(b, _menu_box)
+		b.custom_minimum_size = Vector2(150, BAR_H)
+	_colonist_dock.visible = compact
+	_menu_box.columns = 4 if compact else 2
 	if compact:
 		_top_flow.get_child(0).custom_minimum_size.x = 150
-		_bottom_inset = BAR_H + 22
-		_message.offset_top = -(BAR_H + 90)
-		_message.offset_bottom = -(BAR_H + 24)
-		_tools_scroll.custom_minimum_size.y = BAR_H + 4
-		_tools_row.add_theme_constant_override("separation", 6)
-		# bottom bar: Осмотр, categories, alarm
-		_tools_row.add_child(_cat_row)
-		_reparent_to(_tool_buttons["inspect"], _cat_row)
-		_tool_buttons["inspect"].custom_minimum_size = Vector2(110, BAR_H)
-		for cid: String in _cat_buttons:
-			_cat_row.add_child(_cat_buttons[cid])
-		_reparent_to(_alarm_btn, _cat_row)
-		_alarm_btn.custom_minimum_size = Vector2(110, BAR_H)
-		for b: Button in _panel_buttons.values() + [_letters_btn]:
-			_reparent_to(b, _menu_box)
-			b.custom_minimum_size = Vector2(150, BAR_H)
 		_reparent_to(_colonist_bar, _colonist_dock)
-		_colonist_bar.set_compact(true)
 	else:
 		_top_flow.get_child(0).custom_minimum_size.x = 430
-		_bottom_inset = BTN_MIN.y + 24
-		_message.offset_top = -(BTN_MIN.y + 110)
-		_message.offset_bottom = -(BTN_MIN.y + 24)
-		_tools_scroll.custom_minimum_size.y = BTN_MIN.y + 8
-		_tools_row.add_theme_constant_override("separation", 8)
-		for b: Button in _tool_order:
-			b.custom_minimum_size = BTN_MIN
-		for b: Button in [_letters_btn] + _panel_buttons.values():
-			b.custom_minimum_size = Vector2(84, 64)
-		_colonist_bar.set_compact(false)
+	_colonist_bar.set_compact(compact)
 	_place_side()
 
 
@@ -687,6 +678,7 @@ func _process(delta: float) -> void:
 		_message.text = ""
 		_next_toast()
 	_letters_btn.text = "Письма (%d)" % _letters.unread if _letters.unread > 0 else "Письма"
+	_menu_btn.text = "Ещё (%d)" % _letters.unread if _letters.unread > 0 else "Ещё"
 	_place_side()
 	_panel_timer += delta
 	if _panel_timer >= PANEL_REFRESH:

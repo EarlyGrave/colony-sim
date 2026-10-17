@@ -12,6 +12,7 @@ var _scroll: ScrollContainer
 var _box: VBoxContainer
 var _strip: Button
 var _sig := ""
+var _hide_btn: Button
 var _known: Dictionary = {}
 var _timers: Array = []  # [Label, crisis id]
 
@@ -131,16 +132,19 @@ func _rebuild() -> void:
 	_strip.add_theme_color_override("font_color", Color(1.0, 0.6, 0.5))
 	if collapsed:
 		return
+	_hide_btn = Button.new()
+	_hide_btn.text = "Скрыть"
+	_hide_btn.custom_minimum_size = Vector2(130, 56)
+	_hide_btn.focus_mode = Control.FOCUS_NONE
+	_hide_btn.pressed.connect(func() -> void:
+		collapsed = true
+		_sig = ""
+		refresh())
 	if sim.crises != null:
 		for p in sim.crises.pending:
 			_crisis_card(str(p["id"]), width)
 	for cid in payoff_ids():
 		_payoff_card(cid, width)
-	var hide := _button(_box, "Скрыть", Vector2(160, 64))
-	hide.pressed.connect(func() -> void:
-		collapsed = true
-		_sig = ""
-		refresh())
 	_scroll.custom_minimum_size = Vector2(width, 10)
 	_fit.call_deferred()
 
@@ -155,11 +159,15 @@ func _crisis_card(id: String, width: float) -> void:
 	var c: Dictionary = sim.defs.crises["crises"][id]
 	var head := Label.new()
 	head.text = "КРИЗИС: %s (%d%% заражения)" % [c["name"], roundi(float(c["threshold"]) * 100.0)]
-	head.add_theme_font_size_override("font_size", 26)
+	head.add_theme_font_size_override("font_size", 18 if _small() else 26)
 	head.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35))
-	_box.add_child(head)
-	_wrapped(_box, str(c["text"]), width)
+	_add_head(head)
+	var body := _wrapped(_box, str(c["text"]), width)
+	if _small():
+		body.add_theme_font_size_override("font_size", 14)
 	var tl := Label.new()
+	if _small():
+		tl.add_theme_font_size_override("font_size", 14)
 	tl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
 	_box.add_child(tl)
 	_timers.append([tl, id])
@@ -167,7 +175,10 @@ func _crisis_card(id: String, width: float) -> void:
 	flow.add_theme_constant_override("h_separation", 10)
 	flow.add_theme_constant_override("v_separation", 8)
 	_box.add_child(flow)
-	var col_w := (width - 20.0) / 2.0 if width >= 560.0 else width
+	var n_opts: int = c["options"].size()
+	var col_w := (width - 10.0 * (n_opts - 1) - 24.0) / n_opts if (_small() or width >= 560.0) and n_opts > 0 else width
+	if not _small() and width >= 560.0:
+		col_w = (width - 20.0) / 2.0
 	for oid: String in c["options"]:
 		var o: Dictionary = c["options"][oid]
 		var vb := VBoxContainer.new()
@@ -178,9 +189,11 @@ func _crisis_card(id: String, width: float) -> void:
 		for item: String in cost:
 			label += " (%d %s)" % [int(cost[item]), str(sim.defs.items[item]["name"]).to_lower()]
 		var b := _button(vb, label, Vector2(0, 64))
+		if _small():
+			b.add_theme_font_size_override("font_size", 15)
 		b.disabled = not sim.crises.can_afford(id, oid)
 		b.pressed.connect(func() -> void: sim.resolve_crisis(id, oid))
-		_wrapped(vb, str(o["text"]), col_w).add_theme_font_size_override("font_size", 16)
+		_wrapped(vb, str(o["text"]), col_w).add_theme_font_size_override("font_size", 12 if _small() else 16)
 	_box.add_child(HSeparator.new())
 
 
@@ -190,7 +203,7 @@ func _payoff_card(cid: int, width: float) -> void:
 	head.text = "%s выплатил долг" % c.display_name
 	head.add_theme_font_size_override("font_size", 24)
 	head.add_theme_color_override("font_color", Color(0.5, 0.95, 0.5))
-	_box.add_child(head)
+	_add_head(head)
 	_wrapped(_box, "Остаться вольным колонистом или покинуть планету?", width)
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 10)
@@ -200,6 +213,23 @@ func _payoff_card(cid: int, width: float) -> void:
 	var leave := _button(row, "Покинуть планету", Vector2(240, 64))
 	leave.pressed.connect(func() -> void: sim.choose_payoff(cid, false))
 	_box.add_child(HSeparator.new())
+
+
+## First card header shares its row with the "Скрыть" button.
+func _add_head(head: Label) -> void:
+	if _hide_btn != null and _hide_btn.get_parent() == null:
+		var row := HBoxContainer.new()
+		head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(head)
+		row.add_child(_hide_btn)
+		_box.add_child(row)
+	else:
+		_box.add_child(head)
+
+
+func _small() -> bool:
+	return get_viewport_rect().size.y < 500.0
 
 
 func _wrapped(parent: Control, text: String, width: float) -> Label:

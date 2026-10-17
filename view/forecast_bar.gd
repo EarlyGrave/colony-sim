@@ -7,7 +7,7 @@ var sim: Simulation
 
 
 func _init() -> void:
-	custom_minimum_size = Vector2(0, 16)
+	custom_minimum_size = Vector2(0, 8)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
