@@ -162,3 +162,9 @@ Deconstruction reuses `building_destroyed` (does not end the game).
 4. Enemies: creatures only for now; armed humans come later with factions.
 5. Save/load: yes (autosave in browser + load).
 6. Colonist death is permanent.
+
+## D23. Perk system decisions (owner: "as you see fit, revise later")
+Per-skill perk points (points = skill level − perks bought in that skill); skill scale 0–10,
+starting levels 0–4; respec allowed for refined essence; active perks manual only;
+total waste/contamination reduction from perks capped at 40%; passion affects xp only;
+no vibration — letter + badge. Plan: docs/prompter_inbox.md §12.

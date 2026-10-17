@@ -18,3 +18,13 @@ Your worktree may be based on an old commit. Before anything else run:
 `git reset --hard claude/colony-sim-godot-4jftsm` (local branch in the shared repo), then `godot --headless --path . --import` and the test suite (should be green, ~97 tests).
 Wave-1 systems now exist: work givers (sim/jobs/givers/*, giver_registry.gd, data/work.json, skills), health (sim.health.apply_damage/tend/add_illness, downed), UI registry (view/panels/panel_registry.gd with "# slot N" markers; GamePanel; InspectorSection).
 Owner decisions: basic mood/stress yes; research/trade later; food = growing + stove; enemies = creatures only (no armed humans); save/load yes; colonist death permanent.
+
+## PERKS batch (start: `git reset --hard claude/colony-sim-godot-4jftsm`, import, tests ~173 green)
+- Perk data only in data/perks.json (loader in defs.gd region perks). Effects are read ONLY via
+  `sim.perks.mod(c, stat, ctx := {}) -> float` (additive sum, 0.0 if none) and `sim.perks.has(c, perk_id)`.
+  Never read c.perks from other systems.
+- Choosing/using perks are Simulation commands (learn_perk, use_perk, respec_perks) with `_record(...)` first line.
+  Cooldowns in ticks. No randomness outside sim.rng.
+- Colonist holds one `c.perks` (ColonistPerks: learned, cooldowns, buffs). Logic only in sim/perks/*.
+- Signals: perk_learned, perk_used, perk_point_available. UI via panel_registry, buttons >= 64 px.
+- Decisions D23 in DECISIONS.md (caps: waste/contamination reduction total <= 40%).
