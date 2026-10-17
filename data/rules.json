@@ -11,5 +11,11 @@
 		"short": "Лимит\nзаражения",
 		"default": false,
 		"max_contamination_percent": 50
+	},
+	"ore_reserve": {
+		"name": "Резерв руды: не отдавать руду со склада в установку ниже порога",
+		"short": "Резерв\nруды",
+		"default": false,
+		"amount": 20
 	}
 }

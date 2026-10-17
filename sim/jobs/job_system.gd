@@ -204,8 +204,11 @@ func _find_haul(c: Colonist) -> Job:
 			continue
 		var job: Job = null
 		var b := _building_needing(item, cell, c)
+		var feed := 0
 		if b != null:
-			job = _haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.BUILDING_IN, NO_CELL, b.id, item, mini(count, b.input_space(item)))
+			feed = _reserve_limited(item, cell, mini(count, b.input_space(item)))
+		if b != null and feed > 0:
+			job = _haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.BUILDING_IN, NO_CELL, b.id, item, feed)
 		elif not sim.items.is_stored(cell):
 			var dst := _storage_for(item, cell, c)
 			if dst.x >= 0:
@@ -307,6 +310,18 @@ func _haul(src: int, src_cell: Vector2i, src_b: int, dst: int, dst_cell: Vector2
 func _storage_for(item: String, near: Vector2i, c: Colonist) -> Vector2i:
 	return sim.items.find_storage_cell(item, near, func(cell: Vector2i) -> bool:
 		return not _free(c, "dst:%d,%d" % [cell.x, cell.y]))
+
+
+## "Ore reserve" rule: how much of `want` may leave `cell` for a building input.
+## Stored ore may only be taken down to the reserve; loose ore is kept for
+## storage until the reserve is filled.
+func _reserve_limited(item: String, cell: Vector2i, want: int) -> int:
+	if item != "essence_ore" or not sim.is_rule_on("ore_reserve"):
+		return want
+	var surplus := sim.items.count_stored(item) - int(sim.defs.rules["ore_reserve"]["amount"])
+	if not sim.items.is_stored(cell):
+		return want if surplus >= 0 else 0
+	return clampi(surplus, 0, want)
 
 
 ## Nearest working building whose input wants `item`, not already being fed.
