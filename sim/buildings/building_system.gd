@@ -92,8 +92,18 @@ func refining_capped() -> bool:
 
 
 func may_operate(b: Building) -> bool:
+	if sim.crises.flag("refine_lock") and _is_refining(b):  # region crises
+		return false
 	return b.can_run_recipe() and (b.progress > 0 or not refining_capped())
 
+
+# region crises
+func _is_refining(b: Building) -> bool:
+	for item: String in b.recipe.get("outputs", {}):
+		if sim.defs.items[item].get("contaminates", false):
+			return true
+	return false
+# endregion
 
 ## Returns true when a batch completed this tick.
 func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
@@ -127,6 +137,8 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 				n = 0
 			else:
 				n = PerkHooks.scaled(operator, "waste_mult", float(n), 1.0 + sim.perks.mod(operator, "waste_mult"))
+		elif b.recipe_id == "refine_essence":  # region crises
+			n = int(round(float(n) * sim.crises.mult("refine_output_mult")))
 		if n <= 0:
 			continue
 		# endregion

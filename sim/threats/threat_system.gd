@@ -69,7 +69,7 @@ func colony_wealth() -> float:
 
 ## Raid points: the colony's wealth and growth is what calls the creatures.
 func raid_points(index: int) -> float:
-	return _attract_mult() * (float(cfg["base_strength"]) \
+	return _attract_mult() * sim.crises.mult("raid_points_mult") * (float(cfg["base_strength"]) \
 		+ float(cfg["per_wave"]) * (index - 1) \
 		+ float(cfg["per_wealth"]) * colony_wealth() \
 		+ float(cfg["per_refined"]) * sim.ledger.get_count("recipe:refined_essence") \
@@ -230,7 +230,7 @@ func end_wave() -> void:
 	for e in enemies:
 		e.leaving = true
 		e.clear_path()
-	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * sim.ticks_per_day)
+	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
 	_schedule_origin()
 	sim.set_alarm(_alarm_before_wave)
 	sim.bus.wave_ended.emit(wave_index)
