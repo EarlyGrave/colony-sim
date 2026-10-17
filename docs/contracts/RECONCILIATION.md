@@ -22,4 +22,4 @@ Related contracts: `items-inventory.md`, `recipes-buildings.md`, `colonists-need
 - Each ruling that changes data gets a Defs validation plus a test; the runner already fails on any engine error.
 - Reports to the owner remain in Russian; this file stays in English.
 
-Status: proposed by architect, to be confirmed by orchestrator
+Status: CONFIRMED by the orchestrator (owner delegated the call, session 3). Rulings 1–10 are binding for E10+.

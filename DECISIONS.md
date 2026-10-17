@@ -133,3 +133,15 @@ Owner allowed ~13 minutes. Every agent got a wall-clock deadline and the rule
 "a partial draft marked '(draft, unfinished)' beats nothing"; the orchestrator
 reserved the last minutes for tests, commit, push and the handoff file.
 Unfinished drafts are listed in `PROGRESS.md` and the handoff.
+
+## D25. Contract reconciliation rulings 1–10 are binding
+Owner delegated the call ("your code, decide"). All ten proposed rulings in
+`docs/contracts/RECONCILIATION.md` are confirmed: `recipes` array, 9 canonical
+skills with nullable skill, `storage_priority` 0..3 vs separate
+`work_priority`, single `equip_item` command, weapons/armor as items with
+stats in `weapons.json`/`armor.json` under the same id,
+`order_attack(colonist_id, enemy_id)`, combat only injures and the health
+model owns death, closed `Ledger.Reason` enum, full save coverage with
+round-trip tests, frozen `story_event` args. D21 (keep `refined_essence` /
+`waste`) is confirmed the same way. Next session applies these to the
+contracts before writing E10 code.
