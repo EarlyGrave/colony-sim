@@ -33,6 +33,9 @@ var storyteller: Storyteller
 # region health
 var health: HealthSystem
 # endregion
+# region combat
+var combat: CombatSystem
+# endregion
 
 var _connections: Array = []  # [signal, callable] pairs made on the bus
 
@@ -75,6 +78,9 @@ func _init_systems() -> void:
 	# region health
 	health = HealthSystem.new(self)
 	# endregion
+	# region combat
+	combat = CombatSystem.new(self)
+	# endregion
 
 
 func _place_starting_colony() -> void:
@@ -85,6 +91,10 @@ func _place_starting_colony() -> void:
 	for i in int(col_cfg["colonists"]):
 		var c := colonists.spawn(center + spots[i % spots.size()])
 		c.engineer = i < int(col_cfg["engineers"])
+		# region combat
+		if c.engineer:
+			c.combat.weapon = str(defs.weapons["combat"]["engineer_weapon"])
+		# endregion
 	# Starting stockpile next to the capsule, with the supplies on it.
 	var sz: Array = col_cfg["start_stockpile_size"]
 	var origin := center + Vector2i(3, -1)
@@ -216,6 +226,11 @@ func dispose() -> void:
 	if colonists:
 		for c in colonists.list:
 			c.job = null
+	# region combat
+	if combat != null:
+		combat.sim = null
+		combat = null
+	# endregion
 	items = null
 	colonists = null
 	jobs = null
@@ -240,3 +255,18 @@ func set_work_priority(colonist_id: int, work_type: String, p: int) -> bool:
 	return true
 # endregion
 	health = null
+
+# region combat
+## Drafted colonists ignore work and the alarm and fight.
+func set_drafted(colonist_id: int, on: bool) -> bool:
+	return combat.set_drafted(colonists.get_by_id(colonist_id), on)
+
+
+## Drafted colonist walks to `cell` (stops to shoot enemies in range on the way).
+func order_move(colonist_id: int, cell: Vector2i) -> bool:
+	return combat.order_move(colonists.get_by_id(colonist_id), cell)
+
+
+func order_attack(colonist_id: int, enemy_id: int) -> bool:
+	return combat.order_attack(colonists.get_by_id(colonist_id), enemy_id)
+# endregion

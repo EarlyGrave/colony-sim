@@ -287,3 +287,22 @@ func _tick_turrets() -> void:
 		shots.append([from, target.visual_pos(), sim.tick])
 		damage_enemy(target, float(t["damage"]))
 		sim.buildings.wear(b, float(b.def.get("wear_per_shot", 0.0)))
+
+# region combat
+## Living (not leaving) enemies within `r` cells of `pos`, nearest first.
+func enemies_in_range(pos: Vector2, r: float) -> Array[Enemy]:
+	var out: Array[Enemy] = []
+	var dists: Array[float] = []
+	for e in enemies:
+		if e.leaving:
+			continue
+		var d := Vector2(e.cell).distance_to(pos)
+		if d > r:
+			continue
+		var i := 0
+		while i < dists.size() and dists[i] <= d:
+			i += 1
+		dists.insert(i, d)
+		out.insert(i, e)
+	return out
+# endregion
