@@ -13,6 +13,10 @@ var hidden := false
 var sick_until := 0
 ## Engineers can be sent to repair turrets during raids (rule "raid_engineer").
 var engineer := false
+# region jobs-core
+## Skills and work priorities (set by ColonistSystem.spawn).
+var skills: Skills = null
+# endregion
 
 var job: Job = null
 var idle_until := 0

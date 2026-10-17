@@ -59,7 +59,7 @@
 		"wave_duration_ticks": 350,
 		"base_strength": 2.5,
 		"per_wave": 1.4,
-		"per_refined": 0.08,
+		"per_refined": 0.04,
 		"per_contamination": 0.15,
 		"colonist_aggro_range": 5.0,
 		"turret_aggro_range": 4.0,

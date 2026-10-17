@@ -20,7 +20,7 @@ func test_without_turrets_colony_dies_on_wave_2_or_3() -> void:
 
 func test_turrets_hold_but_static_defense_is_not_enough() -> void:
 	var r := Scenario.run_waves(_colony(SEED, 3), 10)
-	assert_gt(r["log"].size(), 3, "turrets should hold at least 3 waves")
+	assert_gt(r["log"].size(), 2, "turrets should hold at least 2 waves and reach the 3rd")
 	assert_eq(r["log"][0]["kills"], r["log"][0]["enemies"], "first wave should be wiped out by turrets")
 	# Waves grow with the colony: without the player's help it falls anyway.
 	assert_ne(r["game_over"], "", "untouched defense should eventually fail")

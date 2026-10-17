@@ -3,33 +3,23 @@ extends RefCounted
 ## Chooses jobs for idle colonists (RimWorld-style "work givers") and keeps
 ## reservations so two colonists never grab the same target.
 ##
-## Priorities come from data/jobs.json. Within one priority the nearest
-## candidate wins. Fleeing overrides everything while the alarm is on.
+## Per-colonist work priorities (data/work.json, Skills.priorities); within one
+## priority givers run in work.json order and the nearest candidate wins. Fleeing overrides everything while the alarm is on.
 
 const NO_CELL := Vector2i(-1, -1)
 
 var sim: Simulation
 ## reservation key -> colonist id
 var reserved: Dictionary = {}
-## Provider methods sorted by priority (highest first).
-var _providers: Array[Callable] = []
+## giver id -> WorkGiver (see giver_registry.gd)
+var givers: Dictionary = {}
 var _idle_retry: int
 
 
 func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	_idle_retry = int(sim.defs.balance["colonist"]["idle_retry_ticks"])
-	var table := {
-		"repair": _find_repair,
-		"operate": _find_operate,
-		"haul": _find_haul,
-		"mine": _find_mine,
-	}
-	var types := table.keys()
-	types.sort_custom(func(a: String, b: String) -> bool:
-		return sim.defs.job_priority(a) > sim.defs.job_priority(b))
-	for t in types:
-		_providers.append(table[t])
+	givers = GiverRegistry.create_all(sim)
 
 
 func tick_colonist(c: Colonist) -> void:
@@ -153,11 +143,43 @@ func assign(c: Colonist) -> Job:
 		sim.items.drop(c.cell, c.carry_item, c.carry_count)
 		c.carry_item = ""
 		c.carry_count = 0
-	for p in _providers:
-		var job: Job = p.call(c)
-		if job != null:
-			return job
+	for t in work_order(c):
+		for gid: String in sim.defs.work["types"][t]["givers"]:
+			var g: WorkGiver = givers.get(gid)
+			if g == null:
+				continue
+			var job: Job = g.find(c)
+			if job != null:
+				return job
 	return null
+
+
+## Enabled work types for `c`: priority 1..max first, then data/work.json order.
+func work_order(c: Colonist) -> Array[String]:
+	var out: Array[String] = []
+	for p in range(1, int(sim.defs.work["max_priority"]) + 1):
+		for t: String in sim.defs.work["types"]:
+			if c.skills.priority(t) == p:
+				out.append(t)
+	return out
+
+
+## Call once per working tick of `work_type`: grants skill xp and returns the
+## work-speed multiplier (1.0 for unskilled work).
+func work_tick(c: Colonist, work_type: String) -> float:
+	var skill: String = sim.defs.work["types"][work_type]["skill"]
+	if skill == "":
+		return 1.0
+	var mult := c.skills.speed_mult(sim.defs, skill)
+	if c.skills.add_xp(sim.defs, skill, float(sim.defs.skills["xp_per_work_tick"])):
+		sim.bus.skill_leveled.emit(c.id, skill, c.skills.level(skill))
+	return mult
+
+
+## Hook for needs / draft / downed: interrupts the current job and runs `job`.
+func request_override(c: Colonist, job: Job) -> void:
+	end_job(c, Job.Status.FAILED, false)
+	_start(c, job)
 
 
 # --- Providers ----------------------------------------------------------------
@@ -170,122 +192,6 @@ func _deliver_carried(c: Colonist) -> Job:
 	if dst.x < 0:
 		return null
 	return _haul(HaulJob.Src.CARRIED, NO_CELL, -1, HaulJob.Dst.CELL, dst, -1, c.carry_item, c.carry_count)
-
-
-func _find_haul(c: Colonist) -> Job:
-	var best: Job = null
-	var best_d := 1 << 30
-	# 1) Building outputs -> storage.
-	if sim.buildings:
-		for b: Building in sim.buildings.list:
-			var key := "bout:%d" % b.id
-			if b.output.is_empty() or not _free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
-				continue
-			var d := c.cell.distance_squared_to(b.cell)
-			if d >= best_d:
-				continue
-			for item: String in b.output:
-				var dst := _storage_for(item, b.cell, c)
-				if dst.x >= 0:
-					best = _haul(HaulJob.Src.BUILDING_OUT, NO_CELL, b.id, HaulJob.Dst.CELL, dst, -1, item, int(b.output[item]))
-					best.reservations.append(key)
-					best.fail_key = key
-					best_d = d
-					break
-	# 2) Feed buildings that need input; 3) loose stacks -> storage.
-	for cell: Vector2i in sim.items.stacks:
-		var key := "cell:%d,%d" % [cell.x, cell.y]
-		var d := c.cell.distance_squared_to(cell)
-		if d >= best_d or not _free(c, key):
-			continue
-		var item := sim.items.item_at(cell)
-		var count := sim.items.count_at(cell)
-		if not sim.pathfinder.reachable(c.cell, cell):
-			continue
-		var job: Job = null
-		var b := _building_needing(item, cell, c)
-		var feed := 0
-		if b != null:
-			feed = _reserve_limited(item, cell, mini(count, b.input_space(item)))
-		if b != null and feed > 0:
-			job = _haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.BUILDING_IN, NO_CELL, b.id, item, feed)
-		elif not sim.items.is_stored(cell):
-			var dst := _storage_for(item, cell, c)
-			if dst.x >= 0:
-				job = _haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.CELL, dst, -1, item, count)
-		if job != null:
-			job.reservations.append(key)
-			job.fail_key = key
-			best = job
-			best_d = d
-	return best
-
-
-func _find_mine(c: Colonist) -> Job:
-	var best := NO_CELL
-	var best_d := 1 << 30
-	var m := sim.map
-	for i in m.mine_designated.size():
-		if m.mine_designated[i] == 0:
-			continue
-		var cell := Vector2i(i % m.width, i / m.width)
-		var key := "dep:%d,%d" % [cell.x, cell.y]
-		var d := c.cell.distance_squared_to(cell)
-		if d >= best_d or not _free(c, key):
-			continue
-		if sim.pathfinder.best_adjacent(c.cell, cell).x < 0:
-			continue
-		best = cell
-		best_d = d
-	if best.x < 0:
-		return null
-	var j := MineJob.new(best)
-	var k := "dep:%d,%d" % [best.x, best.y]
-	j.reservations.append(k)
-	j.fail_key = k
-	return j
-
-
-func _find_operate(c: Colonist) -> Job:
-	if sim.buildings == null:
-		return null
-	var best: Building = null
-	var best_d := 1 << 30
-	for b: Building in sim.buildings.list:
-		var key := "op:%d" % b.id
-		if not sim.buildings.may_operate(b) or not _free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
-			continue
-		var d := c.cell.distance_squared_to(b.cell)
-		if d < best_d:
-			best = b
-			best_d = d
-	if best == null:
-		return null
-	var j := OperateJob.new(best.id)
-	j.reservations.append("op:%d" % best.id)
-	j.fail_key = "op:%d" % best.id
-	return j
-
-
-func _find_repair(c: Colonist) -> Job:
-	if sim.buildings == null:
-		return null
-	var best: Building = null
-	var best_d := 1 << 30
-	for b: Building in sim.buildings.list:
-		var key := "rep:%d" % b.id
-		if not b.needs_repair(sim) or not _free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
-			continue
-		var d := c.cell.distance_squared_to(b.cell)
-		if d < best_d:
-			best = b
-			best_d = d
-	if best == null:
-		return null
-	var j := RepairJob.new(best.id)
-	j.reservations.append("rep:%d" % best.id)
-	j.fail_key = "rep:%d" % best.id
-	return j
 
 
 # --- Helpers ------------------------------------------------------------------

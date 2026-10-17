@@ -216,3 +216,19 @@ func dispose() -> void:
 	contamination = null
 	threats = null
 	storyteller = null
+
+
+# region jobs-core
+## Work priority of one colonist: 0 = off, 1 (first) .. work.json max_priority.
+func set_work_priority(colonist_id: int, work_type: String, p: int) -> bool:
+	var c := colonists.get_by_id(colonist_id)
+	if c == null or not defs.work["types"].has(work_type):
+		return false
+	if p < 0 or p > int(defs.work["max_priority"]):
+		return false
+	if c.skills.priority(work_type) == p:
+		return true
+	c.skills.priorities[work_type] = p
+	bus.work_priority_changed.emit(colonist_id, work_type, p)
+	return true
+# endregion
