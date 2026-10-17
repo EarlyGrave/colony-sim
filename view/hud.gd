@@ -9,15 +9,17 @@ signal alarm_toggled(on: bool)
 signal rule_toggled(rule_id: String, on: bool)
 signal new_game_requested()
 
-const BTN_MIN := Vector2(96, 72)
+const BTN_MIN := Vector2(96, 88)
+const SPR := "res://assets/sprites/"
+## [tool id, label, icon sprite or ""]
 const TOOLS: Array = [
-	["inspect", "Осмотр"],
-	["mine", "Добыча"],
-	["stockpile", "Склад"],
-	["waste_dump", "Свалка"],
-	["clear_zone", "Убрать\nзону"],
-	["refinery", "Установка"],
-	["turret", "Турель"],
+	["inspect", "Осмотр", ""],
+	["mine", "Добыча", "designation_mine"],
+	["stockpile", "Склад", "item_ore"],
+	["waste_dump", "Свалка", "item_waste"],
+	["clear_zone", "Убрать", ""],
+	["refinery", "Установка", "refinery"],
+	["turret", "Турель", "turret_base"],
 ]
 const REASONS := {
 	"hq_destroyed": "Капсула разрушена. Колония пала.",
@@ -86,18 +88,18 @@ func _ready() -> void:
 	scroll.add_child(tools_row)
 	var group := ButtonGroup.new()
 	for t in TOOLS:
-		var b := _button(tools_row, t[1], BTN_MIN)
+		var b := _button(tools_row, t[1], BTN_MIN, t[2])
 		b.toggle_mode = true
 		b.button_group = group
 		var id: String = t[0]
 		b.pressed.connect(func() -> void: tool_selected.emit(id))
 		_tool_buttons[id] = b
-	_alarm_btn = _button(tools_row, "Тревога", BTN_MIN)
+	_alarm_btn = _button(tools_row, "Тревога", BTN_MIN, "capsule")
 	_alarm_btn.toggle_mode = true
 	_alarm_btn.toggled.connect(func(on: bool) -> void: alarm_toggled.emit(on))
 	var rules: Dictionary = Defs.get_default().rules
 	for rule_id: String in rules:
-		var rb := _button(tools_row, str(rules[rule_id]["short"]), BTN_MIN)
+		var rb := _button(tools_row, str(rules[rule_id]["short"]), BTN_MIN, "colonist_engineer")
 		rb.toggle_mode = true
 		rb.toggled.connect(func(on: bool) -> void: rule_toggled.emit(rule_id, on))
 		_rule_buttons[rule_id] = rb
@@ -221,9 +223,15 @@ func _label(parent: Control) -> Label:
 	return l
 
 
-func _button(parent: Control, text: String, min_size: Vector2) -> Button:
+func _button(parent: Control, text: String, min_size: Vector2, icon := "") -> Button:
 	var b := Button.new()
 	b.text = text
+	if icon != "":
+		b.icon = load(SPR + icon + ".png")
+		b.expand_icon = true
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		b.add_theme_constant_override("icon_max_width", 36)
 	b.custom_minimum_size = min_size
 	b.focus_mode = Control.FOCUS_NONE
 	parent.add_child(b)

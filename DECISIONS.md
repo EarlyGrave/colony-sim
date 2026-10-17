@@ -94,3 +94,13 @@ balance bot.
 
 ## D18. Stress postponed, capsule stays the "storage" target
 Owner decision, session 2.
+
+## D19. Own generated pixel art instead of Kenney packs
+Asset sites (kenney.nl, opengameart) are unreachable from the cloud session.
+`tools/gen_art.py` (Python + PIL, deterministic) writes 16 px sprites to
+`assets/sprites/`: terrain variants, colonists (normal / engineer / sick),
+crawler, brute, turret base + rotating barrel, refinery, capsule, item icons,
+mining marker. Drawn 2x with nearest filtering. Re-run the script after
+editing it; commit the PNGs (and their `.import` files).
+Cosmetic-only state (turret aim, hit flashes, death particles, smoke) lives in
+`WorldView`, never in the sim.
