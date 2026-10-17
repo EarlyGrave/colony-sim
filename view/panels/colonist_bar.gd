@@ -8,20 +8,32 @@ const SPR := "res://assets/sprites/"
 const CARD := Vector2(176, 68)
 
 var sim: Simulation
-var _row: HBoxContainer
+var _row: BoxContainer
 var _cards := {}  # colonist id -> Dictionary of widgets
 var _key := ""
+var _compact := false
 
 
 func _init() -> void:
 	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	mouse_filter = Control.MOUSE_FILTER_PASS
-	_row = HBoxContainer.new()
+	_row = BoxContainer.new()
 	_row.add_theme_constant_override("separation", 6)
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_row)
 	custom_minimum_size.y = CARD.y + 4
+
+
+## Compact: small 64x64 portrait buttons in a vertical column (name/job hidden).
+func set_compact(on: bool) -> void:
+	_compact = on
+	_row.vertical = on
+	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if on else ScrollContainer.SCROLL_MODE_AUTO
+	vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if on else ScrollContainer.SCROLL_MODE_DISABLED
+	custom_minimum_size = Vector2(72, 0) if on else Vector2(0, CARD.y + 4)
+	size_flags_vertical = Control.SIZE_EXPAND_FILL if on else Control.SIZE_FILL
+	_key = ""
 
 
 func bind(p_sim: Simulation) -> void:
@@ -58,7 +70,7 @@ func refresh() -> void:
 
 func _make_card(c: Colonist) -> Dictionary:
 	var btn := Button.new()
-	btn.custom_minimum_size = CARD
+	btn.custom_minimum_size = Vector2(64, 64) if _compact else CARD
 	btn.focus_mode = Control.FOCUS_NONE
 	var id := c.id
 	btn.pressed.connect(func() -> void: colonist_pressed.emit(id))
@@ -96,6 +108,11 @@ func _make_card(c: Colonist) -> Dictionary:
 	var st_l := _small_label(hb, 15)
 	st_l.clip_text = false
 	st_l.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	if _compact:
+		vb.visible = false
+		icon.custom_minimum_size = Vector2(40, 40)
+		st_l.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		st_l.add_theme_font_size_override("font_size", 12)
 	return {"icon": icon, "name": name_l, "bar": bar, "job": job_l, "state": st_l}
 
 

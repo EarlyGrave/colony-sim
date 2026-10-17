@@ -36,6 +36,14 @@ const TOOLS: Array = [
 	["bed", "Кровать", "bed"],
 	# endregion
 ]
+const COMPACT_H := 500.0  ## logical viewport height below which the compact layout is used
+const BAR_H := 64.0
+## Compact bottom bar: category -> [label, tool ids]. "alarm" and rule ids are handled separately.
+const CATS: Array = [
+	["zones", "Зоны", ["stockpile", "waste_dump", "clear_zone", "growing"]],
+	["build", "Стройка", ["refinery", "turret", "workbench", "wall", "door", "stove", "bed", "deconstruct"]],
+	["orders", "Приказы", ["mine", "@rules"]],
+]
 const REASONS := {
 	"hq_destroyed": "Капсула разрушена. Колония пала.",
 	"colonists_dead": "Все колонисты погибли.",
@@ -66,6 +74,25 @@ var _rule_buttons := {}  # rule id -> Button
 var _game_over: PanelContainer
 var _game_over_label: Label
 var _message_until := 0.0
+var _compact := false
+var _top_flow: HFlowContainer
+var _panel_row: HBoxContainer
+var _tools_row: HBoxContainer
+var _tools_scroll: ScrollContainer
+var _bottom: PanelContainer
+var _cat_row: HBoxContainer
+var _cat_popup: PanelContainer
+var _cat_popup_row: HBoxContainer
+var _cat_buttons := {}  # category id -> Button
+var _open_cat := ""
+var _stash: Control
+var _menu_btn: Button
+var _menu_popup: PanelContainer
+var _menu_box: VBoxContainer
+var _colonist_dock: PanelContainer
+var _tool_order: Array[Button] = []
+var _inspect_btn_ref: Button
+var _bottom_inset := BTN_MIN.y + 24
 
 
 func _ready() -> void:
@@ -85,6 +112,7 @@ func _ready() -> void:
 	var top := PanelContainer.new()
 	_stack.add_child(top)
 	var top_flow := HFlowContainer.new()
+	_top_flow = top_flow
 	top_flow.add_theme_constant_override("h_separation", 6)
 	top_flow.add_theme_constant_override("v_separation", 4)
 	top.add_child(top_flow)
@@ -110,6 +138,7 @@ func _ready() -> void:
 
 	# --- Panel bar (letters + registered panels) ---
 	var panel_row := HBoxContainer.new()
+	_panel_row = panel_row
 	panel_row.add_theme_constant_override("separation", 4)
 	top_flow.add_child(panel_row)
 	_letters_btn = _button(panel_row, "Письма", Vector2(84, 64))
@@ -122,6 +151,10 @@ func _ready() -> void:
 		pb.pressed.connect(func() -> void: toggle_panel(pid))
 		_panel_buttons[pid] = pb
 
+	_menu_btn = _button(speed_row, "Ещё", Vector2(88, 64))
+	_menu_btn.pressed.connect(func() -> void: _menu_popup.visible = not _menu_popup.visible)
+	_menu_btn.visible = false
+
 	# --- Colonist bar ---
 	_colonist_bar = ColonistBar.new()
 	_colonist_bar.colonist_pressed.connect(func(id: int) -> void: colonist_card_pressed.emit(id))
@@ -132,11 +165,14 @@ func _ready() -> void:
 	bottom.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	bottom.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	root.add_child(bottom)
+	_bottom = bottom
 	var scroll := ScrollContainer.new()
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.custom_minimum_size.y = BTN_MIN.y + 8
 	bottom.add_child(scroll)
+	_tools_scroll = scroll
 	var tools_row := HBoxContainer.new()
+	_tools_row = tools_row
 	tools_row.add_theme_constant_override("separation", 8)
 	scroll.add_child(tools_row)
 	var group := ButtonGroup.new()
@@ -147,15 +183,19 @@ func _ready() -> void:
 		var id: String = t[0]
 		b.pressed.connect(func() -> void: tool_selected.emit(id))
 		_tool_buttons[id] = b
+		_tool_order.append(b)
 	_alarm_btn = _button(tools_row, "Тревога", BTN_MIN, "capsule")
 	_alarm_btn.toggle_mode = true
 	_alarm_btn.toggled.connect(func(on: bool) -> void: alarm_toggled.emit(on))
+	_tool_order.append(_alarm_btn)
 	var rules: Dictionary = Defs.get_default().rules
 	for rule_id: String in rules:
 		var rb := _button(tools_row, str(rules[rule_id]["short"]), BTN_MIN, "colonist_engineer")
 		rb.toggle_mode = true
 		rb.toggled.connect(func(on: bool) -> void: rule_toggled.emit(rule_id, on))
 		_rule_buttons[rule_id] = rb
+		_tool_order.append(rb)
+	_build_compact_widgets(root, group)
 
 	# --- Message line above the bottom bar ---
 	_message = Label.new()
@@ -189,6 +229,150 @@ func _ready() -> void:
 	_game_over.visible = false
 
 	select_tool("inspect")
+	get_viewport().size_changed.connect(_check_layout)
+	_check_layout()
+
+
+## Overlay widgets used only by the compact (small-height) layout.
+func _build_compact_widgets(root: Control, group: ButtonGroup) -> void:
+	_cat_row = HBoxContainer.new()
+	_cat_row.add_theme_constant_override("separation", 6)
+	_inspect_btn_ref = _tool_buttons["inspect"]
+	for c: Array in CATS:
+		var cid: String = c[0]
+		var cb := Button.new()
+		cb.text = str(c[1])
+		cb.custom_minimum_size = Vector2(120, BAR_H)
+		cb.focus_mode = Control.FOCUS_NONE
+		cb.pressed.connect(func() -> void: _toggle_cat(cid))
+		_cat_buttons[cid] = cb
+	_cat_popup = PanelContainer.new()
+	_cat_popup.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_cat_popup.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_cat_popup.visible = false
+	root.add_child(_cat_popup)
+	var sc := ScrollContainer.new()
+	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_cat_popup.add_child(sc)
+	_cat_popup_row = HBoxContainer.new()
+	_cat_popup_row.add_theme_constant_override("separation", 6)
+	sc.add_child(_cat_popup_row)
+	_menu_popup = PanelContainer.new()
+	_menu_popup.visible = false
+	root.add_child(_menu_popup)
+	_menu_box = VBoxContainer.new()
+	_menu_popup.add_child(_menu_box)
+	_stash = Control.new()
+	_stash.visible = false
+	root.add_child(_stash)
+	for tb: Button in _tool_order:
+		tb.pressed.connect(func() -> void:
+			if tb != _alarm_btn and not _rule_buttons.values().has(tb):
+				_close_cat())
+	_colonist_dock = PanelContainer.new()
+	_colonist_dock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var flat := StyleBoxEmpty.new()
+	_colonist_dock.add_theme_stylebox_override("panel", flat)
+	root.add_child(_colonist_dock)
+
+
+func _check_layout() -> void:
+	var h := get_viewport().get_visible_rect().size.y
+	var want := h < COMPACT_H
+	if want != _compact or _cat_popup_row.get_parent() == null:
+		_apply_layout(want)
+
+
+func _reparent_to(n: Control, to: Node) -> void:
+	if n.get_parent() != null:
+		n.get_parent().remove_child(n)
+	to.add_child(n)
+
+
+func _apply_layout(compact: bool) -> void:
+	_compact = compact
+	_open_cat = ""
+	_cat_popup.visible = false
+	_menu_popup.visible = false
+	for b: Button in _tool_order:
+		_reparent_to(b, _stash if compact else _tools_row)
+	for cid: String in _cat_buttons:
+		if _cat_buttons[cid].get_parent() != null:
+			_cat_buttons[cid].get_parent().remove_child(_cat_buttons[cid])
+	for b: Button in [_letters_btn] + _panel_buttons.values():
+		_reparent_to(b, _panel_row)
+	_reparent_to(_colonist_bar, _stack)
+	_colonist_dock.visible = compact
+	_menu_btn.visible = compact
+	_panel_row.visible = not compact
+	if _cat_row.get_parent() != null:
+		_cat_row.get_parent().remove_child(_cat_row)
+	if compact:
+		_top_flow.get_child(0).custom_minimum_size.x = 150
+		_bottom_inset = BAR_H + 22
+		_message.offset_top = -(BAR_H + 90)
+		_message.offset_bottom = -(BAR_H + 24)
+		_tools_scroll.custom_minimum_size.y = BAR_H + 4
+		_tools_row.add_theme_constant_override("separation", 6)
+		# bottom bar: Осмотр, categories, alarm
+		_tools_row.add_child(_cat_row)
+		_reparent_to(_tool_buttons["inspect"], _cat_row)
+		_tool_buttons["inspect"].custom_minimum_size = Vector2(110, BAR_H)
+		for cid: String in _cat_buttons:
+			_cat_row.add_child(_cat_buttons[cid])
+		_reparent_to(_alarm_btn, _cat_row)
+		_alarm_btn.custom_minimum_size = Vector2(110, BAR_H)
+		for b: Button in _panel_buttons.values() + [_letters_btn]:
+			_reparent_to(b, _menu_box)
+			b.custom_minimum_size = Vector2(150, BAR_H)
+		_reparent_to(_colonist_bar, _colonist_dock)
+		_colonist_bar.set_compact(true)
+	else:
+		_top_flow.get_child(0).custom_minimum_size.x = 430
+		_bottom_inset = BTN_MIN.y + 24
+		_message.offset_top = -(BTN_MIN.y + 110)
+		_message.offset_bottom = -(BTN_MIN.y + 24)
+		_tools_scroll.custom_minimum_size.y = BTN_MIN.y + 8
+		_tools_row.add_theme_constant_override("separation", 8)
+		for b: Button in _tool_order:
+			b.custom_minimum_size = BTN_MIN
+		for b: Button in [_letters_btn] + _panel_buttons.values():
+			b.custom_minimum_size = Vector2(84, 64)
+		_colonist_bar.set_compact(false)
+	_place_side()
+
+
+func _toggle_cat(cid: String) -> void:
+	var was := _open_cat
+	_close_cat()
+	if was == cid:
+		return
+	_open_cat = cid
+	for c: Array in CATS:
+		if c[0] != cid:
+			continue
+		for tid: String in c[2]:
+			if tid == "@rules":
+				for rb: Button in _rule_buttons.values():
+					_reparent_to(rb, _cat_popup_row)
+					rb.custom_minimum_size = Vector2(96, 72)
+			elif _tool_buttons.has(tid):
+				_reparent_to(_tool_buttons[tid], _cat_popup_row)
+				_tool_buttons[tid].custom_minimum_size = Vector2(96, 72)
+	_cat_popup.offset_bottom = -(BAR_H + 22)
+	_cat_popup.visible = true
+	_cat_buttons[cid].modulate = Color(0.8, 0.6, 1.0)
+
+
+func _close_cat() -> void:
+	if _open_cat == "":
+		return
+	for ch in _cat_popup_row.get_children():
+		_reparent_to(ch, _stash)
+	_cat_popup.visible = false
+	for cb: Button in _cat_buttons.values():
+		cb.modulate = Color.WHITE
+	_open_cat = ""
 
 
 func _exit_tree() -> void:
@@ -280,6 +464,8 @@ func toggle_panel(id: String) -> void:
 
 func _open_side(p: GamePanel, id: String) -> void:
 	close_side()
+	if _menu_popup != null:
+		_menu_popup.visible = false
 	_side = p
 	_side_id = id
 	p.close_requested.connect(close_side)
@@ -287,9 +473,10 @@ func _open_side(p: GamePanel, id: String) -> void:
 	p.anchor_right = 1.0
 	p.anchor_top = 0.0
 	p.anchor_bottom = 1.0
-	p.offset_left = -SIDE_W - 8
+	var sw := 300 if _compact else SIDE_W
+	p.offset_left = -sw - 8
 	p.offset_right = -8
-	p.offset_bottom = -(BTN_MIN.y + 24)
+	p.offset_bottom = -_bottom_inset
 	p.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_root.add_child(p)
 	_place_side()
@@ -311,8 +498,24 @@ func close_side() -> void:
 
 
 func _place_side() -> void:
+	if _compact and _colonist_dock != null:
+		_colonist_dock.anchor_left = 0.0
+		_colonist_dock.anchor_right = 0.0
+		_colonist_dock.anchor_top = 0.0
+		_colonist_dock.anchor_bottom = 1.0
+		_colonist_dock.offset_left = 0
+		_colonist_dock.offset_right = 84
+		_colonist_dock.offset_top = _stack.size.y + 4
+		_colonist_dock.offset_bottom = -_bottom_inset
+	if _menu_popup != null:
+		_menu_popup.anchor_left = 1.0
+		_menu_popup.anchor_right = 1.0
+		_menu_popup.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_menu_popup.offset_right = -8
+		_menu_popup.offset_top = _stack.size.y + 4
 	if _side != null:
 		_side.offset_top = _stack.size.y + 4
+		_side.offset_bottom = -_bottom_inset
 
 
 func _sync_panel_buttons() -> void:
