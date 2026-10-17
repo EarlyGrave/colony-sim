@@ -86,11 +86,16 @@ func spent(c: Colonist, skill: String) -> int:
 
 
 func points_available(c: Colonist, skill: String) -> int:
-	return maxi(0, level_in(c, skill) - spent(c, skill))
+	return maxi(0, floori(float(level_in(c, skill)) / float(levels_per_point())) - spent(c, skill))
+
+
+## Skill levels needed per perk point (data: levels_per_point).
+func levels_per_point() -> int:
+	return maxi(1, int(sim.defs.perks.get("levels_per_point", 2)))
 
 
 ## "" if the perk can be learned, otherwise a reason code:
-## unknown_perk, dead, already_learned, level, requires, no_points.
+## unknown_perk, dead, already_learned, level, requires, excluded, no_points.
 func can_learn(c: Colonist, perk_id: String) -> String:
 	if not _defs.has(perk_id):
 		return "unknown_perk"
@@ -105,6 +110,18 @@ func can_learn(c: Colonist, perk_id: String) -> String:
 	for r: String in p["requires"]:
 		if not has(c, r):
 			return "requires"
+	var any: Array = p.get("requires_any", [])
+	if not any.is_empty():
+		var ok := false
+		for r: String in any:
+			if has(c, r):
+				ok = true
+				break
+		if not ok:
+			return "requires"
+	for x: String in p.get("excludes", []):
+		if has(c, x):
+			return "excluded"
 	if points_available(c, skill) <= 0:
 		return "no_points"
 	return ""
