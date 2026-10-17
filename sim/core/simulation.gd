@@ -53,6 +53,9 @@ var combat: CombatSystem
 var clock: WorldClock
 var needs: NeedsSystem
 var farming: FarmingSystem
+# region progression
+var progression: ProgressionSystem
+# endregion
 # region perks
 var perks: PerkSystem
 # endregion
@@ -112,6 +115,7 @@ func _init_systems() -> void:
 	farming = FarmingSystem.new(self)
 	# endregion
 	perks = PerkSystem.new(self)  # region perks
+	progression = ProgressionSystem.new(self)  # region progression
 
 
 func _place_starting_colony() -> void:
@@ -300,6 +304,7 @@ func dispose() -> void:
 	if perks != null:  # region perks
 		perks.sim = null
 	perks = null
+	progression = null  # region progression
 	if mood != null:  # region mood
 		mood.sim = null
 	mood = null

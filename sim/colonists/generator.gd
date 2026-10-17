@@ -34,6 +34,7 @@ static func generate(sim: Simulation, cell: Vector2i) -> Colonist:
 		for s: String in bonus:
 			if c.skills.levels.has(s):
 				c.skills.levels[s] = clampi(c.skills.level(s) + int(bonus[s]), 0, max_level)
+	c.skills.mark_joined()
 	c.bio = {"age": age, "backstory": story, "traits": chosen, "work_speed": speed}
 	return c
 

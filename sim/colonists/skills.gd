@@ -11,6 +11,8 @@ var xp: Dictionary = {}        # skill id -> float (progress inside the level)
 var passions: Dictionary = {}  # skill id -> Passion
 ## work type id -> 0 (off) or 1..max_priority (lower is done first).
 var priorities: Dictionary = {}
+## skill id -> level when the colonist joined; perk points count only levels gained after it.
+var join_levels: Dictionary = {}
 
 
 ## Deterministic initial skills; draws a fixed number of values from `rng`.
@@ -27,9 +29,27 @@ static func create(defs: Defs, rng: RandomNumberGenerator) -> Skills:
 			s.passions[id] = Passion.MINOR
 		else:
 			s.passions[id] = Passion.NONE
+	s.mark_joined()
 	for t: String in defs.work["types"]:
 		s.priorities[t] = int(defs.work["default_priority"])
 	return s
+
+
+## Records current levels as the baseline for perk points (call after trait bonuses).
+func mark_joined() -> void:
+	join_levels = levels.duplicate()
+
+
+func join_level(skill: String) -> int:
+	return int(join_levels.get(skill, 0))
+
+
+## Total xp ever earned on the current level scale (for reporting deltas).
+func xp_total(defs: Defs, skill: String) -> float:
+	var t := float(xp.get(skill, 0.0))
+	for l in level(skill):
+		t += float(defs.skills["xp_base"]) + float(defs.skills["xp_step"]) * l
+	return t
 
 
 func level(skill: String) -> int:

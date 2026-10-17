@@ -1,0 +1,8 @@
+{
+	"_comment": "XP awards from game events. target: best_skill (colonist's highest skill), combat_best (higher of shooting/melee), or a skill id. who: all (alive colonists), actor (the one who did it).",
+	"day_survived": {"who": "all", "target": "best_skill", "amount": 25},
+	"wave_repelled": {"who": "all", "target": "combat_best", "amount": 100, "per_wave_bonus": 15},
+	"colonist_rescued": {"who": "actor", "target": "medicine", "amount": 120},
+	"first_refine": {"who": "actor", "target": "operating", "amount": 100},
+	"event_choice": {"who": "all", "target": "best_skill", "amount": 40}
+}

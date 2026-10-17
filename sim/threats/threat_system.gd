@@ -224,6 +224,7 @@ func _check_morale() -> void:
 
 
 func end_wave() -> void:
+	var repelled := wave_active and _attackers() == 0 and pending_drop.is_empty()
 	wave_active = false
 	raid_id = ""
 	pending_drop = {}
@@ -234,6 +235,8 @@ func end_wave() -> void:
 	_schedule_origin()
 	sim.set_alarm(_alarm_before_wave)
 	sim.bus.wave_ended.emit(wave_index)
+	if repelled:
+		sim.bus.wave_repelled.emit(wave_index)  # region progression
 
 
 func _attackers() -> int:
