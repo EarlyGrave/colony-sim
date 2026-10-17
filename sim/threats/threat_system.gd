@@ -15,6 +15,9 @@ var next_wave_tick := -1
 var wave_index := 0
 var wave_active := false
 var wave_end_tick := 0
+## Where the next wave will come from; decided when the wave is scheduled.
+var next_spawn_origin := Vector2i(-1, -1)
+var _warned := false
 var enemies: Array[Enemy] = []
 var kills := 0
 ## Recent turret shots for the view: [from: Vector2, to: Vector2, tick: int]
@@ -40,6 +43,7 @@ func awaken() -> void:
 		return
 	awakened = true
 	next_wave_tick = sim.tick + int(float(cfg["first_wave_delay_days"]) * sim.ticks_per_day)
+	_schedule_origin()
 	sim.bus.threat_awakened.emit()
 
 
@@ -54,6 +58,10 @@ func wave_strength(index: int) -> float:
 func tick() -> void:
 	if awakened and not wave_active and sim.tick >= next_wave_tick:
 		start_wave()
+	if awakened and not wave_active and not _warned \
+			and next_wave_tick - sim.tick < int(cfg["warning_ticks"]):
+		_warned = true
+		sim.bus.wave_incoming.emit(next_spawn_origin, next_wave_tick - sim.tick)
 	_tick_turrets()
 	for e: Enemy in enemies.duplicate():
 		if e.leaving:
@@ -71,7 +79,7 @@ func start_wave() -> void:
 	wave_active = true
 	wave_end_tick = sim.tick + int(cfg["wave_duration_ticks"])
 	var strength := wave_strength(wave_index)
-	var origin := _pick_spawn_origin()
+	var origin := next_spawn_origin if next_spawn_origin.x >= 0 else _pick_spawn_origin()
 	var budget := strength if origin.x >= 0 else 0.0
 	var guard := 200
 	while guard > 0:
@@ -97,6 +105,7 @@ func end_wave() -> void:
 		e.leaving = true
 		e.clear_path()
 	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * sim.ticks_per_day)
+	_schedule_origin()
 	sim.set_alarm(_alarm_before_wave)
 	sim.bus.wave_ended.emit(wave_index)
 
@@ -110,6 +119,19 @@ func _attackers() -> int:
 
 
 # --- Spawning -----------------------------------------------------------------
+
+func _schedule_origin() -> void:
+	_warned = false
+	next_spawn_origin = _pick_spawn_origin()
+
+
+## Compass side of a map cell relative to the map center: "север", "юг", ...
+func side_name(c: Vector2i) -> String:
+	var d := c - sim.map_center()
+	if absi(d.x) >= absi(d.y):
+		return "востока" if d.x > 0 else "запада"
+	return "юга" if d.y > 0 else "севера"
+
 
 func _pick_spawn_origin() -> Vector2i:
 	var home := sim.map_center()

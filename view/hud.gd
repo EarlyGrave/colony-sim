@@ -209,11 +209,12 @@ func _threat_text() -> String:
 		return ""
 	var t: ThreatSystem = sim.threats
 	if t.wave_active:
-		return "ВОЛНА %d: тварей %d" % [t.wave_index, t.enemies.size()]
+		return "ВОЛНА %d: тварей %d (с %s)" % [t.wave_index, t.enemies.size(), t.side_name(t.next_spawn_origin)]
 	if not t.awakened:
 		return "Твари спят"
 	var ticks := t.next_wave_tick - sim.tick
-	return "Волна через %.1f ч, сила ~%.0f" % [ticks * 24.0 / sim.ticks_per_day, t.wave_strength(t.wave_index + 1)]
+	var side := " с %s" % t.side_name(t.next_spawn_origin) if ticks < int(t.cfg["warning_ticks"]) else ""
+	return "Волна через %.1f ч%s, сила ~%.0f" % [ticks * 24.0 / sim.ticks_per_day, side, t.wave_strength(t.wave_index + 1)]
 
 
 func _label(parent: Control) -> Label:
