@@ -93,6 +93,12 @@
 		"illness_severity": 0.8,
 		"duration_ticks": 600
 	},
+	"doctor": {
+		"tend_ticks": 40,
+		"self_quality_mult": 0.5,
+		"feed_ticks": 12,
+		"bed_heal_mult": 1.6
+	},
 	"tend": {
 		"default_quality": 0.5,
 		"base_quality": 0.3,

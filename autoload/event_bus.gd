@@ -85,3 +85,8 @@ signal colonist_starving(colonist_id: int)
 signal plant_sown(cell: Vector2i, plant_id: String)
 signal plant_harvested(cell: Vector2i, item_id: String, amount: int)
 # endregion
+# region doctor
+signal colonist_rescued(patient_id: int, carrier_id: int)
+signal colonist_tended(patient_id: int, doctor_id: int, injuries: int)
+signal patient_fed(patient_id: int, feeder_id: int)
+# endregion

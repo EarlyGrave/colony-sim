@@ -8,6 +8,8 @@ func _colony(seed_value := 41) -> Simulation:
 	var sim := make_sim(seed_value, true, 24, 24, peaceful_defs())
 	var scen := preload("res://tests/scenario.gd")
 	scen.standard_colony(sim, 2)
+	for c in sim.colonists.list:  # these tests are about the body, not doctors
+		sim.set_work_priority(c.id, "doctoring", 0)
 	return sim
 
 
@@ -69,7 +71,8 @@ func test_tend_quality_reads_skills() -> void:
 	var sim := _colony()
 	var c: Colonist = sim.colonists.list[0]
 	assert_eq(sim.health.tend_quality(null), 0.5)
-	assert_eq(sim.health.tend_quality(c), 0.5, "no skills -> default")
+	var t: Dictionary = sim.defs.health["tend"]
+	assert_near(sim.health.tend_quality(c), float(t["base_quality"]) + c.skills.level("medicine") * float(t["per_skill_level"]), 0.001)
 
 
 func test_minor_wounds_heal() -> void:

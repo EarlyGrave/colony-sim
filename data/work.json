@@ -3,6 +3,15 @@
 	"default_priority": 3,
 	"max_priority": 4,
 	"types": {
+		"doctoring": {
+			"label": "Лечение",
+			"skill": "medicine",
+			"givers": [
+				"rescue",
+				"tend",
+				"feed_patient"
+			]
+		},
 		"repair": {
 			"label": "Ремонт",
 			"skill": "construction",
@@ -57,11 +66,6 @@
 		"crafting": {
 			"label": "Ремесло",
 			"skill": "crafting",
-			"givers": []
-		},
-		"doctoring": {
-			"label": "Лечение",
-			"skill": "medicine",
 			"givers": []
 		}
 	}

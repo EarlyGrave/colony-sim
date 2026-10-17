@@ -13,6 +13,12 @@ var manipulation := 1.0
 var consciousness := 1.0
 var pain := 0.0
 var work_acc := 0.0
+# region doctor
+## Building id of the bed (or shelter) the patient rests in, -1 = none.
+var bed_id := -1
+## Colonist id currently carrying this patient, -1 = none.
+var carrier_id := -1
+# endregion
 
 
 func is_sick() -> bool:

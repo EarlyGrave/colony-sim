@@ -115,7 +115,7 @@ func _sleep_job(c: Colonist) -> SleepJob:
 	var best: Building = null
 	var best_d := 1 << 30
 	for b: Building in sim.buildings.list:
-		if not b.def.get("bed", false) or not sim.jobs._free(c, "bed:%d" % b.id):
+		if not b.def.get("bed", false) or not sim.jobs._free(c, "bed:%d" % b.id) or sim.health.bed_occupied(b.id):
 			continue
 		if not sim.pathfinder.reachable(c.cell, b.cell):
 			continue

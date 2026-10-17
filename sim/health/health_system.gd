@@ -58,10 +58,10 @@ func add_illness(c: Colonist, illness_id: String, severity: float, duration_tick
 
 ## Tends every untended injury. Quality comes from the doctor's medicine skill
 ## (if any). Returns the number of injuries tended.
-func tend(patient: Colonist, doctor: Object = null) -> int:
+func tend(patient: Colonist, doctor: Object = null, quality_mult := 1.0) -> int:
 	if patient == null or not patient.alive or patient.health == null:
 		return 0
-	var q := tend_quality(doctor)
+	var q := clampf(tend_quality(doctor) * quality_mult, 0.0, 1.0)
 	var n := 0
 	for i in patient.health.injuries:
 		if not i.tended:
@@ -78,6 +78,8 @@ func tend_quality(doctor: Object) -> float:
 	if doctor == null:
 		return q
 	var skills: Variant = doctor.get("skills")
+	if skills is Skills:  # region doctor
+		return clampf(float(t["base_quality"]) + float((skills as Skills).level("medicine")) * float(t["per_skill_level"]), 0.0, 1.0)
 	var level: Variant = null
 	if typeof(skills) == TYPE_DICTIONARY:
 		level = (skills as Dictionary).get("medicine", null)
@@ -90,6 +92,16 @@ func tend_quality(doctor: Object) -> float:
 	if typeof(level) == TYPE_INT or typeof(level) == TYPE_FLOAT:
 		q = float(t["base_quality"]) + float(level) * float(t["per_skill_level"])
 	return clampf(q, 0.0, 1.0)
+
+
+# region doctor
+## True if a patient lies in this bed / shelter.
+func bed_occupied(building_id: int) -> bool:
+	for c in sim.colonists.list:
+		if c.alive and c.health != null and c.health.bed_id == building_id:
+			return true
+	return false
+# endregion
 
 
 # --- Queries ----------------------------------------------------------------------
@@ -123,6 +135,8 @@ func tick() -> void:
 		var h := c.health
 		if h.is_untouched():
 			continue
+		if h.bed_id >= 0 and sim.buildings.get_by_id(h.bed_id) == null:  # region doctor
+			h.bed_id = -1
 		_bleed_and_heal(h)
 		if check > 0 and sim.tick % check == 0:
 			_infection_check(c, h)
@@ -136,15 +150,16 @@ func _bleed_and_heal(h: HealthState) -> void:
 	elif h.blood < 1.0:
 		h.blood = minf(1.0, h.blood + float(cfg["blood_regen_per_tick"]))
 	var bonus := float(cfg["tended_heal_bonus"])
+	var rest_mult := float(cfg["doctor"]["bed_heal_mult"]) if h.bed_id >= 0 else 1.0  # region doctor
 	var keep: Array[Injury] = []
 	for i in h.injuries:
 		var mult := 1.0 + i.tend_quality * bonus if i.tended else 1.0
 		if i.is_illness():
-			i.severity -= i.heal_per_tick * mult
+			i.severity -= i.heal_per_tick * mult * rest_mult
 		else:
 			if not i.tended:
 				mult = float(cfg["untended_heal_mult"])
-			i.severity -= float(cfg["kinds"][i.kind]["heal"]) * mult
+			i.severity -= float(cfg["kinds"][i.kind]["heal"]) * mult * rest_mult
 		if i.severity > 0.0:
 			keep.append(i)
 	h.injuries = keep
@@ -208,6 +223,7 @@ func _refresh(c: Colonist, h: HealthState) -> void:
 		_on_downed(c)
 	elif not now_downed and h.downed:
 		h.downed = false
+		h.bed_id = -1  # region doctor: up and about
 
 
 func _on_downed(c: Colonist) -> void:
