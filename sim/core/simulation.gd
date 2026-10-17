@@ -71,10 +71,13 @@ var ammo: AmmoSystem  # region ammo
 # endregion
 # endregion
 
+var opts: Dictionary = {}  # region meta: deterministic start options
+var run_summary: Dictionary = {}  # region meta
 var _connections: Array = []  # [signal, callable] pairs made on the bus
 
 
-func _init(p_seed: int, p_bus: Object, p_defs: Defs = null) -> void:
+func _init(p_seed: int, p_bus: Object, p_defs: Defs = null, p_opts: Dictionary = {}) -> void:
+	opts = p_opts.duplicate(true)  # region meta
 	seed_value = p_seed
 	rng.seed = p_seed
 	bus = p_bus
@@ -91,6 +94,7 @@ func start_new_game() -> void:
 	MapGenerator.generate(map, rng, cfg)
 	_init_systems()
 	_place_starting_colony()
+	StartOpts.apply(self, opts)  # region meta
 
 
 ## Empty all-ground map, no colony, for test scenarios.
@@ -194,6 +198,9 @@ func end_game(reason: String) -> void:
 	if game_over_reason != "":
 		return
 	game_over_reason = reason
+	run_summary = Legacy.summarize(self, reason)  # region meta
+	run_summary["site"] = int(opts.get("site", 0))  # region meta
+	bus.run_ended.emit(run_summary)  # region meta
 	bus.game_over.emit(reason)
 
 

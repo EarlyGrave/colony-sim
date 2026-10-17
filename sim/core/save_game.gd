@@ -24,7 +24,7 @@ static func to_dict(sim: Simulation) -> Dictionary:
 			args.append({"v": [a.x, a.y]} if a is Vector2i else a)
 		out_log.append([e[0], e[1], args])
 	return {"version": VERSION, "seed": sim.seed_value, "defs_hash": defs_hash(sim.defs),
-		"tick": sim.tick, "commands": out_log}
+		"tick": sim.tick, "commands": out_log, "opts": sim.opts}  # region meta
 
 
 static func to_json(sim: Simulation) -> String:
@@ -63,7 +63,7 @@ static func _check(data: Dictionary, defs: Defs) -> String:
 
 
 static func _replay(data: Dictionary, bus: Object, defs: Defs, on_progress: Callable) -> Simulation:
-	var sim := Simulation.new(int(data["seed"]), bus, defs)
+	var sim := Simulation.new(int(data["seed"]), bus, defs, _opts_from(data))  # region meta
 	sim.start_new_game()
 	sim.replaying = true
 	var cmds: Array = []
@@ -105,3 +105,17 @@ static func state_hash(sim: Simulation) -> int:
 		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output, b.output_q])
 		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output, b.ammo, b.ammo_policy])  # region ammo
 	return var_to_str(parts).hash()
+
+
+# region meta
+## Opts survive JSON (ints come back as floats); normalise numeric keys.
+static func _opts_from(data: Dictionary) -> Dictionary:
+	var o: Dictionary = (data.get("opts", {}) as Dictionary).duplicate(true)
+	for k in ["scout", "site"]:
+		if o.has(k):
+			o[k] = int(o[k])
+	if o.has("crate"):
+		for item: String in o["crate"]:
+			o["crate"][item] = int(o["crate"][item])
+	return o
+# endregion
