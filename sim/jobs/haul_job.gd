@@ -30,9 +30,9 @@ func tick(c: Colonist, sim: Simulation) -> int:
 			if at.x < 0:
 				return Status.FAILED
 			var m := c.move_toward(at, sim)
-			if m == Colonist.Move.FAILED:
+			if m == GridMover.Move.FAILED:
 				return Status.FAILED
-			if m == Colonist.Move.MOVING:
+			if m == GridMover.Move.MOVING:
 				return Status.RUNNING
 			if not _pick_up(c, sim):
 				return Status.FAILED
@@ -43,9 +43,9 @@ func tick(c: Colonist, sim: Simulation) -> int:
 	if to.x < 0:
 		return Status.FAILED
 	var mv := c.move_toward(to, sim)
-	if mv == Colonist.Move.FAILED:
+	if mv == GridMover.Move.FAILED:
 		return Status.FAILED
-	if mv == Colonist.Move.MOVING:
+	if mv == GridMover.Move.MOVING:
 		return Status.RUNNING
 	_deliver(c, sim)
 	return Status.DONE

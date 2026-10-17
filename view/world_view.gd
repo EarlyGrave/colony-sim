@@ -8,6 +8,10 @@ const COLOR_ROCK := Color("6e6b66")
 const COLOR_DEPOSIT := Color("5b3f94")
 
 var sim: Simulation
+## First corner of a pending rectangle selection (or (-1,-1)).
+var pending_corner := Vector2i(-1, -1)
+## Cell highlighted by the last tap (inspector).
+var selected_cell := Vector2i(-1, -1)
 var _map_image: Image
 var _map_sprite := Sprite2D.new()
 
@@ -22,6 +26,7 @@ func bind(p_sim: Simulation) -> void:
 	_map_sprite.centered = false
 	_map_sprite.scale = Vector2(TILE, TILE)
 	_map_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_map_sprite.show_behind_parent = true
 	if _map_sprite.get_parent() == null:
 		add_child(_map_sprite)
 	sim.bus.tile_changed.connect(_on_tile_changed)
@@ -75,6 +80,9 @@ func _draw() -> void:
 	_draw_items()
 	_draw_buildings()
 	_draw_colonists()
+	_draw_enemies()
+	_draw_shots()
+	_draw_selection()
 
 
 func _draw_zones() -> void:
@@ -136,6 +144,32 @@ func _draw_colonists() -> void:
 			draw_rect(Rect2(p + Vector2(4, -14), Vector2(10, 10)), Color(sim.defs.items[c.carry_item]["color"]))
 		if c.hp < c.max_hp:
 			_bar(Rect2(p + Vector2(-12, 14), Vector2(24, 4)), c.hp / c.max_hp, Color(0.85, 0.2, 0.2))
+
+
+func _draw_enemies() -> void:
+	for e: Enemy in sim.threats.enemies:
+		var p := e.visual_pos() * TILE + Vector2(TILE, TILE) * 0.5
+		var r := TILE * (0.42 if e.def_id == "brute" else 0.3)
+		var col := Color(e.def["color"])
+		if e.leaving:
+			col.a = 0.5
+		draw_colored_polygon(PackedVector2Array([p + Vector2(0, -r), p + Vector2(r, r * 0.8), p + Vector2(-r, r * 0.8)]), col)
+		if e.hp < e.max_hp:
+			_bar(Rect2(p + Vector2(-12, r + 2), Vector2(24, 4)), e.hp / e.max_hp, Color(0.9, 0.3, 0.3))
+
+
+func _draw_shots() -> void:
+	for s: Array in sim.threats.shots:
+		var a: Vector2 = s[0] * TILE + Vector2(TILE, TILE) * 0.5
+		var b: Vector2 = s[1] * TILE + Vector2(TILE, TILE) * 0.5
+		draw_line(a, b, Color(1, 0.95, 0.5, 0.9), 2.0)
+
+
+func _draw_selection() -> void:
+	if pending_corner.x >= 0:
+		draw_rect(Rect2(cell_to_world(pending_corner), Vector2(TILE, TILE)), Color(1, 1, 1, 0.9), false, 3.0)
+	if selected_cell.x >= 0:
+		draw_rect(Rect2(cell_to_world(selected_cell), Vector2(TILE, TILE)), Color(0.4, 0.9, 1.0, 0.9), false, 2.0)
 
 
 func _bar(r: Rect2, frac: float, col: Color) -> void:

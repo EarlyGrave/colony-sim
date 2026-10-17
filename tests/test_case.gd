@@ -42,6 +42,13 @@ func make_sim(seed_value: int, generate := true, w := 24, h := 24, defs: Defs = 
 	return sim
 
 
+## Defs with creature waves disabled, for tests about the economy.
+static func peaceful_defs() -> Defs:
+	var d := Defs.get_default().duplicate_defs()
+	d.balance["threat"]["enabled"] = false
+	return d
+
+
 func fail(msg: String) -> void:
 	failures.append(msg)
 

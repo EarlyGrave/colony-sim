@@ -40,13 +40,14 @@
 		"error_growth": 0.5
 	},
 	"threat": {
+		"enabled": true,
 		"awaken_mined_total": 60,
 		"first_wave_delay_days": 1.0,
 		"wave_interval_days": 1.5,
-		"wave_duration_ticks": 450,
-		"base_strength": 3.0,
-		"per_wave": 2.5,
-		"per_refined": 0.12,
-		"per_contamination": 0.25
+		"wave_duration_ticks": 350,
+		"base_strength": 2.5,
+		"per_wave": 2.0,
+		"per_refined": 0.05,
+		"per_contamination": 0.15
 	}
 }

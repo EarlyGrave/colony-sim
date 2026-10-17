@@ -29,7 +29,7 @@ func test_forecast_never_divides_by_zero() -> void:
 
 
 func _refining_sim(seed_value: int, ore: int) -> Simulation:
-	var sim := make_sim(seed_value, false, 20, 20)
+	var sim := make_sim(seed_value, false, 20, 20, peaceful_defs())
 	sim.colonists.spawn(Vector2i(2, 2))
 	sim.colonists.spawn(Vector2i(3, 2))
 	for y in 2:

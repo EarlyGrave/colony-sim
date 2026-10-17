@@ -4,6 +4,9 @@ extends TestCase
 
 ## Small sandbox: one colonist, refinery, stockpile with ore, waste dump.
 func _setup(defs: Defs = null, ore := 40) -> Simulation:
+	if defs == null:
+		defs = peaceful_defs()
+	defs.balance["threat"]["enabled"] = false
 	var sim := make_sim(7, false, 20, 20, defs)
 	sim.colonists.spawn(Vector2i(2, 2))
 	for y in 2:
@@ -58,7 +61,7 @@ func test_no_refining_without_operator() -> void:
 func test_full_output_blocks_refinery() -> void:
 	# Without a waste dump the waste piles up in the output buffer and the
 	# chain stalls: one broken link, not a crash.
-	var sim := make_sim(9, false, 20, 20)
+	var sim := make_sim(9, false, 20, 20, peaceful_defs())
 	sim.colonists.spawn(Vector2i(2, 2))
 	var b := sim.buildings.place("refinery", Vector2i(9, 5), false)
 	sim.ledger.record_produced("essence_ore", 200, "test")

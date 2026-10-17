@@ -20,9 +20,9 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		if _stand.x < 0:
 			return Status.FAILED
 	var m := c.move_toward(_stand, sim)
-	if m == Colonist.Move.FAILED:
+	if m == GridMover.Move.FAILED:
 		return Status.FAILED
-	if m == Colonist.Move.MOVING:
+	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
 	_work += 1
 	if _work < int(sim.defs.balance["mining"]["work_ticks"]):

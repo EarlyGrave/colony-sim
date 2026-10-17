@@ -15,9 +15,9 @@ func tick(c: Colonist, sim: Simulation) -> int:
 	if b == null:
 		return Status.FAILED
 	var m := c.move_toward(b.cell, sim)
-	if m == Colonist.Move.FAILED:
+	if m == GridMover.Move.FAILED:
 		return Status.FAILED
-	if m == Colonist.Move.MOVING:
+	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
 	c.hidden = true
 	return Status.DONE

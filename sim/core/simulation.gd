@@ -26,6 +26,8 @@ var colonists: ColonistSystem
 var jobs: JobSystem
 var buildings: BuildingSystem
 var contamination: ContaminationSystem
+var threats: ThreatSystem
+var storyteller: Storyteller
 
 var _connections: Array = []  # [signal, callable] pairs made on the bus
 
@@ -61,6 +63,8 @@ func _init_systems() -> void:
 	buildings = BuildingSystem.new(self)
 	jobs = JobSystem.new(self)
 	contamination = ContaminationSystem.new(self)
+	threats = ThreatSystem.new(self)
+	storyteller = Storyteller.new(self)
 
 
 func _place_starting_colony() -> void:
@@ -91,7 +95,9 @@ func step() -> void:
 		return
 	tick += 1
 	colonists.tick()
+	threats.tick()
 	contamination.tick()
+	storyteller.tick()
 	if colonists.alive_count() == 0 and not colonists.list.is_empty():
 		end_game("colonists_dead")
 	if tick % ticks_per_day == 0:
@@ -176,7 +182,7 @@ func dispose() -> void:
 			sig.disconnect(pair[1])
 	_connections.clear()
 	# Break RefCounted cycles (systems hold a reference back to the sim).
-	for sys: Object in [items, colonists, jobs, buildings, contamination]:
+	for sys: Object in [items, colonists, jobs, buildings, contamination, threats, storyteller]:
 		if sys != null:
 			sys.set("sim", null)
 	if colonists:
@@ -187,3 +193,5 @@ func dispose() -> void:
 	jobs = null
 	buildings = null
 	contamination = null
+	threats = null
+	storyteller = null
