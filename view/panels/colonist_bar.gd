@@ -5,7 +5,7 @@ extends ScrollContainer
 signal colonist_pressed(colonist_id: int)
 
 const SPR := "res://assets/sprites/"
-const CARD := Vector2(204, 86)
+const CARD := Vector2(220, 56)
 
 var sim: Simulation
 var _row: BoxContainer
@@ -81,7 +81,7 @@ func _make_card(c: Colonist) -> Dictionary:
 	hb.add_theme_constant_override("separation", 6)
 	btn.add_child(hb)
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(40, 40)
+	icon.custom_minimum_size = Vector2(36, 36)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -93,19 +93,35 @@ func _make_card(c: Colonist) -> Dictionary:
 	vb.add_theme_constant_override("separation", 1)
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hb.add_child(vb)
-	var name_l := _small_label(vb, 17)
+	var line1 := HBoxContainer.new()
+	line1.add_theme_constant_override("separation", 6)
+	line1.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(line1)
+	var name_l := _small_label(line1, 17)
+	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var bar := ProgressBar.new()
 	bar.min_value = 0.0
 	bar.max_value = 1.0
 	bar.show_percentage = false
-	bar.custom_minimum_size = Vector2(0, 8)
+	bar.custom_minimum_size = Vector2(48, 8)
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = Color(0.85, 0.3, 0.3)
 	bar.add_theme_stylebox_override("fill", fill)
-	vb.add_child(bar)
+	line1.add_child(bar)
 	var job_l := _small_label(vb, 14)
 	var debt_l := _small_label(vb, 13)
+	debt_l.visible = false
+	vb.remove_child(debt_l)
+	btn.add_child(debt_l)
+	debt_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	debt_l.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 3)
+	debt_l.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	debt_l.add_theme_color_override("font_outline_color", Color.BLACK)
+	debt_l.add_theme_constant_override("outline_size", 5)
+	debt_l.clip_text = false
+	debt_l.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	var st_l := _small_label(hb, 15)
 	st_l.clip_text = false
 	st_l.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -177,13 +193,17 @@ func _update_card(c: Colonist, w: Dictionary) -> void:
 	st_l.add_theme_color_override("font_color", st[1])
 	var debt_l := w["debt"] as Label
 	var dst := sim.debt.state_of(c) if sim.debt != null else null
-	debt_l.visible = dst != null and (dst.remaining() > 0 or dst.pending_choice)
-	if debt_l.visible:
+	var has_debt := dst != null and (dst.remaining() > 0 or dst.pending_choice)
+	debt_l.visible = _compact and has_debt
+	var debt_txt := ""
+	if has_debt:
 		if dst.pending_choice:
-			debt_l.text = "долг выплачен: выбор!"
+			debt_l.text = "!"
+			debt_txt = "свободен!"
 			debt_l.add_theme_color_override("font_color", Color(0.5, 0.95, 0.5))
 		else:
-			debt_l.text = "до свободы: %d эссенции" % dst.remaining()
+			debt_l.text = "%d" % dst.remaining()
+			debt_txt = "долг %d" % dst.remaining()
 			debt_l.add_theme_color_override("font_color", Color(0.9, 0.4, 0.3) if sim.debt.is_overdue(c) else Color(0.7, 0.6, 1.0))
 	var idle_col := Color(1.0, 0.75, 0.3)
 	if c.hidden:
@@ -195,3 +215,5 @@ func _update_card(c: Colonist, w: Dictionary) -> void:
 	else:
 		job_l.text = c.job.describe()
 		job_l.add_theme_color_override("font_color", Color.WHITE)
+	if has_debt and not _compact:
+		job_l.text += " · " + debt_txt
