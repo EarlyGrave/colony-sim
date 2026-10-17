@@ -280,24 +280,29 @@ func dispose() -> void:
 # region crafting
 ## Adds a bill to a bills building. Returns the bill id or -1.
 func add_bill(building_id: int, recipe_id: String, mode: String, target: int) -> int:
+	_record("add_bill", [building_id, recipe_id, mode, target])  # save-load
 	return crafting.add_bill(buildings.get_by_id(building_id), recipe_id, mode, target)
 
 
 func remove_bill(building_id: int, bill_id: int) -> bool:
+	_record("remove_bill", [building_id, bill_id])  # save-load
 	return crafting.remove_bill(buildings.get_by_id(building_id), bill_id)
 
 
 func update_bill(building_id: int, bill_id: int, mode: String, target: int, paused: bool) -> bool:
+	_record("update_bill", [building_id, bill_id, mode, target, paused])  # save-load
 	return crafting.update_bill(buildings.get_by_id(building_id), bill_id, mode, target, paused)
 
 
 ## Filter/priority apply to the whole connected zone group containing `c`.
 func set_zone_filter(c: Vector2i, item_id: String, allowed: bool) -> bool:
+	_record("set_zone_filter", [c, item_id, allowed])  # save-load
 	return storage.set_filter(c, item_id, allowed)
 
 
 ## 0 = low, 1 = normal, 2 = high (data/crafting.json "priorities").
 func set_zone_priority(c: Vector2i, priority: int) -> bool:
+	_record("set_zone_priority", [c, priority])  # save-load
 	return storage.set_priority(c, priority)
 # endregion
 
@@ -322,14 +327,17 @@ func set_work_priority(colonist_id: int, work_type: String, p: int) -> bool:
 # region combat
 ## Drafted colonists ignore work and the alarm and fight.
 func set_drafted(colonist_id: int, on: bool) -> bool:
+	_record("set_drafted", [colonist_id, on])  # save-load
 	return combat.set_drafted(colonists.get_by_id(colonist_id), on)
 
 
 ## Drafted colonist walks to `cell` (stops to shoot enemies in range on the way).
 func order_move(colonist_id: int, cell: Vector2i) -> bool:
+	_record("order_move", [colonist_id, cell])  # save-load
 	return combat.order_move(colonists.get_by_id(colonist_id), cell)
 
 
 func order_attack(colonist_id: int, enemy_id: int) -> bool:
+	_record("order_attack", [colonist_id, enemy_id])  # save-load
 	return combat.order_attack(colonists.get_by_id(colonist_id), enemy_id)
 # endregion
