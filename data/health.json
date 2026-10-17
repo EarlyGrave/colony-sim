@@ -25,6 +25,13 @@
 			"vital": false
 		}
 	},
+	"shelter_collapse": {
+		"_comment": "Colonists hiding in a shelter when it is destroyed take this many hits of damage_min..damage_max (random parts).",
+		"hits": 3,
+		"damage_min": 30,
+		"damage_max": 70,
+		"kind": "bullet"
+	},
 	"kinds": {
 		"cut": {
 			"name": "Порез",

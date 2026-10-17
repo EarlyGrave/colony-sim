@@ -141,6 +141,7 @@ func test_escape_trigger_and_item_loss() -> void:
 	var escaped: Array[int] = []
 	sim.bus.colonist_escaped.connect(func(id: int) -> void: escaped.append(id))
 	sim.debt.cfg["escape_weight"] = 1.0
+	sim.debt.cfg["escape_patrol_range"] = 0  # nobody on patrol may intercept here
 	c.carry_item = "refined_essence"
 	c.carry_count = 5
 	sim.ledger.record_produced("refined_essence", 5, "test")
@@ -217,3 +218,29 @@ func test_riot_smashing_leaves_no_stale_path() -> void:
 		sim.step()
 		worst = maxi(worst, c.stuck_ticks)
 	assert_lt(worst, 50, "rioter standing at a building keeps a stale path")
+
+
+func test_patrolling_colonist_catches_escapee() -> void:
+	var sim := _sim(3)
+	var c: Colonist = sim.colonists.list[0]
+	var g: Colonist = sim.colonists.list[1]
+	g.cell = c.cell + Vector2i(3, 0)
+	assert_false(sim.debt.stopped_by_guard(c))
+	g.job = PatrolJob.new([c.cell], 0, 1)
+	assert_true(sim.debt.stopped_by_guard(c))
+	g.cell = c.cell + Vector2i(9, 0)
+	assert_false(sim.debt.stopped_by_guard(c))
+
+
+func test_shelter_destruction_injures_hidden_colonists() -> void:
+	var sim := _sim(4)
+	var hq: Building = null
+	for b in sim.buildings.list:
+		if b.def_id == "hq":
+			hq = b
+	var c: Colonist = sim.colonists.list[0]
+	c.cell = hq.cell
+	c.hidden = true
+	sim.buildings.destroy(hq)
+	assert_false(c.hidden)
+	assert_gt(c.health.total_damage() if c.health.total_damage() > 0.0 else 0.0, 0.0)

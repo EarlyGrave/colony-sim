@@ -232,9 +232,17 @@ func _remove(b: Building) -> void:
 		sim.ammo.spill(b)
 	if b.def.get("shelter", false):
 		for c in sim.colonists.list:
-			if c.hidden and b.contains(c.cell):
+			if c.alive and c.hidden and b.contains(c.cell):
 				c.hidden = false
+				_collapse_hit(c)
 	sim.bus.building_destroyed.emit(b.id)
+
+
+## A shelter falling on its occupants: heavy injuries (some may die).
+func _collapse_hit(c: Colonist) -> void:
+	var cc: Dictionary = sim.defs.health.get("shelter_collapse", {})
+	for i in int(cc.get("hits", 0)):
+		sim.health.apply_damage(c, float(sim.rng.randi_range(int(cc["damage_min"]), int(cc["damage_max"]))), "", str(cc["kind"]))
 
 
 func find_shelter(near: Vector2i) -> Building:

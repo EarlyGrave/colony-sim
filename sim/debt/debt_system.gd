@@ -196,10 +196,17 @@ func edge_target(c: Colonist) -> Vector2i:
 
 
 func stopped_by_guard(c: Colonist) -> bool:
+	# A drafted colonist stops an escapee within escape_stop_range; one on patrol
+	# (the non-drafted guard) within the wider escape_patrol_range.
 	var r := int(cfg["escape_stop_range"])
+	var rp := int(cfg.get("escape_patrol_range", r))
 	for o in sim.colonists.list:
-		if o.alive and o.id != c.id and not o.hidden and o.combat != null and o.combat.drafted \
-				and maxi(absi(o.cell.x - c.cell.x), absi(o.cell.y - c.cell.y)) <= r:
+		if not o.alive or o.id == c.id or o.hidden or (o.health != null and o.health.downed):
+			continue
+		var d := maxi(absi(o.cell.x - c.cell.x), absi(o.cell.y - c.cell.y))
+		if o.combat != null and o.combat.drafted and d <= r:
+			return true
+		if o.job != null and o.job.type == "patrol" and d <= rp:
 			return true
 	return false
 

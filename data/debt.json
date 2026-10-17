@@ -18,6 +18,7 @@
 	"riot_witness_thought": "riot_witness",
 	"escape_ticks": 600,
 	"escape_stop_range": 2,
+	"escape_patrol_range": 4,
 	"stay_work_speed": 0.1,
 	"stay_thought": "freedman",
 	"leave_reward": 15,
