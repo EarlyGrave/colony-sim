@@ -8,8 +8,13 @@ signal speed_selected(speed: int)
 signal alarm_toggled(on: bool)
 signal rule_toggled(rule_id: String, on: bool)
 signal new_game_requested()
+signal colonist_card_pressed(colonist_id: int)
+
+const TOAST_MAX_QUEUE := 4
+const PANEL_REFRESH := 0.25
 
 const BTN_MIN := Vector2(96, 88)
+const SIDE_W := 340
 const SPR := "res://assets/sprites/"
 ## [tool id, label, icon sprite or ""]
 const TOOLS: Array = [
@@ -33,7 +38,18 @@ var _stats: Label
 var _forecast: Label
 var _threat: Label
 var _message: Label
-var _info: Label
+var _clock: Label
+var _stack: VBoxContainer
+var _colonist_bar: ColonistBar
+var _letters := LetterLog.new()
+var _letters_btn: Button
+var _panel_buttons := {}  # panel id -> Button
+var _side: GamePanel = null
+var _side_id := ""
+var _inspector: InspectorPanel = null
+var _root: Control
+var _panel_timer := 0.0
+var _toasts: Array[Array] = []  # [text, seconds]
 var _tool_buttons := {}
 var _speed_buttons: Array[Button] = []
 var _alarm_btn: Button
@@ -51,9 +67,14 @@ func _ready() -> void:
 	add_child(root)
 
 	# --- Top bar: stats + speed (wraps on narrow screens) ---
+	_root = root
+	_stack = VBoxContainer.new()
+	_stack.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stack.add_theme_constant_override("separation", 2)
+	root.add_child(_stack)
 	var top := PanelContainer.new()
-	top.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	root.add_child(top)
+	_stack.add_child(top)
 	var top_flow := HFlowContainer.new()
 	top_flow.add_theme_constant_override("h_separation", 12)
 	top_flow.add_theme_constant_override("v_separation", 4)
@@ -63,6 +84,8 @@ func _ready() -> void:
 	labels.custom_minimum_size.x = 300
 	labels.add_theme_constant_override("separation", 0)
 	top_flow.add_child(labels)
+	_clock = _label(labels)
+	_clock.visible = false
 	_stats = _label(labels)
 	_forecast = _label(labels)
 	_threat = _label(labels)
@@ -74,6 +97,23 @@ func _ready() -> void:
 		b.toggle_mode = true
 		b.pressed.connect(func() -> void: speed_selected.emit(i))
 		_speed_buttons.append(b)
+
+	# --- Panel bar (letters + registered panels) ---
+	var panel_row := HBoxContainer.new()
+	panel_row.add_theme_constant_override("separation", 8)
+	top_flow.add_child(panel_row)
+	_letters_btn = _button(panel_row, "Письма", Vector2(104, 64))
+	_letters_btn.pressed.connect(func() -> void: toggle_panel("letters"))
+	for e: Array in PanelRegistry.panel_entries():
+		var pid: String = e[0]
+		var pb := _button(panel_row, str(e[1]), Vector2(104, 64))
+		pb.pressed.connect(func() -> void: toggle_panel(pid))
+		_panel_buttons[pid] = pb
+
+	# --- Colonist bar ---
+	_colonist_bar = ColonistBar.new()
+	_colonist_bar.colonist_pressed.connect(func(id: int) -> void: colonist_card_pressed.emit(id))
+	_stack.add_child(_colonist_bar)
 
 	# --- Bottom bar: tools + alarm ---
 	var bottom := PanelContainer.new()
@@ -120,19 +160,6 @@ func _ready() -> void:
 	_message.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_message)
 
-	# --- Inspector (right side) ---
-	var info_panel := PanelContainer.new()
-	info_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	info_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	info_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(info_panel)
-	_info = Label.new()
-	_info.custom_minimum_size = Vector2(260, 0)
-	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	info_panel.add_child(_info)
-	info_panel.visible = false
-	_info.set_meta("panel", info_panel)
-
 	# --- Game over overlay ---
 	_game_over = PanelContainer.new()
 	_game_over.set_anchors_preset(Control.PRESET_CENTER)
@@ -152,11 +179,21 @@ func _ready() -> void:
 	select_tool("inspect")
 
 
+func _exit_tree() -> void:
+	_letters.unbind()
+
+
 func bind(p_sim: Simulation) -> void:
 	sim = p_sim
 	_game_over.visible = false
 	_alarm_btn.set_pressed_no_signal(false)
-	show_info("")
+	close_side()
+	_toasts.clear()
+	_message.text = ""
+	_letters.bind(p_sim, p_sim.bus)
+	if not _letters.letter_added.is_connected(_on_letter):
+		_letters.letter_added.connect(_on_letter)
+	_colonist_bar.bind(p_sim)
 
 
 func select_tool(id: String) -> void:
@@ -169,14 +206,107 @@ func set_speed(speed: int) -> void:
 		_speed_buttons[i].set_pressed_no_signal(i == speed)
 
 
+## Queues a toast; shown one after another.
 func show_message(text: String, seconds := 3.0) -> void:
-	_message.text = text
-	_message_until = Time.get_ticks_msec() / 1000.0 + seconds
+	if text == "":
+		return
+	if not _toasts.is_empty() and _toasts[-1][0] == text:
+		return
+	_toasts.append([text, seconds])
+	while _toasts.size() > TOAST_MAX_QUEUE:
+		_toasts.pop_front()
+	if _message.text == "":
+		_next_toast()
 
 
-func show_info(text: String) -> void:
-	_info.text = text
-	(_info.get_meta("panel") as Control).visible = text != ""
+func _next_toast() -> void:
+	if _toasts.is_empty():
+		_message.text = ""
+		return
+	var t: Array = _toasts.pop_front()
+	_message.text = t[0]
+	# Shorten the toast when more are waiting.
+	_message_until = Time.get_ticks_msec() / 1000.0 + (minf(float(t[1]), 2.5) if not _toasts.is_empty() else float(t[1]))
+
+
+func _on_letter(entry: Dictionary) -> void:
+	show_message(str(entry["text"]), 5.0)
+
+
+## Opens the inspector for {"kind", "colonist", "building", "cell"}; empty closes it.
+func show_inspector(target: Dictionary) -> void:
+	if target.is_empty():
+		if _side_id == "inspector":
+			close_side()
+		return
+	if _inspector == null or _side != _inspector:
+		_open_side(_inspector_panel(), "inspector")
+	_inspector.set_target(target)
+
+
+func _inspector_panel() -> InspectorPanel:
+	if _inspector == null:
+		_inspector = InspectorPanel.new()
+	return _inspector
+
+
+func toggle_panel(id: String) -> void:
+	if _side_id == id:
+		close_side()
+		return
+	var p: GamePanel
+	if id == "letters":
+		var lp := LettersPanel.new()
+		lp.bind_log(_letters)
+		p = lp
+	else:
+		p = PanelRegistry.make_panel(id)
+	if p != null:
+		_open_side(p, id)
+
+
+func _open_side(p: GamePanel, id: String) -> void:
+	close_side()
+	_side = p
+	_side_id = id
+	p.close_requested.connect(close_side)
+	p.anchor_left = 1.0
+	p.anchor_right = 1.0
+	p.anchor_top = 0.0
+	p.anchor_bottom = 1.0
+	p.offset_left = -SIDE_W - 8
+	p.offset_right = -8
+	p.offset_bottom = -(BTN_MIN.y + 24)
+	p.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_root.add_child(p)
+	_place_side()
+	p.open(sim)
+	if id == "letters":
+		_letters.mark_read()
+	_sync_panel_buttons()
+
+
+func close_side() -> void:
+	if _side != null and is_instance_valid(_side):
+		if _side == _inspector:
+			_root.remove_child(_side)
+		else:
+			_side.queue_free()
+	_side = null
+	_side_id = ""
+	_sync_panel_buttons()
+
+
+func _place_side() -> void:
+	if _side != null:
+		_side.offset_top = _stack.size.y + 4
+
+
+func _sync_panel_buttons() -> void:
+	if _letters_btn:
+		_letters_btn.modulate = Color(0.8, 0.6, 1.0) if _side_id == "letters" else Color.WHITE
+	for pid: String in _panel_buttons:
+		_panel_buttons[pid].modulate = Color(0.8, 0.6, 1.0) if _side_id == pid else Color.WHITE
 
 
 func show_game_over(reason: String) -> void:
@@ -184,12 +314,14 @@ func show_game_over(reason: String) -> void:
 	_game_over.visible = true
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if sim == null:
 		return
 	var it := sim.items
-	_stats.text = "День %d · Руда %d · Эссенция %d · Отходы %d · Люди %d" % [
-		sim.day() + 1, it.count_stored("essence_ore"), it.count_stored("refined_essence"),
+	var tpd := sim.ticks_per_day
+	_clock.text = "День %d, %02d:00" % [sim.day() + 1, sim.tick % tpd * 24 / tpd]
+	_stats.text = _clock.text + " · Руда %d · Эссенция %d · Отходы %d · Люди %d" % [
+		it.count_stored("essence_ore"), it.count_stored("refined_essence"),
 		it.count_world("waste"), sim.colonists.alive_count()]
 	var cont := sim.contamination
 	if cont.revealed:
@@ -197,12 +329,25 @@ func _process(_delta: float) -> void:
 		_forecast.text = "Заражение %.1f%% · Конец через ~%.0f ± %.0f дн." % [cont.fraction() * 100.0, f["days"], f["error"]]
 	else:
 		_forecast.text = "Заражение %.1f%% · Прогноз конца неизвестен" % (cont.fraction() * 100.0)
-	_threat.text = _threat_text()
+	_threat.text = ""
+	_threat.visible = false
+	_forecast.text += " · " + _threat_text()
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
 	for rule_id: String in _rule_buttons:
 		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
 	if _message.text != "" and Time.get_ticks_msec() / 1000.0 > _message_until:
 		_message.text = ""
+		_next_toast()
+	_letters_btn.text = "Письма (%d)" % _letters.unread if _letters.unread > 0 else "Письма"
+	_place_side()
+	_panel_timer += delta
+	if _panel_timer >= PANEL_REFRESH:
+		_panel_timer = 0.0
+		_colonist_bar.refresh()
+		if _side != null:
+			_side.refresh()
+			if _side_id == "letters":
+				_letters.mark_read()
 
 
 func _threat_text() -> String:
@@ -258,4 +403,7 @@ func _make_theme() -> Theme:
 	th.set_stylebox("pressed", "Button", pressed)
 	th.set_stylebox("hover_pressed", "Button", pressed)
 	th.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.12, 0.12, 0.15)
+	th.set_stylebox("background", "ProgressBar", bg)
 	return th

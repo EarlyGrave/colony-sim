@@ -34,7 +34,7 @@ func _ready() -> void:
 		sim.set_rule(id, on)
 		hud.show_message(("Правило включено: " if on else "Правило выключено: ") + str(sim.defs.rules[id]["name"]), 4.0))
 	hud.new_game_requested.connect(func() -> void: new_game(_random_seed()))
-	EventBus.story_event.connect(func(_id: String, text: String) -> void: hud.show_message(text, 5.0))
+	hud.colonist_card_pressed.connect(_select_colonist)
 	EventBus.game_over.connect(func(reason: String) -> void: hud.show_game_over(reason))
 	new_game(_initial_seed())
 
@@ -149,8 +149,7 @@ func _on_tapped(world_pos: Vector2) -> void:
 		else:
 			hud.show_message("Здесь нечего сносить", 3.0)
 	else:
-		world.selected_cell = cell
-		hud.show_info(_describe_cell(cell))
+		_inspect(world_pos, cell)
 
 
 func _apply_rect(r: Rect2i) -> void:
@@ -178,39 +177,35 @@ func _apply_rect(r: Rect2i) -> void:
 			hud.show_message("%s: %d клеток" % [sim.defs.zones[tool]["name"], count], 3.0)
 
 
-func _describe_cell(c: Vector2i) -> String:
-	var lines: Array[String] = []
-	var b := sim.buildings.at(c)
-	if b:
-		lines.append("%s\nПрочность %d/%d" % [b.def["name"], b.hp, b.max_hp])
-		if b.is_machine():
-			lines.append("Износ: состояние %d%%%s" % [b.condition, "  СЛОМАНА" if b.broken else ""])
-		if not b.recipe.is_empty():
-			lines.append("Вход: %s\nВыход: %s" % [_fmt_items(b.input), _fmt_items(b.output)])
+## Inspect tool: colonist under the tap, else building, else the bare cell.
+func _inspect(world_pos: Vector2, cell: Vector2i) -> void:
+	world.selected_cell = cell
+	var best: Colonist = null
+	var best_d := WorldView.TILE * 0.9
 	for col in sim.colonists.list:
-		if col.alive and col.cell == c and not col.hidden:
-			var status := "болен" if col.is_sick(sim.tick) else (col.job.describe() if col.job else "без дела")
-			lines.append("%s%s: здоровье %d, %s" % [col.display_name, " (инженер)" if col.engineer else "", col.hp, status])
-	match sim.map.get_tile(c):
-		MapGrid.Tile.ROCK:
-			lines.append("Скала")
-		MapGrid.Tile.DEPOSIT:
-			lines.append("Месторождение эссенции: %d" % sim.map.get_deposit_amount(c))
-	var st := sim.items.get_stack(c)
-	if not st.is_empty():
-		lines.append("%s × %d" % [sim.defs.items[st["item"]]["name"], st["count"]])
-	var z := sim.map.get_zone(c)
-	if z != "":
-		lines.append("Зона: " + str(sim.defs.zones[z]["name"]))
-	if lines.is_empty():
-		lines.append("Грунт")
-	return "\n".join(lines)
+		if not col.alive or col.hidden:
+			continue
+		var d := (col.visual_pos() * WorldView.TILE + Vector2(WorldView.TILE, WorldView.TILE) * 0.5).distance_to(world_pos)
+		if d < best_d:
+			best_d = d
+			best = col
+	if best != null:
+		_select_colonist(best.id, false)
+		return
+	hud.show_inspector(inspect_target(sim, cell))
 
 
-func _fmt_items(d: Dictionary) -> String:
-	if d.is_empty():
-		return "—"
-	var parts: Array[String] = []
-	for k in d:
-		parts.append("%s %d" % [sim.defs.items[k]["name"], d[k]])
-	return ", ".join(parts)
+## Target dictionary for the inspector (see InspectorSection).
+static func inspect_target(p_sim: Simulation, cell: Vector2i) -> Dictionary:
+	var b := p_sim.buildings.at(cell)
+	return {"kind": "building" if b else "cell", "colonist": null, "building": b, "cell": cell}
+
+
+func _select_colonist(id: int, center := true) -> void:
+	for col in sim.colonists.list:
+		if col.id == id and col.alive:
+			world.selected_cell = col.cell
+			if center:
+				camera.position = col.visual_pos() * WorldView.TILE + Vector2(WorldView.TILE, WorldView.TILE) * 0.5
+			hud.show_inspector({"kind": "colonist", "colonist": col, "building": null, "cell": col.cell})
+			return
