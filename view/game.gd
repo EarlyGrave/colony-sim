@@ -36,6 +36,8 @@ func _ready() -> void:
 		hud.show_message(("Правило включено: " if on else "Правило выключено: ") + str(sim.defs.rules[id]["name"]), 4.0))
 	hud.new_game_requested.connect(func() -> void: new_game(_random_seed()))
 	hud.colonist_card_pressed.connect(_select_colonist)
+	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
+		camera.position = WorldView.cell_to_world(cell))
 	EventBus.game_over.connect(func(reason: String) -> void: hud.show_game_over(reason))
 	new_game(_initial_seed())
 	_setup_save_load()  # save-load

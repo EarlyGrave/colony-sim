@@ -2,6 +2,8 @@ class_name LettersPanel
 extends GamePanel
 ## Shows the last letters from LetterLog (newest first).
 
+signal show_cell_requested(cell: Vector2i)
+
 var letters: LetterLog
 var _shown := -1
 
@@ -39,4 +41,12 @@ func refresh() -> void:
 		if sim:
 			day = int(e["tick"]) / sim.ticks_per_day + 1
 			hour = int(e["tick"]) % sim.ticks_per_day * 24 / sim.ticks_per_day
-		add_line("д%d %02d:00  %s" % [day, hour, e["text"]], col)
+		var l := add_line("д%d %02d:00  %s" % [day, hour, e["text"]], col)
+		if e.has("cell"):
+			var cell: Vector2i = e["cell"]
+			var b := Button.new()
+			b.text = "Показать"
+			b.custom_minimum_size = Vector2(0, 64)
+			b.focus_mode = Control.FOCUS_NONE
+			b.pressed.connect(func() -> void: show_cell_requested.emit(cell))
+			content.add_child(b)

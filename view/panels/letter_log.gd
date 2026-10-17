@@ -1,7 +1,7 @@
 class_name LetterLog
 extends RefCounted
 ## Bus-driven log of important events ("letters"). Pure view-side state.
-## Entries: {"text": String, "tick": int, "level": "info"|"warn"|"bad"}.
+## Entries: {"text", "tick", "level": "info"|"warn"|"bad", "cell": Vector2i (optional)}.
 
 signal letter_added(entry: Dictionary)
 
@@ -30,6 +30,24 @@ func bind(p_sim: Simulation, bus: Object) -> void:
 	_listen("building_destroyed", func(id: int = 0) -> void: add("Разрушено: %s." % _building_name(id), "bad"))
 	_listen("colonist_died", func(id: int = 0) -> void: add("Погиб колонист: %s." % _colonist_name(id), "bad"))
 	_listen("story_event", func(_id: String = "", text: String = "") -> void: add(text, "warn"))
+	_listen("raid_started", func(raid_id: String = "", _p: float = 0.0, n: int = 0) -> void:
+		var rd: Dictionary = sim.defs.raids.get(raid_id, {}) if sim.get("defs") and sim.defs.get("raids") != null else {}
+		add("Налёт: %s (%d тварей)." % [str(rd.get("name", raid_id)), n], "bad"))
+	_listen("raid_tremor", func(cell: Vector2i = Vector2i.ZERO, _t: int = 0, text: String = "") -> void:
+		add(text if text != "" else "Земля дрожит…", "warn", cell))
+	_listen("raid_burrowed", func(cell: Vector2i = Vector2i.ZERO, n: int = 0) -> void:
+		add("Твари вылезли из-под земли (%d)." % n, "bad", cell))
+	_listen("raid_retreat", func(_r: String = "") -> void: add("Твари отступают.", "info"))
+	_listen("colonist_downed", func(id: int = 0) -> void:
+		add("Колонист без сознания: %s." % _colonist_name(id), "bad", _colonist_cell(id)))
+	_listen("colonist_joined", func(id: int = 0) -> void:
+		add("К колонии присоединился %s." % _colonist_name(id), "info", _colonist_cell(id)))
+	_listen("event_choice_posted", func(_u: int = 0, text: String = "") -> void:
+		add("ВАЖНО: %s (панель «События»)" % text, "bad"))
+	_listen("mood_break_started", func(id: int = 0, kind: String = "") -> void:
+		add("Срыв у %s: %s." % [_colonist_name(id), kind], "bad", _colonist_cell(id)))
+	_listen("colonist_starving", func(id: int = 0) -> void:
+		add("Голодает: %s." % _colonist_name(id), "warn", _colonist_cell(id)))
 	_listen("forecast_revealed", func() -> void: add("Открыт прогноз конца планеты.", "info"))
 
 
@@ -43,10 +61,12 @@ func unbind() -> void:
 	sim = null
 
 
-func add(text: String, level := "info") -> void:
+func add(text: String, level := "info", cell: Variant = null) -> void:
 	if text == "":
 		return
 	var entry := {"text": text, "tick": sim.tick if sim else 0, "level": level}
+	if cell is Vector2i:
+		entry["cell"] = cell
 	entries.push_front(entry)
 	if entries.size() > MAX_ENTRIES:
 		entries.pop_back()
@@ -76,3 +96,11 @@ func _colonist_name(id: int) -> String:
 			if c.id == id:
 				return c.display_name
 	return "?"
+
+
+func _colonist_cell(id: int) -> Variant:
+	if sim:
+		for c in sim.colonists.list:
+			if c.id == id:
+				return c.cell
+	return null

@@ -93,7 +93,10 @@ func _make_card(c: Colonist) -> Dictionary:
 	bar.add_theme_stylebox_override("fill", fill)
 	vb.add_child(bar)
 	var job_l := _small_label(vb, 14)
-	return {"icon": icon, "name": name_l, "bar": bar, "job": job_l}
+	var st_l := _small_label(hb, 15)
+	st_l.clip_text = false
+	st_l.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	return {"icon": icon, "name": name_l, "bar": bar, "job": job_l, "state": st_l}
 
 
 func _small_label(parent: Control, size: int) -> Label:
@@ -106,6 +109,23 @@ func _small_label(parent: Control, size: int) -> Label:
 	return l
 
 
+## [short text, color] for sleeping / eating / downed / drafted / break.
+func _state_of(c: Colonist) -> Array:
+	if c.health != null and c.health.downed:
+		return ["ЛЕЖ", Color(1.0, 0.4, 0.4)]
+	if c.mood != null and c.mood.break_kind != "":
+		return ["СРЫВ", Color(1.0, 0.3, 0.3)]
+	if c.combat != null and c.combat.drafted:
+		return ["БОЙ", Color(1.0, 0.8, 0.3)]
+	if c.job != null:
+		match c.job.type:
+			"sleep":
+				return ["ZZ", Color(0.6, 0.7, 1.0)]
+			"eat":
+				return ["ЕДА", Color(0.6, 1.0, 0.6)]
+	return ["", Color.WHITE]
+
+
 func _update_card(c: Colonist, w: Dictionary) -> void:
 	var sprite := "colonist_engineer" if c.engineer else "colonist"
 	if c.is_sick(sim.tick):
@@ -114,6 +134,10 @@ func _update_card(c: Colonist, w: Dictionary) -> void:
 	(w["name"] as Label).text = c.display_name
 	(w["bar"] as ProgressBar).value = c.hp / c.max_hp
 	var job_l := w["job"] as Label
+	var st := _state_of(c)
+	var st_l := w["state"] as Label
+	st_l.text = st[0]
+	st_l.add_theme_color_override("font_color", st[1])
 	var idle_col := Color(1.0, 0.75, 0.3)
 	if c.hidden:
 		job_l.text = "в укрытии"
