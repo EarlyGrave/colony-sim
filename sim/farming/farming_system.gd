@@ -38,22 +38,28 @@ func can_sow(c: Vector2i) -> bool:
 		and sim.cell_free_for_items(c)
 
 
-func sow(c: Vector2i, plant_id: String) -> bool:
+func sow(c: Vector2i, plant_id: String, sower: Colonist = null) -> bool:
 	if not can_sow(c) or not sim.defs.plants.has(plant_id):
 		return false
 	plants[c] = Plant.new(plant_id, c)
+	plants[c].grow_bonus = sim.perks.mod(sower, "grow_speed")  # region perks
 	sim.bus.plant_sown.emit(c, plant_id)
 	return true
 
 
 ## Removes a mature plant and drops its yield on the cell. Returns the amount.
-func harvest(c: Vector2i) -> int:
+func harvest(c: Vector2i, harvester: Colonist = null) -> int:
 	var p := plant_at(c)
 	if p == null or not is_mature(p):
 		return 0
 	var def: Dictionary = sim.defs.plants[p.def_id]
 	plants.erase(c)
 	var n := int(def["yield"])
+	# region perks
+	n = PerkHooks.scaled(harvester, "harvest_yield", float(n), 1.0 + sim.perks.mod(harvester, "harvest_yield"))
+	if sim.perks.consume_flag(harvester, "double_harvest"):
+		n *= 2
+	# endregion
 	var item: String = def["item"]
 	sim.ledger.record_produced(item, n, "farming")
 	sim.items.drop(c, item, n)
@@ -72,6 +78,11 @@ func tick() -> void:
 			dead.append(c)  # zone removed: the crop is gone
 		elif light >= float(sim.defs.plants[p.def_id]["min_daylight"]):
 			p.growth += 1
+			if p.grow_bonus != 0.0:  # region perks
+				p.grow_acc += p.grow_bonus
+				var extra := floori(p.grow_acc)
+				p.grow_acc -= extra
+				p.growth = maxi(0, p.growth + extra)
 	for c in dead:
 		plants.erase(c)
 		sim.jobs.reserved.erase("plant:%d,%d" % [c.x, c.y])

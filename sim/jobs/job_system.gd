@@ -176,13 +176,14 @@ func work_order(c: Colonist) -> Array[String]:
 ## work-speed multiplier (1.0 for unskilled work).
 func work_tick(c: Colonist, work_type: String) -> float:
 	var skill: String = sim.defs.work["types"][work_type]["skill"]
+	var generic := maxf(0.0, 1.0 + sim.perks.mod(c, "work_speed"))  # region perks
 	if skill == "":
-		return 1.0
+		return generic
 	var mult := c.skills.speed_mult(sim.defs, skill)
 	mult *= float(c.bio.get("work_speed", 1.0))  # region arrivals
 	if c.skills.add_xp(sim.defs, skill, float(sim.defs.skills["xp_per_work_tick"])):
 		sim.bus.skill_leveled.emit(c.id, skill, c.skills.level(skill))
-	return mult
+	return mult * generic
 
 
 ## Hook for needs / draft / downed: interrupts the current job and runs `job`.

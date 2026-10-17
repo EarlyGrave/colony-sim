@@ -32,6 +32,8 @@ var needs: NeedsState = null
 
 # region perks
 var perks: ColonistPerks = null
+## Fractional remainders of perk-scaled integer amounts (stat key -> float).
+var perk_carry: Dictionary = {}
 # endregion
 
 var job: Job = null
@@ -52,6 +54,11 @@ func _init(p_id: int, p_name: String, p_cell: Vector2i, cfg: Dictionary) -> void
 	max_hp = float(cfg["max_hp"])
 	hp = max_hp
 	move_ticks = int(cfg["move_ticks"])
+
+
+## Perk move_speed: extra movement progress per tick (region perks).
+func move_gain(sim: Simulation) -> float:
+	return 1.0 + sim.perks.mod(self, "move_speed")
 
 
 func is_sick(now: int) -> bool:

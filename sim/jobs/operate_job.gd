@@ -23,10 +23,13 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	_acc += sim.jobs.work_tick(c, work_type)
+	# region perks
+	var stat := "operate_speed" if work_type == "operating" else "craft_speed"
+	_acc += sim.jobs.work_tick(c, work_type) * maxf(0.0, 1.0 + sim.perks.mod(c, stat))
+	# endregion
 	var steps := int(_acc)
 	_acc -= steps
-	return Status.DONE if sim.buildings.work(b, steps) else Status.RUNNING
+	return Status.DONE if sim.buildings.work(b, steps, c) else Status.RUNNING
 
 
 func describe() -> String:

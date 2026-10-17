@@ -21,10 +21,10 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	_work += sim.jobs.work_tick(c, "growing")
+	_work += sim.jobs.work_tick(c, "growing") * maxf(0.0, 1.0 + sim.perks.mod(c, "plant_speed"))  # region perks
 	if _work < int(sim.defs.plants[plant_id]["sow_ticks"]):
 		return Status.RUNNING
-	sim.farming.sow(cell, plant_id)
+	sim.farming.sow(cell, plant_id, c)
 	return Status.DONE
 
 

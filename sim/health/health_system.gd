@@ -25,6 +25,9 @@ func state_of(c: Colonist) -> HealthState:
 func apply_damage(c: Colonist, amount: float, part := "", kind := "bite") -> Injury:
 	if not c.alive or amount <= 0.0:
 		return null
+	amount *= maxf(0.0, 1.0 + sim.perks.mod(c, "damage_taken"))  # region perks
+	if amount <= 0.0:
+		return null
 	var h := state_of(c)
 	if part == "" or not cfg["parts"].has(part):
 		part = _random_part()
@@ -62,11 +65,17 @@ func tend(patient: Colonist, doctor: Object = null, quality_mult := 1.0) -> int:
 	if patient == null or not patient.alive or patient.health == null:
 		return 0
 	var q := clampf(tend_quality(doctor) * quality_mult, 0.0, 1.0)
+	# region perks: the doctor's perks (heal_speed, infection_chance, tend_quality)
+	var doc: Colonist = doctor as Colonist
+	q = clampf(q * (1.0 + sim.perks.mod(doc, "tend_quality")), 0.0, 1.0)
+	# endregion
 	var n := 0
 	for i in patient.health.injuries:
 		if not i.tended:
 			i.tended = true
 			i.tend_quality = q
+			i.heal_bonus = sim.perks.mod(doc, "heal_speed")  # region perks
+			i.infection_bonus = sim.perks.mod(doc, "infection_chance")
 			n += 1
 	_refresh(patient, patient.health)
 	return n
@@ -137,13 +146,13 @@ func tick() -> void:
 			continue
 		if h.bed_id >= 0 and sim.buildings.get_by_id(h.bed_id) == null:  # region doctor
 			h.bed_id = -1
-		_bleed_and_heal(h)
+		_bleed_and_heal(c, h)
 		if check > 0 and sim.tick % check == 0:
 			_infection_check(c, h)
 		_refresh(c, h)
 
 
-func _bleed_and_heal(h: HealthState) -> void:
+func _bleed_and_heal(c: Colonist, h: HealthState) -> void:
 	var rate := h.bleed_rate()
 	if rate > 0.0:
 		h.blood = maxf(0.0, h.blood - rate)
@@ -152,8 +161,10 @@ func _bleed_and_heal(h: HealthState) -> void:
 	var bonus := float(cfg["tended_heal_bonus"])
 	var rest_mult := float(cfg["doctor"]["bed_heal_mult"]) if h.bed_id >= 0 else 1.0  # region doctor
 	var keep: Array[Injury] = []
+	var own_heal := sim.perks.mod(c, "heal_speed")  # region perks: patient's own perk + tending doctor's
 	for i in h.injuries:
 		var mult := 1.0 + i.tend_quality * bonus if i.tended else 1.0
+		mult *= maxf(0.0, 1.0 + own_heal + i.heal_bonus)
 		if i.is_illness():
 			i.severity -= i.heal_per_tick * mult * rest_mult
 		else:
@@ -172,7 +183,8 @@ func _infection_check(c: Colonist, h: HealthState) -> void:
 		if i.illness_id == "infection":
 			return
 		if cfg["kinds"][i.kind]["infectable"]:
-			chance += float(inf["chance"]) * ((1.0 - i.tend_quality) if i.tended else 1.0)
+			chance += float(inf["chance"]) * ((1.0 - i.tend_quality) if i.tended else 1.0) \
+				* maxf(0.0, 1.0 + sim.perks.mod(c, "infection_chance") + i.infection_bonus)  # region perks
 	if chance <= 0.0:
 		return
 	if sim.rng.randf() < minf(1.0, chance):
