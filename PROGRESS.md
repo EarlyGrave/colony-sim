@@ -41,12 +41,13 @@ Tests: 56 green.
 - [x] HUD buttons with icons.
 
 ## Next
-- Merge to `main` so CI deploys the build to GitHub Pages (see "Needs owner").
-- Refinery hogs all ore: an "ore reserve" rule (keep N ore for construction).
-- Wave direction warning; more rules (e.g. "stop refining when contamination > X").
-- Repair costs / maintenance rules; deconstruct tool; wave direction warning.
-- Storyteller events that break one link (design pillar 2).
-- Stress & breakdowns (out of scope for this slice).
+- State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
+  + graphics, pushed, CI green, NOT yet merged to `main` (owner merges on request;
+  PR #1 with E0–E8 is already merged, Pages deploy works).
+- Ideas proposed to owner (not chosen yet): "ore reserve" rule (refinery eats
+  all ore), wave direction warning, rule "stop refining above contamination X",
+  repair costs, deconstruct tool, bigger HUD icons on phones.
+- Stress & breakdowns: postponed by owner.
 
 ## Known issues
 - Colonists ignore enemies when the alarm is off (no self-preservation).
@@ -75,6 +76,5 @@ HP); волны заканчиваются по таймеру и твари о�
 масштаб UI по devicePixelRatio.
 
 ## Needs owner
-1. Слить ветку в `main` (или сказать мне открыть PR).
-2. Settings → Pages → Source: **GitHub Actions** (если CI не сможет включить сам).
-3. Ок ли толкование «склад» как цели = капсула, или нужен склад-постройка с HP?
+- Merge the work branch into `main` when he asks ("вливай").
+- Resolved: Pages enabled (source = GitHub Actions); "склад" target = capsule; stress postponed.
