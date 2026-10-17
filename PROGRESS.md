@@ -95,6 +95,10 @@ TS-движка из диздока; свой тест-раннер вместо
 HP); волны заканчиваются по таймеру и твари отступают; ремонт пока бесплатный;
 масштаб UI по devicePixelRatio.
 
-## Needs owner
-- Merge the work branch into `main` when he asks ("вливай").
-- Resolved: Pages enabled (source = GitHub Actions); "склад" target = capsule; stress postponed.
+## State for the next session
+- Pages works: https://earlygrave.github.io/colony-sim/ (deploys from `main`).
+- Branch `claude/colony-sim-godot-4jftsm` has E9–E11 + graphics, NOT yet merged
+  to `main` (owner hasn't asked yet). PR #1 (E0–E8) is merged.
+- Owner decisions: stress postponed; "склад" target stays = capsule.
+- Fresh cloud session: install Godot 4.7.2 + web templates per README, then
+  `godot --headless --path . --import` before running tests.
