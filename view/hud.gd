@@ -20,6 +20,7 @@ const TOOLS: Array = [
 	["clear_zone", "Убрать", ""],
 	["refinery", "Установка", "refinery"],
 	["turret", "Турель", "turret_base"],
+	["deconstruct", "Снести", ""],
 ]
 const REASONS := {
 	"hq_destroyed": "Капсула разрушена. Колония пала.",

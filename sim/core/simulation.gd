@@ -163,6 +163,11 @@ func place_building(def_id: String, c: Vector2i) -> Building:
 	return buildings.place(def_id, c)
 
 
+## Player command: removes the building at `c` and refunds part of its cost.
+func deconstruct(c: Vector2i) -> bool:
+	return buildings.deconstruct(c)
+
+
 func set_rule(rule_id: String, on: bool) -> void:
 	if not rules.has(rule_id) or rules[rule_id] == on:
 		return
