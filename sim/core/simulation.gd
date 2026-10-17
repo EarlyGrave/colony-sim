@@ -62,6 +62,7 @@ var progression: ProgressionSystem
 # region perks
 var perks: PerkSystem
 var quality: QualitySystem  # region quality
+var ammo: AmmoSystem  # region ammo
 # endregion
 # endregion
 
@@ -123,6 +124,7 @@ func _init_systems() -> void:
 	contracts = ContractSystem.new(self)  # region contracts
 	quality = QualitySystem.new(self)  # region quality
 	progression = ProgressionSystem.new(self)  # region progression
+	ammo = AmmoSystem.new(self)  # region ammo
 
 
 func _place_starting_colony() -> void:
@@ -315,6 +317,7 @@ func dispose() -> void:
 	if crises != null:  # region crises
 		crises.sim = null
 	crises = null
+	ammo = null  # region ammo
 	if perks != null:  # region perks
 		perks.sim = null
 	perks = null
@@ -409,6 +412,12 @@ func answer_event(event_uid: int, accept: bool) -> bool:
 	return storyteller.answer(event_uid, accept)
 # endregion
 
+
+# region ammo
+func set_turret_ammo_policy(building_id: int, policy: String) -> bool:
+	_record("set_turret_ammo_policy", [building_id, policy])  # save-load
+	return ammo.set_policy(building_id, policy)
+# endregion
 
 # region perks
 func learn_perk(colonist_id: int, perk_id: String) -> bool:

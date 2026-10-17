@@ -97,6 +97,8 @@ signal contract_failed(contract_id: int, reason: String)
 # region progression
 signal xp_awarded(colonist_id: int, skill_id: String, amount: float, reason: String)
 signal wave_repelled(wave_index: int)
+# region ammo
+signal ammo_depleted(kind: String, id: int)  # kind: "turret" | "colonist"
 # endregion
 # region perks
 signal perk_learned(colonist_id: int, perk_id: String)

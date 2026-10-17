@@ -33,5 +33,19 @@
 			"meal": 1
 		},
 		"work_ticks": 60
+	},
+	"essence_rounds": {
+		"name": "Патроны",
+		"inputs": {
+			"refined_essence": 1,
+			"essence_ore": 2
+		},
+		"outputs": {
+			"essence_rounds": 10
+		},
+		"work_ticks": 60,
+		"benches": [
+			"workbench"
+		]
 	}
 }

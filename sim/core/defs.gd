@@ -33,6 +33,7 @@ var weapons: Dictionary = {}
 # region progression
 var xp: Dictionary = {}
 # endregion
+var ammo: Dictionary = {}  # region ammo
 # region perks
 var perks: Dictionary = {}
 var quality: Dictionary = {}  # region quality
@@ -97,6 +98,7 @@ func load_from(dir: String) -> void:
 	# region perks
 	perks = _load_json(dir + "perks.json")
 	quality = _load_json(dir + "quality.json")  # region quality
+	ammo = _load_json(dir + "ammo.json")  # region ammo
 	# endregion
 	# endregion
 	# region crises
@@ -150,6 +152,7 @@ func duplicate_defs() -> Defs:
 	d.perks = perks.duplicate(true)
 	d.quality = quality.duplicate(true)  # region quality
 	d.crises = crises.duplicate(true)  # region crises
+	d.ammo = ammo.duplicate(true)  # region ammo
 	# endregion
 	# endregion
 	# region raids

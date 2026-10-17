@@ -21,6 +21,11 @@ var recipe: Dictionary = {}
 var recipe_id := ""
 var progress := 0
 var turret_cooldown := 0
+# region ammo
+var ammo := 0
+var ammo_policy := "normal"
+var ammo_empty_flagged := false
+# endregion
 # region crafting
 ## Ingredients wanted by active bills (item -> true); refreshed by BillSystem.
 var bill_items: Dictionary = {}

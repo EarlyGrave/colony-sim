@@ -7,7 +7,8 @@
 			"refined_essence",
 			"machine_parts",
 			"raw_food",
-			"meal"
+			"meal",
+			"essence_rounds"
 		],
 		"waste_emission_factor": 1.0
 	},

@@ -35,5 +35,11 @@
 		"color": "#d98a4a",
 		"stack": 50,
 		"nutrition": 0.85
+	},
+	"essence_rounds": {
+		"name": "Заряженные патроны",
+		"color": "#ffd24a",
+		"stack": 50,
+		"value": 2.0
 	}
 }

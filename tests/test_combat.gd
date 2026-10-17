@@ -35,6 +35,8 @@ func _hits(sim: Simulation, level: int, shots: int) -> int:
 	var c := sim.colonists.spawn(Vector2i(5, 5))
 	c.combat.weapon = "rifle"
 	c.skills.levels["shooting"] = level
+	sim.ammo._pouch_init(c)
+	c.combat.pouch = 100000  # this test is about hit chance, not logistics
 	var e := _crawler(sim, Vector2i(10, 5))
 	e.hp = 1.0e9
 	var dmg := float(sim.defs.weapons["weapons"]["rifle"]["damage"])
