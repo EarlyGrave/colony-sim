@@ -24,6 +24,8 @@ var health: Dictionary = {}
 var mood: Dictionary = {}
 # region crafting
 var crafting: Dictionary = {}
+# region combat
+var weapons: Dictionary = {}
 # endregion
 
 static var _default: Defs = null
@@ -57,6 +59,8 @@ func load_from(dir: String) -> void:
 	mood = _load_json(dir + "mood.json")
 	# region crafting
 	crafting = _load_json(dir + "crafting.json")
+	# region combat
+	weapons = _load_json(dir + "weapons.json")
 	# endregion
 
 
@@ -82,6 +86,8 @@ func duplicate_defs() -> Defs:
 	d.mood = mood.duplicate(true)
 	# region crafting
 	d.crafting = crafting.duplicate(true)
+	# region combat
+	d.weapons = weapons.duplicate(true)
 	# endregion
 	return d
 

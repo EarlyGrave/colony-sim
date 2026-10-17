@@ -51,6 +51,8 @@ signal thought_added(colonist_id: int, thought_id: String)
 # region crafting
 signal bills_changed(building_id: int)
 signal zone_settings_changed(cell: Vector2i)
+# region combat
+signal colonist_drafted(colonist_id: int, on: bool)
 # endregion
 
 # --- Game flow ---

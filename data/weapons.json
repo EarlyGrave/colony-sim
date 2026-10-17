@@ -1,0 +1,20 @@
+{
+	"_comment": "Weapons and combat balance. kind: melee|ranged. range in cells. Hit chance = hit_base + hit_per_skill*skill level - range_penalty*(dist-1) for ranged, clamped.",
+	"combat": {
+		"start_weapon": "prison_shiv",
+		"engineer_weapon": "rifle",
+		"hit_base": 0.5,
+		"hit_per_skill": 0.04,
+		"range_penalty": 0.03,
+		"hit_min": 0.05,
+		"hit_max": 0.95,
+		"xp_per_attack": 6.0,
+		"fight_back_range": 1.5,
+		"flee_hp_fraction": 0.35,
+		"flee_watch_range": 6.0
+	},
+	"weapons": {
+		"prison_shiv": {"name": "Заточка", "kind": "melee", "damage": 7.0, "cooldown_ticks": 8, "range": 1.5, "skill": "melee"},
+		"rifle": {"name": "Винтовка", "kind": "ranged", "damage": 12.0, "cooldown_ticks": 14, "range": 9.0, "skill": "shooting"}
+	}
+}

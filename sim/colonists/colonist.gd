@@ -21,6 +21,8 @@ var health: HealthState = null
 # endregion
 # region mood
 var mood: Mood = null
+# region combat
+var combat: CombatState = null
 # endregion
 
 var job: Job = null

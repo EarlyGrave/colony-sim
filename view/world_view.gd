@@ -265,6 +265,10 @@ func _draw_colonists() -> void:
 		_sprite(name, p + Vector2(0, bob), Vector2(TILE, TILE), flip)
 		if c.carry_count > 0:
 			_sprite(ITEM_SPRITES.get(c.carry_item, "item_ore"), p + Vector2(0, -TILE * 0.55 + bob), Vector2(TILE, TILE) * 0.7)
+		# region combat
+		if c.combat != null and c.combat.drafted:
+			draw_colored_polygon(PackedVector2Array([p + Vector2(0, -TILE * 0.95), p + Vector2(-7, -TILE * 0.7), p + Vector2(7, -TILE * 0.7)]), Color(0.95, 0.15, 0.15))
+		# endregion
 		if c.hp < c.max_hp:
 			_bar(Rect2(p + Vector2(-12, TILE * 0.5), Vector2(24, 4)), c.hp / c.max_hp, Color(0.9, 0.25, 0.25))
 

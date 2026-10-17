@@ -22,6 +22,10 @@ func spawn(cell: Vector2i) -> Colonist:
 	# region jobs-core
 	c.skills = Skills.create(sim.defs, sim.rng)
 	# endregion
+	# region combat
+	c.combat = CombatState.new()
+	c.combat.weapon = str(sim.defs.weapons["combat"]["start_weapon"])
+	# endregion
 	list.append(c)
 	return c
 

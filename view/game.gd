@@ -76,6 +76,7 @@ func new_game(seed_value: int) -> void:
 		sim.dispose()
 	sim = Simulation.new(seed_value, EventBus)
 	sim.start_new_game()
+	combat_selected = -1  # region combat
 	world.bind(sim)
 	world.pending_corner = Vector2i(-1, -1)
 	world.selected_cell = Vector2i(-1, -1)
@@ -130,6 +131,10 @@ func _on_tapped(world_pos: Vector2) -> void:
 	var cell := WorldView.world_to_cell(world_pos)
 	if sim == null or not sim.map.in_bounds(cell):
 		return
+	# region combat
+	if _combat_tap(world_pos, cell):
+		return
+	# endregion
 	if tool in RECT_TOOLS:
 		if world.pending_corner.x < 0:
 			world.pending_corner = cell
@@ -203,6 +208,7 @@ static func inspect_target(p_sim: Simulation, cell: Vector2i) -> Dictionary:
 
 
 func _select_colonist(id: int, center := true) -> void:
+	combat_selected = id  # region combat
 	for col in sim.colonists.list:
 		if col.id == id and col.alive:
 			world.selected_cell = col.cell
@@ -284,4 +290,28 @@ func _notification(what: int) -> void:
 	# triggers focus-out in Godot's web platform).
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
 		autosave()
+# region combat
+## Colonist last selected with the inspect tool (target of draft orders).
+var combat_selected := -1
+
+
+## With a drafted colonist selected: tap an enemy = attack, tap empty ground = move.
+func _combat_tap(world_pos: Vector2, cell: Vector2i) -> bool:
+	if tool != "inspect" or combat_selected < 0:
+		return false
+	var sel := sim.colonists.get_by_id(combat_selected)
+	if sel == null or not sel.alive or sel.combat == null or not sel.combat.drafted:
+		return false
+	var half := Vector2(WorldView.TILE, WorldView.TILE) * 0.5
+	for e in sim.threats.enemies_in_range(Vector2(cell), 2.0):
+		if (e.visual_pos() * WorldView.TILE + half).distance_to(world_pos) < WorldView.TILE * 0.9:
+			if sim.order_attack(sel.id, e.id):
+				hud.show_message("Атака!", 2.0)
+			return true
+	for col in sim.colonists.list:
+		if col.alive and not col.hidden and col.cell == cell:
+			return false
+	if sim.order_move(sel.id, cell):
+		hud.show_message("Идти сюда", 2.0)
+	return true
 # endregion
