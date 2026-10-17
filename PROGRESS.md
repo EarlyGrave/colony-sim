@@ -60,6 +60,17 @@ Tests: 57 green. Handoff: `docs/handoff/session-2026-10-17-handoff.md`.
   E10 (items, stacks, inventory, storage filters/priorities) per
   `docs/contracts/items-inventory.md`.
 
+## Session 2 (cont.) — parallel agents batch
+- [x] Rule "Резерв руды" (ore_reserve): refinery never drains stored ore below 20.
+- [x] Rule "Лимит заражения" (refine_cap): no new batches at >= 50% contamination.
+- [x] Wave warning: next wave origin chosen in advance, red arrow at the edge,
+  storyteller "Твари идут с севера!", HUD shows the side.
+- [x] Deconstruct tool "Снести": 50% refund (Ledger source "refund"), capsule excluded.
+- [x] Game-designer review → balance: contamination per_batch 1.5, waste 0.035/day,
+  threat per_wave 1.4, per_refined 0.08, storyteller chance 0.25. Result: no turrets
+  → wave 2; static 3 turrets → wave 3–4; rebuilding → wave 5–7 with contamination 30–65%.
+Tests: 73 green.
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
@@ -97,7 +108,7 @@ HP); волны заканчиваются по таймеру и твари о�
 
 ## State for the next session
 - Pages works: https://earlygrave.github.io/colony-sim/ (deploys from `main`).
-- Branch `claude/colony-sim-godot-4jftsm` has E9–E11 + graphics, NOT yet merged
+- Branch `claude/colony-sim-godot-4jftsm` has E9–E11, graphics, rules batch; NOT yet merged
   to `main` (owner hasn't asked yet). PR #1 (E0–E8) is merged.
 - Owner decisions: stress postponed; "склад" target stays = capsule.
 - Fresh cloud session: install Godot 4.7.2 + web templates per README, then

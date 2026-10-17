@@ -145,3 +145,12 @@ model owns death, closed `Ledger.Reason` enum, full save coverage with
 round-trip tests, frozen `story_event` args. D21 (keep `refined_essence` /
 `waste`) is confirmed the same way. Next session applies these to the
 contracts before writing E10 code.
+
+## D20. Parallel agents with worktrees, merged by the lead
+Features developed by Sonnet sub-agents in isolated git worktrees; the lead
+merges, resolves conflicts (rules.json), runs the full suite and re-balances.
+A game-designer agent reviews the build against the design pillars.
+
+## D21. Balance pass after designer review
+Contamination made heavier and waves more tied to refining (see PROGRESS).
+Deconstruction reuses `building_destroyed` (does not end the game).

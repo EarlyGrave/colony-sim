@@ -38,8 +38,8 @@
 	},
 	"contamination": {
 		"max": 100.0,
-		"per_batch": 0.6,
-		"per_waste_per_day": 0.02,
+		"per_batch": 1.5,
+		"per_waste_per_day": 0.035,
 		"rate_smoothing_days": 1.0,
 		"min_rate_per_day": 0.2,
 		"base_error": 0.15,
@@ -48,7 +48,7 @@
 	"storyteller": {
 		"enabled": true,
 		"checks_per_day": 2,
-		"chance": 0.4,
+		"chance": 0.25,
 		"quiet_before_wave_ticks": 150
 	},
 	"threat": {
@@ -58,8 +58,8 @@
 		"wave_interval_days": 1.5,
 		"wave_duration_ticks": 350,
 		"base_strength": 2.5,
-		"per_wave": 2.0,
-		"per_refined": 0.05,
+		"per_wave": 1.4,
+		"per_refined": 0.08,
 		"per_contamination": 0.15,
 		"colonist_aggro_range": 5.0,
 		"turret_aggro_range": 4.0,
