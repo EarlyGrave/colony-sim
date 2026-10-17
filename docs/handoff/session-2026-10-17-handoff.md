@@ -16,7 +16,23 @@
 | Э9 (этот промпт: контракты и архитектура) | документы, статус по файлам ниже | ничего в сборке — только docs |
 
 ### Статус файлов Э9
-__FILE_STATUS__
+| Файл | Статус | Автор-агент |
+| --- | --- | --- |
+| `docs/ARCHITECTURE.md` | готов (аудит текущего кода, 23 сигнала шины, точки расширения) | architect |
+| `docs/contracts/README.md` | готов: индекс, таблица сигналов, 10 расхождений между контрактами | architect |
+| `docs/contracts/items-inventory.md` | готов | architect |
+| `docs/contracts/recipes-buildings.md` | готов | architect |
+| `docs/contracts/colonists-needs-jobs.md` | готов | architect |
+| `docs/contracts/combat-weapons.md` | готов | architect |
+| `docs/contracts/research-events-save.md` | готов | architect |
+| `docs/contracts/ui-touch.md` | готов (v1) | ui |
+| `art/STYLE.md` | готов, цвета новых ресурсов не проверены на телефоне | art |
+| `docs/economy/resources-and-chains.md` | готов: 39 предметов, 24 рецепта, 24 постройки, граф, свёртка сырья | economy |
+| `docs/agents/qa/E9-report.md` | готов: 56 → 57 тестов, список недостающих тестов | qa |
+| `tests/test_long_sim.gd` | готов и зелёный: 10 000 тиков, сохранение предметов + детерминизм, 2 с | qa |
+
+Ни один файл не остался с пометкой «(draft, unfinished)». Все числа в
+контрактах и таблицах — отправные точки, не баланс.
 
 ## Ссылка на сборку
 https://earlygrave.github.io/colony-sim/ — публикуется только из `main`.
@@ -53,8 +69,15 @@ https://earlygrave.github.io/colony-sim/ — публикуется только
 экономикой ещё нет.
 
 ## Долги и заглушки
-- Нет теста на ≥10 000 тиков (максимум 4000), нет теста save→load, нет прямого
-  юнит-теста `Ledger` (отчёт QA).
+- Тест на 10 000 тиков добавлен; нет теста save→load и прямого юнит-теста
+  `Ledger` (отчёт QA).
+- Расхождения между контрактами (см. `docs/contracts/README.md`):
+  `building_placed` vs `building_completed`; `equip` vs `equip_item`;
+  список навыков в recipes-buildings не совпадает со `skills.json`; у боя
+  «hp ≤ 0 = смерть» против модели ранений; в контракте сохранения не учтены
+  инвентари, чертежи, заказы, ранения, приоритеты, призыв, патроны турелей.
+- Материалы оружия в combat-weapons (`scrap`, `iron`…) не сверены с id предметов.
+- Русские строки в коде ещё не переведены на `tr()`-ключи.
 - Все контракты Э9 — спецификации, ни одна система Э10+ не начата.
 - Файлы со статусом «черновик» ниже требуют дочитки в начале следующей сессии.
 
