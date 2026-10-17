@@ -16,6 +16,9 @@ static func generate(sim: Simulation, cell: Vector2i) -> Colonist:
 	var c := Colonist.new(sim.colonists.alloc_id(), str(names[rng.randi_range(0, names.size() - 1)]),
 			cell, defs.balance["colonist"])
 	c.skills = Skills.create(defs, rng)
+	# QA: newcomers must be combat-capable too (draft/order commands read c.combat).
+	c.combat = CombatState.new()
+	c.combat.weapon = str(defs.weapons["combat"]["start_weapon"])
 	var age := rng.randi_range(int(cfg["age_min"]), int(cfg["age_max"]))
 	var story := str(stories[rng.randi_range(0, stories.size() - 1)])
 	var pool: Array[String] = []
