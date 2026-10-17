@@ -99,6 +99,12 @@ signal xp_awarded(colonist_id: int, skill_id: String, amount: float, reason: Str
 signal wave_repelled(wave_index: int)
 # region ammo
 signal ammo_depleted(kind: String, id: int)  # kind: "turret" | "colonist"
+# region debt
+signal debt_paid(colonist_id: int)
+signal debt_choice_made(colonist_id: int, outcome: String)
+signal riot_started(colonist_id: int)
+signal colonist_escaped(colonist_id: int)
+signal escape_stopped(colonist_id: int)
 # endregion
 # region perks
 signal perk_learned(colonist_id: int, perk_id: String)

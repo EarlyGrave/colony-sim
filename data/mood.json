@@ -13,6 +13,10 @@
 		"wave_survived": {"label": "Survived the attack", "value": 6, "duration_days": 2.0},
 		"planet_doomed": {"label": "The planet is dying", "value": -5, "duration_days": 0.0},
 		"slept_on_floor": {"label": "Slept on the floor", "value": -4, "duration_days": 1.0},
-		"ate_raw": {"label": "Ate raw food", "value": -3, "duration_days": 1.0}
+		"ate_raw": {"label": "Ate raw food", "value": -3, "duration_days": 1.0},
+		"despair_1": {"label": "Долг давит", "value": -6, "duration_days": 0.2},
+		"despair_2": {"label": "Отчаяние", "value": -14, "duration_days": 0.2},
+		"riot_witness": {"label": "Бунт в колонии", "value": -8, "duration_days": 2.0},
+		"freedman": {"label": "Свободный человек", "value": 8, "duration_days": 0.0}
 	}
 }

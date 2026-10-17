@@ -57,6 +57,14 @@ func bind(p_sim: Simulation, bus: Object) -> void:
 			e["skill"] = skill_id)
 	_listen("ammo_depleted", func(kind: String = "", id: int = 0) -> void:  # region ammo
 		add("Кончились патроны: %s." % (_building_name(id) if kind == "turret" else _colonist_name(id)), "bad"))
+	# region debt
+	_listen("debt_paid", func(id: int = 0) -> void:
+		add("%s выплатил долг. Остаться или покинуть планету? (осмотр)" % _colonist_name(id), "info", _colonist_cell(id)))
+	_listen("riot_started", func(id: int = 0) -> void:
+		add("Бунт: %s громит постройки!" % _colonist_name(id), "bad", _colonist_cell(id)))
+	_listen("colonist_escaped", func(id: int = 0) -> void: add("Побег: %s сбежал с планеты." % _colonist_name(id), "bad"))
+	_listen("escape_stopped", func(id: int = 0) -> void: add("Беглец %s остановлен." % _colonist_name(id), "info", _colonist_cell(id)))
+	# endregion
 	_listen("forecast_revealed", func() -> void: add("Открыт прогноз конца планеты.", "info"))
 
 
