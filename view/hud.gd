@@ -443,6 +443,7 @@ func show_inspector(target: Dictionary) -> void:
 func _inspector_panel() -> InspectorPanel:
 	if _inspector == null:
 		_inspector = InspectorPanel.new()
+		_inspector.panel_requested.connect(func(pid: String, cid: int) -> void: open_panel_for(pid, cid))
 	return _inspector
 
 
@@ -455,11 +456,22 @@ func toggle_panel(id: String) -> void:
 		var lp := LettersPanel.new()
 		lp.bind_log(_letters)
 		lp.show_cell_requested.connect(func(c: Vector2i) -> void: focus_cell_requested.emit(c))
+		lp.panel_requested.connect(func(pid: String, cid: int, sk: String) -> void: open_panel_for(pid, cid, sk))
 		p = lp
 	else:
 		p = PanelRegistry.make_panel(id)
 	if p != null:
 		_open_side(p, id)
+
+
+## Opens a registered panel focused on a colonist (perk panel).
+func open_panel_for(id: String, colonist_id: int, skill := "") -> void:
+	var p := PanelRegistry.make_panel(id)
+	if p == null:
+		return
+	if p is PerkPanel:
+		(p as PerkPanel).focus_colonist(colonist_id, skill)
+	_open_side(p, id)
 
 
 func _open_side(p: GamePanel, id: String) -> void:
