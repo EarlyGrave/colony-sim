@@ -71,6 +71,7 @@ func test_dead_lands_endure_poisons_edges() -> void:
 	assert_true(sim.resolve_crisis("dead_lands", "endure"))
 	var c: Colonist = sim.colonists.list[0]
 	c.cell = Vector2i(1, 1)
+	c.idle_until = sim.tick + 1000000  # keep them on the toxic edge (no idle work)
 	assert_true(sim.crises.toxic_cell(c.cell))
 	assert_false(sim.crises.toxic_cell(sim.map_center()))
 	sim.run_ticks(sim.defs.crises["settings"]["toxic_interval_ticks"])

@@ -300,45 +300,22 @@ func dispose() -> void:
 		if sig.is_connected(pair[1]):
 			sig.disconnect(pair[1])
 	_connections.clear()
-	# Break RefCounted cycles (systems hold a reference back to the sim).
-	for sys: Object in [items, colonists, jobs, buildings, contamination, threats, storyteller, health]:
-		if sys != null:
-			sys.set("sim", null)
+	# Break RefCounted cycles generically: every system object that holds
+	# `sim` gets it cleared, then the reference is dropped. New systems are
+	# covered automatically (no per-system lines to merge).
 	if colonists:
 		for c in colonists.list:
 			c.job = null
-	# region combat
-	if combat != null:
-		combat.sim = null
-		combat = null
-	# endregion
-	items = null
-	colonists = null
-	jobs = null
-	buildings = null
-	contamination = null
-	threats = null
-	storyteller = null
-	if contracts != null:  # region contracts
-		contracts.sim = null
-	contracts = null
-	if crises != null:  # region crises
-		crises.sim = null
-	crises = null
-	ammo = null  # region ammo
-	if idle_work != null:  # region idle-work
-		idle_work.sim = null
-	idle_work = null  # region idle-work
-	if perks != null:  # region perks
-		perks.sim = null
-	perks = null
-	progression = null  # region progression
-	if mood != null:  # region mood
-		mood.sim = null
-	mood = null
-	if debt != null:  # region debt
-		debt.sim = null
-	debt = null
+	for prop in get_property_list():
+		if not (prop["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE) or prop["type"] != TYPE_OBJECT:
+			continue
+		var name: String = prop["name"]
+		if name in ["bus", "rng", "defs", "ledger", "map"]:
+			continue
+		var o: Object = get(name)
+		if o != null and "sim" in o:
+			o.set("sim", null)
+		set(name, null)
 
 
 # region crafting
@@ -369,15 +346,6 @@ func set_zone_priority(c: Vector2i, priority: int) -> bool:
 	_record("set_zone_priority", [c, priority])  # save-load
 	return storage.set_priority(c, priority)
 # endregion
-	health = null
-	# region needs
-	for sys: Object in [needs, farming, clock]:
-		if sys != null:
-			sys.set("sim", null)
-	needs = null
-	farming = null
-	clock = null
-	# endregion
 
 
 # region jobs-core
@@ -395,7 +363,6 @@ func set_work_priority(colonist_id: int, work_type: String, p: int) -> bool:
 	bus.work_priority_changed.emit(colonist_id, work_type, p)
 	return true
 # endregion
-	health = null
 
 # region combat
 ## Drafted colonists ignore work and the alarm and fight.
