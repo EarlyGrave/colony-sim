@@ -40,6 +40,8 @@ var quality: Dictionary = {}  # region quality
 # endregion
 # endregion
 
+# region storyteller-chains
+var event_chains: Dictionary = {}
 # region crises
 var crises: Dictionary = {}
 # region debt
@@ -107,6 +109,9 @@ func load_from(dir: String) -> void:
 	ammo = _load_json(dir + "ammo.json")  # region ammo
 	# endregion
 	# endregion
+	# region storyteller-chains
+	event_chains = _load_json(dir + "event_chains.json")
+	events.merge(_load_json(dir + "events_prison.json"))
 	# region crises
 	crises = _load_json(dir + "crises.json")
 	# region debt
@@ -163,6 +168,7 @@ func duplicate_defs() -> Defs:
 	# region perks
 	d.perks = perks.duplicate(true)
 	d.quality = quality.duplicate(true)  # region quality
+	d.event_chains = event_chains.duplicate(true)  # region storyteller-chains
 	d.crises = crises.duplicate(true)  # region crises
 	d.ammo = ammo.duplicate(true)  # region ammo
 	# endregion
