@@ -5,9 +5,9 @@
 	"types": {
 		"repair": {"label": "Ремонт", "skill": "construction", "givers": ["repair"]},
 		"operating": {"label": "Установки", "skill": "operating", "givers": ["operate"]},
-		"hauling": {"label": "Перенос", "skill": "", "givers": ["haul"]},
+		"hauling": {"label": "Перенос", "skill": "", "givers": ["deliver_materials", "haul"]},
 		"mining": {"label": "Добыча", "skill": "mining", "givers": ["mine"]},
-		"construction": {"label": "Стройка", "skill": "construction", "givers": []},
+		"construction": {"label": "Стройка", "skill": "construction", "givers": ["build"]},
 		"crafting": {"label": "Ремесло", "skill": "crafting", "givers": []},
 		"cooking": {"label": "Кухня", "skill": "crafting", "givers": []},
 		"growing": {"label": "Посевы", "skill": "plants", "givers": []},

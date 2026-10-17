@@ -27,7 +27,7 @@ var _particles: Array = []  # [pos, vel, life, max_life, color, size]
 func _ready() -> void:
 	for n in ["colonist", "colonist_engineer", "colonist_sick", "colonist_engineer_sick", "crawler", "brute",
 			"turret_base", "turret_barrel", "refinery", "capsule", "item_ore", "item_refined", "item_waste",
-			"designation_mine"]:
+			"designation_mine", "wall", "door"]:
 		_tex[n] = load(SPR + n + ".png")
 	for kind in [["ground", 6], ["rock", 4], ["ore", 3]]:
 		var arr: Array[Image] = []
@@ -205,6 +205,7 @@ func _draw_items() -> void:
 
 
 func _draw_buildings() -> void:
+	_draw_blueprints()  # region construction
 	for b: Building in sim.buildings.list:
 		var r := Rect2(cell_to_world(b.cell), Vector2(b.size) * TILE)
 		var mod := Color(0.55, 0.5, 0.5) if b.broken else Color.WHITE
@@ -222,6 +223,8 @@ func _draw_buildings() -> void:
 				draw_set_transform(center, aim, Vector2.ONE)
 				_sprite("turret_barrel", Vector2(TILE * 0.2, 0), r.size * 1.1, false, mod)
 				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			"wall", "door":
+				_sprite(b.def_id, center, r.size, false, mod)
 			_:
 				draw_rect(r.grow(-2), Color(b.def["color"]) * mod)
 		if b.broken:
@@ -376,3 +379,25 @@ func _draw_selection() -> void:
 func _bar(r: Rect2, frac: float, col: Color) -> void:
 	draw_rect(r.grow(1), Color(0, 0, 0, 0.7))
 	draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(frac, 0.0, 1.0), r.size.y)), col)
+
+
+# region construction
+## Planned buildings: translucent sprite, delivered-materials bar, work bar.
+func _draw_blueprints() -> void:
+	for bp: Blueprint in sim.buildings.blueprints:
+		var r := Rect2(cell_to_world(bp.cell), Vector2(bp.size) * TILE)
+		var ghost := Color(0.6, 0.8, 1.0, 0.45)
+		if _tex.has(bp.def_id) or bp.def_id in ["refinery"]:
+			_sprite(bp.def_id, r.get_center(), r.size, false, ghost)
+		elif bp.def_id == "turret":
+			_sprite("turret_base", r.get_center(), r.size, false, ghost)
+		else:
+			draw_rect(r.grow(-2), Color(Color(bp.def["color"]), 0.45))
+		draw_rect(r.grow(-1), Color(0.6, 0.85, 1.0, 0.8), false, 2.0)
+		var need := 0
+		for item: String in bp.def["cost"]:
+			need += int(bp.def["cost"][item])
+		_bar(Rect2(r.position + Vector2(3, r.size.y - 7), Vector2(r.size.x - 6, 4)), float(bp.delivered_total()) / maxf(need, 1.0), Color(0.75, 0.55, 1.0))
+		if bp.work_done > 0.0:
+			_bar(Rect2(r.position + Vector2(3, r.size.y + 1), Vector2(r.size.x - 6, 4)), bp.progress_fraction(), Color(0.4, 0.9, 0.5))
+# endregion

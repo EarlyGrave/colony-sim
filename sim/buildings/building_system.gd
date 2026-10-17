@@ -8,6 +8,11 @@ var occupancy: Dictionary = {}  # Vector2i -> building id
 var refined_batches := 0
 var first_refine_done := false
 var _next_id := 1
+# region construction
+var blueprints: Array[Blueprint] = []
+var bp_occupancy: Dictionary = {}  # Vector2i -> blueprint id
+var _next_bp_id := 1
+# endregion
 
 
 func _init(p_sim: Simulation) -> void:
@@ -26,7 +31,7 @@ func at(c: Vector2i) -> Building:
 
 
 func occupied(c: Vector2i) -> bool:
-	return occupancy.has(c)
+	return occupancy.has(c) or bp_occupancy.has(c)
 
 
 ## Empty string if `def_id` can be placed at `c`, otherwise the reason.
@@ -39,7 +44,7 @@ func placement_error(def_id: String, c: Vector2i, check_cost := true) -> String:
 			var p := c + Vector2i(x, y)
 			if not sim.map.is_passable(p):
 				return "Мешает рельеф"
-			if occupancy.has(p):
+			if occupancy.has(p) or bp_occupancy.has(p):
 				return "Место занято"
 			if sim.items.stacks.has(p):
 				return "Мешают предметы"
@@ -68,6 +73,8 @@ func place(def_id: String, c: Vector2i, pay := true) -> Building:
 	list.append(b)
 	for p in b.footprint():
 		occupancy[p] = b.id
+	if b.def.get("blocks_movement", false):  # region construction
+		_block(b, true)
 	sim.bus.building_placed.emit(b.id)
 	return b
 
@@ -148,6 +155,8 @@ func destroy(b: Building) -> void:
 ## Player deconstruction: refunds a fraction of the cost, spills buffers.
 ## Returns false if there is nothing deconstructible at `c`.
 func deconstruct(c: Vector2i) -> bool:
+	if bp_occupancy.has(c):  # region construction
+		return cancel_blueprint(get_blueprint(int(bp_occupancy[c])))
 	var b := at(c)
 	if b == null or not bool(b.def.get("deconstructible", true)):
 		return false
@@ -170,6 +179,8 @@ func _remove(b: Building) -> void:
 	list.erase(b)
 	for p in b.footprint():
 		occupancy.erase(p)
+	if b.def.get("blocks_movement", false):  # region construction
+		_block(b, false)
 	for buf: Dictionary in [b.input, b.output]:
 		for item: String in buf:
 			sim.items.drop(b.cell, item, int(buf[item]))
@@ -197,6 +208,8 @@ func count_item(item_id: String) -> int:
 	var s := 0
 	for b in list:
 		s += int(b.input.get(item_id, 0)) + int(b.output.get(item_id, 0))
+	for bp in blueprints:  # region construction
+		s += int(bp.delivered.get(item_id, 0))
 	return s
 
 
@@ -206,3 +219,100 @@ func count_of(def_id: String) -> int:
 		if b.def_id == def_id:
 			n += 1
 	return n
+
+
+# region construction
+## Plans a building: the cells are reserved, work givers do the rest.
+## Returns null if placement is invalid. Cost is NOT required up front.
+func place_blueprint(def_id: String, c: Vector2i) -> Blueprint:
+	if placement_error(def_id, c, false) != "":
+		return null
+	var bp := Blueprint.new(_next_bp_id, def_id, sim.defs.buildings[def_id], c,
+		float(sim.defs.balance["construction"]["default_build_work"]))
+	_next_bp_id += 1
+	blueprints.append(bp)
+	for p in bp.footprint():
+		bp_occupancy[p] = bp.id
+	sim.bus.blueprint_placed.emit(bp.id)
+	return bp
+
+
+func get_blueprint(id: int) -> Blueprint:
+	for bp in blueprints:
+		if bp.id == id:
+			return bp
+	return null
+
+
+func blueprint_at(c: Vector2i) -> Blueprint:
+	return get_blueprint(int(bp_occupancy[c])) if bp_occupancy.has(c) else null
+
+
+func _drop_blueprint(bp: Blueprint) -> void:
+	blueprints.erase(bp)
+	for p in bp.footprint():
+		bp_occupancy.erase(p)
+	for key in ["bp:%d" % bp.id]:
+		sim.jobs.reserved.erase(key)
+	for item: String in bp.def["cost"]:
+		sim.jobs.reserved.erase("bpmat:%d:%s" % [bp.id, item])
+
+
+## Removes a blueprint; delivered materials spill onto the ground (nothing is lost).
+func cancel_blueprint(bp: Blueprint) -> bool:
+	if bp == null:
+		return false
+	_drop_blueprint(bp)
+	for item: String in bp.delivered:
+		if int(bp.delivered[item]) > 0:
+			sim.items.drop(bp.cell, item, int(bp.delivered[item]))
+	bp.delivered.clear()
+	sim.bus.blueprint_cancelled.emit(bp.id)
+	return true
+
+
+## Turns a fully supplied blueprint into a building; materials are consumed now.
+func complete_blueprint(bp: Blueprint) -> Building:
+	if bp == null or not bp.has_all_materials():
+		return null
+	_drop_blueprint(bp)
+	for item: String in bp.def["cost"]:
+		var n := int(bp.def["cost"][item])
+		sim.ledger.record_consumed(item, n, "construction")
+	bp.delivered.clear()
+	var b := place(bp.def_id, bp.cell, false)
+	if b == null:  # cannot happen: the cells were reserved
+		return null
+	sim.bus.blueprint_completed.emit(bp.id, b.id)
+	return b
+
+
+func _block(b: Building, on: bool) -> void:
+	for p in b.footprint():
+		sim.pathfinder.set_blocked(p, on)
+	if on:
+		_evict(b)
+
+
+## Moves colonists / creatures standing inside a freshly solid building out.
+func _evict(b: Building) -> void:
+	var movers: Array = []
+	movers.append_array(sim.colonists.list)
+	movers.append_array(sim.threats.enemies if sim.threats != null else [])
+	for m: GridMover in movers:
+		if not b.contains(m.cell):
+			continue
+		var spot := _nearest_walkable(m.cell)
+		if spot.x >= 0:
+			m.cell = spot
+		m.clear_path()
+
+
+func _nearest_walkable(from: Vector2i) -> Vector2i:
+	for r in range(1, 8):
+		for y in range(-r, r + 1):
+			for x in range(-r, r + 1):
+				if maxi(absi(x), absi(y)) == r and sim.pathfinder.is_walkable(from + Vector2i(x, y)):
+					return from + Vector2i(x, y)
+	return Vector2i(-1, -1)
+# endregion

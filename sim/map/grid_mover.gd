@@ -28,7 +28,7 @@ func move_toward(target: Vector2i, sim: Simulation) -> int:
 		return Move.MOVING
 	move_t = 0
 	var next: Vector2i = path[0]
-	if not sim.map.is_passable(next):
+	if not sim.pathfinder.is_walkable(next):
 		path = sim.pathfinder.find_path(cell, target)
 		return Move.FAILED if path.is_empty() else Move.MOVING
 	cell = next

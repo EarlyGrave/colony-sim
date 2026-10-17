@@ -7,6 +7,12 @@ var map: MapGrid
 var astar := AStarGrid2D.new()
 var _component := PackedInt32Array()
 var _components_dirty := true
+# region construction
+## Cells made solid by buildings (walls): Vector2i -> true. MapGrid stays terrain-only.
+var blocked: Dictionary = {}
+## Component labels of the bare terrain (walls ignored), for spawn decisions.
+var _terrain_component := PackedInt32Array()
+# endregion
 
 
 func _init(p_map: MapGrid) -> void:
@@ -24,13 +30,45 @@ func rebuild() -> void:
 	for y in map.height:
 		for x in map.width:
 			var c := Vector2i(x, y)
-			astar.set_point_solid(c, not map.is_passable(c))
+			astar.set_point_solid(c, not is_walkable(c))
 	_components_dirty = true
 
 
 func refresh_cell(c: Vector2i) -> void:
-	astar.set_point_solid(c, not map.is_passable(c))
+	astar.set_point_solid(c, not is_walkable(c))
 	_components_dirty = true
+
+
+# region construction
+## Terrain passable and not covered by a solid building.
+func is_walkable(c: Vector2i) -> bool:
+	return map.is_passable(c) and not blocked.has(c)
+
+
+func set_blocked(c: Vector2i, on: bool) -> void:
+	if on == blocked.has(c):
+		return
+	if on:
+		blocked[c] = true
+	else:
+		blocked.erase(c)
+	refresh_cell(c)
+
+
+## Reachability on bare terrain, ignoring walls (where could a creature come from).
+func reachable_terrain(a: Vector2i, b: Vector2i) -> bool:
+	if not map.is_passable(a) or not map.is_passable(b):
+		return false
+	_ensure_components()
+	return _terrain_component[map.idx(a)] == _terrain_component[map.idx(b)]
+
+
+## True if `from` can get to `cell` itself, or next to it when `cell` is solid.
+func can_approach(from: Vector2i, cell: Vector2i) -> bool:
+	if is_walkable(cell):
+		return reachable(from, cell)
+	return best_adjacent(from, cell).x >= 0
+# endregion
 
 
 ## Path from `from` to `to`, excluding `from`. Empty if unreachable or same cell.
@@ -53,7 +91,7 @@ func best_adjacent(from: Vector2i, target: Vector2i) -> Vector2i:
 		var n := target + d
 		if n == from:
 			return n
-		if map.is_passable(n) and reachable(from, n):
+		if is_walkable(n) and reachable(from, n):
 			var dist := Vector2(n - from).length()
 			if dist < best_d:
 				best_d = dist
@@ -62,14 +100,14 @@ func best_adjacent(from: Vector2i, target: Vector2i) -> Vector2i:
 
 
 func reachable(a: Vector2i, b: Vector2i) -> bool:
-	if not map.is_passable(a) or not map.is_passable(b):
+	if not is_walkable(a) or not is_walkable(b):
 		return false
 	_ensure_components()
 	return _component[map.idx(a)] == _component[map.idx(b)]
 
 
 func component_of(c: Vector2i) -> int:
-	if not map.is_passable(c):
+	if not is_walkable(c):
 		return -1
 	_ensure_components()
 	return _component[map.idx(c)]
@@ -79,21 +117,27 @@ func _ensure_components() -> void:
 	if not _components_dirty:
 		return
 	_components_dirty = false
-	_component.resize(map.width * map.height)
-	_component.fill(-1)
+	_label(_component, true)
+	_label(_terrain_component, false)
+
+
+func _label(comp: PackedInt32Array, with_blocks: bool) -> void:
+	comp.resize(map.width * map.height)
+	comp.fill(-1)
 	var next_id := 0
-	for i in _component.size():
-		if _component[i] != -1 or map.tiles[i] != MapGrid.Tile.GROUND:
+	for i in comp.size():
+		var start := Vector2i(i % map.width, i / map.width)
+		if comp[i] != -1 or map.tiles[i] != MapGrid.Tile.GROUND or (with_blocks and blocked.has(start)):
 			continue
-		var queue: Array[Vector2i] = [Vector2i(i % map.width, i / map.width)]
-		_component[i] = next_id
+		var queue: Array[Vector2i] = [start]
+		comp[i] = next_id
 		var head := 0
 		while head < queue.size():
 			var c := queue[head]
 			head += 1
 			for d in MapGrid.NEIGHBORS_4:
 				var n := c + d
-				if map.is_passable(n) and _component[map.idx(n)] == -1:
-					_component[map.idx(n)] = next_id
+				if map.is_passable(n) and comp[map.idx(n)] == -1 and not (with_blocks and blocked.has(n)):
+					comp[map.idx(n)] = next_id
 					queue.append(n)
 		next_id += 1

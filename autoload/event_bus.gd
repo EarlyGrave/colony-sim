@@ -63,3 +63,10 @@ signal story_event(event_id: String, text: String)
 signal skill_leveled(colonist_id: int, skill_id: String, level: int)
 signal work_priority_changed(colonist_id: int, work_type: String, priority: int)
 # endregion
+
+# region construction
+signal blueprint_placed(blueprint_id: int)
+signal blueprint_progress(blueprint_id: int)
+signal blueprint_cancelled(blueprint_id: int)
+signal blueprint_completed(blueprint_id: int, building_id: int)
+# endregion

@@ -146,7 +146,7 @@ func _pick_spawn_origin() -> Vector2i:
 			1: c = Vector2i(t, h - 1)
 			2: c = Vector2i(0, t)
 			_: c = Vector2i(w - 1, t)
-		if sim.pathfinder.reachable(c, home):
+		if sim.pathfinder.reachable_terrain(c, home):  # walls don't stop a wave from coming
 			return c
 	# Deterministic fallback: first reachable edge cell.
 	for x in w:
@@ -164,7 +164,7 @@ func _spawn_cell_near(origin: Vector2i) -> Vector2i:
 	var r := int(cfg["spawn_scatter"])
 	for attempt in 12:
 		var c := origin + Vector2i(sim.rng.randi_range(-r, r), sim.rng.randi_range(-r, r))
-		if sim.pathfinder.reachable(c, origin):
+		if sim.pathfinder.reachable_terrain(c, origin):
 			return c
 	return origin
 
@@ -193,7 +193,7 @@ func _tick_enemy(e: Enemy) -> void:
 			if e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
 				sim.buildings.damage(b, float(e.def["damage"]))
-		elif e.move_toward(b.nearest_cell_to(e.cell), sim) == GridMover.Move.FAILED:
+		elif _approach_building(e, b) == GridMover.Move.FAILED:
 			e.retarget_at = sim.tick + 5
 	else:
 		var c := sim.colonists.get_by_id(e.target_id)
@@ -229,7 +229,7 @@ func _choose_target(e: Enemy) -> void:
 	for c in sim.colonists.list:
 		if c.alive and not c.hidden:
 			var d := Vector2(c.cell).distance_to(pos)
-			if d <= best_d:
+			if d <= best_d and sim.pathfinder.can_approach(e.cell, c.cell):
 				best_d = d
 				e.target_kind = Enemy.Target.COLONIST
 				e.target_id = c.id
@@ -239,6 +239,8 @@ func _choose_target(e: Enemy) -> void:
 	var best: Building = null
 	var best_score := -INF
 	for b in sim.buildings.list:
+		if b.def.get("sapper_only", false):  # walls are only attacked when they block the way
+			continue
 		var d := b.distance_to(pos)
 		var score: float
 		if b.def.has("turret") and d <= float(cfg["turret_aggro_range"]):
@@ -251,6 +253,8 @@ func _choose_target(e: Enemy) -> void:
 	if best != null:
 		e.target_kind = Enemy.Target.BUILDING
 		e.target_id = best.id
+		if not sim.pathfinder.can_approach(e.cell, best.nearest_cell_to(e.cell)):
+			_sapper_target(e)
 
 
 func damage_enemy(e: Enemy, amount: float) -> void:
@@ -305,4 +309,31 @@ func enemies_in_range(pos: Vector2, r: float) -> Array[Enemy]:
 		dists.insert(i, d)
 		out.insert(i, e)
 	return out
+
+# region construction
+## Walks toward a building; a solid target (wall) is approached from a free neighbour.
+func _approach_building(e: Enemy, b: Building) -> int:
+	var goal := b.nearest_cell_to(e.cell)
+	if not sim.pathfinder.is_walkable(goal):
+		goal = sim.pathfinder.best_adjacent(e.cell, goal)
+		if goal.x < 0:
+			return GridMover.Move.FAILED
+	return e.move_toward(goal, sim)
+
+
+## Sapper-lite: the real target is walled off, so chew through the nearest wall
+## the creature can actually reach.
+func _sapper_target(e: Enemy) -> void:
+	var best: Building = null
+	var best_d := INF
+	for b in sim.buildings.list:
+		if not b.def.get("blocks_movement", false):
+			continue
+		var d := b.distance_to(Vector2(e.cell))
+		if d < best_d and sim.pathfinder.can_approach(e.cell, b.cell):
+			best = b
+			best_d = d
+	if best != null:
+		e.target_kind = Enemy.Target.BUILDING
+		e.target_id = best.id
 # endregion

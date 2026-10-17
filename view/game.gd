@@ -5,7 +5,7 @@ extends Node
 
 const MAX_TICKS_PER_FRAME := 40
 const RECT_TOOLS := ["mine", "stockpile", "waste_dump", "clear_zone"]
-const BUILD_TOOLS := ["refinery", "turret"]
+const BUILD_TOOLS := ["refinery", "turret", "wall", "door"]  # wall/door: region construction
 const HINTS := {
 	"inspect": "Нажми на клетку, чтобы посмотреть, что там.",
 	"mine": "Добыча: нажми два угла области с рудой (фиолетовое).",
@@ -146,12 +146,12 @@ func _on_tapped(world_pos: Vector2) -> void:
 		var err := sim.can_place_building(tool, cell)
 		if err == "":
 			sim.place_building(tool, cell)
-			hud.show_message("Построено: " + str(sim.defs.buildings[tool]["name"]), 3.0)
+			hud.show_message("Заложено: " + str(sim.defs.buildings[tool]["name"]) + " (нужны материалы и стройка)", 3.0)
 		else:
 			hud.show_message(err, 3.0)
 	elif tool == "deconstruct":
 		if sim.deconstruct(cell):
-			hud.show_message("Снесено", 3.0)
+			hud.show_message("Снесено / план отменён", 3.0)
 		else:
 			hud.show_message("Здесь нечего сносить", 3.0)
 	else:

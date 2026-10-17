@@ -17,6 +17,7 @@
 		"color": "#b0446b",
 		"max_hp": 250,
 		"cost": {"essence_ore": 20},
+		"build_work": 120,
 		"buildable": true,
 		"recipe": "refine_essence",
 		"input_capacity": 20,
@@ -42,9 +43,32 @@
 		"color": "#5f9ea0",
 		"max_hp": 120,
 		"cost": {"refined_essence": 10},
+		"build_work": 80,
 		"buildable": true,
 		"turret": {"range": 6.5, "damage": 9, "cooldown_ticks": 8},
 		"wear_per_shot": 1.2,
 		"threat_priority": 1
+	},
+	"wall": {
+		"name": "Стена",
+		"size": [1, 1],
+		"color": "#6b6258",
+		"max_hp": 150,
+		"cost": {"essence_ore": 2},
+		"build_work": 40,
+		"buildable": true,
+		"blocks_movement": true,
+		"sapper_only": true,
+		"threat_priority": 0
+	},
+	"door": {
+		"name": "Дверь",
+		"size": [1, 1],
+		"color": "#8a6a40",
+		"max_hp": 80,
+		"cost": {"essence_ore": 3},
+		"build_work": 50,
+		"buildable": true,
+		"threat_priority": 0.5
 	}
 }
