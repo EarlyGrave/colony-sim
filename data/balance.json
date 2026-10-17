@@ -41,6 +41,12 @@
 		"base_error": 0.15,
 		"error_growth": 0.5
 	},
+	"storyteller": {
+		"enabled": true,
+		"checks_per_day": 2,
+		"chance": 0.4,
+		"quiet_before_wave_ticks": 150
+	},
 	"threat": {
 		"enabled": true,
 		"awaken_mined_total": 60,

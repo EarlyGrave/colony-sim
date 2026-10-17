@@ -42,6 +42,9 @@ func tick_colonist(c: Colonist) -> void:
 		if sim.alarm:
 			return
 		c.hidden = false
+	if c.is_sick(sim.tick) and (c.job == null or c.job.type != "flee"):
+		end_job(c, Job.Status.FAILED, false)
+		return
 	if c.job == null:
 		if c.idle_until > sim.tick:
 			return

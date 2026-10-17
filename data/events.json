@@ -1,0 +1,23 @@
+{
+	"_comment": "Storyteller events. Each one breaks exactly one link of the colony.",
+	"lightning": {
+		"name": "Молния",
+		"weight": 3,
+		"min_day": 2,
+		"text": "Молния ударила в постройку «{target}» — машина сломана, нужен ремонт."
+	},
+	"sickness": {
+		"name": "Лихорадка",
+		"weight": 3,
+		"min_day": 2,
+		"duration_ticks": 360,
+		"text": "{target} слёг с лихорадкой и полдня не сможет работать."
+	},
+	"cave_in": {
+		"name": "Обвал",
+		"weight": 2,
+		"min_day": 3,
+		"max_cells": 3,
+		"text": "Обвал засыпал часть месторождения — руда потеряна."
+	}
+}

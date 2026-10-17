@@ -9,6 +9,8 @@ var max_hp: float
 var alive := true
 ## Inside a shelter (invisible and untargetable).
 var hidden := false
+## Sick colonists don't work until this tick (they still flee on alarm).
+var sick_until := 0
 
 var job: Job = null
 var idle_until := 0
@@ -28,6 +30,10 @@ func _init(p_id: int, p_name: String, p_cell: Vector2i, cfg: Dictionary) -> void
 	max_hp = float(cfg["max_hp"])
 	hp = max_hp
 	move_ticks = int(cfg["move_ticks"])
+
+
+func is_sick(now: int) -> bool:
+	return sick_until > now
 
 
 func is_unreachable(key: String, now: int) -> bool:

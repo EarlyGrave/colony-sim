@@ -38,7 +38,7 @@ func test_resources_are_conserved() -> void:
 			var ore_world := sim.items.count_world("essence_ore")
 			assert_eq(ore_world, sim.ledger.balance_of("essence_ore"), "seed %d: ore appeared/vanished at tick %d" % [seed_value, sim.tick])
 			var mined := sim.ledger.get_count("mining:essence_ore")
-			assert_eq(deposits_before - sim.map.total_deposit_amount(), mined, "seed %d: deposit accounting" % seed_value)
+			assert_eq(deposits_before - sim.map.total_deposit_amount(), mined + sim.map.deposit_lost, "seed %d: deposit accounting" % seed_value)
 
 
 func test_mining_stops_when_designation_removed() -> void:

@@ -18,6 +18,8 @@ var deposit_amount: PackedInt32Array
 var mine_designated: PackedByteArray
 ## Zone id per cell ("" = none).
 var zone_ids: PackedStringArray
+## Ore destroyed without being mined (cave-ins), for deposit accounting.
+var deposit_lost := 0
 
 var _bus: Object
 
@@ -68,6 +70,14 @@ func is_deposit(c: Vector2i) -> bool:
 
 func get_deposit_amount(c: Vector2i) -> int:
 	return deposit_amount[idx(c)]
+
+
+## Turns a deposit into rock; its remaining ore is lost.
+func collapse_deposit(c: Vector2i) -> void:
+	if not is_deposit(c):
+		return
+	deposit_lost += get_deposit_amount(c)
+	set_tile(c, Tile.ROCK)
 
 
 ## Removes up to `amount` ore from a deposit. Returns how much was taken.
