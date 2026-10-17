@@ -117,8 +117,8 @@ func can_run_recipe() -> bool:
 
 
 func needs_repair(sim: Simulation) -> bool:
-	if destroyed:
-		return false
+	if destroyed or bool(def.get("blocks_movement", false)):
+		return false  # walls are rebuilt, not repaired
 	if broken or hp < max_hp:
 		return true
 	return is_machine() and condition < float(sim.defs.balance["repair"]["threshold"]) * 100.0

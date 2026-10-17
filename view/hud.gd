@@ -26,6 +26,8 @@ const TOOLS: Array = [
 	["refinery", "Установка", "refinery"],
 	["turret", "Турель", "turret_base"],
 	["deconstruct", "Снести", ""],
+	["wall", "Стена", "wall"],  # region construction
+	["door", "Дверь", "door"],  # region construction
 ]
 const REASONS := {
 	"hq_destroyed": "Капсула разрушена. Колония пала.",

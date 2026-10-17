@@ -82,7 +82,7 @@ static func run_waves(sim: Simulation, max_waves: int, intervene := false, max_t
 				var angle := player_rng.randf() * TAU
 				var near := sim.map_center() + Vector2i(roundi(cos(angle) * 5.0), roundi(sin(angle) * 5.0))
 				var spot := find_spot(sim, "turret", near, 0)
-				if sim.place_building("turret", spot) == null:
+				if sim.place_instant("turret", spot) == null:
 					break
 				built[0] += 1)
 	var broken := [0]

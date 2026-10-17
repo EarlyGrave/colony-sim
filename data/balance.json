@@ -30,7 +30,8 @@
 		"yield": 5
 	},
 	"construction": {
-		"refund_fraction": 0.5
+		"refund_fraction": 0.5,
+		"default_build_work": 60
 	},
 	"repair": {
 		"work_ticks": 60,

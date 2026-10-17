@@ -161,11 +161,21 @@ func set_zone(c: Vector2i, zone_id: String) -> bool:
 func can_place_building(def_id: String, c: Vector2i) -> String:
 	if not defs.buildings.has(def_id) or not defs.buildings[def_id].get("buildable", false):
 		return "Нельзя построить"
-	return buildings.placement_error(def_id, c)
+	return buildings.placement_error(def_id, c, false)  # blueprints need no materials up front
 
 
-func place_building(def_id: String, c: Vector2i) -> Building:
+## Player command: plans a building (blueprint). Colonists haul the materials
+## and build it. Returns null if it can't be placed.
+func place_building(def_id: String, c: Vector2i) -> Blueprint:
 	if can_place_building(def_id, c) != "":
+		return null
+	return buildings.place_blueprint(def_id, c)
+
+
+## Instant placement paying the cost from storage (tests, scenarios, tools).
+func place_instant(def_id: String, c: Vector2i) -> Building:
+	if not defs.buildings.has(def_id) or not defs.buildings[def_id].get("buildable", false) \
+			or buildings.placement_error(def_id, c) != "":
 		return null
 	return buildings.place(def_id, c)
 

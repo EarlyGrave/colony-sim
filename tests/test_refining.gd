@@ -82,7 +82,7 @@ func test_building_cost_is_paid_from_storage() -> void:
 	var cell := sim.map_center() + Vector2i(-5, 3)
 	var err := sim.can_place_building("refinery", cell)
 	assert_eq(err, "")
-	assert_true(sim.place_building("refinery", cell) != null)
+	assert_true(sim.place_instant("refinery", cell) != null)
 	assert_eq(sim.items.count_stored("essence_ore"), before - 20)
 	assert_eq(sim.items.count_world("essence_ore"), sim.ledger.balance_of("essence_ore"))
 	# Not enough ore for a second one beyond what's left.

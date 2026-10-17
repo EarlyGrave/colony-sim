@@ -353,6 +353,29 @@ def terrain():
         save(o, "ore_%d" % v)
 
 
+# region construction
+def walls():
+    k = rgba(PAL["k"])
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, 15, 15], fill=rgba("#6e665c"), outline=k)
+    for y in (4, 8, 12):
+        d.line([(1, y), (14, y)], fill=rgba("#4a443d"))
+    for x, y0 in ((5, 1), (10, 5), (4, 9), (11, 13)):
+        d.line([(x, y0), (x, y0 + 2)], fill=rgba("#4a443d"))
+    d.line([(1, 1), (14, 1)], fill=rgba("#9a9184"))
+    save(img, "wall")
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 5, 15, 10], fill=rgba("#6e665c"), outline=k)
+    d.rectangle([3, 3, 12, 12], fill=rgba("#8a6a40"), outline=k)
+    d.line([(7, 4), (7, 11)], fill=rgba("#5a4328"))
+    d.point((9, 8), fill=rgba("#e0b030"))
+    d.point((5, 8), fill=rgba("#e0b030"))
+    save(img, "door")
+# endregion
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     colonists()
@@ -360,6 +383,7 @@ def main():
     turret()
     refinery()
     capsule()
+    walls()  # region construction
     items()
     pickaxe()
     terrain()
