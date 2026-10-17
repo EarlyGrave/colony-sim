@@ -109,7 +109,7 @@ func test_overdue_raises_despair_and_mood() -> void:
 	var c: Colonist = sim.colonists.list[0]
 	var st := sim.debt.state_of(c)
 	var base := sim.mood.mood_of(c)
-	sim.run_ticks(sim.ticks_per_day * (int(sim.defs.debt["due_days"]) + 1) + 40)
+	sim.run_ticks(sim.ticks_per_day * (int(sim.defs.debt["due_days"]) + 3) + 40)  # despair 16/day: 3 overdue days > despair_mid
 	assert_true(sim.debt.is_overdue(c))
 	assert_gt(st.despair, 33.0)
 	assert_lt(sim.mood.mood_of(c), base)
