@@ -197,11 +197,10 @@ func can_place_building(def_id: String, c: Vector2i) -> String:
 	return buildings.placement_error(def_id, c, false)  # blueprints need no materials up front
 
 
-func place_building(def_id: String, c: Vector2i) -> Building:
-	_record("place_building", [def_id, c])  # save-load
 ## Player command: plans a building (blueprint). Colonists haul the materials
 ## and build it. Returns null if it can't be placed.
 func place_building(def_id: String, c: Vector2i) -> Blueprint:
+	_record("place_building", [def_id, c])  # save-load
 	if can_place_building(def_id, c) != "":
 		return null
 	return buildings.place_blueprint(def_id, c)
@@ -355,5 +354,6 @@ func order_attack(colonist_id: int, enemy_id: int) -> bool:
 ## Answers a pending storyteller choice (wanderer: join or not; pod survivor:
 ## rescue or leave). Returns false for an unknown uid.
 func answer_event(event_uid: int, accept: bool) -> bool:
+	_record("answer_event", [event_uid, accept])  # save-load
 	return storyteller.answer(event_uid, accept)
 # endregion

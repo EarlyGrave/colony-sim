@@ -5,7 +5,7 @@ extends Node
 
 const MAX_TICKS_PER_FRAME := 40
 const RECT_TOOLS := ["mine", "stockpile", "waste_dump", "clear_zone"]
-const BUILD_TOOLS := ["refinery", "turret", "wall", "door"]  # wall/door: region construction
+const BUILD_TOOLS := ["refinery", "turret", "wall", "door", "workbench"]  # wall/door: region construction
 const HINTS := {
 	"inspect": "Нажми на клетку, чтобы посмотреть, что там.",
 	"mine": "Добыча: нажми два угла области с рудой (фиолетовое).",

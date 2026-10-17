@@ -25,6 +25,7 @@ const TOOLS: Array = [
 	["clear_zone", "Убрать", ""],
 	["refinery", "Установка", "refinery"],
 	["turret", "Турель", "turret_base"],
+	["workbench", "Верстак", "refinery"],
 	["deconstruct", "Снести", ""],
 	["wall", "Стена", "wall"],  # region construction
 	["door", "Дверь", "door"],  # region construction
