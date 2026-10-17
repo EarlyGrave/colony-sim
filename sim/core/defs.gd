@@ -35,6 +35,9 @@ var perks: Dictionary = {}
 # endregion
 # endregion
 
+# region debt
+var debt: Dictionary = {}
+# endregion
 # region raids
 var raids: Dictionary = {}
 # endregion
@@ -85,6 +88,9 @@ func load_from(dir: String) -> void:
 	perks = _load_json(dir + "perks.json")
 	# endregion
 	# endregion
+	# region debt
+	debt = _load_json(dir + "debt.json")
+	# endregion
 	# region raids
 	raids = _load_json(dir + "raids.json")
 	# endregion
@@ -126,6 +132,9 @@ func duplicate_defs() -> Defs:
 	# region perks
 	d.perks = perks.duplicate(true)
 	# endregion
+	# endregion
+	# region debt
+	d.debt = debt.duplicate(true)
 	# endregion
 	# region raids
 	d.raids = raids.duplicate(true)

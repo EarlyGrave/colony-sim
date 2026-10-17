@@ -36,6 +36,9 @@ var health: HealthSystem
 # region mood
 var mood: MoodSystem
 # endregion
+# region debt
+var debt: DebtSystem
+# endregion
 
 # region save-load
 ## SAVE/LOAD CONTRACT: every player command method MUST call
@@ -112,6 +115,7 @@ func _init_systems() -> void:
 	farming = FarmingSystem.new(self)
 	# endregion
 	perks = PerkSystem.new(self)  # region perks
+	debt = DebtSystem.new(self)  # region debt
 
 
 func _place_starting_colony() -> void:
@@ -152,6 +156,7 @@ func step() -> void:
 	colonists.tick()
 	perks.tick()  # region perks
 	health.tick()  # region health
+	debt.tick()  # region debt
 	mood.tick()  # region mood
 	threats.tick()
 	contamination.tick()
@@ -303,6 +308,9 @@ func dispose() -> void:
 	if mood != null:  # region mood
 		mood.sim = null
 	mood = null
+	if debt != null:  # region debt
+		debt.sim = null
+	debt = null
 
 
 # region crafting
@@ -400,4 +408,24 @@ func use_perk(colonist_id: int, perk_id: String) -> bool:
 func respec_perks(colonist_id: int) -> bool:
 	_record("respec_perks", [colonist_id])  # save-load
 	return perks.respec(colonists.get_by_id(colonist_id))
+# endregion
+
+
+# region debt
+## Moves refined essence from storage into the prisoner's debt (ledger sink "debt").
+func pay_debt(colonist_id: int, amount: int) -> bool:
+	_record("pay_debt", [colonist_id, amount])  # save-load
+	return debt.pay(colonists.get_by_id(colonist_id), amount)
+
+
+## Auto-pays `per_day` essence every day while stock allows (0 = off).
+func set_quota(colonist_id: int, per_day: int) -> bool:
+	_record("set_quota", [colonist_id, per_day])  # save-load
+	return debt.set_quota(colonists.get_by_id(colonist_id), per_day)
+
+
+## After the debt is paid: stay as a free colonist (true) or leave the planet.
+func choose_payoff(colonist_id: int, stay: bool) -> bool:
+	_record("choose_payoff", [colonist_id, stay])  # save-load
+	return debt.choose_payoff(colonists.get_by_id(colonist_id), stay)
 # endregion

@@ -86,6 +86,16 @@ func _roll_break(c: Colonist, m: Mood) -> void:
 	var chance := float(cfg["extreme_chance"] if extreme else cfg["minor_chance"])
 	if sim.rng.randf() >= chance:
 		return
+	# region debt
+	if sim.debt != null and sim.debt.handles_break(c):
+		# Prison-style breaks replace wandering/sabotage for indebted prisoners.
+		var pk := sim.debt.pick_break_kind()
+		m.break_kind = pk
+		m.break_until = sim.tick + sim.debt.break_ticks(pk)
+		sim.jobs.request_override(c, sim.debt.start_break(c, pk))
+		sim.bus.mood_break_started.emit(c.id, pk)
+		return
+	# endregion
 	var kind := "wander"
 	if extreme and _sabotage():
 		kind = "sabotage"

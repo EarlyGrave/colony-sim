@@ -55,6 +55,14 @@ func bind(p_sim: Simulation, bus: Object) -> void:
 			e["panel"] = "perks"
 			e["colonist_id"] = id
 			e["skill"] = skill_id)
+	# region debt
+	_listen("debt_paid", func(id: int = 0) -> void:
+		add("%s выплатил долг. Остаться или покинуть планету? (осмотр)" % _colonist_name(id), "info", _colonist_cell(id)))
+	_listen("riot_started", func(id: int = 0) -> void:
+		add("Бунт: %s громит постройки!" % _colonist_name(id), "bad", _colonist_cell(id)))
+	_listen("colonist_escaped", func(id: int = 0) -> void: add("Побег: %s сбежал с планеты." % _colonist_name(id), "bad"))
+	_listen("escape_stopped", func(id: int = 0) -> void: add("Беглец %s остановлен." % _colonist_name(id), "info", _colonist_cell(id)))
+	# endregion
 	_listen("forecast_revealed", func() -> void: add("Открыт прогноз конца планеты.", "info"))
 
 

@@ -90,6 +90,13 @@ signal colonist_rescued(patient_id: int, carrier_id: int)
 signal colonist_tended(patient_id: int, doctor_id: int, injuries: int)
 signal patient_fed(patient_id: int, feeder_id: int)
 # endregion
+# region debt
+signal debt_paid(colonist_id: int)
+signal debt_choice_made(colonist_id: int, outcome: String)
+signal riot_started(colonist_id: int)
+signal colonist_escaped(colonist_id: int)
+signal escape_stopped(colonist_id: int)
+# endregion
 # region perks
 signal perk_learned(colonist_id: int, perk_id: String)
 signal perk_used(colonist_id: int, perk_id: String)
