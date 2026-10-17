@@ -9,6 +9,10 @@ var cfg: Dictionary
 ## event id -> number of times fired
 var fired: Dictionary = {}
 var last_event := ""
+## Open player choices: {uid, kind ("choice"|"survivor"), colonist, text,
+## expires, rescued, tend_at}. Colonists here are not yet part of the colony.
+var pending: Array[Dictionary] = []
+var _next_uid := 1
 
 
 func _init(p_sim: Simulation) -> void:
@@ -32,11 +36,15 @@ func tick() -> void:
 	if not bool(cfg["enabled"]):
 		return
 	var period := maxi(1, sim.ticks_per_day / int(cfg["checks_per_day"]))
-	if sim.tick % period != 0 or not colony_is_whole():
+	_tick_pending()
+	if sim.tick % period != 0:
+		return
+	var whole := colony_is_whole()
+	if not whole and not _has_arrival_events():
 		return
 	if sim.rng.randf() >= float(cfg["chance"]):
 		return
-	var id := _pick_event()
+	var id := _pick_event(whole)
 	if id != "":
 		fire(id)
 
@@ -57,12 +65,12 @@ func colony_is_whole() -> bool:
 	return true
 
 
-func _pick_event() -> String:
+func _pick_event(whole: bool) -> String:
 	var options: Array[String] = []
 	var total := 0.0
 	for id: String in sim.defs.events:
 		var e: Dictionary = sim.defs.events[id]
-		if sim.day() + 1 >= int(e["min_day"]) and _eligible(id):
+		if sim.day() + 1 >= int(e["min_day"]) and (whole or not bool(e.get("harmful", true))) and _eligible(id):
 			options.append(id)
 			total += float(e["weight"])
 	if options.is_empty():
@@ -76,7 +84,19 @@ func _pick_event() -> String:
 
 
 func _eligible(id: String) -> bool:
+	var e: Dictionary = sim.defs.events[id]
+	if e.has("max_per_game") and int(fired.get(id, 0)) >= int(e["max_per_game"]):
+		return false
 	match id:
+		"wanderer", "pod_crash":
+			return _room_for(1 + pending.size()) and not _has_pending(str(e.get("kind", "")))
+		"transport_drop":
+			return _room_for(1 + pending.size())
+		"toxic_fallout":
+			return sim.contamination.fraction() >= float(e["contamination_fraction"]) \
+				and not _outdoor_colonists().is_empty()
+		"cargo_pod":
+			return not _cargo_items().is_empty()
 		"lightning":
 			return not _machines().is_empty()
 		"sickness":
@@ -112,6 +132,43 @@ func fire(id: String) -> bool:
 					cells.append(start + d)
 			for c in cells:
 				sim.map.collapse_deposit(c)
+		"wanderer":
+			var w := ColonistGenerator.generate(sim, _edge_cell())
+			target = w.display_name
+			_post("choice", w, str(e["text"]).replace("{target}", target))
+		"pod_crash":
+			var pc := ColonistGenerator.generate(sim, _free_cell_near(sim.map_center(), 6))
+			var dmg: Array = e["damage"]
+			sim.health.apply_damage(pc, float(sim.rng.randi_range(int(dmg[0]), int(dmg[1]))), "", "bruise")
+			target = pc.display_name
+			_post("survivor", pc, str(e["text"]).replace("{target}", target))
+		"transport_drop":
+			var cnt: Array = e["count"]
+			var n := sim.rng.randi_range(int(cnt[0]), int(cnt[1]))
+			var names: Array[String] = []
+			while n > 0 and _room_for(1):
+				n -= 1
+				var nc := ColonistGenerator.generate(sim, _free_cell_near(sim.map_center(), 3))
+				sim.colonists.add(nc)
+				names.append(nc.display_name)
+			target = ", ".join(names)
+		"toxic_fallout":
+			var names2: Array[String] = []
+			for oc in _outdoor_colonists():
+				sim.health.add_illness(oc, "toxic_fallout", float(e["severity"]), int(e["duration_ticks"]))
+				names2.append(oc.display_name)
+			target = ", ".join(names2)
+		"cargo_pod":
+			var spot := _free_cell_near(sim.map_center(), 5)
+			var parts: Array[String] = []
+			var its := _cargo_items()
+			for item in its:
+				var r: Array = e["items"][item]
+				var amount := sim.rng.randi_range(int(r[0]), int(r[1]))
+				sim.ledger.record_produced(item, amount, "cargo_pod")
+				sim.items.drop(spot, item, amount)
+				parts.append("%s x%d" % [sim.defs.items[item]["name"], amount])
+			target = ", ".join(parts)
 	fired[id] = int(fired.get(id, 0)) + 1
 	last_event = id
 	_say(id, str(e["text"]).replace("{target}", target))
@@ -145,3 +202,150 @@ func _designated_deposits() -> Array[Vector2i]:
 
 func _say(event_id: String, text: String) -> void:
 	sim.bus.story_event.emit(event_id, text)
+
+
+# region arrivals
+## Player answer to a pending choice. wanderer: accept = joins now.
+## survivor: accept = rescue (tended after a short delay, then joins);
+## decline = left to their fate. Returns false for an unknown uid.
+func answer(uid: int, accept: bool) -> bool:
+	var p := _find_pending(uid)
+	if p.is_empty():
+		return false
+	if p["kind"] == "survivor" and accept:
+		if not bool(p["rescued"]):
+			p["rescued"] = true
+			p["tend_at"] = sim.tick + int(sim.defs.events["pod_crash"]["tend_delay_ticks"])
+			p["expires"] = -1
+			sim.bus.event_choice_resolved.emit(uid, true)
+		return true
+	pending.erase(p)
+	var c: Colonist = p["colonist"]
+	if accept and _room_for(1):
+		sim.colonists.add(c)
+		_say("joined", "%s присоединился к колонии." % c.display_name)
+	else:
+		accept = false
+	sim.bus.event_choice_resolved.emit(uid, accept)
+	return true
+
+
+func _has_arrival_events() -> bool:
+	for id: String in sim.defs.events:
+		if not bool(sim.defs.events[id].get("harmful", true)):
+			return true
+	return false
+
+
+func has_pending() -> bool:
+	return not pending.is_empty()
+
+
+func _tick_pending() -> void:
+	for p in pending.duplicate():
+		var c: Colonist = p["colonist"]
+		if bool(p.get("rescued", false)):
+			if sim.tick >= int(p["tend_at"]) and _has_untended(c):
+				sim.health.tend(c, _best_doctor())
+			if not _has_untended(c):
+				pending.erase(p)
+				if _room_for(1):
+					sim.colonists.add(c)
+					_say("joined", "%s выздоравливает и присоединился к колонии." % c.display_name)
+		elif int(p["expires"]) >= 0 and sim.tick >= int(p["expires"]):
+			pending.erase(p)
+			sim.bus.event_choice_resolved.emit(int(p["uid"]), false)
+			_say("declined", "%s ушёл: никто не ответил." % c.display_name)
+
+
+func _post(kind: String, c: Colonist, text: String) -> void:
+	var uid := _next_uid
+	_next_uid += 1
+	pending.append({"uid": uid, "kind": kind, "colonist": c, "text": text, "rescued": false, "tend_at": 0,
+		"expires": sim.tick + int(sim.defs.arrivals["choice_timeout_ticks"])})
+	sim.bus.event_choice_posted.emit(uid, text)
+
+
+func _find_pending(uid: int) -> Dictionary:
+	for p in pending:
+		if int(p["uid"]) == uid:
+			return p
+	return {}
+
+
+func _has_pending(kind: String) -> bool:
+	for p in pending:
+		if p["kind"] == kind:
+			return true
+	return false
+
+
+func _room_for(n: int) -> bool:
+	return sim.colonists.alive_count() + n <= int(sim.defs.arrivals["max_colonists"])
+
+
+func _has_untended(c: Colonist) -> bool:
+	if c.health == null:
+		return false
+	for i in c.health.injuries:
+		if not i.tended:
+			return true
+	return false
+
+
+func _best_doctor() -> Colonist:
+	var best: Colonist = null
+	for c in sim.colonists.list:
+		if c.alive and (best == null or c.skills.level("medicine") > best.skills.level("medicine")):
+			best = c
+	return best
+
+
+func _outdoor_colonists() -> Array[Colonist]:
+	var out: Array[Colonist] = []
+	for c in sim.colonists.list:
+		if c.alive and not c.hidden:
+			out.append(c)
+	return out
+
+
+func _cargo_items() -> Array[String]:
+	var out: Array[String] = []
+	var e: Dictionary = sim.defs.events["cargo_pod"]
+	for item: String in e["items"]:
+		if sim.defs.items.has(item):
+			out.append(item)
+	return out
+
+
+## A reachable passable map-edge cell (deterministic scan from a random start).
+func _edge_cell() -> Vector2i:
+	var home := sim.map_center()
+	var w := sim.map.width
+	var h := sim.map.height
+	for attempt in 200:
+		var side := sim.rng.randi_range(0, 3)
+		var t := sim.rng.randi_range(0, (w if side < 2 else h) - 1)
+		var c: Vector2i
+		match side:
+			0: c = Vector2i(t, 0)
+			1: c = Vector2i(t, h - 1)
+			2: c = Vector2i(0, t)
+			_: c = Vector2i(w - 1, t)
+		if sim.pathfinder.reachable(c, home):
+			return c
+	return home
+
+
+func _free_cell_near(center: Vector2i, max_r: int) -> Vector2i:
+	for r in range(1, max_r + 1):
+		var ring: Array[Vector2i] = []
+		for y in range(-r, r + 1):
+			for x in range(-r, r + 1):
+				if maxi(absi(x), absi(y)) == r and sim.cell_free_for_items(center + Vector2i(x, y)) \
+						and sim.pathfinder.reachable(center + Vector2i(x, y), center):
+					ring.append(center + Vector2i(x, y))
+		if not ring.is_empty():
+			return ring[sim.rng.randi_range(0, ring.size() - 1)]
+	return center
+# endregion

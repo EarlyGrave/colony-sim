@@ -14,6 +14,7 @@ const PANELS: Array = [
 	# slot 1
 	["work", "Работа", "res://view/panels/work_panel.gd"],
 	# slot 2
+	["events", "События", "res://view/panels/event_choice.gd"],
 	# slot 3
 	# slot 4
 	# slot 5

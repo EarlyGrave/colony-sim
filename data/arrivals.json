@@ -1,0 +1,9 @@
+{
+	"_comment": "Colony growth: colonist cap, choice timeouts, generator ranges.",
+	"max_colonists": 8,
+	"choice_timeout_ticks": 600,
+	"age_min": 19,
+	"age_max": 58,
+	"max_traits": 2,
+	"trait_chance": 0.5
+}

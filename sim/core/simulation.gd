@@ -240,3 +240,10 @@ func set_work_priority(colonist_id: int, work_type: String, p: int) -> bool:
 	return true
 # endregion
 	health = null
+
+# region arrivals
+## Answers a pending storyteller choice (wanderer: join or not; pod survivor:
+## rescue or leave). Returns false for an unknown uid.
+func answer_event(event_uid: int, accept: bool) -> bool:
+	return storyteller.answer(event_uid, accept)
+# endregion
