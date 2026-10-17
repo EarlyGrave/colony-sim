@@ -12,6 +12,9 @@ func _colony(seed_value: int, turrets: int) -> Simulation:
 	defs.crises["crises"].clear()  # crises are covered by test_crises
 	defs.debt["due_days"] = 100000  # prison breaks are covered by test_debt
 	defs.idle_work["cleanup"]["illness_chance"] = 0.0  # scrubbing sickness is covered by test_idle_work
+	defs.event_chains["random_enabled"] = false  # chains/complications are covered by test_event_chains
+	if defs.event_chains.has("complication"):
+		defs.event_chains["complication"]["chance"] = 0.0
 	var sim := make_sim(seed_value, true, 24, 24, defs)
 	Scenario.standard_colony(sim, turrets)
 	return sim
