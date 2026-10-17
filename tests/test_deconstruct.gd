@@ -34,7 +34,7 @@ func test_capsule_refused() -> void:
 	assert_eq(hq.def_id, "hq")
 	assert_false(sim.deconstruct(hq.cell))
 	assert_true(sim.buildings.occupied(hq.cell))
-	assert_false(sim.game_over)
+	assert_eq(sim.game_over_reason, "")
 
 
 func test_operating_colonist_survives() -> void:
