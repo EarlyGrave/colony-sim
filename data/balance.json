@@ -1,0 +1,61 @@
+{
+	"ticks_per_day": 600,
+	"map": {
+		"width": 64,
+		"height": 64,
+		"rock_clusters": 16,
+		"rock_cluster_size": [10, 45],
+		"deposit_clusters": 8,
+		"deposit_cluster_size": [3, 8],
+		"deposit_amount": [30, 60],
+		"clear_radius": 6,
+		"min_deposit_distance": 7
+	},
+	"colony": {
+		"colonists": 3,
+		"start_items": {"essence_ore": 30},
+		"start_stockpile_size": [4, 4]
+	},
+	"colonist": {
+		"max_hp": 100,
+		"move_ticks": 3,
+		"carry_capacity": 10,
+		"unreachable_cooldown_ticks": 200,
+		"idle_retry_ticks": 10
+	},
+	"mining": {
+		"item": "essence_ore",
+		"work_ticks": 30,
+		"yield": 5
+	},
+	"repair": {
+		"work_ticks": 60,
+		"threshold": 0.5
+	},
+	"contamination": {
+		"max": 100.0,
+		"per_batch": 0.6,
+		"per_waste_per_day": 0.02,
+		"rate_smoothing_days": 1.0,
+		"min_rate_per_day": 0.2,
+		"base_error": 0.15,
+		"error_growth": 0.5
+	},
+	"threat": {
+		"enabled": true,
+		"awaken_mined_total": 60,
+		"first_wave_delay_days": 1.0,
+		"wave_interval_days": 1.5,
+		"wave_duration_ticks": 350,
+		"base_strength": 2.5,
+		"per_wave": 2.0,
+		"per_refined": 0.05,
+		"per_contamination": 0.15,
+		"colonist_aggro_range": 5.0,
+		"turret_aggro_range": 4.0,
+		"retarget_ticks": 20,
+		"spawn_scatter": 3,
+		"turret_target_bonus": 1000.0,
+		"priority_weight": 100.0
+	}
+}

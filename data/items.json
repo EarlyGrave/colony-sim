@@ -1,0 +1,5 @@
+{
+	"essence_ore": {"name": "Руда эссенции", "color": "#7a5cc2", "stack": 50},
+	"refined_essence": {"name": "Очищенная эссенция", "color": "#d36bff", "stack": 50},
+	"waste": {"name": "Отходы", "color": "#7fbf3f", "stack": 50, "contaminates": true}
+}

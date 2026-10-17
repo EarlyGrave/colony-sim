@@ -1,0 +1,4 @@
+{
+	"crawler": {"name": "Ползун", "color": "#d94a3a", "max_hp": 30, "move_ticks": 4, "damage": 6, "attack_cooldown_ticks": 10, "attack_range": 1.5, "threat_cost": 1.0},
+	"brute": {"name": "Громила", "color": "#8b1e1e", "max_hp": 110, "move_ticks": 6, "damage": 20, "attack_cooldown_ticks": 14, "attack_range": 1.5, "threat_cost": 3.5, "min_wave": 3}
+}

@@ -1,0 +1,37 @@
+{
+	"hq": {
+		"name": "Капсула",
+		"size": [2, 2],
+		"color": "#c9a227",
+		"max_hp": 500,
+		"cost": {},
+		"buildable": false,
+		"shelter": true,
+		"critical": true,
+		"threat_priority": 2
+	},
+	"refinery": {
+		"name": "Установка",
+		"size": [2, 2],
+		"color": "#b0446b",
+		"max_hp": 250,
+		"cost": {"essence_ore": 20},
+		"buildable": true,
+		"recipe": "refine_essence",
+		"input_capacity": 20,
+		"output_capacity": 30,
+		"wear_per_batch": 12,
+		"threat_priority": 3
+	},
+	"turret": {
+		"name": "Турель",
+		"size": [1, 1],
+		"color": "#5f9ea0",
+		"max_hp": 120,
+		"cost": {"essence_ore": 10, "refined_essence": 4},
+		"buildable": true,
+		"turret": {"range": 6.5, "damage": 9, "cooldown_ticks": 8},
+		"wear_per_shot": 1.2,
+		"threat_priority": 1
+	}
+}
