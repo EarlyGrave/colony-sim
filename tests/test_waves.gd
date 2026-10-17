@@ -30,16 +30,23 @@ func test_turrets_hold_but_static_defense_is_not_enough() -> void:
 
 
 func test_player_intervention_keeps_colony_alive_longer() -> void:
-	var static_r := Scenario.run_waves(_colony(SEED, 3), 10)
-	var sim := _colony(SEED, 3)
-	var r := Scenario.run_waves(sim, 10, true)
+	# With RimWorld pacing (a raid every 3.5 days) the bot colony reaches the
+	# ~day 21 horizon (starvation / planet death) when it rebuilds turrets, so
+	# the gain is measured as a total over several seeds instead of +2 on one.
 	var survived := func(res: Dictionary) -> int:
 		return res["waves"] if res["game_over"] == "" else res["died_on_wave"] - 1
-	assert_true(survived.call(r) >= survived.call(static_r) + 2,
-		"rebuilding turrets should buy at least 2 waves (static %d, active %d)" % [survived.call(static_r), survived.call(r)])
-	assert_gt(r["turrets_built"], 3)
-	for item in sim.defs.items:
-		assert_eq(sim.items.count_world(item), sim.ledger.balance_of(item), "%s leaked" % item)
+	var gain := 0
+	for s in [SEED, 2, 3]:
+		var static_r := Scenario.run_waves(_colony(s, 3), 10)
+		var sim := _colony(s, 3)
+		var r := Scenario.run_waves(sim, 10, true)
+		var g: int = survived.call(r) - survived.call(static_r)
+		assert_true(g >= 1, "seed %d: rebuilding turrets should buy a wave (static %d, active %d)" % [s, survived.call(static_r), survived.call(r)])
+		gain += g
+		assert_gt(r["turrets_built"], 3)
+		for item in sim.defs.items:
+			assert_eq(sim.items.count_world(item), sim.ledger.balance_of(item), "%s leaked" % item)
+	assert_true(gain >= 4, "total gain over seeds: %d" % gain)
 
 
 func test_wave_strength_grows_with_refining_and_contamination() -> void:

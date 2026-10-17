@@ -5,6 +5,7 @@ extends TestCase
 func _strong_defs() -> Defs:
 	var d := Defs.get_default().duplicate_defs()
 	d.balance["threat"]["base_strength"] = 40.0
+	d.balance["threat"]["first_wave_max_points"] = 1000.0  # no tutorial cap
 	return d
 
 

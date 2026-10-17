@@ -152,6 +152,8 @@ func start_wave() -> void:
 	wave_active = true
 	wave_end_tick = sim.tick + int(cfg["wave_duration_ticks"])
 	var strength := raid_points(wave_index)
+	if wave_index == 1:
+		strength = minf(strength, float(cfg["first_wave_max_points"]))  # tutorial swarm
 	var origin := next_spawn_origin if next_spawn_origin.x >= 0 else _pick_spawn_origin()
 	raid_id = (force_raid_id if force_raid_id != "" else pick_raid_type(strength)) if origin.x >= 0 else ""
 	raid_total = 0
