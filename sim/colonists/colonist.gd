@@ -11,6 +11,8 @@ var alive := true
 var hidden := false
 ## Sick colonists don't work until this tick (they still flee on alarm).
 var sick_until := 0
+## Engineers can be sent to repair turrets during raids (rule "raid_engineer").
+var engineer := false
 
 var job: Job = null
 var idle_until := 0

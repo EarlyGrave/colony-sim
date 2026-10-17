@@ -138,8 +138,10 @@ func _draw_colonists() -> void:
 		if not c.alive or c.hidden:
 			continue
 		var p := c.visual_pos() * TILE + Vector2(TILE, TILE) * 0.5
-		draw_circle(p, TILE * 0.36, Color(0.95, 0.9, 0.8))
-		draw_arc(p, TILE * 0.36, 0, TAU, 20, Color(0.1, 0.1, 0.1), 2.0)
+		var body := Color(0.7, 0.9, 0.55) if c.is_sick(sim.tick) else Color(0.95, 0.9, 0.8)
+		draw_circle(p, TILE * 0.36, body)
+		var ring := Color(0.25, 0.55, 1.0) if c.engineer else Color(0.1, 0.1, 0.1)
+		draw_arc(p, TILE * 0.36, 0, TAU, 20, ring, 3.0 if c.engineer else 2.0)
 		if c.carry_count > 0:
 			draw_rect(Rect2(p + Vector2(4, -14), Vector2(10, 10)), Color(sim.defs.items[c.carry_item]["color"]))
 		if c.hp < c.max_hp:

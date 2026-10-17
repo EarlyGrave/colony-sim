@@ -1,0 +1,9 @@
+{
+	"_comment": "Player 'if-then' rules. Toggled in the HUD.",
+	"raid_engineer": {
+		"name": "При налёте инженер чинит турели",
+		"short": "Инженер\nв налёт",
+		"default": false,
+		"turret_hp_fraction": 0.6
+	}
+}

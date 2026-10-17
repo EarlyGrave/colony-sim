@@ -15,6 +15,8 @@ var tick := 0
 var ticks_per_day: int
 ## Colonists hide in the shelter while the alarm is on.
 var alarm := false
+## Player rules: rule id -> enabled (defaults from data/rules.json).
+var rules: Dictionary = {}
 ## Non-empty once the game is lost ("hq_destroyed", "colonists_dead", "planet_dead").
 var game_over_reason := ""
 
@@ -38,6 +40,8 @@ func _init(p_seed: int, p_bus: Object, p_defs: Defs = null) -> void:
 	bus = p_bus
 	defs = p_defs if p_defs != null else Defs.get_default()
 	ticks_per_day = int(defs.balance["ticks_per_day"])
+	for id: String in defs.rules:
+		rules[id] = bool(defs.rules[id]["default"])
 
 
 ## Generates the map and places the starting colony.
@@ -73,7 +77,8 @@ func _place_starting_colony() -> void:
 	buildings.place("hq", center - Vector2i(1, 1), false)
 	var spots: Array[Vector2i] = [Vector2i(-2, 1), Vector2i(1, 2), Vector2i(2, -1), Vector2i(-2, -2), Vector2i(0, 3)]
 	for i in int(col_cfg["colonists"]):
-		colonists.spawn(center + spots[i % spots.size()])
+		var c := colonists.spawn(center + spots[i % spots.size()])
+		c.engineer = i < int(col_cfg["engineers"])
 	# Starting stockpile next to the capsule, with the supplies on it.
 	var sz: Array = col_cfg["start_stockpile_size"]
 	var origin := center + Vector2i(3, -1)
@@ -156,6 +161,17 @@ func place_building(def_id: String, c: Vector2i) -> Building:
 	if can_place_building(def_id, c) != "":
 		return null
 	return buildings.place(def_id, c)
+
+
+func set_rule(rule_id: String, on: bool) -> void:
+	if not rules.has(rule_id) or rules[rule_id] == on:
+		return
+	rules[rule_id] = on
+	bus.rule_changed.emit(rule_id, on)
+
+
+func is_rule_on(rule_id: String) -> bool:
+	return bool(rules.get(rule_id, false))
 
 
 func set_alarm(on: bool) -> void:

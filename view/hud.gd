@@ -6,6 +6,7 @@ extends CanvasLayer
 signal tool_selected(tool: String)
 signal speed_selected(speed: int)
 signal alarm_toggled(on: bool)
+signal rule_toggled(rule_id: String, on: bool)
 signal new_game_requested()
 
 const BTN_MIN := Vector2(96, 72)
@@ -33,6 +34,7 @@ var _info: Label
 var _tool_buttons := {}
 var _speed_buttons: Array[Button] = []
 var _alarm_btn: Button
+var _rule_buttons := {}  # rule id -> Button
 var _game_over: PanelContainer
 var _game_over_label: Label
 var _message_until := 0.0
@@ -93,6 +95,12 @@ func _ready() -> void:
 	_alarm_btn = _button(tools_row, "Тревога", BTN_MIN)
 	_alarm_btn.toggle_mode = true
 	_alarm_btn.toggled.connect(func(on: bool) -> void: alarm_toggled.emit(on))
+	var rules: Dictionary = Defs.get_default().rules
+	for rule_id: String in rules:
+		var rb := _button(tools_row, str(rules[rule_id]["short"]), BTN_MIN)
+		rb.toggle_mode = true
+		rb.toggled.connect(func(on: bool) -> void: rule_toggled.emit(rule_id, on))
+		_rule_buttons[rule_id] = rb
 
 	# --- Message line above the bottom bar ---
 	_message = Label.new()
@@ -188,6 +196,8 @@ func _process(_delta: float) -> void:
 		_forecast.text = "Заражение %.1f%% · Прогноз конца неизвестен" % (cont.fraction() * 100.0)
 	_threat.text = _threat_text()
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
+	for rule_id: String in _rule_buttons:
+		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
 	if _message.text != "" and Time.get_ticks_msec() / 1000.0 > _message_until:
 		_message.text = ""
 

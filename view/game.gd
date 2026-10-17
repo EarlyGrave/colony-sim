@@ -32,6 +32,9 @@ func _ready() -> void:
 	hud.tool_selected.connect(_on_tool_selected)
 	hud.speed_selected.connect(set_speed)
 	hud.alarm_toggled.connect(func(on: bool) -> void: sim.set_alarm(on))
+	hud.rule_toggled.connect(func(id: String, on: bool) -> void:
+		sim.set_rule(id, on)
+		hud.show_message(("Правило включено: " if on else "Правило выключено: ") + str(sim.defs.rules[id]["name"]), 4.0))
 	hud.new_game_requested.connect(func() -> void: new_game(_random_seed()))
 	EventBus.story_event.connect(func(_id: String, text: String) -> void: hud.show_message(text, 5.0))
 	EventBus.game_over.connect(func(reason: String) -> void: hud.show_game_over(reason))
@@ -176,7 +179,8 @@ func _describe_cell(c: Vector2i) -> String:
 			lines.append("Вход: %s\nВыход: %s" % [_fmt_items(b.input), _fmt_items(b.output)])
 	for col in sim.colonists.list:
 		if col.alive and col.cell == c and not col.hidden:
-			lines.append("%s: здоровье %d, %s" % [col.display_name, col.hp, col.job.describe() if col.job else "без дела"])
+			var status := "болен" if col.is_sick(sim.tick) else (col.job.describe() if col.job else "без дела")
+			lines.append("%s%s: здоровье %d, %s" % [col.display_name, " (инженер)" if col.engineer else "", col.hp, status])
 	match sim.map.get_tile(c):
 		MapGrid.Tile.ROCK:
 			lines.append("Скала")

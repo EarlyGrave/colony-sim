@@ -33,6 +33,9 @@ func _init(p_sim: Simulation) -> void:
 
 
 func tick_colonist(c: Colonist) -> void:
+	if _engineer_on_duty(c):
+		_tick_engineer(c)
+		return
 	if sim.alarm and not c.hidden and (c.job == null or c.job.type != "flee") and not c.is_unreachable("flee", sim.tick):
 		var shelter := sim.buildings.find_shelter(c.cell) if sim.buildings else null
 		if shelter != null:
@@ -58,6 +61,56 @@ func tick_colonist(c: Colonist) -> void:
 	c.stuck_ticks = 0 if c.cell != before or c.path.is_empty() else c.stuck_ticks + 1
 	if st != Job.Status.RUNNING:
 		end_job(c, st)
+
+
+# --- Rule "raid_engineer" ---------------------------------------------------------
+
+func _engineer_on_duty(c: Colonist) -> bool:
+	return sim.alarm and c.engineer and sim.is_rule_on("raid_engineer") and not c.is_sick(sim.tick)
+
+
+## During a raid the engineer repairs damaged turrets and hides otherwise.
+func _tick_engineer(c: Colonist) -> void:
+	if c.job == null or c.job.type != "repair":
+		var t := _turret_needing_urgent_repair(c)
+		if t != null:
+			end_job(c, Job.Status.FAILED, false)
+			c.hidden = false
+			var j := RepairJob.new(t.id)
+			j.reservations.append("rep:%d" % t.id)
+			j.fail_key = "rep:%d" % t.id
+			_start(c, j)
+		elif c.hidden:
+			return
+		elif c.job == null or c.job.type != "flee":
+			var shelter := sim.buildings.find_shelter(c.cell)
+			end_job(c, Job.Status.FAILED, false)
+			if shelter == null:
+				return
+			_start(c, FleeJob.new(shelter.id))
+	var st := c.job.tick(c, sim)
+	if st != Job.Status.RUNNING:
+		end_job(c, st)
+
+
+func _turret_needing_urgent_repair(c: Colonist) -> Building:
+	var frac := float(sim.defs.rules["raid_engineer"]["turret_hp_fraction"])
+	var reach_from := c.cell
+	var best: Building = null
+	var best_d := 1 << 30
+	for b in sim.buildings.list:
+		if not b.def.has("turret"):
+			continue
+		var urgent := b.broken or b.hp < b.max_hp * frac \
+			or b.condition < float(sim.defs.balance["repair"]["threshold"]) * 100.0
+		var key := "rep:%d" % b.id
+		if not urgent or not _free(c, key) or not sim.pathfinder.reachable(reach_from, b.cell):
+			continue
+		var d := reach_from.distance_squared_to(b.cell)
+		if d < best_d:
+			best = b
+			best_d = d
+	return best
 
 
 func _start(c: Colonist, j: Job) -> void:

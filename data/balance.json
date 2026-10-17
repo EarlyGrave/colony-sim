@@ -13,6 +13,7 @@
 	},
 	"colony": {
 		"colonists": 3,
+		"engineers": 1,
 		"start_items": {"essence_ore": 30},
 		"start_stockpile_size": [4, 4]
 	},

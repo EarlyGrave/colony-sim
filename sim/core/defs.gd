@@ -13,6 +13,7 @@ var enemies: Dictionary = {}
 var jobs: Dictionary = {}
 var balance: Dictionary = {}
 var events: Dictionary = {}
+var rules: Dictionary = {}
 
 static var _default: Defs = null
 
@@ -34,6 +35,7 @@ func load_from(dir: String) -> void:
 	jobs = _load_json(dir + "jobs.json")
 	balance = _load_json(dir + "balance.json")
 	events = _load_json(dir + "events.json")
+	rules = _load_json(dir + "rules.json")
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -47,6 +49,7 @@ func duplicate_defs() -> Defs:
 	d.jobs = jobs.duplicate(true)
 	d.balance = balance.duplicate(true)
 	d.events = events.duplicate(true)
+	d.rules = rules.duplicate(true)
 	return d
 
 

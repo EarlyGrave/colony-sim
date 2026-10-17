@@ -37,6 +37,7 @@ signal wave_ended(wave_index: int)
 signal enemy_killed(enemy_id: int)
 signal colonist_died(colonist_id: int)
 signal alarm_changed(active: bool)
+signal rule_changed(rule_id: String, on: bool)
 
 # --- Game flow ---
 signal game_over(reason: String)
