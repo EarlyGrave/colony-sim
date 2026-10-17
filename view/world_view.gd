@@ -11,6 +11,8 @@ const SPR := "res://assets/sprites/"
 var sim: Simulation
 ## First corner of a pending rectangle selection (or (-1,-1)).
 var pending_corner := Vector2i(-1, -1)
+var show_field := true  ## contamination overlay toggle
+var patrol_draft: Array[Vector2i] = []
 ## Cell highlighted by the last tap (inspector).
 var selected_cell := Vector2i(-1, -1)
 
@@ -376,6 +378,7 @@ func _ellipse_shadow(at: Vector2) -> void:
 
 
 func _draw_selection() -> void:
+	_draw_patrol()
 	if pending_corner.x >= 0:
 		draw_rect(Rect2(cell_to_world(pending_corner), Vector2(TILE, TILE)), Color(1, 1, 1, 0.9), false, 3.0)
 	if selected_cell.x >= 0:
@@ -430,6 +433,8 @@ func _draw_night() -> void:
 # region mutation
 ## Green wash by cell contamination; mutated cells go purple-green.
 func _draw_contamination_field() -> void:
+	if not show_field:
+		return
 	var mut := sim.mutation
 	var tainted: float = mut.tainted_threshold()
 	var mutated: float = mut.mutated_threshold()
@@ -442,4 +447,22 @@ func _draw_contamination_field() -> void:
 		if v >= mutated:
 			col = Color(0.6, 0.25, 0.8, 0.32)
 		draw_rect(Rect2(cell_to_world(c), Vector2(TILE, TILE)), col)
+# endregion
+
+
+# region batch3 ui
+## Patrol route: the saved one faintly, the draft being edited brightly.
+func _draw_patrol() -> void:
+	var half := Vector2(TILE, TILE) * 0.5
+	var saved: Array[Vector2i] = sim.idle_work.patrol_route if sim.idle_work != null else []
+	for set_i in 2:
+		var pts: Array[Vector2i] = saved if set_i == 0 else patrol_draft
+		if set_i == 0 and not patrol_draft.is_empty():
+			continue
+		var col := Color(0.4, 0.8, 1.0, 0.45) if set_i == 0 else Color(1.0, 0.85, 0.2, 0.95)
+		for i in pts.size():
+			var p := cell_to_world(pts[i]) + half
+			if i > 0:
+				draw_line(cell_to_world(pts[i - 1]) + half, p, col, 2.0)
+			draw_circle(p, TILE * 0.3, col)
 # endregion

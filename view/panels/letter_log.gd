@@ -11,6 +11,7 @@ var entries: Array[Dictionary] = []
 var unread := 0
 var sim: Simulation
 var _bus: Object
+var _mutation_told := false
 var _conns: Array = []  # [signal name, callable]
 
 
@@ -20,6 +21,7 @@ func bind(p_sim: Simulation, bus: Object) -> void:
 	_bus = bus
 	entries.clear()
 	unread = 0
+	_mutation_told = false
 	_listen("wave_started", func(i: int = 0, strength: float = 0.0) -> void:
 		add("Волна %d началась (сила ~%.0f)." % [i, strength], "bad"))
 	_listen("wave_incoming", func(a: Variant = null, b: Variant = null) -> void:
@@ -64,6 +66,21 @@ func bind(p_sim: Simulation, bus: Object) -> void:
 		add("Бунт: %s громит постройки!" % _colonist_name(id), "bad", _colonist_cell(id)))
 	_listen("colonist_escaped", func(id: int = 0) -> void: add("Побег: %s сбежал с планеты." % _colonist_name(id), "bad"))
 	_listen("escape_stopped", func(id: int = 0) -> void: add("Беглец %s остановлен." % _colonist_name(id), "info", _colonist_cell(id)))
+	# endregion
+	# region batch3 ui
+	_listen("wave_repelled", func(i: int = 0) -> void: add("Налёт %d отбит без потерь в обороне." % i, "info"))
+	_listen("patrol_spotted", func(_id: int = 0, cell: Vector2i = Vector2i.ZERO, n: int = 0) -> void:
+		add("Патруль заметил тварей: %d." % n, "warn", cell))
+	_listen("debt_choice_made", func(id: int = 0, outcome: String = "") -> void:
+		add("%s: %s." % [_colonist_name(id), "остался вольным колонистом" if outcome == "stayed" else "покинул планету"], "info"))
+	_listen("cell_mutated", func(cell: Vector2i = Vector2i.ZERO) -> void:
+		if not _mutation_told:
+			_mutation_told = true
+			add("Земля мутировала. Её можно очистить эссенцией (осмотр клетки).", "warn", cell))
+	_listen("contract_offered", func(_cid: int = 0) -> void:
+		var e := add("Новый контракт надзирателей.", "warn")
+		if not e.is_empty():
+			e["panel"] = "contracts")
 	# endregion
 	_listen("forecast_revealed", func() -> void: add("Открыт прогноз конца планеты.", "info"))
 
