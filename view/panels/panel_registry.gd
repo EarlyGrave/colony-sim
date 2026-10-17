@@ -18,6 +18,7 @@ const PANELS: Array = [
 	# slot 4
 	# slot 5
 	# slot 6
+	["save", "Меню", "res://view/panels/save_panel.gd"],
 ]
 
 const INSPECTOR_SECTIONS: Array = [
