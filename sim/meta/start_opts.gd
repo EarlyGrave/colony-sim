@@ -4,6 +4,7 @@ extends RefCounted
 ## Keys: start_rules: Array[String], start_xp: float, reveal_forecast: bool,
 ## scout: int (cells to pre-designate), crate: Dictionary item->n,
 ## contamination: float (starting level), site: int (landing site index).
+## map_w / map_h: int map size (read by Simulation.start_new_game, not here).
 ## Never touches sim.rng except the explicit site reseed.
 
 
