@@ -10,11 +10,12 @@
 		"texts": {
 			"breakdown": "The raid brings a malfunction: {target} goes down.",
 			"sick": "In the chaos {target} caught a fever.",
-			"cave_in": "A tremor accompanies the creatures: part of the deposit collapsed."
+			"cave_in": "A tremor accompanies the creatures: part of the deposit is buried under rubble."
 		},
 		"sick_ticks": 360,
 		"wear": 1000.0,
-		"cave_cells": 3
+		"cave_cells": 3,
+		"rubble_ticks": 1200
 	},
 	"steps": {
 		"inspection_arrive": {

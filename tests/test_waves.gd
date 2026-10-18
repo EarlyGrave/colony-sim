@@ -163,4 +163,11 @@ func test_waves_conserve_items_and_stay_deterministic() -> void:
 	assert_eq(a.threats.kills, b.threats.kills)
 	for item in a.defs.items:
 		assert_eq(a.items.count_world(item), a.ledger.balance_of(item), "%s leaked" % item)
-	assert_true(a.jobs.reserved.size() <= a.colonists.alive_count(), "stale reservations: %s" % str(a.jobs.reserved))
+	# A job may legitimately hold several keys (source + destination, machine
+	# ports), so check holders: every reservation belongs to a living colonist.
+	var alive_ids := {}
+	for col in a.colonists.list:
+		if col.alive:
+			alive_ids[col.id] = true
+	for k in a.jobs.reserved:
+		assert_true(alive_ids.has(a.jobs.reserved[k]), "stale reservation %s held by %s" % [k, str(a.jobs.reserved[k])])

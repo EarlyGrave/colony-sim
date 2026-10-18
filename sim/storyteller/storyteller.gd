@@ -158,7 +158,7 @@ func fire(id: String) -> bool:
 				if cells.size() < int(e["max_cells"]) and sim.map.is_deposit(start + d):
 					cells.append(start + d)
 			for c in cells:
-				sim.map.collapse_deposit(c)
+				_cave_in_cell(c, int(e.get("rubble_ticks", 1200)))
 		"wanderer":
 			var w := ColonistGenerator.generate(sim, _edge_cell())
 			target = w.display_name
@@ -216,6 +216,16 @@ func _healthy_colonists() -> Array[Colonist]:
 		if c.alive and not c.is_sick(sim.tick):
 			out.append(c)
 	return out
+
+
+## Nodes are invulnerable: a cave-in only buries them under temporary rubble
+## (recorded in the ledger). Legacy finite deposits still collapse for good.
+func _cave_in_cell(c: Vector2i, rubble_ticks: int) -> void:
+	if sim.map.is_node(c):
+		sim.map.bury_node(c, sim.tick + rubble_ticks)
+		sim.ledger.record_event("cave_in:rubble_cells", 1)
+	else:
+		sim.map.collapse_deposit(c)
 
 
 func _designated_deposits() -> Array[Vector2i]:
@@ -641,7 +651,7 @@ func _maybe_complicate(wave: int) -> void:
 				if cells.size() < int(cc["cave_cells"]) and sim.map.is_deposit(start + d):
 					cells.append(start + d)
 			for cell in cells:
-				sim.map.collapse_deposit(cell)
+				_cave_in_cell(cell, int(cc.get("rubble_ticks", 1200)))
 	last_complication_wave = wave
 	_say("complication_" + kind, str(cc["texts"][kind]).replace("{target}", target))
 # endregion

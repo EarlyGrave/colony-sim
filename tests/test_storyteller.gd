@@ -47,12 +47,21 @@ func test_sickness_never_takes_the_last_worker() -> void:
 	assert_false(sim.storyteller.fire("sickness"))
 
 
-func test_cave_in_seals_designated_deposit_and_is_accounted() -> void:
+func test_cave_in_buries_node_temporarily_and_is_accounted() -> void:
 	var sim := _colony()
-	var before := sim.map.total_deposit_amount()
+	var nodes := sim.map.node_cells().size()
 	assert_true(sim.storyteller.fire("cave_in"))
-	assert_gt(sim.map.deposit_lost, 0)
-	assert_eq(before - sim.map.total_deposit_amount(), sim.map.deposit_lost)
+	var buried := 0
+	for c in sim.map.node_cells():
+		if sim.map.node_rubbled(c, sim.tick):
+			buried += 1
+	assert_gt(buried, 0, "cave-in must bury at least one node")
+	assert_eq(sim.ledger.get_count("cave_in:rubble_cells"), buried, "accounted in ledger")
+	assert_eq(sim.map.node_cells().size(), nodes, "nodes are invulnerable")
+	assert_eq(sim.map.deposit_lost, 0)
+	sim.run_ticks(int(sim.defs.events["cave_in"]["rubble_ticks"]) + 1)
+	for c in sim.map.node_cells():
+		assert_false(sim.map.node_rubbled(c, sim.tick), "rubble clears by itself")
 
 
 func test_only_one_broken_link_at_a_time() -> void:

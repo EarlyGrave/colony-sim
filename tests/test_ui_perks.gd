@@ -25,6 +25,7 @@ func test_learn_through_ui_handler_uses_sim_command() -> void:
 	var sim := make_sim(5)
 	var c: Colonist = sim.colonists.list[0]
 	var skill := "mining"
+	c.skills.join_levels.clear()  # tests grant levels directly: baseline 0 (generated join levels depend on the seed)
 	c.skills.levels[skill] = 4
 	var pid := _first_perk(sim, skill)
 	var p := _panel(sim, c.id)

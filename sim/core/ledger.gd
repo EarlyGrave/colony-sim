@@ -21,6 +21,11 @@ func record_consumed(item_id: String, n: int, sink: String) -> void:
 	by_source[k] = int(by_source.get(k, 0)) + n
 
 
+## Non-item bookkeeping (e.g. "cave_in:rubble_cells"); never affects item balances.
+func record_event(key: String, n: int) -> void:
+	by_source[key] = int(by_source.get(key, 0)) + n
+
+
 func balance_of(item_id: String) -> int:
 	return int(produced.get(item_id, 0)) - int(consumed.get(item_id, 0))
 

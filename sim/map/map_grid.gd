@@ -32,6 +32,8 @@ var node_res: PackedByteArray
 var node_purity: PackedByteArray
 ## Fractional yield carried per node between mining cycles.
 var node_carry: PackedFloat32Array
+## Tick until which a node is buried under rubble (cave-in); 0 = clear. Nodes are never destroyed.
+var node_rubble_until: PackedInt32Array
 var biome_id := "start"
 # endregion
 
@@ -52,6 +54,8 @@ func _init(w: int, h: int, bus: Object = null) -> void:
 	node_purity.fill(0)
 	node_carry.resize(w * h)
 	node_carry.fill(0.0)
+	node_rubble_until.resize(w * h)
+	node_rubble_until.fill(0)
 	zone_ids.resize(w * h)
 	zone_ids.fill("")
 
@@ -76,6 +80,7 @@ func set_tile(c: Vector2i, t: int, amount := 0) -> void:
 		node_res[i] = 0
 		node_purity[i] = 0
 		node_carry[i] = 0.0
+		node_rubble_until[i] = 0
 	if t != Tile.DEPOSIT:
 		if mine_designated[i] != 0:
 			_mine_set.erase(i)
@@ -112,6 +117,15 @@ func node_cells() -> Array[Vector2i]:
 		if node_res[i] != 0 and tiles[i] == Tile.DEPOSIT:
 			out.append(Vector2i(i % width, i / width))
 	return out
+
+
+func node_rubbled(c: Vector2i, tick: int) -> bool:
+	return in_bounds(c) and tick < node_rubble_until[idx(c)]
+
+
+## Cave-in on a node: buried (unminable) until `until_tick`, then clear again.
+func bury_node(c: Vector2i, until_tick: int) -> void:
+	node_rubble_until[idx(c)] = until_tick
 
 
 ## One hand-mining cycle: items = base * mult * purity_mult, fractions carried
@@ -209,5 +223,5 @@ func is_adjacent_to_passable(c: Vector2i) -> bool:
 ## Stable hash of terrain state, for determinism tests.
 func checksum() -> int:
 	var h := hash(tiles)
-	h = hash([h, hash(deposit_amount), width, height, hash(node_res), hash(node_purity)])  # region A1a
+	h = hash([h, hash(deposit_amount), width, height, hash(node_res), hash(node_purity), hash(node_rubble_until)])  # region A1a
 	return h

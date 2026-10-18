@@ -21,7 +21,8 @@
 		"weight": 2,
 		"min_day": 3,
 		"max_cells": 3,
-		"text": "A cave-in buried part of the deposit - ore lost.",
+		"rubble_ticks": 1200,
+		"text": "A cave-in buried part of the deposit - buried under rubble for a while.",
 		"harmful": true
 	},
 	"wanderer": {
