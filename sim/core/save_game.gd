@@ -4,7 +4,7 @@ extends RefCounted
 ## {seed, defs hash, tick, command_log} fully describes a game.
 ## Plain data in/out; file IO lives in view/save_store.gd.
 
-const VERSION := 1
+const VERSION := 2  # v2: infinite nodes + belts; v1 saves replay differently -> error "version" (incompatible)
 
 
 static func defs_hash(defs: Defs) -> int:
@@ -21,7 +21,7 @@ static func to_dict(sim: Simulation) -> Dictionary:
 	for e: Array in sim.command_log:
 		var args: Array = []
 		for a: Variant in e[2]:
-			args.append({"v": [a.x, a.y]} if a is Vector2i else a)
+			args.append(_enc_arg(a))  # region A1d
 		out_log.append([e[0], e[1], args])
 	return {"version": VERSION, "seed": sim.seed_value, "defs_hash": defs_hash(sim.defs),
 		"tick": sim.tick, "commands": out_log, "opts": sim.opts}  # region meta
@@ -70,7 +70,12 @@ static func _replay(data: Dictionary, bus: Object, defs: Defs, on_progress: Call
 	for e: Array in data["commands"]:
 		var args: Array = []
 		for a: Variant in e[2]:
-			if a is Dictionary:
+			if a is Dictionary and a.has("a"):  # region A1d: Vector2i list
+				var cells: Array = []
+				for p: Array in a["a"]:
+					cells.append(Vector2i(int(p[0]), int(p[1])))
+				args.append(cells)
+			elif a is Dictionary:
 				args.append(Vector2i(int(a["v"][0]), int(a["v"][1])))
 			elif a is float:
 				args.append(int(a))
@@ -105,7 +110,21 @@ static func state_hash(sim: Simulation) -> int:
 		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output, b.output_q])
 		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output, b.ammo, b.ammo_policy])  # region ammo
 	parts.append(hash(sim.mutation.field))  # region mutation
+	parts.append(sim.logistics.state_parts())  # region A1d
 	return var_to_str(parts).hash()
+
+
+# region A1d
+static func _enc_arg(a: Variant) -> Variant:
+	if a is Vector2i:
+		return {"v": [a.x, a.y]}
+	if a is Array:
+		var out: Array = []
+		for c: Vector2i in a:
+			out.append([c.x, c.y])
+		return {"a": out}
+	return a
+# endregion
 
 
 # region meta

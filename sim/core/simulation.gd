@@ -75,6 +75,7 @@ var ammo: AmmoSystem  # region ammo
 # endregion
 # endregion
 
+var logistics  # region A1d: LogisticsSystem (A1c); stub until merged
 var opts: Dictionary = {}  # region meta: deterministic start options
 var run_summary: Dictionary = {}  # region meta
 var _connections: Array = []  # [signal, callable] pairs made on the bus
@@ -151,6 +152,7 @@ func _init_systems() -> void:
 	debt = DebtSystem.new(self)  # region debt
 	idle_work = IdleWorkSystem.new(self)  # region idle-work
 	mutation = MutationSystem.new(self)  # region mutation
+	if logistics == null: logistics = LogisticsStub.new(self)  # region A1d (A1c: replace with LogisticsSystem)
 
 
 func _place_starting_colony() -> void:
@@ -299,6 +301,57 @@ func set_alarm(on: bool) -> void:
 		return
 	alarm = on
 	bus.alarm_changed.emit(on)
+
+
+# region A1d
+const BELT_DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]  # E,S,W,N
+
+
+func can_belt_cell_error(c: Vector2i) -> String:
+	if not map.is_passable(c) or buildings.occupied(c) or buildings.blueprint_at(c) != null:
+		return "blocked"
+	return ""
+
+
+## Player command: a dragged belt path (one recorded command). Cells must be
+## 4-connected in order; each belt points to the next cell, the last one uses
+## `last_dir`. Atomic: any invalid cell rejects the whole path.
+func place_belt(cells: Array, last_dir: int) -> bool:
+	_record("place_belt", [cells, last_dir])  # save-load
+	if cells.is_empty() or last_dir < 0 or last_dir > 3:
+		return false
+	var seen := {}
+	var dirs: Array = []
+	for i in cells.size():
+		var c: Vector2i = cells[i]
+		if seen.has(c) or can_belt_cell_error(c) != "":
+			return false
+		seen[c] = true
+		if i + 1 < cells.size():
+			var d := BELT_DIRS.find((cells[i + 1] as Vector2i) - c)
+			if d < 0:
+				return false
+			dirs.append(d)
+		else:
+			dirs.append(last_dir)
+	logistics.place_path(cells, dirs)
+	return true
+
+
+## Player command: removes the belts on `cells`; true if any was removed.
+func remove_belt(cells: Array) -> bool:
+	_record("remove_belt", [cells])  # save-load
+	var any := false
+	for c: Vector2i in cells:
+		if logistics.remove_at(c):
+			any = true
+	return any
+
+
+func set_belt_dir(c: Vector2i, dir: int) -> bool:
+	_record("set_belt_dir", [c, dir])  # save-load
+	return dir >= 0 and dir <= 3 and logistics.set_dir(c, dir)
+# endregion
 
 
 # region save-load

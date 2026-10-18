@@ -317,6 +317,9 @@ func load_game() -> void:
 	_loading = false
 	if not res["ok"]:
 		set_speed(prev_speed)
+		if res["error"] == "version":  # region A1d
+			hud.show_message("Old save is incompatible with this version.", 5.0)
+			return
 		hud.show_message("Не удалось загрузить сохранение (%s)." % res["error"], 5.0)
 		return
 	if sim:
