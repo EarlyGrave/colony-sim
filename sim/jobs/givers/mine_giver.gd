@@ -12,9 +12,7 @@ func find(c: Colonist) -> Job:
 	var best := JobSystem.NO_CELL
 	var best_d := 1 << 30
 	var m := sim.map
-	for i in m.mine_designated.size():
-		if m.mine_designated[i] == 0:
-			continue
+	for i in m.mine_indices():
 		var cell := Vector2i(i % m.width, i / m.width)
 		var key := "dep:%d,%d" % [cell.x, cell.y]
 		var d := c.cell.distance_squared_to(cell)
