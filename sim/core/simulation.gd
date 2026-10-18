@@ -310,6 +310,14 @@ func get_rule_mode(rule_id: String) -> String:
 	return str(rules.get(rule_id, ""))
 
 
+# region T2
+## Player command: Mourning Bell burst (x threat for a while, costs essence; shortfall becomes debt).
+func trigger_bell(building_id: int) -> bool:
+	_record("trigger_bell", [building_id])  # save-load
+	return Decoy.trigger_bell(buildings.get_by_id(building_id), self)
+# endregion
+
+
 func is_rule_on(rule_id: String) -> bool:
 	return bool(rules.get(rule_id, false))
 

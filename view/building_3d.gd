@@ -9,6 +9,7 @@ const HEIGHTS := {
 	"door": 0.65, "stove": 0.45, "bed": 0.25,
 	"miner": 0.6, "smelter": 0.85, "assembler": 0.7, "storage_in": 0.35, "storage_out": 0.35,  # region A2c
 	"research_bench": 0.6,  # region R2c
+	"ash_beacon": 1.0, "penitent_wall": 1.0, "mourning_bell": 1.0,  # region T2
 }
 ## Explicit flat fallbacks (drawn by WorldView on the ground layer).
 const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt", "warden_terminal"]  # belts: BeltLayer; warden_terminal: region R2b

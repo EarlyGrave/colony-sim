@@ -109,6 +109,9 @@ static func state_hash(sim: Simulation) -> int:
 	for b in sim.buildings.list:
 		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output, b.output_q])
 		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output, b.ammo, b.ammo_policy])  # region ammo
+	for b in sim.buildings.list:  # region T2
+		if not b.decoy.is_empty():
+			parts.append([b.id, b.decoy])
 	parts.append(hash(sim.mutation.field))  # region mutation
 	parts.append(sim.logistics.state_parts())  # region A1d
 	parts.append(sim.research.state_parts())  # region R2a

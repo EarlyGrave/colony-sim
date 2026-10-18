@@ -454,6 +454,7 @@ func _nearest_walkable(from: Vector2i) -> Vector2i:
 # region A2a
 ## Once per tick (after logistics): miners extract, processors run recipes. No operator needed.
 func tick_machines() -> void:
+	tick_decoys()  # region T2
 	for b in list:
 		match str(b.def.get("machine", "")):
 			"extractor":
@@ -522,4 +523,12 @@ func pay_repair(cost: Dictionary, near: Vector2i) -> bool:
 	for item: String in cost:
 		sim.items.consume_stored(item, int(cost[item]), near)
 	return true
+# endregion
+
+
+# region T2
+func tick_decoys() -> void:
+	for b in list:
+		if b.def.has("decoy"):
+			Decoy.tick(b, sim)
 # endregion
