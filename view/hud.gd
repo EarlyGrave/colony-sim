@@ -1526,13 +1526,14 @@ func _k3_layout(x: float, y0: float, slot_r: float) -> float:
 func _e4_update() -> void:
 	var pb: Button = _panel_buttons.get("petition")
 	if pb != null:
-		var txt := PetitionPanel.chip_text(PetitionPanel.state_of(sim))
-		pb.visible = txt != ""
+		var ps := PetitionPanel.state_of(sim)
+		var txt := PetitionPanel.chip_text(ps)
+		pb.visible = txt != "" and (int(ps.get("phase", -1)) > 0 or int(ps.get("done", 0)) > 0)
 		if txt != "":
 			pb.text = txt
 			pb.add_theme_font_size_override("font_size", 13)
 	var db: Button = _panel_buttons.get("dispatch")
 	if db != null:
 		var ds := DispatchPanel.state_of(sim)
-		db.visible = not ds.is_empty() and bool(ds.get("enabled", true))
+		db.visible = bool(ds.get("enabled", false)) and sim.day() >= 4
 # endregion

@@ -145,7 +145,7 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline", k
 						break
 				r["e2_mult"] = sim.contracts.wave_mult()
 				if "--e2trace" in OS.get_cmdline_user_args():
-					print("  d%d ore %d food %d meal %d parts %d iron %d cu %d plate %d" % [sim.day(), sim.items.count_stored("essence_ore"), sim.items.count_stored("raw_food"), sim.items.count_stored("meal"), sim.items.count_stored("machine_parts"), sim.items.count_stored("ingot_iron"), sim.items.count_stored("ingot_copper"), sim.items.count_stored("plate")])  # region T5
+					print("  d%d ore %d food %d meal %d parts %d iron %d cu %dplate %d ref %d" % [sim.day(), sim.items.count_stored("essence_ore"), sim.items.count_stored("raw_food"), sim.items.count_stored("meal"), sim.items.count_stored("machine_parts"), sim.items.count_stored("ingot_iron"), sim.items.count_stored("ingot_copper"), sim.items.count_stored("plate"), sim.items.count_stored("refined_essence")])  # region T5
 		if sim.tick % 20 == 0:
 			if camp != null:
 				_k5_expedition(camp, sim, r)  # region K5

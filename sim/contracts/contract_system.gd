@@ -242,7 +242,10 @@ func dispatch_state() -> Dictionary:
 	var nxt := next_dispatch_tier()
 	for t: Dictionary in d.get("tiers", []):
 		var n := int(t["tier"])
-		out.append({"tier": n, "name": t["name"], "bundle": t["bundle"], "done": dispatched().has(n),
+		var have := {}
+		for item: String in t["bundle"]:
+			have[item] = sim.items.count_stored(item)
+		out.append({"tier": n, "name": t["name"], "bundle": t["bundle"], "have": have, "done": dispatched().has(n),
 			"pick": dispatched().get(n, ""), "available": n == nxt and can_dispatch(n)})
 	return {"enabled": bool(sim.defs.balance.get("e2_enabled", false)), "tiers": out,
 		"modifiers": d.get("modifiers", []), "wave_mult": wave_mult()}

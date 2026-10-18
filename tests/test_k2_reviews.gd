@@ -5,6 +5,7 @@ extends TestCase
 func _sim(on: bool, preset: String) -> Simulation:
 	var d := peaceful_defs()
 	d.balance["k2_enabled"] = on
+	d.balance["e3_enabled"] = false
 	var sim := make_sim(3, false, 24, 24, d)
 	sim.milestones.k2_preset = preset
 	return sim
@@ -59,6 +60,7 @@ func test_decoy_absorbs_one_audit() -> void:
 
 func _preset_sim(id: String, threats: bool) -> Simulation:
 	var d := peaceful_defs() if not threats else Defs.get_default().duplicate_defs()
+	d.balance["e3_enabled"] = false
 	var sim := Simulation.new(3, make_bus(), d, StartOpts.preset_opts(d, id))
 	sim.start_empty(24, 24)
 	_sims.append(sim)

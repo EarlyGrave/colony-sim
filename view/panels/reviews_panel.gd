@@ -53,10 +53,10 @@ func e4_lines() -> Array:
 	var out: Array = []
 	if sim == null or sim.milestones == null:
 		return out
-	var ms: Object = sim.milestones
-	if ms.has_method("rank_title") and str(ms.call("rank_title")) != "":
-		out.append("Rank: %s" % str(ms.call("rank_title")))
-	if ms.has_method("range_score"):
-		out.append("Range score: %d" % int(ms.call("range_score")))
+	var ms: MilestoneSystem = sim.milestones
+	if ms.e3_rank_title() != "":
+		out.append("Rank: %s" % ms.e3_rank_title())
+	if ms.e3_on():
+		out.append("Range score: %d" % int(ms.e3_range_score()))
 	return out
 # endregion
