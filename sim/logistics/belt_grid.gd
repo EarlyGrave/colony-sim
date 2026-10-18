@@ -425,6 +425,25 @@ func _out_free(t: int) -> bool:
 	return _claim[t] == 0 and (item[t] < 0 or _resolve(t))
 
 
+# region K4
+## True when splitter c has exactly one valid output and it is cell t (so it contends for t like a belt).
+func _splitter_only_feeds(c: int, t: int) -> bool:
+	var only := -1
+	for sl in 3:
+		var o := _out_cell(c, sl)
+		if o >= 0:
+			if only >= 0:
+				return false
+			only = o
+	return only == t
+
+
+## Output free, and a merger output also lets this node take its turn in the rotation.
+func _out_ok(t: int, from: int) -> bool:
+	return _out_free(t) and (kind[t] != K_MERGER or _merger_allows(t, from))
+# endregion
+
+
 ## Chosen output cell for the ready item in splitter i, or -1 (blocked). Advances the pointer on success.
 func _node_pick(i: int) -> int:
 	var k := kind[i]
@@ -433,14 +452,14 @@ func _node_pick(i: int) -> int:
 		outs[s] = _out_cell(i, s)
 	if k == K_PRIORITY:
 		for s in [1, 0, 2]:
-			if outs[s] >= 0 and _out_free(outs[s]):
+			if outs[s] >= 0 and _out_ok(outs[s], i):
 				return outs[s]
 		return -1
 	var start := ptr[i]
 	if k == K_BASIC:
 		for n in 3:
 			var s := (start + n) % 3
-			if outs[s] >= 0 and _out_free(outs[s]):
+			if outs[s] >= 0 and _out_ok(outs[s], i):
 				ptr[i] = (s + 1) % 3
 				return outs[s]
 		return -1
@@ -448,15 +467,15 @@ func _node_pick(i: int) -> int:
 	var fc: PackedInt32Array = _fcode.get(i, PackedInt32Array([F_ANY, F_ANY, F_ANY]))
 	var it := item[i]
 	for s in [1, 0, 2]:
-		if outs[s] >= 0 and fc[s] == it and _out_free(outs[s]):
+		if outs[s] >= 0 and fc[s] == it and _out_ok(outs[s], i):
 			return outs[s]
 	for n in 3:
 		var s := (start + n) % 3
-		if outs[s] >= 0 and fc[s] == F_ANY and _out_free(outs[s]):
+		if outs[s] >= 0 and fc[s] == F_ANY and _out_ok(outs[s], i):
 			ptr[i] = (s + 1) % 3
 			return outs[s]
 	for s in [1, 0, 2]:
-		if outs[s] >= 0 and fc[s] == F_OVERFLOW and _out_free(outs[s]):
+		if outs[s] >= 0 and fc[s] == F_OVERFLOW and _out_ok(outs[s], i):
 			return outs[s]
 	return -1
 
@@ -479,7 +498,7 @@ func _merger_allows(t: int, i: int) -> bool:
 			continue
 		var facing := dir[c] == od
 		if kind[c] >= 1 and kind[c] <= 3:
-			facing = false  # splitter: output not known yet, treated as non-contender
+			facing = _splitter_only_feeds(c, t)  # region K4: sole-output splitter takes its turn
 		if facing:
 			winner = c
 			wslot = s
