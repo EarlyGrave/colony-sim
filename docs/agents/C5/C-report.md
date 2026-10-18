@@ -12,3 +12,4 @@ Branch `c5-squad-ui` (C1 `c1-squads` merged in; no push). Screenshots at 844x390
 | no squad | 19 | 10 | 20 | 488.5 | 109.1 | 0 |
 | squad (3 roles, hold+focus) | 24 | 17 | 43 | 1169.5 | 214.3 | 0 |
 Target (>= 30% fewer deaths) NOT met: deaths +115%. Not a fair read: no-squad games end early by `hq_destroyed` (hiding inmates) while squad games last longer (24 vs 19 waves, 17 vs 10 repelled, more taint) and then end by `colonists_dead`; shiv/rifle inmates take melee fights. Needs C2 abilities, C4 rescue and a better bot (hold behind turrets) before a verdict.
+- Tests: full suite run in two partial passes (a..p all green except phone_layout, since fixed); filtered re-runs green: squad(25) militia phone_layout golden save combat tutorial qa rules radial. Only known red: test_ui_batch3 (hud crisis/contract). Full-suite tail (p..z) not re-run after the final layout fix due to a CPU-starved machine.
