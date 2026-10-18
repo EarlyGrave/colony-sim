@@ -8,6 +8,7 @@ func _ready() -> void:
 	var enemies := 300
 	var frames := 120
 	var zoom := 1.0
+	var shot := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--size="):
 			size = int(a.substr(7))
@@ -17,23 +18,17 @@ func _ready() -> void:
 			frames = int(a.substr(9))
 		elif a.begins_with("--zoom="):
 			zoom = float(a.substr(7))
+		elif a.begins_with("--shot="):
+			shot = a.substr(7)
 	var game := (load("res://view/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await get_tree().process_frame
-	var defs := Defs.get_default().duplicate_defs()
+	var defs := Defs.get_default()
 	defs.balance["map"]["width"] = size
 	defs.balance["map"]["height"] = size
 	defs.balance["threat"]["enabled"] = false
-	game.world.unbind()
-	game.world3d.unbind()
-	game.sim.dispose()
-	game.sim = Simulation.new(1, EventBus, defs)
-	game.sim.start_new_game()
-	game.world.bind(game.sim)
-	game._bind_3d()
-	game.hud.bind(game.sim)
-	game.camera.world_size = game.world.world_size()
-	game.camera.focus = WorldView.cell_to_world(game.sim.map_center())
+	game.new_game(1)
+	game.set_speed(0)
 	game.camera.zoom_level = zoom
 	var center: Vector2i = game.sim.map_center()
 	var kinds := ["crawler", "brute", "spitter", "burrower"]
@@ -55,4 +50,7 @@ func _ready() -> void:
 	var script_ms := float(Time.get_ticks_usec() - s0) / 1000.0 / 30.0
 	print("world3d._process script time %.2f ms" % script_ms)
 	print("size=%d enemies=%d zoom=%.2f frame=%.2f ms (software GL)" % [size, game.sim.threats.enemies.size(), zoom, ms])
+	if shot != "":
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(shot)
 	get_tree().quit()
