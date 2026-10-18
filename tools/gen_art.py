@@ -97,6 +97,99 @@ def colonists():
     save(grid(recolor(eng, {"s": "g", "S": "G"})), "colonist_engineer_sick")
 
 
+# Four-direction walk sheets for the pseudo-3D view: 3 columns (idle, step A,
+# step B) x 4 rows (down, left, right, up), 16 px frames.
+COLONIST_BACK = COLONIST[:4] + [
+    "...khhhhhhhhk...",
+    "...khhhhhhhhk...",
+    "...khhhhhhhhk...",
+    "....khhhhhhk....",
+    "...kkooooookk...",
+    "..kooooooooook..",
+    ".kOoOowwwwoOoOk.",
+    ".ksoOooooooOosk.",
+    "..kooooooooook..",
+] + COLONIST[13:]
+
+COLONIST_SIDE = [
+    "................",
+    "......kkkkk.....",
+    ".....khhhhhk....",
+    "....khhhhhhhk...",
+    "....khhhsssssk..",
+    "....khhssskssk..",
+    "....khsssssssk..",
+    ".....kssssssk...",
+    ".....kkooookk...",
+    "....koooooook...",
+    "....kOooOoook...",
+    "....kOoosOook...",
+    "....koooooook...",
+    ".....kOOOOk.....",
+    ".....kOOOOk.....",
+    ".....kkkkkk.....",
+]
+
+FRONT_STEP = [
+    "...kOOOkkOOOk...",
+    "...kOOOk.kkkk...",
+    "...kkkk.........",
+]
+SIDE_STEP_A = [
+    "....kOOk.kOOk...",
+    "...kOOk...kOOk..",
+    "...kkk.....kkk..",
+]
+SIDE_STEP_B = [
+    ".....kOOOk......",
+    ".....kOOOk......",
+    ".....kkkkk......",
+]
+
+
+def _legs(rows, legs):
+    return rows[:13] + legs
+
+
+def _flip(rows):
+    return [r[::-1] for r in rows]
+
+
+def walk_sheet(front, back, side):
+    down = [front, _legs(front, FRONT_STEP), _legs(front, _flip(FRONT_STEP))]
+    up = [back, _legs(back, _flip(FRONT_STEP)), _legs(back, FRONT_STEP)]
+    right = [side, _legs(side, SIDE_STEP_A), _legs(side, SIDE_STEP_B)]
+    left = [_flip(f) for f in right]
+    sheet = Image.new("RGBA", (16 * 3, 16 * 4), (0, 0, 0, 0))
+    for row, frames in enumerate([down, left, right, up]):
+        for col, rows in enumerate(frames):
+            sheet.paste(grid(rows), (col * 16, row * 16))
+    return sheet
+
+
+def helmet(rows):
+    out = list(rows)
+    for i in range(1, 4):
+        out[i] = out[i].replace("h", "b")
+    return out
+
+
+def colonist_sheets():
+    front_eng = list(COLONIST)
+    front_eng[1] = mirror([".....kkk"])[0]
+    front_eng[2] = mirror(["....kbbb"])[0]
+    front_eng[3] = mirror(["...kbbbb"])[0]
+    front_eng[4] = mirror(["..kBBBBB"])[0]
+    variants = {
+        "colonist": (COLONIST, COLONIST_BACK, COLONIST_SIDE),
+        "colonist_engineer": (front_eng, helmet(COLONIST_BACK), helmet(COLONIST_SIDE)),
+    }
+    for name, (f, b, sd) in variants.items():
+        save(walk_sheet(f, b, sd), name + "_sheet")
+        sick = {"s": "g", "S": "G"}
+        save(walk_sheet(recolor(f, sick), recolor(b, sick), recolor(sd, sick)), name + "_sick_sheet")
+
+
 # --- Creatures ----------------------------------------------------------------
 
 def creatures():
@@ -539,6 +632,7 @@ def food_art():
 def main():
     os.makedirs(OUT, exist_ok=True)
     colonists()
+    colonist_sheets()
     creatures()
     turret()
     refinery()

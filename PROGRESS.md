@@ -86,6 +86,16 @@ Tests: 73 green.
 Tests: 173 green. Idle ~32% in a peaceful 20-day bot game (needs work).
 Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner answers pending).
 
+## Session 4 — pseudo-3D view
+- Broadcast-style camera (perspective Camera3D, 52° pitch, looks north; pan/pinch/wheel
+  keep the ground point under the finger). Flat layers render into a SubViewport and
+  texture a ground plane; rock/ore and walls are raised blocks (MultiMesh) whose tops
+  sample the same texture. Colonists: 4-direction walk sheets (gen_art.py
+  `*_sheet.png`, 3x4 frames); creatures: standing billboards. HP bars / drafted
+  marker in a screen-space overlay. `tools/screenshot.tscn` renders under xvfb.
+- Not yet: buildings (refinery, turret, capsule) are still flat top-down art; creatures
+  have no 4-direction sheets.
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;

@@ -1,8 +1,12 @@
 class_name CameraController
-extends Camera2D
-## Pan / zoom for touch and mouse. No hover, no right click.
-## One finger or left mouse drag: pan. Two fingers: pinch zoom + pan.
-## Mouse wheel: zoom at cursor. A press+release without movement is a tap.
+extends Camera3D
+## "Broadcast" camera: perspective, tilted like a football TV camera (not
+## isometric), always looking north. Pan / zoom for touch and mouse; no hover,
+## no right click. One finger or left mouse drag: pan. Two fingers: pinch zoom
+## + pan. Mouse wheel: zoom at cursor. A press+release without movement is a tap.
+##
+## Public coordinates are 2D world pixels (WorldView space, TILE px per cell)
+## so GameController stays unaware of the 3D scene. One cell = one 3D unit.
 ##
 ## Single-finger input arrives as emulated mouse events (so HUD controls
 ## swallow them first); raw touch events are used only to track pinches.
@@ -10,10 +14,22 @@ extends Camera2D
 signal tapped(world_pos: Vector2)
 
 const TAP_SLOP := 14.0
-const MIN_ZOOM := 0.25
+const MIN_ZOOM := 0.35
 const MAX_ZOOM := 3.0
+const PITCH_DEG := 52.0  ## angle above the ground plane
+const BASE_DISTANCE := 28.0  ## camera distance (cells) at zoom 1
+const FOV_DEG := 38.0
 
 var world_size := Vector2(2048, 2048)
+## Ground point the camera looks at, in world pixels.
+var focus := Vector2.ZERO:
+	set(v):
+		focus = v.clamp(Vector2.ZERO, world_size)
+		_apply()
+var zoom_level := 1.0:
+	set(v):
+		zoom_level = clampf(v, MIN_ZOOM, MAX_ZOOM)
+		_apply()
 
 var _touches := {}  # index -> screen position
 var _pinch_dist := 0.0
@@ -21,6 +37,23 @@ var _pinch_mid := Vector2.ZERO
 var _mouse_down := false
 var _press_pos := Vector2.ZERO
 var _moved := false
+
+
+func _ready() -> void:
+	fov = FOV_DEG
+	near = 0.5
+	far = 400.0
+	current = true
+	_apply()
+
+
+func _apply() -> void:
+	var target := Vector3(focus.x / WorldView.TILE, 0.0, focus.y / WorldView.TILE)
+	var pitch := deg_to_rad(PITCH_DEG)
+	var dist := BASE_DISTANCE / zoom_level
+	# Behind the target = towards +z (south), so north is up on screen.
+	position = target + Vector3(0.0, sin(pitch), cos(pitch)) * dist
+	rotation = Vector3(-pitch, 0.0, 0.0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -43,7 +76,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not _moved and (event.position - _press_pos).length() > TAP_SLOP:
 				_moved = true
 			if _moved:
-				_pan_screen(event.relative)
+				_pan_screen(event.position - event.relative, event.position)
 
 
 func _on_mouse_button(event: InputEventMouseButton) -> void:
@@ -75,7 +108,7 @@ func _update_pinch() -> void:
 	var pts := _two_touches()
 	var dist := maxf(pts[0].distance_to(pts[1]), 1.0)
 	var mid: Vector2 = (pts[0] + pts[1]) * 0.5
-	_pan_screen(mid - _pinch_mid)
+	_pan_screen(_pinch_mid, mid)
 	zoom_at(mid, dist / _pinch_dist)
 	_pinch_dist = dist
 	_pinch_mid = mid
@@ -87,26 +120,29 @@ func _two_touches() -> Array[Vector2]:
 	return [_touches[keys[0]], _touches[keys[1]]]
 
 
-func _pan_screen(screen_delta: Vector2) -> void:
-	position -= screen_delta / zoom.x
-	_clamp_position()
+## Drags the ground: the point under `from` ends up under `to`.
+func _pan_screen(from: Vector2, to: Vector2) -> void:
+	focus += screen_to_world(from) - screen_to_world(to)
 
 
-## Zooms by `factor`, keeping the world point under `screen_pos` fixed.
+## Zooms by `factor`, keeping the ground point under `screen_pos` fixed.
 func zoom_at(screen_pos: Vector2, factor: float) -> void:
 	var before := screen_to_world(screen_pos)
-	var z := clampf(zoom.x * factor, MIN_ZOOM, MAX_ZOOM)
-	zoom = Vector2(z, z)
-	var after := screen_to_world(screen_pos)
-	position += before - after
-	_clamp_position()
+	zoom_level *= factor
+	focus += before - screen_to_world(screen_pos)
 
 
+## Ground point (world pixels) under a screen position: ray vs plane y = 0.
 func screen_to_world(screen_pos: Vector2) -> Vector2:
-	# Computed from our own state (anchor = center, no rotation) so it is
-	# correct immediately after changing position/zoom in the same frame.
-	return position + (screen_pos - get_viewport_rect().size * 0.5) / zoom.x
+	var o := project_ray_origin(screen_pos)
+	var d := project_ray_normal(screen_pos)
+	if d.y > -0.01:
+		d.y = -0.01  # ray at/above the horizon: clamp to a far ground point
+	var t := -o.y / d.y
+	var p := o + d * t
+	return Vector2(p.x, p.z) * WorldView.TILE
 
 
-func _clamp_position() -> void:
-	position = position.clamp(Vector2.ZERO, world_size)
+## Screen position of a 3D point given in cells (x, height, z).
+func cell_to_screen(p: Vector3) -> Vector2:
+	return unproject_position(p)

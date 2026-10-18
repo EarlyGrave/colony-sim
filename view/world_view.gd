@@ -15,6 +15,9 @@ var show_field := true  ## contamination overlay toggle
 var patrol_draft: Array[Vector2i] = []
 ## Cell highlighted by the last tap (inspector).
 var selected_cell := Vector2i(-1, -1)
+## Pseudo-3D mode: units and rock relief are drawn by WorldView3D; this node
+## only paints the flat ground layers (plus unit shadows) into a SubViewport.
+var flat := false
 
 var _tex := {}
 var _tile_images := {}
@@ -108,6 +111,8 @@ func _paint_cell(c: Vector2i) -> void:
 	_map_image.blit_rect(src, Rect2i(0, 0, ART, ART), dst)
 	var below := c + Vector2i(0, 1)
 	var above := c + Vector2i(0, -1)
+	if flat:
+		return
 	if kind != "ground":
 		# Cliff face where the rock meets open ground below.
 		if m.in_bounds(below) and m.is_passable(below):
@@ -267,6 +272,9 @@ func _draw_colonists() -> void:
 		var bob := -absf(sin(_time * 12.0)) * 2.0 if moving else 0.0
 		var flip := moving and c.path[0].x < c.cell.x
 		draw_set_transform(Vector2.ZERO)
+		if flat:
+			_ellipse_shadow(p + Vector2(0, TILE * 0.05))
+			continue
 		_ellipse_shadow(p + Vector2(0, TILE * 0.4))
 		var name := "colonist"
 		if c.engineer:
@@ -296,6 +304,9 @@ func _draw_enemies() -> void:
 		_enemy_last[e.id] = [p, e.hp, last[2]]
 		var scale := 1.5 if e.def_id == "brute" else 1.0
 		var wobble := sin(_time * 10.0 + e.id) * 1.5
+		if flat:
+			_ellipse_shadow(p + Vector2(0, TILE * 0.05))
+			continue
 		_ellipse_shadow(p + Vector2(0, TILE * 0.4 * scale))
 		var mod := Color(1, 1, 1, 0.55) if e.leaving else Color.WHITE
 		_sprite(e.def_id, p + Vector2(0, wobble), Vector2(TILE, TILE) * scale, flip, mod)

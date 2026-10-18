@@ -21,13 +21,17 @@ var speed := 1
 var tool := "inspect"
 var _accum := 0.0
 
-@onready var world: WorldView = $World
+@onready var world: WorldView = $MapViewport/World
+@onready var world3d: WorldView3D = $World3D
+@onready var map_viewport: SubViewport = $MapViewport
 @onready var camera: CameraController = $Camera
 @onready var hud: Hud = $Hud
 
 
 func _ready() -> void:
 	_apply_ui_scale()
+	world3d.camera = camera
+	world3d.overlay = $Overlay
 	camera.tapped.connect(_on_tapped)
 	hud.tool_selected.connect(_on_tool_selected)
 	hud.speed_selected.connect(set_speed)
@@ -53,7 +57,7 @@ func _ready() -> void:
 		hud.show_message("Маршрут патруля сохранён: %d точек." % world.patrol_draft.size(), 3.0)
 		world.patrol_draft.clear())
 	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
-		camera.position = WorldView.cell_to_world(cell))
+		camera.focus = WorldView.cell_to_world(cell))
 	EventBus.game_over.connect(_on_game_over_meta)  # region meta
 	new_game(_initial_seed(), MetaStore.load_state().make_opts())  # region meta
 	_setup_save_load()  # save-load
@@ -61,6 +65,13 @@ func _ready() -> void:
 
 ## Scales the whole 2D/UI by screen density so touch targets keep a physical
 ## size: ~0.85 CSS px per logical px on phones/tablets, 1:1 on desktop.
+## Flat layers render at 16 px per cell into the map viewport, which the 3D
+## ground plane and rock blocks sample.
+func _bind_3d() -> void:
+	map_viewport.size = Vector2i(world.world_size() * world.scale)
+	world3d.bind(sim, map_viewport.get_texture())
+
+
 func _apply_ui_scale() -> void:
 	var dpr := DisplayServer.screen_get_scale()
 	if OS.has_feature("web"):
@@ -73,6 +84,7 @@ func _apply_ui_scale() -> void:
 func _exit_tree() -> void:
 	if sim:
 		world.unbind()
+		world3d.unbind()
 		sim.dispose()
 		sim = null
 
@@ -121,18 +133,20 @@ func _close_meta() -> void:
 func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	if sim:
 		world.unbind()
+		world3d.unbind()
 		sim.dispose()
 	sim = Simulation.new(seed_value, EventBus, null, opts)  # region meta
 	sim.start_new_game()
 	combat_selected = -1  # region combat
 	world.bind(sim)
+	_bind_3d()
 	world.pending_corner = Vector2i(-1, -1)
 	world.selected_cell = Vector2i(-1, -1)
 	world.patrol_draft.clear()
 	hud.bind(sim)
 	camera.world_size = world.world_size()
-	camera.position = WorldView.cell_to_world(sim.map_center())
-	camera.zoom = Vector2(1, 1)
+	camera.focus = WorldView.cell_to_world(sim.map_center())
+	camera.zoom_level = 1.0
 	_accum = 0.0
 	set_speed(1)
 	hud.show_message("Сид %d. Отметь руду инструментом «Добыча» — колонисты начнут копать." % seed_value, 8.0)
@@ -247,7 +261,9 @@ func _inspect(world_pos: Vector2, cell: Vector2i) -> void:
 	for col in sim.colonists.list:
 		if not col.alive or col.hidden:
 			continue
-		var d := (col.visual_pos() * WorldView.TILE + Vector2(WorldView.TILE, WorldView.TILE) * 0.5).distance_to(world_pos)
+		# Standing sprites: a tap on the body hits the ground just north of the feet.
+		var feet := col.visual_pos() * WorldView.TILE + Vector2(WorldView.TILE, WorldView.TILE) * 0.5
+		var d := minf(feet.distance_to(world_pos), (feet - Vector2(0, WorldView.TILE * 0.7)).distance_to(world_pos))
 		if d < best_d:
 			best_d = d
 			best = col
@@ -269,7 +285,7 @@ func _select_colonist(id: int, center := true) -> void:
 		if col.id == id and col.alive:
 			world.selected_cell = col.cell
 			if center:
-				camera.position = col.visual_pos() * WorldView.TILE + Vector2(WorldView.TILE, WorldView.TILE) * 0.5
+				camera.focus = col.visual_pos() * WorldView.TILE + Vector2(WorldView.TILE, WorldView.TILE) * 0.5
 			hud.show_inspector({"kind": "colonist", "colonist": col, "building": null, "cell": col.cell})
 			return
 
@@ -301,14 +317,16 @@ func load_game() -> void:
 		return
 	if sim:
 		world.unbind()
+		world3d.unbind()
 		sim.dispose()
 	sim = res["sim"]
 	world.bind(sim)
+	_bind_3d()
 	world.pending_corner = Vector2i(-1, -1)
 	world.selected_cell = Vector2i(-1, -1)
 	hud.bind(sim)
 	camera.world_size = world.world_size()
-	camera.position = WorldView.cell_to_world(sim.map_center())
+	camera.focus = WorldView.cell_to_world(sim.map_center())
 	_accum = 0.0
 	set_speed(1)
 	_update_continue()
