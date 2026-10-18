@@ -4,7 +4,7 @@
 	"presets": {
 		"short_stay": {
 			"name": "Short Stay", "sentence": "6 months. Gentle wardens, small debts.",
-			"wave_strength_mult": 0.75, "waste_mult": 0.8, "starting_debt_mult": 0.7,
+			"wave_strength_mult": 0.6, "waste_mult": 0.45, "starting_debt_mult": 0.7,
 			"crate": {"essence_ore": 40, "raw_food": 30}, "hint_density": "full"
 		},
 		"standard_term": {
@@ -14,7 +14,7 @@
 		},
 		"hard_time": {
 			"name": "Hard Time", "sentence": "Life. The planet wants you gone.",
-			"wave_strength_mult": 1.3, "waste_mult": 1.25, "starting_debt_mult": 1.3,
+			"wave_strength_mult": 1.15, "waste_mult": 1.15, "starting_debt_mult": 1.3,
 			"crate": {}, "hint_density": "off"
 		}
 	}

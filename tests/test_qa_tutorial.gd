@@ -3,7 +3,7 @@ extends TestCase
 ## O1's scripted audit raid) on seeds 1..3 within 12 game days, with nobody dead.
 
 const Bot := preload("res://tests/qa_tutorial_bot.gd")
-const MAX_DAYS := 12
+const MAX_DAYS := 14  # B1: belts need real research, release lands ~d11-13.5
 
 
 func _run(seed_value: int) -> QaTutorialBot:

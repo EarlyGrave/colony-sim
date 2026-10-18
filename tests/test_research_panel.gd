@@ -44,7 +44,7 @@ func test_buttons_min_height_64() -> void:
 func _first_in_state(p: ResearchPanel, state: String) -> String:
 	for t in ResearchPanel.TIERS:
 		for cand in p.adapter.tech_ids(t):
-			if p.adapter.state_of(cand) == state:
+			if p.adapter.state_of(cand) == state and (state != "available" or int(Defs.get_default().research[cand]["cost"]["essence"]) == 0):  # B1: skip essence-gated techs
 				return cand
 	return ""
 

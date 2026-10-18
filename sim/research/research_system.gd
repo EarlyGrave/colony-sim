@@ -32,7 +32,7 @@ func _init(p_sim: Simulation) -> void:
 			_rec_owner[r] = id
 		for r: String in un.get("rules", []):
 			_rule_owner[r] = id
-		if int(techs[id]["tier"]) <= free_tiers():
+		if int(techs[id]["tier"]) <= free_tiers() and not bool(techs[id].get("paid_start", false)):  # region B1: paid T1 techs
 			done.append(id)  # start techs (T0 + T1)
 	done.sort()
 	for t: Variant in sim.opts.get("research_audit_tiers", []):  # tests/bots: pre-granted tier audits

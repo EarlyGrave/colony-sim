@@ -59,6 +59,11 @@ func _act() -> void:
 	var lesson := str(sim.tutorial.current().get("id", ""))
 	if lesson == "forecast" or lesson == "release":
 		sim.tutorial_ack()  # the view sends these when the forecast ticker is opened / the card is tapped
+	for tid: String in ["conveyance"]:  # region B1: belts need real research now
+		if sim.research.active() == "" and not sim.research.is_done(tid) and sim.buildings.count_of("research_bench") > 0:
+			if sim.set_research(tid):
+				for i in mini(2, sim.colonists.list.size()):
+					sim.set_work_priority(sim.colonists.list[i].id, "researching", 1)
 	if sim.research.active() == "" and not sim.research.is_done("decoys_1") and sim.buildings.count_of("research_bench") > 0:
 		sim.set_research("decoys_1")  # tier 2 is pre-approved by the tutorial
 		for i in mini(2, sim.colonists.list.size()):
@@ -93,7 +98,7 @@ func _act() -> void:
 					sim.set_zone(crops + Vector2i(x, y), "growing")
 			_stage = 4
 		4:
-			if sim.tick > 300:
+			if sim.tick > 300 and sim.research.is_done("conveyance"):  # region B1
 				Scen.build_chain(sim, true)  # returns {} in blueprint mode
 				_chain = true
 				_stage = 5

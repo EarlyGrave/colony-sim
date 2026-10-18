@@ -5,6 +5,7 @@ extends SceneTree
 ## godot --headless --path . -s tools/bot_report.gd [-- --days=25 --seeds=5 --verbose]
 
 const Scenario := preload("res://tests/scenario.gd")
+static var preset_id := ""  # region B1: difficulty preset for play() (tools/b1_preset_table.gd)
 
 
 func _init() -> void:
@@ -30,7 +31,7 @@ func _init() -> void:
 
 
 static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -> Dictionary:
-	var sim := Simulation.new(seed_value, bus)
+	var sim := Simulation.new(seed_value, bus, null, StartOpts.preset_opts(Defs.get_default(), preset_id) if preset_id != "" else {})  # region B1
 	sim.start_new_game()
 	Scenario.standard_colony(sim, 3)
 	var center := sim.map_center()

@@ -222,6 +222,7 @@ func test_fresh_locked_game_has_t0_t1_content() -> void:
 	var sim := Simulation.new(5, make_bus(), peaceful_defs(), {"research_locked": true})
 	_sims.append(sim)
 	sim.start_new_game()
-	for b in ["research_bench", "workbench", "refinery", "miner", "belt", "smelter", "storage_in", "wall", "turret"]:
+	for b in ["research_bench", "workbench", "refinery", "miner", "smelter", "storage_in", "wall", "turret"]:
 		assert_true(sim.research.building_unlocked(b), b + " buildable at start")
 	assert_false(sim.research.building_unlocked("assembler"), "T2 stays locked")
+	assert_false(sim.research.building_unlocked("belt"), "B1: belts need the paid Conveyance tech")

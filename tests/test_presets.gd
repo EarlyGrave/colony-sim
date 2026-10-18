@@ -20,7 +20,7 @@ func test_raid_points_ladder() -> void:
 	var m := _sim_with("standard_term").threats.raid_points(3)
 	var h := _sim_with("hard_time").threats.raid_points(3)
 	assert_gt(m, s * 1.15, "standard >= 15% over short")
-	assert_gt(h, m * 1.15, "hard >= 15% over standard")
+	assert_gt(h, m * 1.1, "hard >= 10% over standard")
 
 
 func _contam_after_batch(id: String) -> float:
@@ -67,7 +67,7 @@ func test_dialog_cards_set_preset_once() -> void:
 	dlg.cards["hard_time"].pressed.emit()
 	dlg.start_button.pressed.emit()
 	assert_eq(got.size(), 1)
-	assert_eq(got[0]["wave_mult"], 1.3)
+	assert_eq(got[0]["wave_mult"], 1.15)
 	dlg.free()
 
 
