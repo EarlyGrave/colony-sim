@@ -36,6 +36,10 @@ var repairs_total := 0
 
 var _memo: PackedByteArray
 var _claim: PackedInt32Array
+## Sparse stepping: indices that may hold an item (superset; stale entries are
+## dropped in step()). `_in_occ` flags membership so each index appears once.
+var _occ := PackedInt32Array()
+var _in_occ: PackedByteArray
 
 
 func _init(w: int, h: int, p_ticks_per_cell: int = 5) -> void:
@@ -55,6 +59,8 @@ func _init(w: int, h: int, p_ticks_per_cell: int = 5) -> void:
 	_memo.resize(n)
 	_claim = PackedInt32Array()
 	_claim.resize(n)
+	_in_occ = PackedByteArray()
+	_in_occ.resize(n)
 	hp = PackedFloat32Array()  # region T3
 	hp.resize(n)
 
@@ -123,6 +129,7 @@ func insert(c: Vector2i, item_id: int, level: int = 0) -> bool:
 		return false
 	item[i] = item_id
 	progress[i] = 0
+	_mark(i)
 	inserted += 1
 	item_count += 1
 	return true
@@ -151,6 +158,12 @@ func take_ready(c: Vector2i, level: int = 0) -> int:
 	return it
 
 
+func _mark(i: int) -> void:
+	if _in_occ[i] == 0:
+		_in_occ[i] = 1
+		_occ.append(i)
+
+
 func _target(i: int) -> int:
 	var d := dir[i]
 	var x := i % width + DIRS[d].x
@@ -171,9 +184,11 @@ func _resolve(i: int) -> bool:
 		return true
 	if m >= 1:
 		return false
+	if item[i] < 0 or progress[i] < ticks_per_cell:
+		return false  # stable answer, no memo write needed
 	_memo[i] = 1
 	var ok := false
-	if item[i] >= 0 and progress[i] >= ticks_per_cell and hp[i] >= stall_hp:  # region T3: damaged tile stalls
+	if hp[i] >= stall_hp:  # region T3: damaged tile stalls
 		var t := _target(i)
 		if t >= 0 and _claim[t] == 0 and (item[t] < 0 or _resolve(t)):
 			if _claim[t] == 0:
@@ -186,15 +201,30 @@ func _resolve(i: int) -> bool:
 func step() -> void:
 	if item_count == 0:
 		return
-	var n := width * height
-	for i in n:
-		if item[i] >= 0 and progress[i] < ticks_per_cell:
-			progress[i] += 1
-	_memo.fill(0)
-	_claim.fill(0)
+	# Sorted occupied indices == the dense 0..n scan order of the old code.
+	_occ.sort()
+	var ready := PackedInt32Array()
+	var tpc := ticks_per_cell
+	var w := 0
+	var cnt := _occ.size()
+	for k in cnt:
+		var i := _occ[k]
+		if item[i] < 0:
+			_in_occ[i] = 0
+			continue
+		_occ[w] = i
+		w += 1
+		var p := progress[i]
+		if p < tpc:
+			progress[i] = p + 1
+			if p + 1 >= tpc:
+				ready.append(i)
+		else:
+			ready.append(i)
+	_occ.resize(w)
 	var movers := PackedInt32Array()
-	for i in n:
-		if item[i] >= 0 and _resolve(i):
+	for i in ready:
+		if _resolve(i):
 			movers.append(i)
 	var carried := PackedInt32Array()
 	var targets := PackedInt32Array()
@@ -203,9 +233,14 @@ func step() -> void:
 		targets.append(_target(i))
 		item[i] = -1
 		progress[i] = 0
+	for i in ready:  # memo is written only for ready cells
+		_memo[i] = 0
 	for k in movers.size():
-		item[targets[k]] = carried[k]
-		progress[targets[k]] = 0
+		var t := targets[k]
+		_claim[t] = 0
+		item[t] = carried[k]
+		progress[t] = 0
+		_mark(t)
 
 
 func state_hash() -> int:
