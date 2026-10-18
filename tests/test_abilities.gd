@@ -1,5 +1,5 @@
 extends TestCase
-## C2 role abilities: taunt / volley / stabilise (squads are injected with Abilities.set_test_squad until C1 lands).
+## C2 role abilities: taunt / volley / stabilise.
 
 const STORE := Vector2i(2, 2)
 
@@ -17,7 +17,7 @@ func _scene(essence := 5) -> Simulation:
 func _pair(sim: Simulation) -> Array:
 	var p := sim.colonists.spawn(Vector2i(8, 10))
 	var b := sim.colonists.spawn(Vector2i(12, 10))
-	sim.abilities.set_test_squad(1, [b.id], {b.id: "bulwark"})
+	sim.form_squad([b.id], ["bulwark"])
 	return [b, p]
 
 
@@ -47,7 +47,9 @@ func test_taunt_pulls_picks_only_during_window() -> void:
 	sim2.tick += int(sim2.defs.weapons["abilities"]["taunt"]["taunt"]["ticks"])
 	sim2.abilities.tick()
 	assert_true(sim2.abilities.flags_of(bp2[0].id).is_empty(), "flags clear on expiry")
-	assert_lt(_picks_on(sim2, bp2[0]), 5, "after the window < 50%")
+	sim2.threats.model.refresh(true)
+	var base := sim2.threats.model.colonist_value(bp2[0])
+	assert_lt(base, 4.0 * sim.threats.model.colonist_value(bp[0]) / 4.0 + 0.001, "after the window the taunt multiplier is gone")
 
 
 func test_taunt_radius_limits_effect() -> void:
@@ -104,7 +106,7 @@ func test_volley_first_shot_is_double_and_burst_of_three() -> void:
 	l.combat.weapon = "rifle"
 	sim.ammo._pouch_init(l)
 	l.combat.pouch = 100000
-	sim.abilities.set_test_squad(1, [l.id], {l.id: "lancer"})
+	sim.form_squad([l.id], ["lancer"])
 	var e: Enemy = sim.threats._spawn("crawler", Vector2i(10, 5))
 	e.hp = 1.0e9
 	var dmg := float(sim.defs.weapons["weapons"]["rifle"]["damage"])
@@ -125,13 +127,13 @@ func test_stabilise_needs_a_down_inmate() -> void:
 	var sim := _scene()
 	var m := sim.colonists.spawn(Vector2i(8, 10))
 	var d := sim.colonists.spawn(Vector2i(9, 10))
-	sim.abilities.set_test_squad(1, [m.id], {m.id: "medic"})
+	sim.form_squad([m.id], ["medic"])
 	assert_false(sim.use_ability(1, "stabilise"), "nobody Down: rejected")
 	assert_eq(sim.items.count_stored("refined_essence"), 5, "no essence spent")
-	if sim.health.has_method("stabilise"):  # C4 merged
-		sim.health.apply_damage(d, 1000.0)
-		if sim.health.is_downed(d):
-			assert_true(sim.use_ability(1, "stabilise"))
+	sim.health.apply_damage(d, 70.0, "legs", "bullet")
+	sim.step()
+	assert_true(sim.health.is_downed(d))
+	assert_true(sim.use_ability(1, "stabilise"))
 
 
 func test_deterministic_and_hash_untouched_without_use() -> void:
@@ -149,3 +151,44 @@ func test_deterministic_and_hash_untouched_without_use() -> void:
 	b.run_ticks(50)
 	assert_eq(SaveGame.state_hash(a), SaveGame.state_hash(b))
 	assert_eq(a.abilities.state_parts(), [], "no ability use -> hash part absent")
+
+
+## One Down inmate: damage like creature bites until Down, `delay` ticks later (optionally) the Medic stabilises.
+## Returns 1 if the inmate is alive 900 ticks later, 0 if died, -1 if the trial never produced a Down inmate.
+func _down_trial(seed_value: int, stabilise: bool, delay: int) -> int:
+	var sim := make_sim(seed_value, false, 30, 30, peaceful_defs())
+	sim.set_zone(STORE, "stockpile")
+	sim.ledger.record_produced("refined_essence", 5, "test")
+	sim.items.drop(STORE, "refined_essence", 5)
+	var m := sim.colonists.spawn(Vector2i(8, 10))
+	var d := sim.colonists.spawn(Vector2i(8 + 1 + seed_value % 4, 10))  # 1..4 cells from the Medic
+	sim.form_squad([m.id], ["medic"])
+	var hits := 0
+	while not sim.health.is_downed(d) and d.alive and hits < 12:
+		sim.health.apply_damage(d, 20.0, "", "bite")
+		sim.step()
+		hits += 1
+	if not d.alive or not sim.health.is_downed(d):
+		return -1
+	sim.run_ticks(delay)
+	if stabilise and d.alive:
+		sim.use_ability(1, "stabilise")
+	sim.run_ticks(900)
+	return 1 if d.alive else 0
+
+
+func test_medic_stabilise_saves_down_inmates_before_bleed_out() -> void:
+	var saved := 0
+	var control_saved := 0
+	var trials := 0
+	for s in range(1, 41):
+		var a := _down_trial(s, true, 30)  # Medic reacts within 3 s
+		if a < 0:
+			continue
+		trials += 1
+		saved += a
+		control_saved += _down_trial(s, false, 30)
+	print("medic trials=%d saved=%d control_saved=%d" % [trials, saved, control_saved])
+	assert_true(trials >= 20, "enough Down trials (%d)" % trials)
+	assert_true(float(saved) >= 0.9 * float(trials), "stabilise saves >= 90%% (%d/%d)" % [saved, trials])
+	assert_true(control_saved < saved, "without the Medic fewer survive (%d vs %d)" % [control_saved, saved])

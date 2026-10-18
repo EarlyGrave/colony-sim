@@ -12,7 +12,6 @@ func _init() -> void:
 			days = int(a.substr(7))
 	var bus: Node = load("res://autoload/event_bus.gd").new()
 	var sums := {false: {"repelled": 0, "dead": 0, "down_sec": 0.0, "essence_spent": 0, "taint_pct": 0.0, "waves": 0}, true: {"repelled": 0, "dead": 0, "down_sec": 0.0, "essence_spent": 0, "taint_pct": 0.0, "waves": 0}}
-	print("squad API in this build: %s (false = plain draft/order proxy)" % str(Simulation.new(1, bus).has_method("form_squad")))
 	print("%d days | mode      | seed | waves | repelled | dead | down s | taint%% | ess spent | over" % days)
 	for seed_value in [1, 2, 3, 4, 5]:
 		for with_squad in [false, true]:
@@ -30,5 +29,16 @@ func _init() -> void:
 	var d0: int = sums[false]["dead"]
 	var d1: int = sums[true]["dead"]
 	print("colonists_dead: %d -> %d (%s)" % [d0, d1, ("%.0f%% fewer" % (100.0 * float(d0 - d1) / float(d0))) if d0 > 0 else "baseline has no deaths"])
+	# Per wave, so a longer-surviving game does not skew the comparison.
+	var r0: int = sums[false]["repelled"]
+	var r1: int = sums[true]["repelled"]
+	var pw0 := float(d0) / maxf(1.0, float(r0))
+	var pw1 := float(d1) / maxf(1.0, float(r1))
+	print("deaths per repelled wave: %.2f -> %.2f (%.0f%% fewer, target >= 30%%)" % [pw0, pw1, 100.0 * (pw0 - pw1) / maxf(0.001, pw0)])
+	var w0: int = sums[false]["waves"]
+	var w1: int = sums[true]["waves"]
+	pw0 = float(d0) / maxf(1.0, float(w0))
+	pw1 = float(d1) / maxf(1.0, float(w1))
+	print("deaths per wave faced:    %.2f -> %.2f (%.0f%% fewer)" % [pw0, pw1, 100.0 * (pw0 - pw1) / maxf(0.001, pw0)])
 	bus.free()
 	quit()

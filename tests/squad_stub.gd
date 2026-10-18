@@ -2,7 +2,7 @@ class_name SquadStub
 extends RefCounted
 ## Test double for the C1/C2 squad API (the real one lands in another branch). Same surface the
 ## C5 UI uses: `squads.list`, `form_squad`, `disband_squad`, `squad_hold`, `squad_focus`,
-## `use_ability`, `abilities.cooldown_left`, plus `colonists`. Every command is recorded in `calls`.
+## `use_ability`, `abilities.ready_in`, plus `colonists`. Every command is recorded in `calls`.
 
 
 class Sq extends RefCounted:
@@ -18,7 +18,7 @@ class Holder extends RefCounted:
 	var list: Array = []
 	var cooldowns: Dictionary = {}
 
-	func cooldown_left(sid: int, ability: String) -> int:
+	func ready_in(sid: int, ability: String) -> int:
 		return int(cooldowns.get("%d:%s" % [sid, ability], 0))
 
 

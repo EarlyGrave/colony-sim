@@ -2,15 +2,12 @@ class_name Abilities
 extends RefCounted
 ## Role abilities (Bulwark taunt, Lancer volley, Medic stabilise). Command: Simulation.use_ability(sid, ability_id).
 ## Numbers: data/weapons.json "abilities". Integer-tick state, no rng.
-## C1 API used (guarded): `sim.squads.get_squad(sid)` -> object with `members:Array[int]` and
-## `role_of:Dictionary{colonist_id: role}`. Until C1 is merged tests inject squads via set_test_squad().
-## C4 API used (guarded): `sim.health.stabilise(c, medic)`.
+## Uses `sim.squads.get_squad(sid)` (members, role_of) and `sim.health.stabilise(c, medic)`.
 
 var sim: Simulation
 var cfg: Dictionary
 ## "sid:ability" -> tick from which the ability is ready again.
 var cooldowns: Dictionary = {}
-var _test_squads: Dictionary = {}
 ## Threat flags {colonist_id: {flag: [until_tick, mult, radius]}}. Kept here, not on Colonist, so that
 ## Colonist's property list (dumped into storyteller/golden state) is unchanged.
 var flags: Dictionary = {}
@@ -28,20 +25,11 @@ func _init(p_sim: Simulation) -> void:
 	cfg = sim.defs.weapons.get("abilities", {})
 
 
-## Test hook (no C1 needed): registers {members, role_of} for squad `sid`.
-func set_test_squad(sid: int, members: Array, role_of: Dictionary) -> void:
-	_test_squads[sid] = {"members": members, "role_of": role_of}
-
-
 func _squad(sid: int) -> Dictionary:
-	if _test_squads.has(sid):
-		return _test_squads[sid]
-	var sq: Variant = sim.get("squads")
-	if sq != null and sq.has_method("get_squad"):
-		var s: Variant = sq.get_squad(sid)
-		if s != null:
-			return {"members": s.members, "role_of": s.role_of}
-	return {}
+	var s: Squad = sim.squads.get_squad(sid)
+	if s == null:
+		return {}
+	return {"members": s.members, "role_of": s.role_of}
 
 
 func _user(sq: Dictionary, role: String) -> Colonist:
@@ -81,8 +69,6 @@ func can_use(sid: int, ability_id: String) -> String:
 
 func _stab_targets(user: Colonist, a: Dictionary) -> Array[Colonist]:
 	var out: Array[Colonist] = []
-	if not sim.health.has_method("stabilise"):
-		return out
 	for c in sim.colonists.list:
 		if c.alive and c != user and sim.health.is_downed(c) \
 				and Vector2(c.cell).distance_to(Vector2(user.cell)) <= float(a["radius"]):
@@ -109,7 +95,7 @@ func use(sid: int, ability_id: String) -> bool:
 			volley[user.id] = [int(a["volley"]["shots"]), float(a["volley"]["dmg_mult"])]
 		"stabilise":
 			for c in _stab_targets(user, a):
-				sim.health.call("stabilise", c, user)
+				sim.health.stabilise(c, user)
 	sim.bus.ability_used.emit(sid, ability_id, user.id)
 	return true
 

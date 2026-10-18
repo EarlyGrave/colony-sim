@@ -16,7 +16,7 @@
 	"abilities": {
 		"_comment": "Squad role abilities (region C2). essence_cost = refined_essence from storage. contam_puff added to the user's cell. noise_burst = threat flag 'burst' on the user (mult for ticks). radius in cells.",
 		"taunt": {"role": "bulwark", "cooldown_ticks": 600, "essence_cost": 1, "contam_puff": 0.15, "noise_burst": {"mult": 3.0, "ticks": 60}, "taunt": {"mult": 4.0, "ticks": 150, "radius": 6.0}},
-		"volley": {"role": "lancer", "cooldown_ticks": 500, "essence_cost": 1, "contam_puff": 0.15, "noise_burst": {"mult": 3.0, "ticks": 60}, "volley": {"shots": 3, "dmg_mult": 2.0}},
+		"volley": {"role": "lancer", "cooldown_ticks": 500, "essence_cost": 1, "contam_puff": 0.15, "noise_burst": {"mult": 3.0, "ticks": 60}, "volley": {"shots": 3, "dmg_mult": 2.5}},
 		"stabilise": {"role": "medic", "cooldown_ticks": 400, "essence_cost": 1, "contam_puff": 0.08, "noise_burst": {"mult": 3.0, "ticks": 60}, "radius": 5.0}
 	},
 	"weapons": {

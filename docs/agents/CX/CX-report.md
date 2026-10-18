@@ -1,0 +1,14 @@
+# CX report: combat integration
+Branch `cx-combat-integration` (base ee866fa). Full suite: 592 passed, 1 failed (known test_ui_batch3). Golden unchanged (test_golden green, no regen: all changes act only inside squads). One full run, not two (CPU-starved box).
+1. Stubs removed: `Abilities` no longer has `set_test_squad` / `has_method` guards (real `sim.squads.get_squad`, `sim.health.stabilise`); `SquadBar` calls `sim.use_ability` and `sim.abilities.ready_in` directly (SquadStub test double renamed to match); `test_abilities` uses real `form_squad`.
+   Found: roles.json `dmg_taken_mult` and `threat_mult` were read by nothing. Now wired via `SquadSystem.role_mult` (HealthSystem.apply_damage, ThreatModel.colonist_value); 1.0 outside squads.
+2. test_waves intervention test restored to the original intent (not a no-op): over seeds 1..5 total gain >= 4 (original threshold), turrets built > 3 per run on average, at most 1 seed worse than static. Probe: with telegraphs seeds 1..6 gain = -1,3,2,2,0,0 (total 6); without telegraphs 1,2,3,1,1,1 (total 9). Telegraph windups make single seeds chaotic (seed 1: static 3, active 2), so per-seed floors are noise; the aggregate is the stable signal. No balance data touched.
+3. `tools/combat_model.gd` prints TTK per weapon/role (Lancer incl. volley) vs 4 creatures + mutants, and survival seconds per role. Tuned: Bulwark dmg_taken_mult 0.6 -> 0.45 (2.2x an unsquadded inmate, was 1.67x), volley dmg_mult 2.0 -> 2.5 (Lancer TTK on brute 8.4 s vs 21.0 s rifle inmate = 40%, was 60%). `tests/test_combat_model.gd` (3 tests). Medic: `test_medic_stabilise_saves_down_inmates_before_bleed_out` 39/39 saved with stabilise after a 3 s reaction, 0/39 without.
+4. QA bot (`tests/qa_combat_bot.gd`, real API only): forms Bulwark+Lancer+Medic from the healthiest inmates, holds 2 cells behind the turret facing the wave, focuses only enemies within 22 cells of the post (focusing the map edge sent the squad out of turret cover: first table was +115% deaths), taunts when a brute telegraphs, volleys in range, stabilises, retreats (disband) below 30% hp. Both modes get 12 refined_essence. 25 d x seeds 1..5 (`tools/combat_report.gd`):
+   | | waves faced | repelled | dead | dead / repelled | dead / wave faced |
+   |---|---|---|---|---|---|
+   | no squad | 19 | 12 | 27 | 2.25 | 1.42 |
+   | squad | 27 | 9 | 18 | 2.00 | 0.67 |
+   Total deaths -33%; per wave faced -53%; per repelled wave only -11%: target (>= 30% per repelled wave) NOT met on that metric. The squad faces more waves (no-squad games end early by hq_destroyed/hiding) but repels fewer (9 vs 12): stalemates where leftover creatures hit buildings outside the squad's reach. Squad games also reach 2.5x taint. Not tuned further to hit the number.
+5. Golden: not regenerated (no behaviour change outside squads).
+Open: repel rate with squads (cover buildings far from the post), 4th member / second hold post.

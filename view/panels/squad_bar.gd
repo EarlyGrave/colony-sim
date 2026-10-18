@@ -5,11 +5,11 @@ extends ScrollContainer
 ## Long-press a banner (0.45 s) = ability radial. Plus "Form squad", "Disband" (selected
 ## squad) and "Wave" (opens the forecast panel).
 ##
-## Squad API (C1/C2), every call guarded with has_method / get so the bar stays inert until merged:
+## Squad API (C1/C2), duck-typed so tests can pass a SquadStub:
 ##   sim.squads.list                       Array of squads {id, name, members:Array[int], role_of:{id:role}, hold:Vector2i, focus:int}
 ##   sim.form_squad(ids:Array, roles:Array=[]) -> int (roles parallel to ids)
 ##   sim.disband_squad(sid)   sim.squad_hold(sid, cell)   sim.squad_focus(sid, enemy_id)
-##   sim.use_ability(sid, ability_id)   sim.abilities.cooldown_left(sid, ability_id) -> ticks (optional, default 0)
+##   sim.use_ability(sid, ability_id)   sim.abilities.ready_in(sid, ability_id) -> ticks
 
 signal forecast_requested()
 signal selection_changed(squad_id: int)
@@ -90,11 +90,8 @@ func squad_by_id(sid: int) -> Variant:
 
 
 func cooldown_left(sid: int, ability: String) -> int:
-	for holder in ["abilities", "squads"]:
-		var o: Variant = api.get(holder)
-		if o != null and o.has_method("cooldown_left"):
-			return int(o.cooldown_left(sid, ability))
-	return 0
+	var o: Variant = api.get("abilities")
+	return int(o.ready_in(sid, ability)) if o != null else 0
 
 
 func has_role(s: Variant, role: String) -> bool:
@@ -174,7 +171,7 @@ func free_inmates() -> Array:
 
 
 func _on_ability(ability: String) -> void:
-	if radial.squad_id >= 0 and api != null and api.has_method("use_ability"):
+	if radial.squad_id >= 0 and api != null:
 		api.use_ability(radial.squad_id, ability)
 
 

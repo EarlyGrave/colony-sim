@@ -28,6 +28,17 @@ func squad_of(colonist_id: int) -> Squad:
 	return null
 
 
+## Role data multiplier (`dmg_taken_mult` / `threat_mult`) of a squad member; 1.0 outside any squad.
+func role_mult(colonist_id: int, key: String) -> float:
+	if list.is_empty():
+		return 1.0
+	var sq := squad_of(colonist_id)
+	if sq == null:
+		return 1.0
+	var role := str(sq.role_of.get(colonist_id, ""))
+	return float(sim.defs.roles["roles"].get(role, {}).get(key, 1.0))
+
+
 func max_size() -> int:
 	return int(sim.defs.roles["max_size"])
 

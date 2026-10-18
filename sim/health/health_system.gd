@@ -26,6 +26,7 @@ func apply_damage(c: Colonist, amount: float, part := "", kind := "bite") -> Inj
 	if not c.alive or amount <= 0.0:
 		return null
 	amount *= maxf(0.0, 1.0 + sim.perks.mod(c, "damage_taken"))  # region perks
+	amount *= sim.squads.role_mult(c.id, "dmg_taken_mult")  # region C1: Bulwark takes less
 	if amount <= 0.0:
 		return null
 	var h := state_of(c)
