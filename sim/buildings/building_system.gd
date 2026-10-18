@@ -176,6 +176,9 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 	wear(b, float(b.def.get("wear_per_batch", 0.0)))
 	batch_operator = operator  # region perks
 	sim.bus.batch_refined.emit(b.id, b.recipe_id)
+	if operator != null:  # region F3
+		sim.colonists.rec(operator)["refined"] += 1
+		sim.colonists.record_changed(operator)
 	batch_operator = null
 	if not first_refine_done:
 		first_refine_done = true

@@ -13,6 +13,10 @@ var _next_id := 1
 
 func _init(p_sim: Simulation) -> void:
 	sim = p_sim
+	# region F3
+	sim.listen(sim.bus.wave_ended, _f3_wave_ended)
+	sim.listen(sim.bus.day_started, _f3_day)
+	# endregion
 
 
 func spawn(cell: Vector2i) -> Colonist:
@@ -75,3 +79,86 @@ func kill(c: Colonist) -> void:
 	c.alive = false
 	c.hidden = false
 	sim.bus.colonist_died.emit(c.id)
+
+
+# region F3
+## Ids of commendations already awarded this run (rebuilt by replay, not hashed).
+var commended: Array = []
+
+
+## Career counters live here, not on Colonist: golden part dumps serialise every
+## Colonist property. Plain Dictionaries (no new Object/script in the sim).
+var records: Dictionary = {}
+
+
+func rec(c: Colonist) -> Dictionary:
+	if not records.has(c.id):
+		records[c.id] = {"kills": {}, "ore_mined": 0, "refined": 0, "repairs": 0, "belts_repaired": 0, "downs": 0, "waves_survived": 0, "nick_stat": ""}
+	return records[c.id]
+
+
+func rec_stat(c: Colonist, name: String) -> int:
+	var r := rec(c)
+	if name == "kills":
+		var n := 0
+		for k: String in r["kills"]:
+			n += int(r["kills"][k])
+		return n
+	return int(r.get(name, 0))
+
+
+func add_kill(c: Colonist, species: String) -> void:
+	var k: Dictionary = rec(c)["kills"]
+	k[species] = int(k.get(species, 0)) + 1
+	record_changed(c)
+
+
+func record_changed(c: Colonist) -> void:
+	var r := rec(c)
+	if r["nick_stat"] != "":
+		return
+	var cfg: Dictionary = sim.defs.balance["flavor"]
+	for s: String in cfg["nick_order"]:
+		if rec_stat(c, s) >= int(cfg["nick_" + s]):
+			r["nick_stat"] = s
+			return
+
+
+func _f3_wave_ended(_i: int) -> void:
+	for c in list:
+		if c.alive:
+			rec(c)["waves_survived"] += 1
+			record_changed(c)
+
+
+func _f3_day(_d: int) -> void:
+	var cm: Dictionary = sim.defs.milestones.get("commendations", {})
+	for id: String in _f3_earned():
+		commended.append(id)
+		if not sim.replaying:
+			sim.bus.letter_received.emit(str(cm[id]["title"]), str(cm[id]["text"]))
+# endregion
+
+
+# region F3
+func colony_total(stat_name: String) -> int:
+	var n := 0
+	for c in list:
+		n += rec_stat(c, stat_name)
+	return n
+
+
+func _f3_earned() -> Array:
+	var out: Array = []
+	var defs: Dictionary = sim.defs.milestones.get("commendations", {})
+	var ids: Array = defs.keys()
+	ids.sort()
+	for id: String in ids:
+		var d: Dictionary = defs[id]
+		if commended.has(id) or colony_total(str(d["stat"])) < int(d["min"]):
+			continue
+		if d.has("max_other") and colony_total(str(d["other"])) > int(d["max_other"]):
+			continue
+		out.append(id)
+	return out
+# endregion

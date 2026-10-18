@@ -266,6 +266,8 @@ func _on_downed(c: Colonist) -> void:
 		sim.items.drop(c.cell, c.carry_item, c.carry_count, c.carry_quality)
 		c.carry_item = ""
 		c.carry_count = 0
+	sim.colonists.rec(c)["downs"] += 1  # region F3
+	sim.colonists.record_changed(c)
 	sim.bus.colonist_downed.emit(c.id)
 
 

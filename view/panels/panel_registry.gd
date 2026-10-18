@@ -44,6 +44,7 @@ const INSPECTOR_SECTIONS: Array = [
 	["mood", "res://view/panels/sections/mood_section.gd"],
 	["debt", "res://view/panels/sections/debt_section.gd"],
 	["mutation", "res://view/panels/sections/mutation_section.gd"],
+	["record", "res://view/panels/sections/record_section.gd"],  # region F3
 	# slot 6
 ]
 

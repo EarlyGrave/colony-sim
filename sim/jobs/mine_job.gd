@@ -44,6 +44,8 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		sim.ledger.record_produced(item, got, "mining")
 		sim.items.drop(c.cell, item, got)
 		sim.bus.item_mined.emit(target, item, got)
+		sim.colonists.rec(c)["ore_mined"] += got  # region F3
+		sim.colonists.record_changed(c)
 	return Status.DONE
 
 
