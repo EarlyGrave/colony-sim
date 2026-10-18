@@ -228,3 +228,12 @@ HP); волны заканчиваются по таймеру и твари о�
 - L1 belt nodes (basic/smart/priority splitter, merger), L2 commands + splitter UI, L3 power sim (nets, brownout, fuel, meltdown), L4 power view (wires, voxel models), L5 data (coal/nitrogen/uranium fuels, 6 buildings, vents/irradiated biomes, power_model), LX reconcile.
 - Coal on start map (extra_share 0.35), goldens regenerated on purpose. 682 tests green x2, web smoke PASS.
 - Open: splitter->merger rotation (first-come), power brownout balance (59% on one seed), solar 62.5% of a smelter.
+
+## Session 4 — Design batch B (design_review_s4 fixes)
+- B1 pacing: conveyance needs research (paid_start), T0/T1 bench x3, presets short 0.6/0.45, hard 1.15 (deaths 8 vs 0). Hand phase 6-7 d.
+- B2 pollution: idle decay (x8 with refine_cap), clean outposts/contract bonus. Throttle bot 57.9 -> 44.1% at d20; baseline 70.2 -> 67.3.
+- B3 Parole Reviews (debt 8%, 2 waves, debt 14%): 5/5 seeds get all 3 by d21. Rules Throttle + Evac HQ, Reviews sheet.
+- B4 hand_plate recipe (belt repairs now on every seed), Frontier Quota contract, siege tribute, Recall chip.
+- B5 wave report card, radial +3 machines, bulwark 0.40 (model -32% squad damage).
+- All flags on by default, goldens regenerated, 701 green x2, web smoke PASS.
+- Open: waves-repelled ramp across presets (waves paced by pollution); seed 3 planet_dead d21 in qa_r3; expedition bot play; throttle crop/mood reward.

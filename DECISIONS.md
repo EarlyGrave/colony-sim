@@ -239,3 +239,9 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 - splitting/electrification techs are tier 2 (T1 is free at start).
 - One solar covers 62.5% of a smelter (smelter power_use 40); revisit in balance pass.
 - Coal blobs: rolled once per ore blob, never within map.extra_min_distance=13 of start.
+
+## Design batch B (decided without owner, review)
+- Belts (conveyance) are the one paid start tech; drilling/smelting stay free.
+- Parole Review thresholds lowered to debt 8% / 2 waves / debt 14% (tier-3 review dropped: bots never reach it).
+- Evac HQ rule = a shelter below 50% hp is abandoned on alarm.
+- Clean-pollution raid multiplier left at 1.0 (0.8 shifted baseline too much).
