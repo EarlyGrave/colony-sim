@@ -89,20 +89,33 @@ func clear() -> void:
 
 ## aim_of: Callable(building_id) -> float. tint: day/contamination tint.
 func sync(sim: Simulation, aim_of: Callable, tint: Color) -> void:
-	var seen := {}
+	# region W2c: static buildings are only re-applied when tint / damage / cell changed;
+	# the removal pass runs only when the 3D node count and the live count disagree.
+	var live := 0
 	for b: Building in sim.buildings.list:
 		if not is_3d(b.def_id):
 			continue
-		seen[b.id] = true
+		live += 1
 		var d: Dictionary = _nodes.get(b.id, {})
 		if d.is_empty():
 			d = _create(b)
 			_nodes[b.id] = d
-		_update(sim, b, d, aim_of, tint)
-	for id: int in _nodes.keys():
-		if not seen.has(id):
-			(_nodes[id]["root"] as Node).queue_free()
-			_nodes.erase(id)
+		if d.has("model") or d["barrel"] != null or b.def_id == "door":
+			_update(sim, b, d, aim_of, tint)  # animated / aimed / proximity-driven: every frame
+			continue
+		var sig := [tint, damage_tint(b), b.cell]
+		if d.get("sig") != sig:
+			d["sig"] = sig
+			_update(sim, b, d, aim_of, tint)
+	if live != _nodes.size():
+		var seen := {}
+		for b: Building in sim.buildings.list:
+			seen[b.id] = true
+		for id: int in _nodes.keys():
+			if not seen.has(id):
+				(_nodes[id]["root"] as Node).queue_free()
+				_nodes.erase(id)
+	# endregion
 
 
 func _create(b: Building) -> Dictionary:

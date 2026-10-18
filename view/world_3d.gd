@@ -66,9 +66,10 @@ var _wall_keys := {}  # chunk index -> wall signature
 var block_rebuilds := 0  ## chunk block MultiMeshes rebuilt (perf counter)
 var view_rect := Rect2(-1e6, -1e6, 2e6, 2e6)  ## visible cells, refreshed per frame
 const CULL_MARGIN := 3.0  ## cells around the view where sprites stay alive
-var _units := {}  # "c<id>" / "e<id>" -> Sprite3D
+var _seen := {}  # region W2c: reused per-frame scratch
+var _units := {}  # int key (colonist id * 2, enemy id * 2 + 1) -> Sprite3D
 var _carry := {}  # colonist id -> Sprite3D
-var _facing := {}  # key -> [last_pos: Vector2, row: int, moving_until: float]
+var _facing := {}  # int key -> [last_pos: Vector2, row: int, moving_until: float]
 var _tex := {}
 var _time := 0.0
 var _tint := Color.WHITE
@@ -239,9 +240,11 @@ func _process(delta: float) -> void:
 	_g1c_update()  # region G1c
 	_buildings3d.sync(sim, _aim_of, _tint)  # region G1b
 	_a2c_update(delta)  # region A2c
-	var seen := {}
+	# region W2c
+	var seen := _seen
+	seen.clear()
 	for c: Colonist in sim.colonists.list:
-		var k := "c%d" % c.id
+		var k := c.id * 2
 		if not c.alive or c.hidden:
 			continue
 		seen[k] = true
@@ -250,20 +253,21 @@ func _process(delta: float) -> void:
 			continue
 		_update_colonist(k, c)
 	for e: Enemy in sim.threats.enemies:
-		var k := "e%d" % e.id
+		var k := e.id * 2 + 1
 		seen[k] = true
 		if not _in_view(e.visual_pos() + Vector2(0.5, 0.5)):
 			_cull(k)
 			continue
 		_update_enemy(k, e)
-	for k: String in _units.keys():
+	for k: int in _units.keys():
 		if not seen.has(k):
 			(_units[k] as Node).queue_free()
 			_units.erase(k)
 			_facing.erase(k)
 	for id: int in _carry.keys():
-		if not seen.has("c%d" % id):
+		if not seen.has(id * 2):
 			_carry.erase(id)
+	# endregion
 	if overlay:
 		overlay.queue_redraw()
 
@@ -291,12 +295,12 @@ func _update_tint() -> void:
 	_tint = t
 
 
-func _cull(k: String) -> void:
+func _cull(k: int) -> void:
 	if _units.has(k):
 		(_units[k] as Sprite3D).visible = false
 
 
-func _sprite(k: String) -> Sprite3D:
+func _sprite(k: int) -> Sprite3D:
 	if _units.has(k):
 		var u: Sprite3D = _units[k]
 		u.visible = true
@@ -314,7 +318,7 @@ func _sprite(k: String) -> Sprite3D:
 
 
 ## Facing row from movement on screen (camera always looks north).
-func _face(k: String, p: Vector2) -> Array:
+func _face(k: int, p: Vector2) -> Array:
 	var f: Array = _facing.get(k, [p, ROW_DOWN, 0.0])
 	var d: Vector2 = p - Vector2(f[0])
 	if d.length() > 0.0005:
@@ -328,7 +332,7 @@ func _face(k: String, p: Vector2) -> Array:
 	return f
 
 
-func _update_colonist(k: String, c: Colonist) -> void:
+func _update_colonist(k: int, c: Colonist) -> void:
 	var s := _sprite(k)
 	var name := "colonist"
 	if c.engineer:
@@ -364,7 +368,7 @@ func _update_colonist(k: String, c: Colonist) -> void:
 		(_carry[c.id] as Sprite3D).visible = false
 
 
-func _update_enemy(k: String, e: Enemy) -> void:
+func _update_enemy(k: int, e: Enemy) -> void:
 	var s := _sprite(k)
 	var p := e.visual_pos() + Vector2(0.5, 0.5)
 	var f := _face(k, p)
@@ -498,7 +502,7 @@ func _g1c_update() -> void:
 	marker.refresh(sim)
 	# One blob per unit, in one MultiMesh.
 	var spots: Array[Vector3] = []  # x, z, size
-	for k: String in _units:
+	for k: int in _units:
 		var s: Sprite3D = _units[k]
 		if not s.visible:
 			continue

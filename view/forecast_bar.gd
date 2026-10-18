@@ -44,9 +44,15 @@ static func tint(frac: float, ths: Array[float]) -> Color:
 	return Color(1.0, 0.8, 0.25).lerp(Color(1.0, 0.25, 0.2), 1.0 - m / 0.08)
 
 
+var _w2c_frac := -1.0  # region W2c: redraw only when the fraction changed
+
+
 func _process(_d: float) -> void:
-	if visible:
-		queue_redraw()
+	if visible and sim != null:
+		var f := sim.contamination.fraction()
+		if f != _w2c_frac:
+			_w2c_frac = f
+			queue_redraw()
 
 
 func _draw() -> void:
