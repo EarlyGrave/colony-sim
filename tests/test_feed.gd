@@ -49,7 +49,7 @@ func test_one_line_per_signal() -> void:
 	var cases: Array = [
 		["wave_started", [1, 1.0], false], ["wave_incoming", [Vector2i(1, 1), 10], false],
 		["crisis_started", ["x", "t"], false], ["research_completed", ["hand_tools"], false],
-		["map_switched", [1], false], ["outpost_lost", [1], false], ["day_started", [5], false],
+		["wave_repelled", [1], false], ["outpost_lost", [1], false], ["day_started", [5], false],
 		["colonist_died", [sim.colonists.list[0].id], false],
 		["colonist_downed", [sim.colonists.list[0].id], true], ["building_destroyed", [3], true],
 	]
@@ -147,3 +147,26 @@ func test_layout_phone() -> void:
 		hud.pa_banner.advance(10.0)
 		hud.pa_banner.advance(10.0)
 		hud.feed_ticker.advance(10.0)
+
+
+## FX: lines come from data/flavor.json, not a fallback.
+func test_lines_come_from_flavor_bank() -> void:
+	var r := _fresh()
+	var sim: Simulation = r[0]
+	var feed: FeedTicker = r[1]
+	var pa: PaBanner = r[2]
+	var bank := FlavorPicker.load_default()
+	sim.bus.wave_started.emit(1, 1.0)
+	assert_true(pa.current() in bank.lines_of(FlavorPicker.K_PA_WAVE_STARTED), pa.current())
+	sim.bus.building_destroyed.emit(3)
+	assert_true(feed.texts()[0] in bank.lines_of(FlavorPicker.K_FEED_BUILDING_DESTROYED), feed.texts()[0])
+	sim.bus.colonist_downed.emit(sim.colonists.list[0].id)
+	var pool := Array(bank.lines_of(FlavorPicker.K_FEED_COLONIST_DOWNED))
+	var hit := false
+	for t: String in feed.texts():
+		for l in pool:
+			if str(l).find("{") < 0 and str(l) == t:
+				hit = true
+		if t.find(sim.colonists.list[0].display_name) >= 0:
+			hit = true
+	assert_true(hit, "downed line from bank")

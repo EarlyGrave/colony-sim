@@ -1,6 +1,8 @@
 extends InspectorSection
 ## F3: inmate record card (rap sheet, nickname, career counters).
 
+var _bank: FlavorPicker = FlavorPicker.load_default()
+
 
 func _init() -> void:
 	title = "Record"
@@ -12,10 +14,10 @@ func applies(_sim: Simulation, target: Dictionary) -> bool:
 
 func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 	var c: Colonist = target["colonist"]
-	var nick := ColonistRecord.nickname(c, sim.colonists.rec(c), sim.defs.names)
+	var nick := ColonistRecord.nickname(c, sim.colonists.rec(c), sim.defs.names, _bank)
 	if nick != "":
 		add_line(box, "%s \"%s\"" % [c.display_name, nick], Color(1.0, 0.85, 0.4))
-	var rs := ColonistRecord.rap_sheet(c.id, sim.defs.names)
+	var rs := ColonistRecord.rap_sheet(c.id, sim.defs.names, _bank)
 	add_line(box, "Crime: " + str(rs["crime"]))
 	add_line(box, "Sentence: " + str(rs["sentence"]))
 	add_line(box, "Complaint: " + str(rs["complaint"]))

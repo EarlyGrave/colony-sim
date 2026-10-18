@@ -1,0 +1,11 @@
+# FX report: flavor integration
+- FeedDirector now uses FlavorPicker.load_default() + pick_first with K_* keys; local FALLBACK bank removed (only "..." for a missing key).
+- Feed: feed.<enemy>.<cause> -> feed.<enemy>.generic -> feed.generic; downed -> feed.colonist.downed; building -> feed.building.destroyed.
+- PA: pa.wave_started/incoming/repelled (new wave_repelled hook), crisis_started, research_completed, colonist_died, outpost_lost, quiet_day. map_switched PA dropped (no bank key, noisy); test updated.
+- BarkLayer uses barks.<state> via picker; record card rap sheet/nickname read the bank (lines_of, id-seeded, stable); nickname stats map to haul/refine keys.
+- F4 AUDITED label text now from splat.audited. Acid-hit splats not done (no bus signal).
+- PA banner label now word-wraps instead of ellipsis-truncating in the narrow phone band.
+- No new flavor.json keys were needed. Commendation letters stay in milestones.json (unchanged).
+- Test: test_feed::test_lines_come_from_flavor_bank (PA + feed lines are bank lines).
+- Sharded suite x2: 632 passed, 0 failed. Goldens untouched (view-only).
+- Screenshot: scratchpad/fx_all.png (tools/fx_shot.tscn).
