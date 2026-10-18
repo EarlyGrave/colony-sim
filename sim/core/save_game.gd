@@ -144,3 +144,97 @@ static func _opts_from(data: Dictionary) -> Dictionary:
 			o["crate"][item] = int(o["crate"][item])
 	return o
 # endregion
+
+
+# region R4d
+## Campaign saves (v3). Sim saves keep VERSION 2. Each map is replayed standalone to its own
+## tick (the v2 `_replay`); ledgers, in-flight cargo/parties and the campaign log are plain data.
+const CAMPAIGN_VERSION := 3
+const CAMPAIGN_SCRIPT := "res://sim/campaign/campaign.gd"
+
+
+## `c` is a Campaign (fields: maps, tick, active, campaign_seed, log, in_flight, ledgers, defs).
+static func campaign_to_dict(c: Object) -> Dictionary:
+	var maps: Array = []
+	for m: Dictionary in c.maps:
+		var sim: Simulation = m["sim"]
+		var d := to_dict(sim)
+		maps.append({"id": int(m["id"]), "biome": str(m.get("biome", "")), "kind": str(m.get("kind", "outpost")),
+			"seed": sim.seed_value, "opts": d["opts"], "sim_commands": d["commands"], "sim_tick": sim.tick,
+			"crew_n": int(m.get("crew_n", 0)), "dead_charged": int(m.get("dead_charged", 0)),
+			"sling_ready": int(m.get("sling_ready", 0))})
+	var ledgers: Dictionary = {}
+	for k: Variant in c.ledgers:
+		ledgers[str(k)] = c.ledgers[k]
+	return {"version": CAMPAIGN_VERSION, "campaign_seed": c.campaign_seed, "defs_hash": defs_hash(c.defs),
+		"tick": c.tick, "active": c.active, "log": c.log, "maps": maps, "ledgers": ledgers,
+		"in_flight": c.in_flight}
+
+
+static func campaign_to_json(c: Object) -> String:
+	return JSON.stringify(campaign_to_dict(c))
+
+
+## Returns {"ok", "error" ("corrupt"/"version"/"defs_changed"), "campaign"}. v2 (single-map) saves
+## give error "version". `campaign_script` defaults to W3's Campaign; it only needs the plain fields.
+static func campaign_from_dict(data: Dictionary, bus_factory: Callable, p_defs: Defs = null, campaign_script: Script = null) -> Dictionary:
+	var defs := p_defs if p_defs != null else Defs.get_default()
+	if not data.has("version"):
+		return {"ok": false, "error": "corrupt", "campaign": null}
+	if int(data["version"]) != CAMPAIGN_VERSION:
+		return {"ok": false, "error": "version", "campaign": null}
+	for k in ["campaign_seed", "defs_hash", "tick", "active", "maps", "ledgers", "in_flight", "log"]:
+		if not data.has(k):
+			return {"ok": false, "error": "corrupt", "campaign": null}
+	if int(data["defs_hash"]) != defs_hash(defs):
+		return {"ok": false, "error": "defs_changed", "campaign": null}
+	var script := campaign_script
+	if script == null and ResourceLoader.exists(CAMPAIGN_SCRIPT):
+		script = load(CAMPAIGN_SCRIPT)
+	if script == null:
+		return {"ok": false, "error": "corrupt", "campaign": null}
+	var c: Object = script.new(int(data["campaign_seed"]), bus_factory, defs)
+	var maps: Array = []
+	for md: Dictionary in data["maps"]:
+		var sim_data := {"version": VERSION, "seed": int(md["seed"]), "defs_hash": data["defs_hash"],
+			"tick": int(md["sim_tick"]), "commands": md["sim_commands"], "opts": _intify(md.get("opts", {}))}
+		var sim := _replay(sim_data, bus_factory.call(), defs, Callable())
+		maps.append({"id": int(md["id"]), "biome": str(md["biome"]), "kind": str(md["kind"]), "sim": sim,
+			"seed": int(md["seed"]), "opts": sim_data["opts"], "crew_n": int(md.get("crew_n", 0)),
+			"dead_charged": int(md.get("dead_charged", 0)), "sling_ready": int(md.get("sling_ready", 0))})
+	var ledgers: Dictionary = {}
+	for k: String in data["ledgers"]:
+		ledgers[int(k) if k.is_valid_int() else k] = _intify(data["ledgers"][k])
+	c.maps = maps
+	c.tick = int(data["tick"])
+	c.active = int(data["active"])
+	c.campaign_seed = int(data["campaign_seed"])
+	c.log = _intify(data["log"])
+	c.in_flight = _intify(data["in_flight"])
+	c.ledgers = ledgers
+	return {"ok": true, "error": "", "campaign": c}
+
+
+static func campaign_from_json(text: String, bus_factory: Callable, p_defs: Defs = null, campaign_script: Script = null) -> Dictionary:
+	var parser := JSON.new()
+	if parser.parse(text) != OK or not (parser.data is Dictionary):
+		return {"ok": false, "error": "corrupt", "campaign": null}
+	return campaign_from_dict(parser.data, bus_factory, p_defs, campaign_script)
+
+
+## JSON turns every number into a float; whole floats go back to int (recursive).
+static func _intify(v: Variant) -> Variant:
+	if v is float and v == floorf(v):
+		return int(v)
+	if v is Array:
+		var a: Array = []
+		for x: Variant in v:
+			a.append(_intify(x))
+		return a
+	if v is Dictionary:
+		var d: Dictionary = {}
+		for k: Variant in v:
+			d[k] = _intify(v[k])
+		return d
+	return v
+# endregion

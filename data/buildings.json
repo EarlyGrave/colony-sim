@@ -381,5 +381,21 @@
 		"threat_priority": 4,
 		"repair_cost": {"essence_ore": 8},
 		"decoy": {"burst_mult": 3.0, "burst_ticks": 600, "cooldown_ticks": 1800, "essence_item": "refined_essence", "essence_cost": 4}
+	},
+	"sling": {
+		"name": "Sling",
+		"size": [2, 2],
+		"color": "#6f8fa8",
+		"max_hp": 200,
+		"cost": {"essence_ore": 30},
+		"build_work": 100,
+		"buildable": true,
+		"threat_priority": 3,
+		"repair_cost": {"essence_ore": 10},
+		"capacity": 40,
+		"cooldown": 300,
+		"travel": 400,
+		"max_in_flight": 3,
+		"deliver_radius": 4
 	}
 }
