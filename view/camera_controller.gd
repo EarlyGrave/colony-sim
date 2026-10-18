@@ -19,12 +19,15 @@ const MAX_ZOOM := 3.0
 const PITCH_DEG := 52.0  ## angle above the ground plane
 const BASE_DISTANCE := 28.0  ## camera distance (cells) at zoom 1
 const FOV_DEG := 38.0
+const PAN_MARGIN := 2.0 * 32.0  ## world px the focus may leave the map by
+const INERTIA_DECAY := 6.0  ## 1/s exponential damping of fling velocity
+const INERTIA_MIN := 8.0  ## world px/s below which a fling stops
 
 var world_size := Vector2(2048, 2048)
 ## Ground point the camera looks at, in world pixels.
 var focus := Vector2.ZERO:
 	set(v):
-		focus = v.clamp(Vector2.ZERO, world_size)
+		focus = v.clamp(Vector2(-PAN_MARGIN, -PAN_MARGIN), world_size + Vector2(PAN_MARGIN, PAN_MARGIN))
 		_apply()
 var zoom_level := 1.0:
 	set(v):
@@ -37,6 +40,8 @@ var _pinch_mid := Vector2.ZERO
 var _mouse_down := false
 var _press_pos := Vector2.ZERO
 var _moved := false
+var _vel := Vector2.ZERO  ## fling velocity, world px/s
+var _drag_accum := Vector2.ZERO  ## focus change from dragging since last frame
 
 
 func _ready() -> void:
@@ -45,6 +50,26 @@ func _ready() -> void:
 	far = 400.0
 	current = true
 	_apply()
+
+
+func _process(delta: float) -> void:
+	step_inertia(delta, _mouse_down or _touches.size() > 0)
+
+
+## Smooth pan: while dragging, remember the speed; after release keep gliding.
+func step_inertia(delta: float, dragging: bool) -> void:
+	if delta <= 0.0:
+		return
+	if dragging:
+		_vel = _drag_accum / delta
+		_drag_accum = Vector2.ZERO
+		return
+	_drag_accum = Vector2.ZERO
+	if _vel.length() < INERTIA_MIN:
+		_vel = Vector2.ZERO
+		return
+	focus += _vel * delta
+	_vel *= exp(-INERTIA_DECAY * delta)
 
 
 func _apply() -> void:
@@ -89,6 +114,7 @@ func _on_mouse_button(event: InputEventMouseButton) -> void:
 				zoom_at(event.position, 1.0 / 1.15)
 		MOUSE_BUTTON_LEFT:
 			if event.pressed:
+				_vel = Vector2.ZERO
 				_mouse_down = true
 				_moved = _touches.size() >= 2
 				_press_pos = event.position
@@ -122,7 +148,9 @@ func _two_touches() -> Array[Vector2]:
 
 ## Drags the ground: the point under `from` ends up under `to`.
 func _pan_screen(from: Vector2, to: Vector2) -> void:
+	var before := focus
 	focus += screen_to_world(from) - screen_to_world(to)
+	_drag_accum += focus - before
 
 
 ## Zooms by `factor`, keeping the ground point under `screen_pos` fixed.
