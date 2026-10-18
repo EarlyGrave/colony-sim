@@ -2,6 +2,7 @@
 	"ticks_per_day": 600,
 	"automation": {"belt_ticks_per_cell": 5},
 	"map": {
+		"start_biome": "start",
 		"width": 64,
 		"height": 64,
 		"rock_clusters": 16,

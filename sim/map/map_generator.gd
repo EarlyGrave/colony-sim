@@ -12,6 +12,8 @@ static func generate(map: MapGrid, rng: RandomNumberGenerator, cfg: Dictionary) 
 
 	map.tiles.fill(MapGrid.Tile.GROUND)
 	map.deposit_amount.fill(0)
+	map.node_res.fill(0)  # region A1a
+	map.node_purity.fill(0)
 
 	# Rock clusters.
 	var rs: Array = cfg["rock_cluster_size"]
@@ -23,7 +25,8 @@ static func generate(map: MapGrid, rng: RandomNumberGenerator, cfg: Dictionary) 
 	# Essence deposits. The first cluster is placed near the start so the
 	# colony always has something to mine.
 	var ds: Array = cfg["deposit_cluster_size"]
-	var da: Array = cfg["deposit_amount"]
+	var biome := NodeData.biome(String(cfg.get("start_biome", "start")))  # region A1a
+	map.biome_id = String(cfg.get("start_biome", "start"))
 	var min_dist: int = int(cfg["min_deposit_distance"])
 	for i in int(cfg["deposit_clusters"]):
 		var start: Vector2i
@@ -35,10 +38,13 @@ static func generate(map: MapGrid, rng: RandomNumberGenerator, cfg: Dictionary) 
 			start = Vector2i(rng.randi_range(2, w - 3), rng.randi_range(2, h - 3))
 			if Vector2(start - center).length() < min_dist:
 				continue
+		var rid := _pick_resource(rng, biome)  # region A1a
 		for c in _blob(map, rng, start, rng.randi_range(int(ds[0]), int(ds[1]))):
 			var k := map.idx(c)
 			map.tiles[k] = MapGrid.Tile.DEPOSIT
-			map.deposit_amount[k] = rng.randi_range(int(da[0]), int(da[1]))
+			map.deposit_amount[k] = 0
+			map.node_res[k] = rid
+			map.node_purity[k] = _pick_purity(rng, biome)
 
 	# Clear the landing area.
 	for y in range(center.y - clear_r, center.y + clear_r + 1):
@@ -47,6 +53,8 @@ static func generate(map: MapGrid, rng: RandomNumberGenerator, cfg: Dictionary) 
 			if map.in_bounds(c) and Vector2(c - center).length() <= clear_r + 0.5:
 				map.tiles[map.idx(c)] = MapGrid.Tile.GROUND
 				map.deposit_amount[map.idx(c)] = 0
+				map.node_res[map.idx(c)] = 0  # region A1a
+				map.node_purity[map.idx(c)] = 0
 
 	_open_enclosed_pockets(map, center)
 
@@ -89,3 +97,34 @@ static func _open_enclosed_pockets(map: MapGrid, center: Vector2i) -> void:
 	for i in map.tiles.size():
 		if map.tiles[i] == MapGrid.Tile.GROUND and reach[i] == 0:
 			map.tiles[i] = MapGrid.Tile.ROCK
+
+
+# region A1a
+## Weighted pick over the biome's resources (sorted ids, deterministic). Returns a resource byte.
+static func _pick_resource(rng: RandomNumberGenerator, biome: Dictionary) -> int:
+	var w: Dictionary = biome.get("resources", {"essence_ore": 1})
+	var ids: Array = w.keys()
+	ids.sort()
+	var total := 0
+	for k in ids:
+		total += int(w[k])
+	var r := rng.randi_range(0, maxi(0, total - 1))
+	for k in ids:
+		r -= int(w[k])
+		if r < 0:
+			return NodeData.res_index(String(k))
+	return NodeData.res_index(String(ids[0]))
+
+
+static func _pick_purity(rng: RandomNumberGenerator, biome: Dictionary) -> int:
+	var w: Dictionary = biome.get("purity_weights", {"normal": 1})
+	var total := 0
+	for p in range(1, 4):
+		total += int(w.get(NodeData.PURITY_IDS[p], 0))
+	var r := rng.randi_range(0, maxi(0, total - 1))
+	for p in range(1, 4):
+		r -= int(w.get(NodeData.PURITY_IDS[p], 0))
+		if r < 0:
+			return p
+	return 2
+# endregion
