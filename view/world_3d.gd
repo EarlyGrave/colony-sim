@@ -83,6 +83,7 @@ func _ready() -> void:
 	_blocks.material_override = _block_mat
 	add_child(_ground)
 	add_child(_blocks)
+	_g1c_ready()  # region G1c
 
 
 func bind(p_sim: Simulation, map_tex: Texture2D) -> void:
@@ -99,6 +100,7 @@ func bind(p_sim: Simulation, map_tex: Texture2D) -> void:
 	_blocks_dirty = true
 	_g1d_bind()  # region G1d hook
 	sim.bus.tile_changed.connect(_on_tile_changed)
+	_g1c_bind()  # region G1c
 	if overlay and not overlay.draw.is_connected(_draw_overlay):
 		overlay.draw.connect(_draw_overlay)
 
@@ -172,6 +174,7 @@ func _process(delta: float) -> void:
 	if _blocks_dirty:
 		_rebuild_blocks()
 	_update_tint()
+	_g1c_update()  # region G1c
 	var seen := {}
 	for c: Colonist in sim.colonists.list:
 		var k := "c%d" % c.id
@@ -344,4 +347,105 @@ func _g1d_bind() -> void:
 		_g1d_fx = Effects3D.new()
 		add_child(_g1d_fx)
 	_g1d_fx.bind(sim)
+# endregion
+
+
+# region G1c atmosphere, shadows, selection ring, standing item piles
+const SHADOW_BLOB := "res://assets/sprites/shadow_blob.png"
+const MAX_PILES := 300  ## cap on standing item sprites
+const PILE_SIZE := 0.62  ## cells; a 16 px item sprite
+const PILE_TEX := {"essence_ore": "item_ore", "refined_essence": "item_refined", "waste": "item_waste",
+		"raw_food": "item_raw_food", "meal": "item_meal"}
+
+## Colonist id shown with the selection ring (set by GameController); -1 = none.
+var selected_colonist := -1:
+	set(v):
+		selected_colonist = v
+		if marker:
+			marker.select(v)
+
+var atmosphere: Atmosphere
+var marker: SelectionMarker
+var _shadows := MultiMeshInstance3D.new()
+var _piles_root := Node3D.new()
+var _piles: Array[Sprite3D] = []
+var _pile_frame := 0
+
+
+func _g1c_ready() -> void:
+	atmosphere = Atmosphere.new()
+	add_child(atmosphere)
+	marker = SelectionMarker.new()
+	add_child(marker)
+	var quad := PlaneMesh.new()
+	quad.size = Vector2.ONE
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = quad
+	_shadows.multimesh = mm
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_texture = load(SHADOW_BLOB)
+	m.disable_fog = true
+	_shadows.material_override = m
+	_shadows.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_shadows)
+	add_child(_piles_root)
+
+
+func _g1c_bind() -> void:
+	atmosphere.configure(Vector2(sim.map.width, sim.map.height))
+	selected_colonist = -1
+	marker.clear()
+	_pile_frame = 0
+
+
+func _g1c_update() -> void:
+	atmosphere.set_tint(_tint)
+	marker.refresh(sim)
+	# One blob per unit, in one MultiMesh.
+	var spots: Array[Vector3] = []  # x, z, size
+	for k: String in _units:
+		var s: Sprite3D = _units[k]
+		spots.append(Vector3(s.position.x, s.position.z, 1.5 if s.pixel_size > UNIT_PX * 1.2 else 0.95))
+	var mm := _shadows.multimesh
+	if mm.instance_count != spots.size():
+		mm.instance_count = spots.size()
+	for i in spots.size():
+		var sp := spots[i]
+		mm.set_instance_transform(i, Transform3D(Basis.from_scale(Vector3(sp.z, 1.0, sp.z * 0.7)), Vector3(sp.x, 0.03, sp.y - 0.02)))
+	_pile_frame += 1
+	if _pile_frame % 10 == 1:
+		_update_piles()
+
+
+## Upright item sprites for ground stacks, capped at MAX_PILES.
+func _update_piles() -> void:
+	var n := 0
+	for c: Vector2i in sim.items.stacks:
+		if n >= MAX_PILES:
+			break
+		var st: Dictionary = sim.items.stacks[c]
+		var cnt := int(st["count"])
+		var s: Sprite3D
+		if n < _piles.size():
+			s = _piles[n]
+		else:
+			s = Sprite3D.new()
+			s.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			s.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			s.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+			s.shaded = false
+			s.offset = Vector2(0, 5)
+			_piles_root.add_child(s)
+			_piles.append(s)
+		s.texture = _tex.get(PILE_TEX.get(st["item"], "item_ore"), _tex["item_ore"])
+		s.pixel_size = PILE_SIZE / 16.0 * (1.0 + 0.25 * float(int(cnt >= 15) + int(cnt >= 35)))
+		s.position = Vector3(c.x + 0.5, 0.0, c.y + 0.62)
+		s.modulate = _tint
+		s.visible = true
+		n += 1
+	for i in range(n, _piles.size()):
+		_piles[i].visible = false
 # endregion
