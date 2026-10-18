@@ -158,17 +158,17 @@ func _small_label(parent: Control, size: int) -> Label:
 ## [short text, color] for sleeping / eating / downed / drafted / break.
 func _state_of(c: Colonist) -> Array:
 	if c.health != null and c.health.downed:
-		return ["ЛЕЖ", Color(1.0, 0.4, 0.4)]
+		return ["DOWN", Color(1.0, 0.4, 0.4)]
 	if c.mood != null and c.mood.break_kind != "":
-		return ["СРЫВ", Color(1.0, 0.3, 0.3)]
+		return ["BRKD", Color(1.0, 0.3, 0.3)]
 	if c.combat != null and c.combat.drafted:
-		return ["БОЙ", Color(1.0, 0.8, 0.3)]
+		return ["FIGHT", Color(1.0, 0.8, 0.3)]
 	if c.job != null:
 		match c.job.type:
 			"sleep":
 				return ["ZZ", Color(0.6, 0.7, 1.0)]
 			"eat":
-				return ["ЕДА", Color(0.6, 1.0, 0.6)]
+				return ["FOOD", Color(0.6, 1.0, 0.6)]
 	return ["", Color.WHITE]
 
 
@@ -199,18 +199,18 @@ func _update_card(c: Colonist, w: Dictionary) -> void:
 	if has_debt:
 		if dst.pending_choice:
 			debt_l.text = "!"
-			debt_txt = "свободен!"
+			debt_txt = "free!"
 			debt_l.add_theme_color_override("font_color", Color(0.5, 0.95, 0.5))
 		else:
 			debt_l.text = "%d" % dst.remaining()
-			debt_txt = "долг %d" % dst.remaining()
+			debt_txt = "debt %d" % dst.remaining()
 			debt_l.add_theme_color_override("font_color", Color(0.9, 0.4, 0.3) if sim.debt.is_overdue(c) else Color(0.7, 0.6, 1.0))
 	var idle_col := Color(1.0, 0.75, 0.3)
 	if c.hidden:
-		job_l.text = "в укрытии"
+		job_l.text = "in cover"
 		job_l.add_theme_color_override("font_color", Color(0.7, 0.8, 1.0))
 	elif c.job == null:
-		job_l.text = "без дела"
+		job_l.text = "idle"
 		job_l.add_theme_color_override("font_color", idle_col)
 	else:
 		job_l.text = c.job.describe()

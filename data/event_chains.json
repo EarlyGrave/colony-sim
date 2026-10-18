@@ -1,16 +1,16 @@
 {
 	"random_enabled": true,
 	"chance": 0.3,
-	"first_kill_hint": "Разделывая тварь, колонисты нашли у неё под кожей тюремную бирку. Номер знакомый — такие выдают здесь.",
+	"first_kill_hint": "Butchering a creature, the colonists found a prison tag under its skin. The number looks familiar - they issue those here.",
 	"inspection_quota_default": 8,
 	"complication": {
 		"min_wave": 3,
 		"chance": 0.4,
 		"kinds": ["breakdown", "sick", "cave_in"],
 		"texts": {
-			"breakdown": "Набег сопровождается сбоем: {target} выходит из строя.",
-			"sick": "В суматохе {target} подхватил лихорадку.",
-			"cave_in": "Тварей сопровождает подземный толчок: часть месторождения обрушилась."
+			"breakdown": "The raid brings a malfunction: {target} goes down.",
+			"sick": "In the chaos {target} caught a fever.",
+			"cave_in": "A tremor accompanies the creatures: part of the deposit collapsed."
 		},
 		"sick_ticks": 360,
 		"wear": 1000.0,
@@ -21,41 +21,41 @@
 			"branches": [
 				{
 					"if": {"essence_ok": true},
-					"text": "Инспектор пересчитал эссенцию, поморщился и выдал паёк «за образцовое содержание». Камеры, разумеется, всё записали.",
+					"text": "The inspector recounted the essence, winced, and issued rations \"for exemplary upkeep\". The cameras recorded everything, of course.",
 					"effects": [{"op": "supplies", "items": {"meal": 6}}, {"op": "anger", "amount": -0.5}, {"op": "thought", "who": "all", "id": "inspection_praise"}]
 				},
 				{
-					"text": "Инспекция нашла на складе недостачу. Штраф, санкции и очень вежливая угроза.",
+					"text": "The inspection found a shortfall in the stockpile. A fine, sanctions and a very polite threat.",
 					"effects": [{"op": "anger", "amount": 1.0}, {"op": "raid_mult", "mult": 1.25}, {"op": "despair", "amount": 6.0}]
 				}
 			]
 		},
 		"rumors_fade": {
-			"text": "Слухи о побеге затихли: выяснилось, что «выход» — это люк в мусоросборник.",
+			"text": "The escape rumors died down: the \"way out\" turned out to be a hatch into the trash compactor.",
 			"effects": [{"op": "despair", "amount": 6.0}]
 		},
 		"smuggler_offer": {
 			"choice": {
-				"text": "Контрабандисты предлагают провиант и детали за 5 очищенной эссенции. Охрана такое не любит.",
-				"yes_label": "Продать", "no_label": "Отказать",
+				"text": "Smugglers offer provisions and parts for 5 refined essence. The guards don't like that sort of thing.",
+				"yes_label": "Sell", "no_label": "Decline",
 				"yes": {
 					"requires_essence": 5,
-					"text": "Сделка состоялась. Груз сброшен у капсулы; надзиратели что-то заподозрили.",
+					"text": "Deal done. The cargo was dropped near the pod; the wardens suspect something.",
 					"effects": [{"op": "take_essence", "n": 5}, {"op": "supplies", "items": {"meal": 5, "machine_parts": 2}}, {"op": "anger", "amount": 0.7}],
-					"fail_text": "Контрабандисты ждали эссенцию, а нашли пустой склад. Ушли обиженными."
+					"fail_text": "The smugglers came for essence and found an empty stockpile. They left offended."
 				},
-				"no": {"text": "Вы промолчали в эфире. Контрабандисты не обиделись, надзиратели ничего не узнали."}
+				"no": {"text": "You stayed silent on the air. The smugglers took no offense; the wardens learned nothing."}
 			}
 		},
 		"decree_effect": {
 			"branches": [
 				{
 					"if": {"has_debtors": true, "roll": 0.4},
-					"text": "Указ об амнистии: долг одного из заключённых урезан «по гуманным соображениям».",
+					"text": "Amnesty decree: one prisoner's debt is cut \"on humanitarian grounds\".",
 					"effects": [{"op": "forgive", "amount": 8}]
 				},
 				{
-					"text": "Указ: нормы повышены на четверть. Метрополия напоминает, что труд освобождает.",
+					"text": "Decree: quotas raised by a quarter. The Metropole reminds you that labor sets you free.",
 					"effects": [{"op": "quota_up", "mult": 1.25}]
 				}
 			]

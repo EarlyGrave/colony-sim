@@ -1,20 +1,20 @@
 {
 	"swarm": {
-		"name": "Рой", "min_points": 0.0, "weight": 5.0, "spawn": "edge", "retreat_fraction": 0.75,
+		"name": "Swarm", "min_points": 0.0, "weight": 5.0, "spawn": "edge", "retreat_fraction": 0.75,
 		"units": [{"enemy": "crawler", "weight": 1.0}]
 	},
 	"brute_pack": {
-		"name": "Стая громил", "min_points": 8.0, "weight": 3.0, "spawn": "edge", "retreat_fraction": 0.5,
+		"name": "Brute Pack", "min_points": 8.0, "weight": 3.0, "spawn": "edge", "retreat_fraction": 0.5,
 		"units": [{"enemy": "brute", "weight": 3.0}, {"enemy": "crawler", "weight": 1.0}]
 	},
 	"spitters": {
-		"name": "Плевуны", "min_points": 4.0, "weight": 3.0, "spawn": "edge", "retreat_fraction": 0.7,
+		"name": "Spitters", "min_points": 4.0, "weight": 3.0, "spawn": "edge", "retreat_fraction": 0.7,
 		"units": [{"enemy": "spitter", "weight": 3.0}, {"enemy": "crawler", "weight": 1.0}]
 	},
 	"burrowers": {
-		"name": "Землерои", "min_points": 3.5, "weight": 3.0, "spawn": "drop", "retreat_fraction": 0.7,
+		"name": "Burrowers", "min_points": 3.5, "weight": 3.0, "spawn": "drop", "retreat_fraction": 0.7,
 		"tremor_ticks": 60, "drop_scatter": 2,
-		"warning_text": "Земля дрожит! Что-то роется под колонией...",
+		"warning_text": "The ground shakes! Something is burrowing beneath the colony...",
 		"units": [{"enemy": "burrower", "weight": 1.0}]
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"hq": {
-		"name": "Капсула",
+		"name": "Pod",
 		"size": [
 			2,
 			2
@@ -15,7 +15,7 @@
 		"threat_priority": 2
 	},
 	"refinery": {
-		"name": "Установка",
+		"name": "Refinery",
 		"size": [
 			2,
 			2
@@ -34,7 +34,7 @@
 		"threat_priority": 3
 	},
 	"workbench": {
-		"name": "Верстак",
+		"name": "Workbench",
 		"size": [
 			2,
 			1
@@ -51,7 +51,7 @@
 		"threat_priority": 3
 	},
 	"turret": {
-		"name": "Турель",
+		"name": "Turret",
 		"size": [
 			1,
 			1
@@ -72,7 +72,7 @@
 		"threat_priority": 1
 	},
 	"wall": {
-		"name": "Стена",
+		"name": "Wall",
 		"size": [
 			1,
 			1
@@ -89,7 +89,7 @@
 		"threat_priority": 0
 	},
 	"door": {
-		"name": "Дверь",
+		"name": "Door",
 		"size": [
 			1,
 			1
@@ -104,7 +104,7 @@
 		"threat_priority": 0.5
 	},
 	"stove": {
-		"name": "Печь",
+		"name": "Stove",
 		"size": [
 			1,
 			1
@@ -121,7 +121,7 @@
 		"output_capacity": 6
 	},
 	"bed": {
-		"name": "Кровать",
+		"name": "Bunk",
 		"size": [
 			1,
 			1
@@ -135,7 +135,7 @@
 		"bed": true
 	},
 	"training_dummy": {
-		"name": "Тренировочный манекен",
+		"name": "Training Dummy",
 		"size": [
 			1,
 			1

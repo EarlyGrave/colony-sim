@@ -3,11 +3,11 @@
 	"tracked": ["machine_parts"],
 	"skill": "crafting",
 	"levels": [
-		{"id": "poor", "name": "Плохое", "mult": 0.6},
-		{"id": "normal", "name": "Обычное", "mult": 1.0},
-		{"id": "good", "name": "Хорошее", "mult": 1.3},
-		{"id": "excellent", "name": "Отличное", "mult": 1.7},
-		{"id": "masterwork", "name": "Шедевр", "mult": 2.5}
+		{"id": "poor", "name": "Poor", "mult": 0.6},
+		{"id": "normal", "name": "Standard", "mult": 1.0},
+		{"id": "good", "name": "Good", "mult": 1.3},
+		{"id": "excellent", "name": "Excellent", "mult": 1.7},
+		{"id": "masterwork", "name": "Masterwork", "mult": 2.5}
 	],
 	"thresholds": [0.2, 0.7, 0.95, 1.2],
 	"base": 0.5,

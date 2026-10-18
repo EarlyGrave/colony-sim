@@ -58,5 +58,5 @@ func test_signal_fires_once_per_wave_before_start() -> void:
 func test_side_name() -> void:
 	var sim := _sim()
 	var c := sim.map_center()
-	assert_eq(sim.threats.side_name(Vector2i(c.x, 0)), "севера")
-	assert_eq(sim.threats.side_name(Vector2i(sim.map.width - 1, c.y)), "востока")
+	assert_eq(sim.threats.side_name(Vector2i(c.x, 0)), "north")
+	assert_eq(sim.threats.side_name(Vector2i(sim.map.width - 1, c.y)), "east")

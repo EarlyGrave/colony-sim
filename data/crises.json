@@ -6,21 +6,21 @@
 	},
 	"crises": {
 		"siege": {
-			"name": "Осада",
+			"name": "Siege",
 			"threshold": 0.5,
 			"timeout_ticks": 1200,
 			"default_option": "endure",
-			"text": "Планета заражена наполовину. Твари чуют гниль и стягиваются к колонии. Что делать?",
+			"text": "The planet is half poisoned. The creatures smell the rot and converge on the colony. What now?",
 			"options": {
 				"endure": {
-					"label": "Держать оборону",
-					"text": "Налёты станут чаще и сильнее на несколько дней.",
+					"label": "Hold the line",
+					"text": "Raids grow more frequent and stronger for a few days.",
 					"duration_days": 4.0,
 					"mods": {"raid_points_mult": 1.4, "raid_interval_mult": 0.7}
 				},
 				"appease": {
-					"label": "Откупиться эссенцией",
-					"text": "Надзиратели берут очищенную эссенцию и сдерживают планету: заражение падает, налёты откладываются.",
+					"label": "Pay off with essence",
+					"text": "The wardens take refined essence and hold the planet back: taint drops and raids are delayed.",
 					"cost": {"refined_essence": 10},
 					"contamination_delta": -6.0,
 					"delay_wave_days": 1.5
@@ -28,40 +28,40 @@
 			}
 		},
 		"dead_lands": {
-			"name": "Мёртвые земли",
+			"name": "Dead Lands",
 			"threshold": 0.75,
 			"timeout_ticks": 1200,
 			"default_option": "evacuate",
-			"text": "Края карты стали ядовитыми. Колонисты вне безопасной зоны заболевают.",
+			"text": "The map edges have turned toxic. Colonists outside the safe zone fall ill.",
 			"options": {
 				"evacuate": {
-					"label": "Эвакуировать склад",
-					"text": "Треть руды и отходов со склада потеряна, зато границы остаются безопасными.",
+					"label": "Evacuate the stockpile",
+					"text": "A third of the stockpiled ore and waste is lost, but the borders stay safe.",
 					"lose_fraction": {"essence_ore": 0.33, "waste": 0.33}
 				},
 				"endure": {
-					"label": "Терпеть яд",
-					"text": "Окраины карты ядовиты до конца игры: любой, кто там окажется, заболеет.",
+					"label": "Endure the poison",
+					"text": "The map outskirts stay toxic for the rest of the game: anyone who goes there falls ill.",
 					"toxic_edge_depth": 5
 				}
 			}
 		},
 		"last_stand": {
-			"name": "Последний рубеж",
+			"name": "Last Stand",
 			"threshold": 0.9,
 			"timeout_ticks": 1200,
 			"default_option": "halt",
-			"text": "Планета при смерти. Остановить переработку или выжать из неё всё до конца?",
+			"text": "The planet is dying. Halt refining, or squeeze out everything it has left?",
 			"options": {
 				"halt": {
-					"label": "Остановить переработку",
-					"text": "Очистка заблокирована на несколько дней.",
+					"label": "Halt refining",
+					"text": "Refining is locked for a few days.",
 					"duration_days": 3.0,
 					"mods": {"refine_lock": 1.0}
 				},
 				"overdrive": {
-					"label": "Форсаж",
-					"text": "Вдвое больше эссенции с партии, но заражение растёт втрое быстрее.",
+					"label": "Overdrive",
+					"text": "Double the essence per batch, but taint grows three times faster.",
 					"mods": {"refine_output_mult": 2.0, "refine_contam_mult": 3.0}
 				}
 			}

@@ -36,4 +36,4 @@ func on_end(c: Colonist, _sim: Simulation) -> void:
 
 
 func describe() -> String:
-	return "Срыв: бродит" if kind == "wander" else "Срыв: саботаж"
+	return "Breakdown: wandering" if kind == "wander" else "Breakdown: sabotage"

@@ -118,7 +118,7 @@ func _update_timers() -> void:
 		for p in sim.crises.pending:
 			if p["id"] == t[1]:
 				var left := maxi(0, int(p["expires"]) - sim.tick)
-				(t[0] as Label).text = "Решение через %.1f ч (иначе — по умолчанию)" % (left * 24.0 / sim.ticks_per_day)
+				(t[0] as Label).text = "Decide in %.1f h (otherwise default)" % (left * 24.0 / sim.ticks_per_day)
 
 
 func _rebuild() -> void:
@@ -128,12 +128,12 @@ func _rebuild() -> void:
 	_timers.clear()
 	var vp := get_viewport_rect().size
 	var width := minf(760.0, vp.x - 40.0)
-	_strip.text = "Нужен ответ: %d (нажми)" % pending_count()
+	_strip.text = "Answer needed: %d (tap)" % pending_count()
 	_strip.add_theme_color_override("font_color", Color(1.0, 0.6, 0.5))
 	if collapsed:
 		return
 	_hide_btn = Button.new()
-	_hide_btn.text = "Скрыть"
+	_hide_btn.text = "Hide"
 	_hide_btn.custom_minimum_size = Vector2(130, 56)
 	_hide_btn.focus_mode = Control.FOCUS_NONE
 	_hide_btn.pressed.connect(func() -> void:
@@ -158,7 +158,7 @@ func _fit() -> void:
 func _crisis_card(id: String, width: float) -> void:
 	var c: Dictionary = sim.defs.crises["crises"][id]
 	var head := Label.new()
-	head.text = "КРИЗИС: %s (%d%% заражения)" % [c["name"], roundi(float(c["threshold"]) * 100.0)]
+	head.text = "CRISIS: %s (%d%% taint)" % [c["name"], roundi(float(c["threshold"]) * 100.0)]
 	head.add_theme_font_size_override("font_size", 18 if _small() else 26)
 	head.add_theme_color_override("font_color", Color(1.0, 0.45, 0.35))
 	_add_head(head)
@@ -200,22 +200,22 @@ func _crisis_card(id: String, width: float) -> void:
 func _payoff_card(cid: int, width: float) -> void:
 	var c := sim.colonists.get_by_id(cid)
 	var head := Label.new()
-	head.text = "%s выплатил долг" % c.display_name
+	head.text = "%s paid off the debt" % c.display_name
 	head.add_theme_font_size_override("font_size", 24)
 	head.add_theme_color_override("font_color", Color(0.5, 0.95, 0.5))
 	_add_head(head)
-	_wrapped(_box, "Остаться вольным колонистом или покинуть планету?", width)
+	_wrapped(_box, "Stay on as a free colonist or leave the planet?", width)
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 10)
 	_box.add_child(row)
-	var stay := _button(row, "Остаться", Vector2(200, 64))
+	var stay := _button(row, "Stay", Vector2(200, 64))
 	stay.pressed.connect(func() -> void: sim.choose_payoff(cid, true))
-	var leave := _button(row, "Покинуть планету", Vector2(240, 64))
+	var leave := _button(row, "Leave the planet", Vector2(240, 64))
 	leave.pressed.connect(func() -> void: sim.choose_payoff(cid, false))
 	_box.add_child(HSeparator.new())
 
 
-## First card header shares its row with the "Скрыть" button.
+## First card header shares its row with the "Hide" button.
 func _add_head(head: Label) -> void:
 	if _hide_btn != null and _hide_btn.get_parent() == null:
 		var row := HBoxContainer.new()

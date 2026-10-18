@@ -1,6 +1,6 @@
 {
 	"refine_essence": {
-		"name": "Очистка эссенции",
+		"name": "Essence Refining",
 		"inputs": {
 			"essence_ore": 10
 		},
@@ -15,7 +15,7 @@
 		]
 	},
 	"machine_parts": {
-		"name": "Детали механизмов",
+		"name": "Machine Parts",
 		"inputs": {
 			"refined_essence": 2,
 			"essence_ore": 3
@@ -29,7 +29,7 @@
 		]
 	},
 	"cook_meal": {
-		"name": "Готовка похлёбки",
+		"name": "Cooking Stew",
 		"inputs": {
 			"raw_food": 2
 		},
@@ -39,7 +39,7 @@
 		"work_ticks": 60
 	},
 	"essence_rounds": {
-		"name": "Патроны",
+		"name": "Ammo",
 		"inputs": {
 			"refined_essence": 1,
 			"essence_ore": 2

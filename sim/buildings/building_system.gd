@@ -39,23 +39,23 @@ func occupied(c: Vector2i) -> bool:
 ## Empty string if `def_id` can be placed at `c`, otherwise the reason.
 func placement_error(def_id: String, c: Vector2i, check_cost := true) -> String:
 	if not sim.defs.buildings.has(def_id):
-		return "Неизвестная постройка"
+		return "Unknown building"
 	var def: Dictionary = sim.defs.buildings[def_id]
 	for y in int(def["size"][1]):
 		for x in int(def["size"][0]):
 			var p := c + Vector2i(x, y)
 			if not sim.map.is_passable(p):
-				return "Мешает рельеф"
+				return "Terrain in the way"
 			if occupancy.has(p) or bp_occupancy.has(p):
-				return "Место занято"
+				return "Spot occupied"
 			if sim.items.stacks.has(p):
-				return "Мешают предметы"
+				return "Items in the way"
 			if sim.map.get_zone(p) != "":
-				return "Мешает зона"
+				return "Zone in the way"
 	if check_cost:
 		for item in def["cost"]:
 			if sim.items.count_stored(item) < int(def["cost"][item]):
-				return "Не хватает: " + sim.defs.items[item]["name"]
+				return "Missing: " + sim.defs.items[item]["name"]
 	return ""
 
 

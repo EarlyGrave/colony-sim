@@ -4,7 +4,7 @@
 	"max_priority": 4,
 	"types": {
 		"doctoring": {
-			"label": "Лечение",
+			"label": "Medical",
 			"skill": "medicine",
 			"givers": [
 				"rescue",
@@ -13,21 +13,21 @@
 			]
 		},
 		"repair": {
-			"label": "Ремонт",
+			"label": "Repair",
 			"skill": "construction",
 			"givers": [
 				"repair"
 			]
 		},
 		"operating": {
-			"label": "Установки",
+			"label": "Machinery",
 			"skill": "operating",
 			"givers": [
 				"operate"
 			]
 		},
 		"hauling": {
-			"label": "Перенос",
+			"label": "Hauling",
 			"skill": "",
 			"givers": [
 				"deliver_materials",
@@ -36,14 +36,14 @@
 			]
 		},
 		"cooking": {
-			"label": "Кухня",
+			"label": "Kitchen",
 			"skill": "crafting",
 			"givers": [
 				"cook"
 			]
 		},
 		"growing": {
-			"label": "Посевы",
+			"label": "Farming",
 			"skill": "plants",
 			"givers": [
 				"sow",
@@ -51,26 +51,26 @@
 			]
 		},
 		"mining": {
-			"label": "Добыча",
+			"label": "Mining",
 			"skill": "mining",
 			"givers": [
 				"mine"
 			]
 		},
 		"construction": {
-			"label": "Стройка",
+			"label": "Construction",
 			"skill": "construction",
 			"givers": [
 				"build"
 			]
 		},
 		"crafting": {
-			"label": "Ремесло",
+			"label": "Crafting",
 			"skill": "crafting",
 			"givers": []
 		},
 		"cleanup": {
-			"label": "Уборка",
+			"label": "Cleaning",
 			"skill": "",
 			"default_priority": 4,
 			"givers": [
@@ -78,7 +78,7 @@
 			]
 		},
 		"patrol": {
-			"label": "Патруль",
+			"label": "Patrol",
 			"skill": "",
 			"default_priority": 4,
 			"givers": [
@@ -86,7 +86,7 @@
 			]
 		},
 		"training": {
-			"label": "Тренировка",
+			"label": "Training",
 			"skill": "",
 			"default_priority": 4,
 			"givers": [

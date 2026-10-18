@@ -24,4 +24,4 @@ func tick(c: Colonist, sim: Simulation) -> int:
 
 
 func describe() -> String:
-	return "Ранен, отступает"
+	return "Wounded, falling back"

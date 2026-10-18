@@ -7,13 +7,13 @@ const MAX_TICKS_PER_FRAME := 40
 const RECT_TOOLS := ["mine", "stockpile", "waste_dump", "clear_zone", "growing"]
 const BUILD_TOOLS := ["refinery", "turret", "wall", "door", "workbench", "stove", "bed", "training_dummy"]
 const HINTS := {
-	"inspect": "Нажми на клетку, чтобы посмотреть, что там.",
-	"mine": "Добыча: нажми два угла области с рудой (фиолетовое).",
-	"stockpile": "Склад: нажми два угла области.",
-	"waste_dump": "Свалка отходов: нажми два угла области. Отходы там заражают слабее.",
-	"growing": "Грядки: нажми два угла области. Колонисты посеют и соберут клубни.",
-	"patrol": "Патруль: нажимай клетки маршрута по порядку, затем «Готово». «Авто» — кольцо вокруг базы.",
-	"clear_zone": "Убрать зону: нажми два угла области.",
+	"inspect": "Tap a cell to see what is there.",
+	"mine": "Mine: tap two corners around the ore (purple).",
+	"stockpile": "Stockpile: tap two corners of the area.",
+	"waste_dump": "Waste dump: tap two corners of the area. Waste there taints less.",
+	"growing": "Crops: tap two corners of the area. Colonists will sow and harvest tubers.",
+	"patrol": "Patrol: tap route cells in order, then \"Done\". \"Auto\" makes a ring around the base.",
+	"clear_zone": "Clear zone: tap two corners of the area.",
 }
 
 var sim: Simulation
@@ -39,7 +39,7 @@ func _ready() -> void:
 	hud.alarm_toggled.connect(func(on: bool) -> void: sim.set_alarm(on))
 	hud.rule_toggled.connect(func(id: String, on: bool) -> void:
 		sim.set_rule(id, on)
-		hud.show_message(("Правило включено: " if on else "Правило выключено: ") + str(sim.defs.rules[id]["name"]), 4.0))
+		hud.show_message(("Rule enabled: " if on else "Rule disabled: ") + str(sim.defs.rules[id]["name"]), 4.0))
 	hud.new_game_requested.connect(func() -> void: new_game(_random_seed()))
 	hud.colonist_card_pressed.connect(_select_colonist)
 	hud.overlay_toggled.connect(func(on: bool) -> void: world.show_field = on)  # region batch3 ui
@@ -49,13 +49,13 @@ func _ready() -> void:
 	hud.patrol_auto.connect(func() -> void:
 		world.patrol_draft.clear()
 		sim.set_patrol_route([])
-		hud.show_message("Патруль: автоматический маршрут.", 3.0))
+		hud.show_message("Patrol: automatic route.", 3.0))
 	hud.patrol_done.connect(func() -> void:
 		if world.patrol_draft.is_empty():
-			hud.show_message("Сначала отметь точки маршрута.", 3.0)
+			hud.show_message("Mark route points first.", 3.0)
 			return
 		sim.set_patrol_route(world.patrol_draft)
-		hud.show_message("Маршрут патруля сохранён: %d точек." % world.patrol_draft.size(), 3.0)
+		hud.show_message("Patrol route saved: %d waypoints." % world.patrol_draft.size(), 3.0)
 		world.patrol_draft.clear())
 	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
 		camera.focus = WorldView.cell_to_world(cell))
@@ -151,7 +151,7 @@ func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	camera.zoom_level = 1.0
 	_accum = 0.0
 	set_speed(1)
-	hud.show_message("Сид %d. Отметь руду инструментом «Добыча» — колонисты начнут копать." % seed_value, 8.0)
+	hud.show_message("Seed %d. Mark ore with the Mine tool - the colonists will start digging." % seed_value, 8.0)
 
 
 func set_speed(s: int) -> void:
@@ -188,7 +188,7 @@ func _on_tool_selected(t: String) -> void:
 		var cost: Array[String] = []
 		for item in def["cost"]:
 			cost.append("%s ×%d" % [str(sim.defs.items[item]["name"]).to_lower(), def["cost"][item]])
-		hud.show_message("%s (%s): нажми, где поставить (%d×%d)." % [def["name"], ", ".join(cost), def["size"][0], def["size"][1]], 5.0)
+		hud.show_message("%s (%s): tap where to place it (%d×%d)." % [def["name"], ", ".join(cost), def["size"][0], def["size"][1]], 5.0)
 	else:
 		hud.show_message(HINTS.get(t, ""), 5.0)
 
@@ -204,7 +204,7 @@ func _on_tapped(world_pos: Vector2) -> void:
 	if tool in RECT_TOOLS:
 		if world.pending_corner.x < 0:
 			world.pending_corner = cell
-			hud.show_message("Теперь нажми второй угол.", 4.0)
+			hud.show_message("Now tap the second corner.", 4.0)
 		else:
 			_apply_rect(Rect2i(world.pending_corner, Vector2i.ONE).expand(cell + Vector2i.ONE))
 			world.pending_corner = Vector2i(-1, -1)
@@ -212,20 +212,20 @@ func _on_tapped(world_pos: Vector2) -> void:
 		var err := sim.can_place_building(tool, cell)
 		if err == "":
 			sim.place_building(tool, cell)
-			hud.show_message("Заложено: " + str(sim.defs.buildings[tool]["name"]) + " (нужны материалы и стройка)", 3.0)
+			hud.show_message("Planned: " + str(sim.defs.buildings[tool]["name"]) + " (needs materials and construction)", 3.0)
 		else:
 			hud.show_message(err, 3.0)
 	elif tool == "patrol":
 		if sim.map.is_passable(cell):
 			world.patrol_draft.append(cell)
-			hud.show_message("Точка %d. «Готово», когда хватит." % world.patrol_draft.size(), 2.0)
+			hud.show_message("Waypoint %d. Tap \"Done\" when enough." % world.patrol_draft.size(), 2.0)
 		else:
-			hud.show_message("Сюда не пройти.", 2.0)
+			hud.show_message("Cannot reach there.", 2.0)
 	elif tool == "deconstruct":
 		if sim.deconstruct(cell):
-			hud.show_message("Снесено / план отменён", 3.0)
+			hud.show_message("Demolished / plan cancelled", 3.0)
 		else:
-			hud.show_message("Здесь нечего сносить", 3.0)
+			hud.show_message("Nothing to demolish here", 3.0)
 	else:
 		_inspect(world_pos, cell)
 
@@ -242,7 +242,7 @@ func _apply_rect(r: Rect2i) -> void:
 					if sim.map.is_deposit(c):
 						sim.designate_mine(c, on)
 						count += 1
-			hud.show_message(("Отмечено под добычу: %d" if on else "Снята отметка: %d") % count, 3.0)
+			hud.show_message(("Marked for mining: %d" if on else "Mark removed: %d") % count, 3.0)
 		"clear_zone":
 			for y in range(r.position.y, r.end.y):
 				for x in range(r.position.x, r.end.x):
@@ -252,7 +252,7 @@ func _apply_rect(r: Rect2i) -> void:
 				for x in range(r.position.x, r.end.x):
 					if sim.set_zone(Vector2i(x, y), tool):
 						count += 1
-			hud.show_message("%s: %d клеток" % [sim.defs.zones[tool]["name"], count], 3.0)
+			hud.show_message("%s: %d cells" % [sim.defs.zones[tool]["name"], count], 3.0)
 
 
 ## Inspect tool: colonist under the tap, else building, else the bare cell.
@@ -305,12 +305,12 @@ func load_game() -> void:
 		return
 	var text := SaveStore.read_text()
 	if text == "":
-		hud.show_message("Нет сохранения.", 3.0)
+		hud.show_message("No save found.", 3.0)
 		return
 	_loading = true
 	var prev_speed := speed
 	set_speed(0)
-	hud.show_message("Загрузка…", 60.0)
+	hud.show_message("Loading…", 60.0)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var res := SaveGame.load_json(text, EventBus)
@@ -320,7 +320,7 @@ func load_game() -> void:
 		if res["error"] == "version":  # region A1d
 			hud.show_message("Old save is incompatible with this version.", 5.0)
 			return
-		hud.show_message("Не удалось загрузить сохранение (%s)." % res["error"], 5.0)
+		hud.show_message("Could not load the save (%s)." % res["error"], 5.0)
 		return
 	if sim:
 		world.unbind()
@@ -337,7 +337,7 @@ func load_game() -> void:
 	_accum = 0.0
 	set_speed(1)
 	_update_continue()
-	hud.show_message("Игра загружена.", 3.0)
+	hud.show_message("Game loaded.", 3.0)
 
 
 func autosave() -> void:
@@ -351,7 +351,7 @@ func _setup_save_load() -> void:
 	layer.layer = 50
 	add_child(layer)
 	_continue_btn = Button.new()
-	_continue_btn.text = "Продолжить"
+	_continue_btn.text = "Continue"
 	_continue_btn.custom_minimum_size = Vector2(260, 80)
 	_continue_btn.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	_continue_btn.position.y -= 120
@@ -387,12 +387,12 @@ func _combat_tap(world_pos: Vector2, cell: Vector2i) -> bool:
 	for e in sim.threats.enemies_in_range(Vector2(cell), 2.0):
 		if (e.visual_pos() * WorldView.TILE + half).distance_to(world_pos) < WorldView.TILE * 0.9:
 			if sim.order_attack(sel.id, e.id):
-				hud.show_message("Атака!", 2.0)
+				hud.show_message("Attack!", 2.0)
 			return true
 	for col in sim.colonists.list:
 		if col.alive and not col.hidden and col.cell == cell:
 			return false
 	if sim.order_move(sel.id, cell):
-		hud.show_message("Идти сюда", 2.0)
+		hud.show_message("Move here", 2.0)
 	return true
 # endregion

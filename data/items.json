@@ -1,49 +1,49 @@
 {
 	"essence_ore": {
-		"name": "Руда эссенции",
+		"name": "Essence Ore",
 		"color": "#7a5cc2",
 		"stack": 50,
 		"value": 1.0
 	},
 	"refined_essence": {
-		"name": "Очищенная эссенция",
+		"name": "Refined Essence",
 		"color": "#d36bff",
 		"stack": 50,
 		"value": 4.0
 	},
 	"essence_bloom": {
-		"name": "Цветок эссенции",
+		"name": "Essence Flower",
 		"color": "#8cff9a",
 		"stack": 20,
 		"value": 6.0
 	},
 	"machine_parts": {
-		"name": "Детали",
+		"name": "Parts",
 		"color": "#c0c0c8",
 		"stack": 25,
 		"value": 8.0
 	},
 	"waste": {
-		"name": "Отходы",
+		"name": "Waste",
 		"color": "#7fbf3f",
 		"stack": 50,
 		"value": 0.0,
 		"contaminates": true
 	},
 	"raw_food": {
-		"name": "Клубни",
+		"name": "Tubers",
 		"color": "#c9a46a",
 		"stack": 50,
 		"nutrition": 0.4
 	},
 	"meal": {
-		"name": "Похлёбка",
+		"name": "Stew",
 		"color": "#d98a4a",
 		"stack": 50,
 		"nutrition": 0.85
 	},
 	"essence_rounds": {
-		"name": "Заряженные патроны",
+		"name": "Loaded Ammo",
 		"color": "#ffd24a",
 		"stack": 50,
 		"value": 2.0

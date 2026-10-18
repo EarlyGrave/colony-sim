@@ -1,20 +1,20 @@
 {
 	"_comment": "Player 'if-then' rules. Toggled in the HUD.",
 	"raid_engineer": {
-		"name": "При налёте инженер чинит турели",
-		"short": "Инженер",
+		"name": "During a raid the engineer repairs turrets",
+		"short": "Engineer",
 		"default": false,
 		"turret_hp_fraction": 0.6
 	},
 	"refine_cap": {
-		"name": "Стоп переработке при заражении",
-		"short": "Лимит\nзаражения",
+		"name": "Stop refining at taint limit",
+		"short": "Taint\ncap",
 		"default": false,
 		"max_contamination_percent": 50
 	},
 	"ore_reserve": {
-		"name": "Резерв руды: не отдавать руду со склада в установку ниже порога",
-		"short": "Резерв\nруды",
+		"name": "Ore reserve: do not feed stockpile ore to the refinery below the threshold",
+		"short": "Ore\nreserve",
 		"default": false,
 		"amount": 20
 	}

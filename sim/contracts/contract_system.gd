@@ -75,8 +75,8 @@ func _offer(day: int) -> void:
 	next_id += 1
 	list.append(c)
 	sim.bus.contract_offered.emit(int(c["id"]))
-	_say("contract_offered", "Надзиратели требуют: %d очищенной эссенции%s за %d дн. Принять контракт?" % [
-		int(c["essence"]), (" и %d деталей" % int(c["parts"])) if int(c["parts"]) > 0 else "", int(c["deadline_days"])])
+	_say("contract_offered", "The wardens demand %d refined essence%s within %d days. Accept the contract?" % [
+		int(c["essence"]), (" and %d parts" % int(c["parts"])) if int(c["parts"]) > 0 else "", int(c["deadline_days"])])
 
 
 func accept(id: int) -> bool:
@@ -115,7 +115,7 @@ func deliver(id: int) -> bool:
 	anger = clampf(anger + float(cfg["anger"]["on_fulfil"]), 0.0, float(cfg["anger"]["max"]))
 	_reward(c)
 	sim.bus.contract_fulfilled.emit(int(c["id"]))
-	_say("contract_fulfilled", "Контракт выполнен. Надзиратели довольны (гнев: %.1f)." % anger)
+	_say("contract_fulfilled", "Contract fulfilled. The wardens are satisfied (anger: %.1f)." % anger)
 	return true
 
 
@@ -140,7 +140,7 @@ func _fail(c: Dictionary) -> void:
 	c["state"] = "failed"
 	_raise_anger(float(cfg["anger"]["on_fail"]))
 	sim.bus.contract_failed.emit(int(c["id"]), "deadline")
-	_say("contract_failed", "Срок контракта истёк! Надзиратели вводят санкции.")
+	_say("contract_failed", "Contract expired! The wardens impose sanctions.")
 	_sanction()
 
 
@@ -148,7 +148,7 @@ func _refuse(c: Dictionary, why: String) -> void:
 	c["state"] = "declined" if why == "declined" else "expired"
 	_raise_anger(float(cfg["anger"]["on_decline"]))
 	sim.bus.contract_failed.emit(int(c["id"]), why)
-	_say("contract_failed", "Отказ от контракта. Надзиратели недовольны.")
+	_say("contract_failed", "Contract refused. The wardens are displeased.")
 	_sanction()
 
 
@@ -166,7 +166,7 @@ func _sanction() -> void:
 	match str(chosen["kind"]):
 		"raid_mult":
 			next_raid_mult *= float(chosen["mult"])
-			_say("contract_sanction", "Санкция: следующий набег будет сильнее.")
+			_say("contract_sanction", "Sanction: the next raid will be stronger.")
 		"inspection":
 			var alive: Array[Colonist] = []
 			for col in sim.colonists.list:
@@ -176,7 +176,7 @@ func _sanction() -> void:
 				return
 			var victim: Colonist = alive[rng.randi_range(0, alive.size() - 1)]
 			sim.health.apply_damage(victim, float(chosen["damage"]), "", str(chosen["damage_kind"]))
-			_say("contract_sanction", "Карательная проверка: %s избит надзирателями." % victim.display_name)
+			_say("contract_sanction", "Punitive inspection: %s was beaten by the wardens." % victim.display_name)
 
 
 func _say(event_id: String, text: String) -> void:

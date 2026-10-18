@@ -1,6 +1,6 @@
 {
 	"tuber": {
-		"name": "Клубни",
+		"name": "Tubers",
 		"item": "raw_food",
 		"yield": 6,
 		"grow_ticks": 600,

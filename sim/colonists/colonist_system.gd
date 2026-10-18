@@ -3,7 +3,7 @@ extends RefCounted
 ## Owns colonists and ticks them (decisions are delegated to JobSystem).
 
 const NAMES: Array[String] = [
-	"Вера", "Гром", "Лис", "Мирон", "Сиплый", "Тень", "Кнут", "Рыжая", "Дед", "Шило", "Ольха", "Фитиль",
+	"Vera", "Thunder", "Fox", "Miron", "Wheezy", "Shade", "Whip", "Ginger", "Gramps", "Awl", "Alder", "Wick",
 ]
 
 var sim: Simulation

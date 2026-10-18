@@ -47,4 +47,4 @@ func on_end(_c: Colonist, sim: Simulation) -> void:
 
 
 func describe() -> String:
-	return "Несёт раненого"
+	return "Carrying a casualty"

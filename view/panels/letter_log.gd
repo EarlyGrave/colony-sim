@@ -23,66 +23,66 @@ func bind(p_sim: Simulation, bus: Object) -> void:
 	unread = 0
 	_mutation_told = false
 	_listen("wave_started", func(i: int = 0, strength: float = 0.0) -> void:
-		add("Волна %d началась (сила ~%.0f)." % [i, strength], "bad"))
+		add("Wave %d has begun (strength ~%.0f)." % [i, strength], "bad"))
 	_listen("wave_incoming", func(a: Variant = null, b: Variant = null) -> void:
-		add("Приближается волна тварей.", "warn"))
-	_listen("wave_ended", func(i: int = 0) -> void: add("Волна %d отбита." % i, "info"))
-	_listen("threat_awakened", func() -> void: add("Твари пробудились.", "warn"))
-	_listen("building_broken", func(id: int = 0) -> void: add("Сломано: %s." % _building_name(id), "warn"))
-	_listen("building_destroyed", func(id: int = 0) -> void: add("Разрушено: %s." % _building_name(id), "bad"))
-	_listen("colonist_died", func(id: int = 0) -> void: add("Погиб колонист: %s." % _colonist_name(id), "bad"))
+		add("A creature wave is approaching.", "warn"))
+	_listen("wave_ended", func(i: int = 0) -> void: add("Wave %d repelled." % i, "info"))
+	_listen("threat_awakened", func() -> void: add("The creatures have awakened.", "warn"))
+	_listen("building_broken", func(id: int = 0) -> void: add("Broken: %s." % _building_name(id), "warn"))
+	_listen("building_destroyed", func(id: int = 0) -> void: add("Destroyed: %s." % _building_name(id), "bad"))
+	_listen("colonist_died", func(id: int = 0) -> void: add("Colonist died: %s." % _colonist_name(id), "bad"))
 	_listen("story_event", func(_id: String = "", text: String = "") -> void: add(text, "warn"))
 	_listen("raid_started", func(raid_id: String = "", _p: float = 0.0, n: int = 0) -> void:
 		var rd: Dictionary = sim.defs.raids.get(raid_id, {}) if sim.get("defs") and sim.defs.get("raids") != null else {}
-		add("Налёт: %s (%d тварей)." % [str(rd.get("name", raid_id)), n], "bad"))
+		add("Raid: %s (%d creatures)." % [str(rd.get("name", raid_id)), n], "bad"))
 	_listen("raid_tremor", func(cell: Vector2i = Vector2i.ZERO, _t: int = 0, text: String = "") -> void:
-		add(text if text != "" else "Земля дрожит…", "warn", cell))
+		add(text if text != "" else "The ground trembles…", "warn", cell))
 	_listen("raid_burrowed", func(cell: Vector2i = Vector2i.ZERO, n: int = 0) -> void:
-		add("Твари вылезли из-под земли (%d)." % n, "bad", cell))
-	_listen("raid_retreat", func(_r: String = "") -> void: add("Твари отступают.", "info"))
+		add("Creatures burst from the ground (%d)." % n, "bad", cell))
+	_listen("raid_retreat", func(_r: String = "") -> void: add("The creatures fall back.", "info"))
 	_listen("colonist_downed", func(id: int = 0) -> void:
-		add("Колонист без сознания: %s." % _colonist_name(id), "bad", _colonist_cell(id)))
+		add("Colonist unconscious: %s." % _colonist_name(id), "bad", _colonist_cell(id)))
 	_listen("colonist_joined", func(id: int = 0) -> void:
-		add("К колонии присоединился %s." % _colonist_name(id), "info", _colonist_cell(id)))
+		add("%s joined the colony." % _colonist_name(id), "info", _colonist_cell(id)))
 	_listen("event_choice_posted", func(_u: int = 0, text: String = "") -> void:
-		add("ВАЖНО: %s (панель «События»)" % text, "bad"))
+		add("IMPORTANT: %s (Events panel)" % text, "bad"))
 	_listen("mood_break_started", func(id: int = 0, kind: String = "") -> void:
-		add("Срыв у %s: %s." % [_colonist_name(id), kind], "bad", _colonist_cell(id)))
+		add("Breakdown for %s: %s." % [_colonist_name(id), kind], "bad", _colonist_cell(id)))
 	_listen("colonist_starving", func(id: int = 0) -> void:
-		add("Голодает: %s." % _colonist_name(id), "warn", _colonist_cell(id)))
+		add("Starving: %s." % _colonist_name(id), "warn", _colonist_cell(id)))
 	_listen("perk_point_available", func(id: int = 0, skill_id: String = "", _pts: int = 0) -> void:
 		var lbl: String = str(sim.defs.skills["skills"].get(skill_id, {}).get("label", skill_id))
-		var e := add("У %s новое очко: %s" % [_colonist_name(id), lbl], "info")
+		var e := add("%s earned a new point: %s" % [_colonist_name(id), lbl], "info")
 		if not e.is_empty():
 			e["panel"] = "perks"
 			e["colonist_id"] = id
 			e["skill"] = skill_id)
 	_listen("ammo_depleted", func(kind: String = "", id: int = 0) -> void:  # region ammo
-		add("Кончились патроны: %s." % (_building_name(id) if kind == "turret" else _colonist_name(id)), "bad"))
+		add("Out of ammo: %s." % (_building_name(id) if kind == "turret" else _colonist_name(id)), "bad"))
 	# region debt
 	_listen("debt_paid", func(id: int = 0) -> void:
-		add("%s выплатил долг. Остаться или покинуть планету? (осмотр)" % _colonist_name(id), "info", _colonist_cell(id)))
+		add("%s paid off the debt. Stay or leave the planet? (inspect)" % _colonist_name(id), "info", _colonist_cell(id)))
 	_listen("riot_started", func(id: int = 0) -> void:
-		add("Бунт: %s громит постройки!" % _colonist_name(id), "bad", _colonist_cell(id)))
-	_listen("colonist_escaped", func(id: int = 0) -> void: add("Побег: %s сбежал с планеты." % _colonist_name(id), "bad"))
-	_listen("escape_stopped", func(id: int = 0) -> void: add("Беглец %s остановлен." % _colonist_name(id), "info", _colonist_cell(id)))
+		add("Riot: %s is wrecking buildings!" % _colonist_name(id), "bad", _colonist_cell(id)))
+	_listen("colonist_escaped", func(id: int = 0) -> void: add("Escape: %s fled the planet." % _colonist_name(id), "bad"))
+	_listen("escape_stopped", func(id: int = 0) -> void: add("Escapee %s stopped." % _colonist_name(id), "info", _colonist_cell(id)))
 	# endregion
 	# region batch3 ui
-	_listen("wave_repelled", func(i: int = 0) -> void: add("Налёт %d отбит без потерь в обороне." % i, "info"))
+	_listen("wave_repelled", func(i: int = 0) -> void: add("Raid %d repelled with no defense losses." % i, "info"))
 	_listen("patrol_spotted", func(_id: int = 0, cell: Vector2i = Vector2i.ZERO, n: int = 0) -> void:
-		add("Патруль заметил тварей: %d." % n, "warn", cell))
+		add("Patrol spotted creatures: %d." % n, "warn", cell))
 	_listen("debt_choice_made", func(id: int = 0, outcome: String = "") -> void:
-		add("%s: %s." % [_colonist_name(id), "остался вольным колонистом" if outcome == "stayed" else "покинул планету"], "info"))
+		add("%s: %s." % [_colonist_name(id), "stayed on as a free colonist" if outcome == "stayed" else "left the planet"], "info"))
 	_listen("cell_mutated", func(cell: Vector2i = Vector2i.ZERO) -> void:
 		if not _mutation_told:
 			_mutation_told = true
-			add("Земля мутировала. Её можно очистить эссенцией (осмотр клетки).", "warn", cell))
+			add("The ground has mutated. Essence can purify it (inspect the cell).", "warn", cell))
 	_listen("contract_offered", func(_cid: int = 0) -> void:
-		var e := add("Новый контракт надзирателей.", "warn")
+		var e := add("New warden contract.", "warn")
 		if not e.is_empty():
 			e["panel"] = "contracts")
 	# endregion
-	_listen("forecast_revealed", func() -> void: add("Открыт прогноз конца планеты.", "info"))
+	_listen("forecast_revealed", func() -> void: add("Planet doom forecast revealed.", "info"))
 
 
 func unbind() -> void:
@@ -124,7 +124,7 @@ func _listen(signal_name: String, callable: Callable) -> void:
 
 func _building_name(id: int) -> String:
 	var b: Building = sim.buildings.get_by_id(id) if sim else null
-	return str(b.def["name"]) if b else "постройка"
+	return str(b.def["name"]) if b else "building"
 
 
 func _colonist_name(id: int) -> String:

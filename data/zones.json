@@ -1,6 +1,6 @@
 {
 	"stockpile": {
-		"name": "Склад",
+		"name": "Stockpile",
 		"color": "#3f6fbf",
 		"accepts": [
 			"essence_ore",
@@ -13,7 +13,7 @@
 		"waste_emission_factor": 1.0
 	},
 	"waste_dump": {
-		"name": "Свалка отходов",
+		"name": "Waste Dump",
 		"color": "#6f8f2f",
 		"accepts": [
 			"waste"
@@ -21,7 +21,7 @@
 		"waste_emission_factor": 0.5
 	},
 	"growing": {
-		"name": "Грядки",
+		"name": "Crops",
 		"color": "#5fa83a",
 		"accepts": [],
 		"waste_emission_factor": 1.0

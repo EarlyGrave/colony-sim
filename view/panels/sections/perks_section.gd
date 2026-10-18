@@ -4,7 +4,7 @@ extends InspectorSection
 
 
 func _init() -> void:
-	title = "Перки"
+	title = "Perks"
 
 
 func applies(sim: Simulation, target: Dictionary) -> bool:
@@ -19,7 +19,7 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 	for s: String in sim.defs.skills["skills"]:
 		pts += sim.perks.points_available(c, s)
 	var b := Button.new()
-	b.text = "Перки (%d)%s" % [n, "  *%d" % pts if pts > 0 else ""]
+	b.text = "Perks (%d)%s" % [n, "  *%d" % pts if pts > 0 else ""]
 	b.custom_minimum_size = Vector2(0, 64)
 	b.focus_mode = Control.FOCUS_NONE
 	if pts > 0:
@@ -42,9 +42,9 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 		ub.focus_mode = Control.FOCUS_NONE
 		var nm := str(d.get("name", pid))
 		if left > 0:
-			ub.text = "%s (перезарядка %d с)" % [nm, ceili(float(left) / Simulation.TICKS_PER_SECOND)]
+			ub.text = "%s (cooldown %d s)" % [nm, ceili(float(left) / Simulation.TICKS_PER_SECOND)]
 			ub.disabled = true
 		else:
-			ub.text = "Применить: " + nm
+			ub.text = "Use: " + nm
 		ub.pressed.connect(func() -> void: sim.use_perk(cid, pid))
 		box.add_child(ub)

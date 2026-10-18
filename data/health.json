@@ -1,25 +1,25 @@
 {
 	"parts": {
 		"head": {
-			"name": "Голова",
+			"name": "Head",
 			"max_hp": 40,
 			"weight": 0.1,
 			"vital": true
 		},
 		"torso": {
-			"name": "Торс",
+			"name": "Torso",
 			"max_hp": 100,
 			"weight": 0.5,
 			"vital": true
 		},
 		"arms": {
-			"name": "Руки",
+			"name": "Arms",
 			"max_hp": 60,
 			"weight": 0.2,
 			"vital": false
 		},
 		"legs": {
-			"name": "Ноги",
+			"name": "Legs",
 			"max_hp": 60,
 			"weight": 0.2,
 			"vital": false
@@ -34,49 +34,49 @@
 	},
 	"kinds": {
 		"cut": {
-			"name": "Порез",
+			"name": "Cut",
 			"bleed": 0.00012,
 			"pain": 0.6,
 			"heal": 0.004,
 			"infectable": true
 		},
 		"bruise": {
-			"name": "Ушиб",
+			"name": "Bruise",
 			"bleed": 0.0,
 			"pain": 0.5,
 			"heal": 0.006,
 			"infectable": false
 		},
 		"bite": {
-			"name": "Укус",
+			"name": "Bite",
 			"bleed": 9e-05,
 			"pain": 0.8,
 			"heal": 0.003,
 			"infectable": true
 		},
 		"bullet": {
-			"name": "Пулевое",
+			"name": "Gunshot",
 			"bleed": 0.00014,
 			"pain": 0.9,
 			"heal": 0.003,
 			"infectable": true
 		},
 		"burn": {
-			"name": "Ожог",
+			"name": "Burn",
 			"bleed": 0.0,
 			"pain": 1.0,
 			"heal": 0.003,
 			"infectable": true
 		},
 		"illness": {
-			"name": "Болезнь",
+			"name": "Illness",
 			"bleed": 0.0,
 			"pain": 0.0,
 			"heal": 0.0,
 			"infectable": false
 		},
 		"starvation": {
-			"name": "Голод",
+			"name": "Hunger",
 			"bleed": 0.0,
 			"pain": 0.3,
 			"heal": 0.0005,
@@ -113,13 +113,13 @@
 	},
 	"illnesses": {
 		"fever": {
-			"name": "Лихорадка"
+			"name": "Fever"
 		},
 		"infection": {
-			"name": "Заражение"
+			"name": "Infection"
 		},
 		"toxic_fallout": {
-			"name": "Токсикоз"
+			"name": "Toxicosis"
 		}
 	}
 }
