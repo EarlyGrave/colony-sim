@@ -137,11 +137,12 @@ func form_default() -> bool:
 	if ids.size() > FORM_SIZE:
 		ids = ids.slice(0, FORM_SIZE)
 	var roles: Array = []  # C1: roles are parallel to ids; [] lets the sim auto-suggest by affinity
-	if not api.has_method("suggest_roles"):
+	var sq: Variant = api.get("squads")
+	if sq != null and sq.has_method("suggest_roles"):
+		roles = Array(sq.suggest_roles(ids))
+	else:
 		for i in ids.size():
 			roles.append(DEFAULT_ROLES[i % DEFAULT_ROLES.size()])
-	else:
-		roles = api.suggest_roles(ids)
 	api.form_squad(ids, roles)
 	return true
 
