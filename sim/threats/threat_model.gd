@@ -13,6 +13,31 @@ var _ref: Array = []
 var _val: Array[float] = []
 var _type: Array[String] = []
 var _cache_tick := -1000000
+# region W1a
+var _geo := PackedInt32Array()  # 4 ints per candidate: building x, y, size.x, size.y (unused for others)
+var _bias_cache: Dictionary = {}  # enemy def_id -> PackedFloat64Array (species bias per candidate), reset in refresh
+var _index: Dictionary = {}  # (kind << 32 | id) -> candidate index
+var _belt_lo := 0  # belt candidates occupy [_belt_lo, _belt_hi) in index order (= region-key order)
+var _belt_hi := 0
+var _belt_rx: Array[int] = []  # per belt candidate: region x / y
+var _belt_ry: Array[int] = []
+var _belt_grid := PackedInt32Array()  # region grid -> candidate index, -1 if none
+var _bgw := 0
+var _bgh := 0
+var _belt_max := 0.0
+var _belts_grid_ref: BeltGrid
+var _cand_di := PackedInt32Array()  # per belt candidate: dir-array index of its cell
+var _memo: Dictionary = {}
+var _memo_sig := -1
+var _g_x := PackedInt32Array()  # per region cell: candidate cell x / y / dir index / value (valid when _belt_grid >= 0)
+var _g_y := PackedInt32Array()
+var _g_di := PackedInt32Array()
+var _g_val := PackedFloat64Array()
+## sqrt(n) rounded to float32 = what Vector2.distance_to returns for integer deltas with dx^2+dy^2 == n (lazy, grows on demand).
+var _dist_tab := PackedFloat32Array()
+var _bdir := PackedByteArray()
+var _bw := 0
+# endregion
 # region R3X
 var _belt_tick := -1000000
 ## Belt candidates per region: [region_key, cell, count], rebuilt every `belt_recompute_ticks`.
@@ -94,6 +119,9 @@ func refresh(force := false) -> void:
 	_ref.clear()
 	_val.clear()
 	_type.clear()
+	_index.clear()  # region W1a
+	_geo.clear()
+	_bias_cache.clear()
 	var kp := float(cfg["k_poll"])
 	var rs := maxi(1, int(cfg["region_size"]))
 	var sums: Dictionary = {}
@@ -111,6 +139,10 @@ func refresh(force := false) -> void:
 		_ref.append(b)
 		_val.append(v)
 		_type.append(b.def_id)
+		_geo.append(b.cell.x)  # region W1a
+		_geo.append(b.cell.y)
+		_geo.append(b.size.x)
+		_geo.append(b.size.y)
 		var rk := (b.cell.x / rs) * 100003 + (b.cell.y / rs)
 		sums[rk] = float(sums.get(rk, 0.0)) + v
 	var cap := float(cfg["cap_per_region"])
@@ -120,12 +152,19 @@ func refresh(force := false) -> void:
 		if sums[rk] > cap:
 			_val[i] *= cap / sums[rk]
 	_refresh_belts()  # region R3X
+	_belt_lo = _val.size()  # region W1a
 	for bc: Array in _belts:
 		_kind.append(2)
 		_id.append(int(bc[0]))
 		_ref.append(bc[1])
 		_val.append(float(cfg["base"].get("belt", 0.0)) * minf(sqrt(float(bc[2])), float(cfg.get("belt_scale_cap", 4.0))))
 		_type.append("belt")
+		_geo.append(0)  # region W1a
+		_geo.append(0)
+		_geo.append(0)
+		_geo.append(0)
+	_belt_hi = _val.size()  # region W1a
+	_build_belt_grid(rs)
 	for c in sim.colonists.list:
 		if not c.alive or c.hidden:
 			continue
@@ -134,6 +173,139 @@ func refresh(force := false) -> void:
 		_ref.append(c)
 		_val.append(colonist_value(c) + _pollution(c.cell) * kp)
 		_type.append("colonist")
+		_geo.append(0)  # region W1a
+		_geo.append(0)
+		_geo.append(0)
+		_geo.append(0)
+	for i in _val.size():  # region W1a
+		_index[(_kind[i] << 32) | _id[i]] = i
+
+
+# region W1a
+func _build_belt_grid(rs: int) -> void:
+	_belt_rx.clear()
+	_belt_ry.clear()
+	_belt_max = 0.0
+	_cand_di.clear()
+	_belts_grid_ref = sim.logistics.belts
+	_bgw = (sim.map.width + rs - 1) / rs
+	_bgh = (sim.map.height + rs - 1) / rs
+	_belt_grid.resize(_bgw * _bgh)
+	_belt_grid.fill(-1)
+	_g_x.resize(_bgw * _bgh)
+	_g_y.resize(_bgw * _bgh)
+	_g_di.resize(_bgw * _bgh)
+	_g_val.resize(_bgw * _bgh)
+	for i in range(_belt_lo, _belt_hi):
+		var bc: Vector2i = _ref[i]
+		var rx := bc.x / rs
+		var ry := bc.y / rs
+		_cand_di.append(bc.y * sim.logistics.belts.width + bc.x)
+		_belt_rx.append(rx)
+		_belt_ry.append(ry)
+		var gi := ry * _bgw + rx
+		_belt_grid[gi] = i
+		_g_x[gi] = bc.x
+		_g_y[gi] = bc.y
+		_g_di[gi] = bc.y * sim.logistics.belts.width + bc.x
+		_g_val[gi] = _val[i]
+		_belt_max = maxf(_belt_max, _val[i])
+
+
+## Best belt candidate for `e` (score > best_s, lowest index on ties), ring walk over the region grid with an
+## exact upper bound; returns [index, score] via out params in `_bb`.
+var _bb_i := -1
+var _bb_s := 0.0
+
+
+func _best_belt(e: Enemy, best_s: float, best_i: int, bias: float, d0: float) -> void:
+	# Memo: the best belt for a cell does not depend on best_s/best_i (they only decide whether it wins), and it only
+	# changes when the belt set changes (place/remove/destroy => belt_count/destroyed) or the candidates are rebuilt.
+	var bg := _belts_grid_ref
+	var sig := bg.belt_count + _belt_tick * 7919 + _cache_tick * 104729  # place/remove or candidate rebuild
+	if sig != _memo_sig:
+		_memo_sig = sig
+		_memo.clear()
+	if not _memo.has(bias):
+		_memo[bias] = {}
+	var by_cell: Dictionary = _memo[bias]
+	var mk := e.cell.y * bg.width + e.cell.x
+	var hit: Array = by_cell.get(mk, [])
+	if not hit.is_empty() and hit[0] >= 0:
+		var hc := _cand_di[hit[0] - _belt_lo]
+		if bg.dir[hc] == 255:  # the cached winner was destroyed since
+			hit = []
+	if hit.is_empty():
+		_bdir = bg.dir
+		_bw = bg.width
+		_search_belt(e, 0.0, -1, bias, d0)
+		hit = [_bb_i, _bb_s]
+		by_cell[mk] = hit
+	var hi: int = hit[0]
+	var hs: float = hit[1]
+	_bb_i = best_i
+	_bb_s = best_s
+	if hi >= 0 and (hs > best_s or (hs == best_s and hs > 0.0 and hi < best_i)):
+		_bb_i = hi
+		_bb_s = hs
+
+
+func _search_belt(e: Enemy, best_s: float, best_i: int, bias: float, d0: float) -> void:
+	_bb_i = best_i
+	_bb_s = best_s
+	var rs := maxi(1, int(cfg["region_size"]))
+	var ex := e.cell.x / rs
+	var ey := e.cell.y / rs
+	var kmax := maxi(maxi(absi(ex), absi(_bgw - 1 - ex)), maxi(absi(ey), absi(_bgh - 1 - ey)))
+	var cx := e.cell.x
+	var cy := e.cell.y
+	for k in kmax + 1:
+		if k > 0 and _bb_s > 0.0:
+			# exact lower bound of the distance to any cell of ring k (nearest of its four sides)
+			var dm := mini(mini((ex + k) * rs - cx, cx - ((ex - k) * rs + rs - 1)),
+					mini((ey + k) * rs - cy, cy - ((ey - k) * rs + rs - 1)))
+			var dmin := float(maxi(dm, 0)) / d0
+			if _belt_max * bias / (1.0 + dmin * dmin) * 1.0001 < _bb_s:
+				return
+		var x0 := ex - k
+		var x1 := ex + k
+		var y0 := ey - k
+		var y1 := ey + k
+		for ry in range(maxi(y0, 0), mini(y1, _bgh - 1) + 1):
+			if ry == y0 or ry == y1:
+				for rx in range(maxi(x0, 0), mini(x1, _bgw - 1) + 1):
+					_try_belt(rx, ry, cx, cy, bias, d0)
+			else:
+				if x0 >= 0:
+					_try_belt(x0, ry, cx, cy, bias, d0)
+				if x1 < _bgw and x1 != x0:
+					_try_belt(x1, ry, cx, cy, bias, d0)
+
+
+func _try_belt(rx: int, ry: int, cx: int, cy: int, bias: float, d0: float) -> void:
+	var gi := ry * _bgw + rx
+	var i := _belt_grid[gi]
+	if i < 0 or _bdir[_g_di[gi]] == 255:  # no candidate / !has_belt (enemy part of _belt_ok is checked once per pick)
+		return
+	var dx := _g_x[gi] - cx
+	var dy := _g_y[gi] - cy
+	var n := dx * dx + dy * dy
+	if n >= _dist_tab.size():
+		_grow_dist(n)
+	var r := _dist_tab[n] / d0
+	var s := _g_val[gi] * bias / (1.0 + r * r)
+	if s > _bb_s or (s == _bb_s and s > 0.0 and i < _bb_i):
+		_bb_s = s
+		_bb_i = i
+
+
+func _grow_dist(n: int) -> void:
+	var from := _dist_tab.size()
+	var to := maxi(n + 1, from + 4096)
+	_dist_tab.resize(to)
+	for k in range(from, to):
+		_dist_tab[k] = sqrt(float(k))
+# endregion
 
 
 # region R3X
@@ -173,18 +345,32 @@ func _belt_ok(c: Vector2i, e: Enemy) -> bool:
 
 
 func score(i: int, e: Enemy) -> float:
+	return _score(i, e, _entry_for(e)[0], float(cfg["d0"]))
+
+
+## region W1a: `bias` (species bias per candidate, see _bias_for) and `d0` are hoisted out of the loop; distances of
+## integer deltas come from the float32 sqrt table (bit-identical to Vector2.distance_to).
+func _score(i: int, e: Enemy, bias: PackedFloat64Array, d0: float) -> float:
 	var d: float
 	var val := _val[i]
-	if _kind[i] == 2:  # region R3X
+	var k := _kind[i]
+	if k == 0:
+		if (_ref[i] as Building).destroyed:
+			return -1.0
+		var g := i * 4
+		var bx := _geo[g]
+		var by := _geo[g + 1]
+		var dx := clampi(e.cell.x, bx, bx + _geo[g + 2] - 1) - e.cell.x
+		var dy := clampi(e.cell.y, by, by + _geo[g + 3] - 1) - e.cell.y
+		var n := dx * dx + dy * dy
+		if n >= _dist_tab.size():
+			_grow_dist(n)
+		d = _dist_tab[n]
+	elif k == 2:  # region R3X
 		var bc: Vector2i = _ref[i]
 		if not _belt_ok(bc, e):
 			return -1.0
 		d = Vector2(bc).distance_to(Vector2(e.cell))
-	elif _kind[i] == 0:
-		var b: Building = _ref[i]
-		if b.destroyed:
-			return -1.0
-		d = b.distance_to(Vector2(e.cell))
 	else:
 		var c: Colonist = _ref[i]
 		if not c.alive or c.hidden:
@@ -195,35 +381,124 @@ func score(i: int, e: Enemy) -> float:
 			var fl: Array = cf[f]
 			if float(fl[2]) > 0.0 and d > float(fl[2]):
 				val /= float(fl[1])
-	var r := d / float(cfg["d0"])
-	var bias := 1.0
+	var r := d / d0
+	return val * bias[i] / (1.0 + r * r)
+
+
+## Per enemy species: [bias per candidate, order, bounds, belt bias, can bite structures]. `order` lists the static
+## candidates (buildings, and -1 for the whole belt group) by descending upper bound (value * bias); colonists are
+## scored live. Rebuilt lazily after each refresh.
+func _entry_for(e: Enemy) -> Array:
+	var key := e.def_id
+	if _bias_cache.has(key):
+		return _bias_cache[key]
 	var sb: Dictionary = cfg["species_bias"].get(e.def_id, {})
-	if sb.has(_type[i]):
-		bias = float(sb[_type[i]])
-	return val * bias / (1.0 + r * r)
+	var arr := PackedFloat64Array()
+	arr.resize(_val.size())
+	var ub: Array = []  # [-bound, index] sorts by descending bound then ascending index
+	for i in _val.size():
+		var bias := float(sb[_type[i]]) if sb.has(_type[i]) else 1.0
+		arr[i] = bias
+		if _kind[i] == 0:
+			ub.append([-(_val[i] * bias), i])
+	if _belt_hi > _belt_lo:
+		ub.append([-(_belt_max * float(sb.get("belt", 1.0))), -1])
+	ub.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	var order := PackedInt32Array()
+	var bounds := PackedFloat64Array()
+	for u: Array in ub:
+		order.append(u[1])
+		bounds.append(-u[0])
+	var entry := [arr, order, bounds, float(sb.get("belt", 1.0)), float(e.def.get("structure_dmg", 0.0)) > 0.0]
+	_bias_cache[key] = entry
+	return entry
+
+
+## Best candidate for `e` among the static ones (buildings + belts), memoised per species and cell for the whole
+## refresh epoch: those values never rise within an epoch (destruction only lowers them), so a remembered winner
+## whose score is unchanged is still the argmax. Returns the candidate index (-1 none), score in _nc_s.
+var _nc_s := 0.0
+var _nc_epoch := -1
+var _nc_sig := -1
+var _nc: Dictionary = {}  # def_id -> {cell index -> [best, score]}
+
+
+func _best_static(e: Enemy, entry: Array, d0: float) -> int:
+	var bias: PackedFloat64Array = entry[0]
+	var sig := sim.logistics.belts.belt_count
+	if _nc_epoch != _cache_tick or _nc_sig != sig:
+		_nc_epoch = _cache_tick
+		_nc_sig = sig
+		_nc.clear()
+	if not _nc.has(e.def_id):
+		_nc[e.def_id] = {}
+	var pm: Dictionary = _nc[e.def_id]
+	var pk := e.cell.y * sim.map.width + e.cell.x
+	var ph: Array = pm.get(pk, [])
+	if not ph.is_empty() and _score(ph[0], e, bias, d0) == ph[1]:
+		_nc_s = ph[1]
+		return ph[0]
+	var order: PackedInt32Array = entry[1]
+	var bounds: PackedFloat64Array = entry[2]
+	var best := -1
+	var best_s := 0.0
+	var belts_ok: bool = _belt_hi > _belt_lo and entry[4] and bool(sim.defs.balance["line_damage"]["enabled"])
+	for j in order.size():
+		if bounds[j] * 1.0001 < best_s:
+			break  # sorted: nothing further can reach best_s
+		var i := order[j]
+		if i < 0:
+			if belts_ok:
+				_best_belt(e, best_s, best, entry[3], d0)
+				if _bb_i != best:
+					best_s = _bb_s
+					best = _bb_i
+			continue
+		var s := _score(i, e, bias, d0)
+		if s > best_s or (s == best_s and s > 0.0 and i < best):
+			best_s = s
+			best = i
+	if best >= 0:
+		pm[pk] = [best, best_s]
+	_nc_s = best_s
+	return best
 
 
 ## Best target for `e` honouring stickiness. {} when nothing is worth attacking.
+## region W1a: same result as scanning every candidate in index order (strict >, first max wins): static candidates
+## come from _best_static, colonists (highest indices) are scored live and win only with a strictly higher score.
 func pick(e: Enemy) -> Dictionary:
 	refresh()
-	var best := -1
-	var best_s := 0.0
 	var cur := -1
-	var cur_s := -1.0
-	for i in _val.size():
-		var s := score(i, e)
-		if s <= 0.0:
-			continue
+	if e.target_kind != Enemy.Target.NONE:
 		var ek := 0 if e.target_kind == Enemy.Target.BUILDING else (2 if e.target_kind == Enemy.Target.BELT else 1)
-		if _kind[i] == ek and _id[i] == e.target_id \
-				and e.target_kind != Enemy.Target.NONE:
-			cur = i
-			cur_s = s
+		cur = int(_index.get((ek << 32) | e.target_id, -1))
+	var entry := _entry_for(e)
+	var bias: PackedFloat64Array = entry[0]
+	var d0 := float(cfg["d0"])
+	var best := _best_static(e, entry, d0)
+	var best_s := _nc_s
+	var flagged := not sim.abilities.flags.is_empty()  # ability flags are read live and may raise a score
+	for i in range(_belt_hi, _val.size()):
+		if not flagged and _val[i] * bias[i] * 1.0001 < best_s:
+			continue
+		var s := _score(i, e, bias, d0)
 		if s > best_s:
 			best_s = s
 			best = i
+	return _finish(e, best, best_s, cur)
+
+
+## Stickiness to the current target `cur` (candidate index or -1) and the result dictionary for the best candidate.
+func _finish(e: Enemy, p_best: int, best_s: float, cur: int) -> Dictionary:
+	var best := p_best
 	if best < 0:
 		return {}
+	var cur_s := -1.0
+	if cur >= 0 and cur != best:
+		cur_s = score(cur, e)  # lazily: only needed when the best candidate is another one
+		if cur_s <= 0.0:
+			cur = -1
 	if cur >= 0 and cur != best:
 		var pr: Dictionary = cfg["pull_ratio"]
 		var pull := float(pr["ranged"] if e.def.get("ranged", false) else pr["melee"])
@@ -232,6 +507,10 @@ func pick(e: Enemy) -> Dictionary:
 	if _kind[best] == 2:  # region R3X
 		return {"kind": "belt", "id": _id[best], "cell": _ref[best]}
 	return {"kind": "building" if _kind[best] == 0 else "colonist", "id": _id[best]}
+
+
+func _belt_ok_enemy(e: Enemy) -> bool:
+	return float(e.def.get("structure_dmg", 0.0)) > 0.0 and bool(sim.defs.balance["line_damage"]["enabled"])
 
 
 ## Score of a specific building for `e` (tests, decoy tools); uses a fresh cache.

@@ -112,3 +112,68 @@ func test_creatures_route_around_a_new_wall() -> void:
 	var e := sim.threats._spawn("crawler", Vector2i(5, 20))
 	sim.run_ticks(900)
 	assert_true(e.cell.x > 15 or bed.hp < bed.max_hp or sim.buildings.at(Vector2i(30, 20)) == null, "went around or chewed through")
+
+
+# region W1a
+## Reference: the pre-cache algorithm (scan every candidate in index order, strict >, first max wins, stickiness).
+func _brute_pick(m: ThreatModel, e: Enemy) -> Dictionary:
+	m.refresh()
+	var best := -1
+	var best_s := 0.0
+	var cur := -1
+	var cur_s := -1.0
+	for i in m._val.size():
+		var s := m.score(i, e)
+		if s <= 0.0:
+			continue
+		var ek := 0 if e.target_kind == Enemy.Target.BUILDING else (2 if e.target_kind == Enemy.Target.BELT else 1)
+		if m._kind[i] == ek and m._id[i] == e.target_id and e.target_kind != Enemy.Target.NONE:
+			cur = i
+			cur_s = s
+		if s > best_s:
+			best_s = s
+			best = i
+	if best < 0:
+		return {}
+	if cur >= 0 and cur != best:
+		var pr: Dictionary = m.cfg["pull_ratio"]
+		var pull := float(pr["ranged"] if e.def.get("ranged", false) else pr["melee"])
+		if cur_s >= float(m.cfg["stick"]) * best_s or best_s <= pull * cur_s:
+			best = cur
+	if m._kind[best] == 2:
+		return {"kind": "belt", "id": m._id[best], "cell": m._ref[best]}
+	return {"kind": "building" if m._kind[best] == 0 else "colonist", "id": m._id[best]}
+
+
+func test_pick_matches_brute_force_with_belts_and_destruction() -> void:
+	var sim := make_sim(11, false, 96, 96, peaceful_defs())
+	sim.buildings.place("bed", Vector2i(48, 48), false)
+	sim.buildings.place("refinery", Vector2i(60, 40), false)
+	sim.colonists.spawn(Vector2i(30, 50))
+	for y in range(6, 90, 3):
+		var cells: Array = []
+		for x in range(6, 90):
+			cells.append(Vector2i(x, y))
+		sim.place_belt(cells, 0)
+	var kinds := ["crawler", "spitter", "brute", "burrower"]
+	var mismatches := 0
+	for round in 6:
+		sim.tick += 10
+		for k in 40:
+			var e: Enemy = sim.threats._spawn(kinds[k % 4], Vector2i((k * 37 + round * 11) % 94 + 1, (k * 53 + round * 7) % 94 + 1))
+			var got := sim.threats.model.pick(e)
+			if got != _brute_pick(sim.threats.model, e):
+				mismatches += 1
+			if k % 3 == 0 and not got.is_empty():  # sticky current target on the next pick
+				e.target_kind = Enemy.Target.BELT if got["kind"] == "belt" else (Enemy.Target.BUILDING if got["kind"] == "building" else Enemy.Target.COLONIST)
+				e.target_id = int(got["id"])
+				if got["kind"] == "belt":
+					e.target_cell = got["cell"]
+				if sim.threats.model.pick(e) != _brute_pick(sim.threats.model, e):
+					mismatches += 1
+		var cut: Array = []  # remove belts between rounds; candidates stay stale until the next belt rebuild
+		for x in range(6, 90):
+			cut.append(Vector2i(x, 6 + round * 12))
+		sim.remove_belt(cut)
+	assert_eq(mismatches, 0, "pick == brute force")
+# endregion
