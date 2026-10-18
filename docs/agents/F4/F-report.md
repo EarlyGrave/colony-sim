@@ -1,0 +1,11 @@
+# F4 visual juice - report
+- New `view/juice_fx.gd` (JuiceFx) + `data/fx.json` (`enabled`, burst/splat/drip/audited); hooked from `Effects3D` only in `# region F4`.
+- Death burst: 8-12 particles tinted by enemies.json colour, 0.4 s, brute x2; one MultiMesh, hard cap 64 live.
+- Splat decals (spitter/crawler deaths): MultiMesh ring pool 40, 20 s fade, grey->green ramp by contamination fraction (G diff 0.1 vs 0.9 > 0.15, tested).
+- Sludge drips: refinery/smelter with progress>0, not broken, in camera frustum (scan 0.4 s); max 3 live per building, pool 48, rate scales with output waste.
+- "AUDITED": Label3D pool of 3, fired when `milestones.done_tiers` grows (audit delivered); cosmetic RNG seed, never sim.rng.
+- Cost: JuiceFx.tick measured 0.12-0.20 ms/frame worst case (6 kills every other frame, 6 working refineries, 64 particles, software GL); idle = one enemy scan per 0.25 s. view_bench 300 enemies: world3d script 0.88 ms (baseline 0.62-1.12, noise).
+- Not done: acid-hit splats and 5%-of-structure-hit AUDITED (no bus signal for those; needs sim edits); brute 2 px shake is exposed as `JuiceFx.shake_px` but not wired to the camera.
+- Tests: `tests/test_juice.gd` (caps, constant pools over 500 events, colour diff, brute x2, label pool, disabled).
+- Screenshots: docs/agents/F4/f4_splats.png (green splats + burst squares), f4_drips.png (sludge drip on refineries).
+- Goldens untouched (view only, no sim change).
