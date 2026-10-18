@@ -13,6 +13,11 @@ var sim: Simulation
 var pending_corner := Vector2i(-1, -1)
 var show_field := true  ## contamination overlay toggle
 var patrol_draft: Array[Vector2i] = []
+# region A2d
+var belt_draft: Array[Vector2i] = []  ## preview path being dragged
+var belt_bad: Dictionary = {}  ## cell -> true for invalid preview cells
+var belt_last_dir := 1
+# endregion
 ## Cell highlighted by the last tap (inspector).
 var selected_cell := Vector2i(-1, -1)
 ## Pseudo-3D mode: units and rock relief are drawn by WorldView3D; this node
@@ -419,6 +424,7 @@ func _ellipse_shadow(at: Vector2) -> void:
 
 func _draw_selection() -> void:
 	_draw_patrol()
+	_draw_belt_draft()
 	if pending_corner.x >= 0:
 		draw_rect(Rect2(cell_to_world(pending_corner), Vector2(TILE, TILE)), Color(1, 1, 1, 0.9), false, 3.0)
 	if selected_cell.x >= 0:
@@ -582,4 +588,22 @@ func _draw_patrol() -> void:
 # region G1b
 func turret_aim(id: int) -> float:
 	return _turret_aim.get(id, -PI / 2)
+# endregion
+
+
+# region A2d
+func _draw_belt_draft() -> void:
+	for i in belt_draft.size():
+		var c := belt_draft[i]
+		var bad := belt_bad.has(c)
+		var r := Rect2(cell_to_world(c), Vector2(TILE, TILE))
+		draw_rect(r, Color(0.9, 0.15, 0.1, 0.55) if bad else Color(0.2, 0.85, 0.9, 0.45))
+		var d := belt_last_dir
+		if i + 1 < belt_draft.size():
+			d = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)].find(belt_draft[i + 1] - c)
+		if d >= 0:
+			var v := Vector2([Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)][d])
+			var mid := r.get_center()
+			draw_line(mid - v * TILE * 0.3, mid + v * TILE * 0.3, Color.WHITE, 3.0)
+			draw_circle(mid + v * TILE * 0.3, 4.0, Color.WHITE)
 # endregion

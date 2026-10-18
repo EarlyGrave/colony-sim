@@ -5,7 +5,7 @@ extends Node
 
 const MAX_TICKS_PER_FRAME := 40
 const RECT_TOOLS := ["mine", "stockpile", "waste_dump", "clear_zone", "growing"]
-const BUILD_TOOLS := ["refinery", "turret", "wall", "door", "workbench", "stove", "bed", "training_dummy"]
+const BUILD_TOOLS := ["refinery", "turret", "wall", "door", "workbench", "stove", "bed", "training_dummy", "miner", "smelter", "assembler", "storage_in", "storage_out"]
 const HINTS := {
 	"inspect": "Tap a cell to see what is there.",
 	"mine": "Mine: tap two corners around the ore (purple).",
@@ -34,6 +34,7 @@ func _ready() -> void:
 	world3d.world_view = world  # region G1b
 	world3d.overlay = $Overlay
 	camera.tapped.connect(_on_tapped)
+	_setup_automation()  # region A2d
 	hud.tool_selected.connect(_on_tool_selected)
 	hud.speed_selected.connect(set_speed)
 	hud.alarm_toggled.connect(func(on: bool) -> void: sim.set_alarm(on))
@@ -145,6 +146,7 @@ func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	world.pending_corner = Vector2i(-1, -1)
 	world.selected_cell = Vector2i(-1, -1)
 	world.patrol_draft.clear()
+	_belt_reset()  # region A2d
 	hud.bind(sim)
 	camera.world_size = world.world_size()
 	camera.focus = WorldView.cell_to_world(sim.map_center())
@@ -181,6 +183,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _on_tool_selected(t: String) -> void:
 	tool = t
+	_leave_belt_tools()  # region A2d
 	world.pending_corner = Vector2i(-1, -1)
 	world.patrol_draft.clear()
 	if t in BUILD_TOOLS:
@@ -395,4 +398,142 @@ func _combat_tap(world_pos: Vector2, cell: Vector2i) -> bool:
 	if sim.order_move(sel.id, cell):
 		hud.show_message("Move here", 2.0)
 	return true
+# endregion
+
+
+# region A2d
+const BELT_TOOLS := ["belt", "belt_remove", "belt_rotate"]
+var auto_panel: AutomationPanel
+var _stroke: Array[Vector2i] = []
+var _stroke_on := false
+var _belt_history: Array = []  ## placed paths (Array of Array[Vector2i]), newest last
+
+
+func _setup_automation() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 20
+	add_child(layer)
+	auto_panel = AutomationPanel.new()
+	auto_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+	auto_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	auto_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	layer.add_child(auto_panel)
+	auto_panel.tool_picked.connect(_on_auto_tool)
+	auto_panel.undo_pressed.connect(undo_belt)
+	camera.stroke_began.connect(func(p: Vector2) -> void: stroke_begin(WorldView.world_to_cell(p)))
+	camera.stroke_moved.connect(func(p: Vector2) -> void: stroke_move(WorldView.world_to_cell(p)))
+	camera.stroke_ended.connect(func(p: Vector2, cancelled: bool) -> void: stroke_end(WorldView.world_to_cell(p), cancelled))
+
+
+func _on_auto_tool(id: String) -> void:
+	hud.select_tool("inspect")  # moves the HUD radio group off its old tool
+	_on_tool_selected(id)
+	camera.capture_drag = id in BELT_TOOLS
+	match id:
+		"belt":
+			hud.show_message("Belt: drag to paint a path. Red cells are blocked.", 5.0)
+		"belt_remove":
+			hud.show_message("Remove belt: drag over belts.", 5.0)
+		"belt_rotate":
+			hud.show_message("Rotate belt: tap a belt to turn it 90 degrees.", 5.0)
+
+
+func _leave_belt_tools() -> void:
+	if camera != null:
+		camera.capture_drag = false
+	if auto_panel != null and tool not in BELT_TOOLS and tool not in AutomationPanel.MACHINES.map(func(m: Array) -> String: return m[0]):
+		auto_panel.clear_selection()
+	_belt_reset()
+
+
+func _belt_reset() -> void:
+	_stroke.clear()
+	_stroke_on = false
+	if world != null:
+		world.belt_draft.clear()
+		world.belt_bad.clear()
+
+
+func _refresh_belt_preview() -> void:
+	world.belt_draft = _stroke.duplicate()
+	world.belt_bad.clear()
+	if tool == "belt":
+		for c in _stroke:
+			if sim.can_belt_cell_error(c) != "":
+				world.belt_bad[c] = true
+	world.belt_last_dir = AutomationPanel.path_last_dir(_stroke, world.belt_last_dir)
+	world.queue_redraw()
+
+
+func stroke_begin(cell: Vector2i) -> void:
+	if sim == null or tool not in BELT_TOOLS:
+		return
+	_stroke.clear()
+	_stroke_on = true
+	if sim.map.in_bounds(cell):
+		_stroke.append(cell)
+	_refresh_belt_preview()
+
+
+func stroke_move(cell: Vector2i) -> void:
+	if not _stroke_on or _stroke.is_empty():
+		return
+	cell = Vector2i(clampi(cell.x, 0, sim.map.width - 1), clampi(cell.y, 0, sim.map.height - 1))
+	if tool == "belt":
+		AutomationPanel.extend_path(_stroke, cell)
+	elif cell != _stroke[-1]:
+		AutomationPanel.extend_path(_stroke, cell)
+	_refresh_belt_preview()
+
+
+func stroke_end(cell: Vector2i, cancelled: bool) -> void:
+	if not _stroke_on:
+		return
+	if not cancelled:
+		stroke_move(cell)
+		_commit_stroke()
+	_belt_reset()
+	world.queue_redraw()
+
+
+func _commit_stroke() -> void:
+	var path: Array[Vector2i] = _stroke.duplicate()
+	if path.is_empty():
+		return
+	match tool:
+		"belt":
+			var last := AutomationPanel.path_last_dir(path, world.belt_last_dir)
+			for c in path:
+				if sim.can_belt_cell_error(c) != "":
+					hud.show_message("Can't build a belt there (blocked).", 3.0)
+					return
+			if sim.place_belt(path, last):
+				_belt_history.append(path)
+				world.belt_last_dir = last
+				hud.show_message("Belt placed: %d cells." % path.size(), 2.0)
+			else:
+				hud.show_message("Can't build a belt there.", 3.0)
+		"belt_remove":
+			if sim.remove_belt(path):
+				hud.show_message("Belt removed.", 2.0)
+			else:
+				hud.show_message("No belts there.", 2.0)
+		"belt_rotate":
+			var c: Vector2i = path[0]
+			var d: int = sim.logistics.dir_at(c)
+			if d < 0:
+				hud.show_message("No belt there.", 2.0)
+			else:
+				sim.set_belt_dir(c, (d + 1) % 4)
+
+
+## Removes the most recently placed belt path.
+func undo_belt() -> void:
+	if sim == null or _belt_history.is_empty():
+		if hud != null:
+			hud.show_message("Nothing to undo.", 2.0)
+		return
+	var path: Array = _belt_history.pop_back()
+	sim.remove_belt(path)
+	hud.show_message("Last belt path removed.", 2.0)
 # endregion
