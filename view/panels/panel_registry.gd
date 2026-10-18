@@ -27,6 +27,8 @@ const PANELS: Array = [
 	["forecast", "Wave", "res://view/panels/forecast_panel.gd"],  # region C5
 	["power", "Power", "res://view/panels/power_panel.gd"],  # region L4
 	["reviews", "Reviews", "res://view/panels/reviews_panel.gd"],  # region B3
+	["petition", "Petition", "res://view/panels/petition_panel.gd"],  # region E4
+	["dispatch", "Dispatch", "res://view/panels/dispatch_panel.gd"],  # region E4
 	["save", "Menu", "res://view/panels/save_panel.gd"],
 ]
 

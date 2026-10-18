@@ -21,8 +21,12 @@ func refresh() -> void:
 		add_line("Parole reviews: %d/%d passed" % [ms.reviews_done.size(), ms.review_defs().size()], Color(0.7, 0.9, 0.7))
 		for l in k3_lines():  # region K3
 			add_line(str(l), Color(0.8, 0.8, 0.9))
+		for l in e4_lines():  # region E4
+			add_line(str(l), Color(0.8, 0.8, 0.9))
 		return
 	add_line("%s: %d%%" % [r["title"], int(ms.review_progress(r) * 100.0)], Color(1.0, 0.85, 0.4))
+	for l in e4_lines():  # region E4
+		add_line(str(l), Color(0.8, 0.8, 0.9))
 
 
 # region K3
@@ -41,3 +45,18 @@ func k3_lines() -> Array:
 # endregion
 	for l in k3_lines():  # region K3
 		add_line(str(l), Color(0.8, 0.8, 0.9))
+
+
+# region E4
+## Reviews 4-5 (E3): rank title and range score, only when the sim provides them.
+func e4_lines() -> Array:
+	var out: Array = []
+	if sim == null or sim.milestones == null:
+		return out
+	var ms: Object = sim.milestones
+	if ms.has_method("rank_title") and str(ms.call("rank_title")) != "":
+		out.append("Rank: %s" % str(ms.call("rank_title")))
+	if ms.has_method("range_score"):
+		out.append("Range score: %d" % int(ms.call("range_score")))
+	return out
+# endregion

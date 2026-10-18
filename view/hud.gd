@@ -173,6 +173,8 @@ func _ready() -> void:
 		pb.add_theme_font_size_override("font_size", 17)
 		pb.pressed.connect(func() -> void: toggle_panel(pid))
 		_panel_buttons[pid] = pb
+		if pid == "petition" or pid == "dispatch":  # region E4: shown only while the sim exposes it
+			pb.visible = false
 
 	_menu_btn = _button(speed_row, "More", Vector2(88, 64))
 	_menu_btn.pressed.connect(func() -> void: _menu_popup.visible = not _menu_popup.visible)
@@ -712,6 +714,7 @@ func _refresh_texts() -> void:
 	_l4_update()  # region L4
 	_c5_update()  # region C5
 	_k3_update()  # region K3
+	_e4_update()  # region E4
 	_letters_btn.text = "Letters (%d)" % _letters.unread if _letters.unread > 0 else "Letters"
 	_menu_btn.text = "More (%d)" % _letters.unread if _letters.unread > 0 else "More"
 # endregion
@@ -1514,4 +1517,22 @@ func _k3_layout(x: float, y0: float, slot_r: float) -> float:
 		return x
 	_o4_anchor_tl(_k3_btn, x, y0, 140.0, 64.0)
 	return x + 148.0
+# endregion
+
+
+# region E4
+## Petition / Dispatch panel buttons appear only when E1/E2 state exists and is enabled; the
+## petition button doubles as the "Petition P2/4" chip.
+func _e4_update() -> void:
+	var pb: Button = _panel_buttons.get("petition")
+	if pb != null:
+		var txt := PetitionPanel.chip_text(PetitionPanel.state_of(sim))
+		pb.visible = txt != ""
+		if txt != "":
+			pb.text = txt
+			pb.add_theme_font_size_override("font_size", 13)
+	var db: Button = _panel_buttons.get("dispatch")
+	if db != null:
+		var ds := DispatchPanel.state_of(sim)
+		db.visible = not ds.is_empty() and bool(ds.get("enabled", true))
 # endregion
