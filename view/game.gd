@@ -151,6 +151,7 @@ func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 		world.unbind()
 		world3d.unbind()
 		sim.dispose()
+	opts["research_locked"] = true  # real game: tech gating on (tests keep it off)
 	sim = Simulation.new(seed_value, EventBus, null, opts)  # region meta
 	sim.start_new_game()
 	combat_selected = -1  # region combat
