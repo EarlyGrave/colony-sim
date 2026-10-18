@@ -113,6 +113,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `event_chains.json` | random_enabled, chance, steps[], complication, inspection_quota_default |
 | `events.json` | id -> {weight, min_day, harmful, max_per_game, requires, text, ...} |
 | `events_prison.json` | same schema as events.json, prison-themed |
+| `expedition.json` | campaign: travel_ticks, map_size, buffer_cap, rate_ticks, upkeep, collateral, raid_*, sling stats (read by Campaign/Autopilot) |
 | `health.json` | parts, kinds, pain_scale/weight, downed_consciousness, shelter_collapse |
 | `idle_work.json` | cleanup{}, patrol{}, training{} |
 | `items.json` | id -> {name, color, stack, value} |
