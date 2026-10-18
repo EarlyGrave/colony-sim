@@ -10,6 +10,8 @@ var first_refine_done := false
 ## Operator of the batch being finished (read by ContaminationSystem on batch_refined).
 var batch_operator: Colonist = null
 var _next_id := 1
+## region L3: bumps when buildings are placed/removed or break/repair, so the power grid recomputes only then.
+var version := 0
 # region construction
 var blueprints: Array[Blueprint] = []
 var bp_occupancy: Dictionary = {}  # Vector2i -> blueprint id
@@ -91,6 +93,7 @@ func place(def_id: String, c: Vector2i, pay := true) -> Building:
 				b.node_cell = p
 				break
 	list.append(b)
+	version += 1  # region L3
 	for p in b.footprint():
 		occupancy[p] = b.id
 	if b.def.get("blocks_movement", false):  # region construction
@@ -205,11 +208,14 @@ func wear(b: Building, amount: float) -> void:
 	b.condition = maxf(0.0, b.condition - amount)
 	if b.condition <= 0.0:
 		b.broken = true
+		version += 1  # region L3
 		b.progress = 0
 		sim.bus.building_broken.emit(b.id)
 
 
 func repair(b: Building) -> void:
+	if b.broken:
+		version += 1  # region L3
 	b.condition = 100.0
 	b.hp = b.max_hp
 	b.broken = false
@@ -225,6 +231,7 @@ func damage(b: Building, amount: float) -> void:
 	# region T3: heavily damaged machines stop (existing broken flag)
 	elif b.is_machine() and not b.broken and b.hp < b.max_hp * float(sim.defs.balance["line_damage"]["machine_broken_frac"]):
 		b.broken = true
+		version += 1  # region L3
 		b.progress = 0
 		sim.bus.building_broken.emit(b.id)
 	# endregion
@@ -262,6 +269,7 @@ func _remove(b: Building) -> void:
 	for key in ["op:%d", "rep:%d", "bin:%d", "bed:%d"]:
 		sim.jobs.reserved.erase(key % b.id)
 	list.erase(b)
+	version += 1  # region L3
 	for p in b.footprint():
 		occupancy.erase(p)
 	if b.def.get("blocks_movement", false):  # region construction
@@ -476,7 +484,7 @@ func _tick_extractor(b: Building) -> void:
 	if b.output_total() >= int(b.def["output_capacity"]):
 		return  # full buffer: stall, nothing is lost
 	var purity: int = sim.map.node_purity[sim.map.idx(b.node_cell)]
-	b.mach_acc += NodeData.rate(res, purity) / 100.0
+	b.mach_acc += NodeData.rate(res, purity) / 100.0 * sim.power.factor_for(b)  # region L3
 	if b.mach_acc < 1.0:
 		return
 	var n := int(floor(b.mach_acc + 0.0001))
@@ -509,7 +517,7 @@ func _tick_processor(b: Building) -> void:
 		if b.recipe.is_empty():
 			return  # idle: no inputs / no room
 	if may_operate(b):
-		work(b, sim.chips.steps(b), null)  # region T4: chip speed / stopped chip
+		work(b, sim.power.scale_steps(b, sim.chips.steps(b)), null)  # region T4: chip speed / stopped chip; L3: brownout
 # endregion
 
 # region T3

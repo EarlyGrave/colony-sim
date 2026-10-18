@@ -25,6 +25,10 @@ signal building_broken(building_id: int)
 signal building_repaired(building_id: int)
 signal batch_refined(building_id: int, recipe_id: String)
 signal first_refine_done()
+# region L3
+signal power_changed(net_id: int)  # a network's brownout factor moved to another 0.05 bucket
+signal power_meltdown(building_id: int)
+# endregion
 
 # --- Contamination ---
 signal contamination_changed(level: float)

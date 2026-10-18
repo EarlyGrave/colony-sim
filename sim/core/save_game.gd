@@ -116,6 +116,9 @@ static func state_hash(sim: Simulation) -> int:
 	parts.append(sim.logistics.state_parts())  # region A1d
 	parts.append(sim.research.state_parts())  # region R2a
 	parts.append(sim.milestones.state_parts())  # region R2b
+	var pw: Array = sim.power.state_parts()  # region L3: only once a pole or generator exists
+	if not pw.is_empty():
+		parts.append(pw)
 	if sim.tutorial != null:  # region O1: only in tutorial mode, so other hashes stay as they were
 		parts.append(sim.tutorial.state_parts())
 	if not sim.squads.list.is_empty():  # region C1: only while a squad exists, other hashes stay as they were

@@ -89,6 +89,7 @@ var militia: Militia
 var in_step := false
 # endregion
 var chips: ChipSystem  # region R4b
+var power: PowerSystem  # region L3
 var squads: SquadSystem  # region C1
 var abilities: Abilities  # region C2
 ## True for buildings whose recipes produce waste (refinery, smelter): refining class.
@@ -304,6 +305,7 @@ func _init_systems() -> void:
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	chips = ChipSystem.new(self)  # region T4
+	power = PowerSystem.new(self)  # region L3
 	squads = SquadSystem.new(self)  # region C1
 	abilities = Abilities.new(self)  # region C2
 	if bool(opts.get("tutorial", false)):  # region O1
@@ -401,6 +403,9 @@ func step() -> void:
 	logistics.tick()  # region A1c
 	if profiling:
 		_lap("logistics")
+	power.tick()  # region L3: networks, fuel burn, brownout factors (before machines use them)
+	if profiling:
+		_lap("power")
 	buildings.tick_machines()  # region A2a
 	if profiling:
 		_lap("machines")
