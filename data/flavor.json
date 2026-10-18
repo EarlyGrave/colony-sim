@@ -1,0 +1,539 @@
+{
+	"_comment": "Flavor text bank. Leaf = array of lines. Placeholders: {who} {victim} {enemy} {n} {cause}. Max 70 chars resolved.",
+	"feed": {
+		"generic": [
+			"Something died. The paperwork is already late.",
+			"Casualty logged. Nobody asked who.",
+			"One more entry for the Warden's ledger.",
+			"A body was involved. Details to follow.",
+			"The count changed. Please do not cheer.",
+			"Loss recorded under 'expected'.",
+			"Another line crossed off the roster.",
+			"An incident occurred. It was brief.",
+			"The planet took its cut.",
+			"Form 12-B filed: 'Well, that happened.'",
+			"Statistics have been updated, quietly.",
+			"Someone is no longer a problem. Or a person.",
+			"Event closed. Reason: finality.",
+			"The ledger balances. Barely.",
+			"Please file your grief in triplicate."
+		],
+		"colonist": {
+			"downed": [
+				"{who} is down. Please step around the paperwork.",
+				"{who} sat down on the job. Involuntarily.",
+				"{who} has gone horizontal. Medics, if any.",
+				"{who} went down. Productivity down with them.",
+				"{who} is resting. Not by choice.",
+				"Inmate {who} requests a bed, urgently."
+			],
+			"generic": [
+				"{who} has left the workforce. Permanently.",
+				"{who} filed for retirement. Denied, then granted.",
+				"{who} is no longer on payroll. There was no payroll.",
+				"{who}: sentence concluded early.",
+				"{who} has been reassigned to 'memory'.",
+				"{who} will be missed by the schedule."
+			],
+			"bleed_out": [
+				"{who} bled out. Cause: workplace.",
+				"{who} ran out of blood. Nobody budgeted more.",
+				"{who} bled out. The bed was on its way.",
+				"{who}: terminal case of too little blood.",
+				"{who} lost the argument with gravity and blood."
+			],
+			"starvation": [
+				"{who} starved. The ration was a rumour.",
+				"{who} died hungry. Meals were 'scheduled'.",
+				"{who}: cause of death, supper.",
+				"{who} missed the last meal. And every one before.",
+				"{who} was owed three days of food. Forgiven."
+			],
+			"burn": [
+				"{who} caught fire. Not an approved perk.",
+				"{who} burned out. Literally, this time.",
+				"{who} became very warm, then very late.",
+				"{who} found the fire. The fire found {who}."
+			],
+			"acid": [
+				"{who} dissolved. Safety briefing was optional.",
+				"{who} met acid. Acid was unmoved.",
+				"{who} was etched out of the roster.",
+				"{who} lost a debate with a spitter."
+			],
+			"collapse": [
+				"{who} was under a rock. Briefly alive.",
+				"{who} was filed under 'rubble'.",
+				"The ceiling won. {who} did not.",
+				"{who} found out why we have supports."
+			],
+			"melee": [
+				"{who} was bitten by management's problem.",
+				"{who} lost a close one with {enemy}.",
+				"{enemy} filed a complaint against {who}. In person.",
+				"{who} took a {enemy} to the face. Fatal."
+			]
+		},
+		"building": {
+			"destroyed": [
+				"A building is now a rumour.",
+				"Structure removed from the inventory.",
+				"The wall gave notice. Effective immediately.",
+				"Property value dropped to 'scenic'.",
+				"Construction was temporary. Now so is the site.",
+				"A building has been redistributed as gravel."
+			]
+		},
+		"crawler": {
+			"generic": [
+				"Crawler #{n} filed for retirement. Turret approved it.",
+				"Crawler returned to sender. Postage paid in lead.",
+				"A crawler was shot. It was a clerical error.",
+				"Crawler dismissed without severance.",
+				"Crawler removed from the wave. Brief ovation.",
+				"Crawler down. Its replacement is on the way."
+			],
+			"turret": [
+				"Crawler took the long way into a turret.",
+				"Crawler left. Pieces remain.",
+				"Crawler dealt with. Floor needs a mop.",
+				"Crawler tested the turret. Passed, sadly."
+			],
+			"melee": [
+				"Crawler bit {who}. Crawler is not sorry.",
+				"Crawler lost the staring contest, then the head.",
+				"Crawler stopped by hand. Surprisingly personal.",
+				"Crawler cleared with a shovel. Respect."
+			]
+		},
+		"brute": {
+			"generic": [
+				"Brute removed from the wave. Paperwork pending.",
+				"Brute stopped. The turret asked for a raise.",
+				"Brute refused to stop; it was persuaded.",
+				"Brute down. The floor filed a complaint.",
+				"Brute retired. Ammo budget did not.",
+				"Brute left the premises, horizontally."
+			],
+			"turret": [
+				"Brute reviewed the turret. The turret won.",
+				"Brute down at last. Please lower voices.",
+				"Brute's quarterly appearance: concluded.",
+				"Brute stopped. Take a long breath."
+			],
+			"melee": [
+				"Brute met an inmate with a grudge. Lost.",
+				"Brute stopped at close range. Too close.",
+				"Brute was talked down. With a pickaxe.",
+				"Brute taken out by hand. Please sit down."
+			]
+		},
+		"spitter": {
+			"generic": [
+				"Spitter dissolved in its own opinion.",
+				"Spitter's acid ran out, and so did the spitter.",
+				"Spitter silenced. The air improved slightly.",
+				"Spitter down. Nobody mourns the puddle.",
+				"Spitter retired from active spitting.",
+				"Spitter returned to goo."
+			],
+			"turret": [
+				"Spitter spat, missed, and was corrected.",
+				"Spitter performance review: terminal.",
+				"Spitter sent off with a bang.",
+				"Spitter terminated. Mind the puddle."
+			],
+			"melee": [
+				"Spitter silenced at arm's length.",
+				"Spitter got a close look at a shovel.",
+				"Spitter dispatched. Gloves recommended.",
+				"Spitter finished off. Messily."
+			]
+		},
+		"burrower": {
+			"generic": [
+				"Burrower went down. So did the property value.",
+				"Burrower returned to the ground. Permanently.",
+				"Burrower surfaced briefly. Got an audit.",
+				"Burrower buried by its own hole.",
+				"Burrower dispatched. The tunnel remains.",
+				"Burrower down; the floor demands a refund."
+			],
+			"turret": [
+				"Burrower dug its last. Floor is uneven.",
+				"Burrower emerged, regretted it.",
+				"Burrower removed. Hole stays, as usual.",
+				"Burrower's hole now has an owner: gravity."
+			],
+			"melee": [
+				"Burrower met a shovel on the way up.",
+				"Burrower popped out and was popped.",
+				"Burrower stopped by hand, mid-dig.",
+				"Burrower dealt with. Floor needs patching."
+			]
+		}
+	},
+	"pa": {
+		"wave_incoming": [
+			"Attention inmates: unscheduled visitors approaching.",
+			"Visitors detected. Please remain productive.",
+			"The Warden advises calm. The Warden is not calm.",
+			"Inbound guests. Hospitality is not provided.",
+			"Heads up: the neighbours are coming over.",
+			"Pleasant reminder: walls are load-bearing.",
+			"A scheduled surprise is en route.",
+			"Please locate your nearest turret. Hug it.",
+			"Notice: Q3 Teeth Review begins shortly.",
+			"Prepare your excuses. Teeth are coming.",
+			"Alert: incoming. Smile if you can.",
+			"The Warden suggests being elsewhere.",
+			"Evacuation is not an option. Neither is optimism.",
+			"Please stay at your assigned post. Or behind one.",
+			"Reminder: panic is non-billable."
+		],
+		"wave_started": [
+			"Attention inmates: visitors have arrived.",
+			"The audit has begun. Please be unremarkable.",
+			"Contact. The Warden is taking notes.",
+			"They are here. Please look busy.",
+			"Wave in progress. Work harder, but behind cover.",
+			"Inmates are reminded the pod is not a toy.",
+			"All hands to defend the paperwork.",
+			"Teeth on the premises. Act accordingly.",
+			"Unscheduled tenancy dispute underway.",
+			"Hostile guests inside the fence. Lovely.",
+			"Alarm status: yes.",
+			"The Warden is watching. From a safe place.",
+			"Visitors do not have appointments.",
+			"Please do not feed the creatures. Or yourselves.",
+			"Combat is a form of overtime."
+		],
+		"wave_repelled": [
+			"Visitors dismissed. Thank you for not dying.",
+			"Wave repelled. Please return to your quotas.",
+			"The Warden is mildly impressed.",
+			"Audit passed. The creatures were not impressed.",
+			"All quiet. Count the heads.",
+			"Calm restored. Calm was never ours.",
+			"Well done. Credit goes to the turrets.",
+			"Damage report to follow. Do not read it.",
+			"The visitors have left. They may return.",
+			"Cleanup crew is you. Please grab a broom.",
+			"Survival noted. No bonus applied.",
+			"Inmates may stand down. Stay near the guns.",
+			"Attack ended. Morale unchanged: still low.",
+			"Another wave filed under 'handled'.",
+			"That's one fewer problem. For now."
+		],
+		"crisis_started": [
+			"Taint exceeds comfort. Comfort has been revised.",
+			"Crisis declared. Please be less in it.",
+			"The planet is displeased. Details unavailable.",
+			"Contamination has reached 'noticeable'.",
+			"Warning: air quality now described as 'character'.",
+			"An emergency has been scheduled for you.",
+			"The Warden regrets nothing. The Warden is alarmed.",
+			"Crisis. Please do not use that word loudly.",
+			"Conditions are deteriorating. Efficiency is up.",
+			"Crisis protocol: panic, then paperwork.",
+			"The soil has opinions about your refining.",
+			"Something has gone wrong. Specifically yours.",
+			"Alarm: the problem is the thing you did.",
+			"Problems detected. Solutions optional.",
+			"Disaster mode engaged. Cheerfully."
+		],
+		"research_completed": [
+			"Innovation granted. Your gratitude is mandatory.",
+			"Research complete. Do not touch it.",
+			"Knowledge acquired. Side effects pending.",
+			"New technology approved by a committee of one.",
+			"Progress achieved. The Warden took credit.",
+			"Science has occurred. Please file it.",
+			"Breakthrough logged. {n} thoughts were had.",
+			"Thank you, researchers. Please do it again.",
+			"Invention approved. Safety review deferred.",
+			"Our understanding has improved. Slightly.",
+			"Good news: a new thing to maintain.",
+			"Eureka acknowledged. Eureka not rewarded.",
+			"The lab reports a result. It is a result.",
+			"Research finished. The budget did not.",
+			"Learning detected. Please stay seated."
+		],
+		"colonist_downed": [
+			"Inmate down. Please do not step on the paperwork.",
+			"An inmate is horizontal. Medics, if any.",
+			"Casualty reported. Stretcher status: imaginary.",
+			"Attention: someone is lying down on duty.",
+			"Inmate in need of bed. Beds in need of inmate.",
+			"Medical request noted. Reply in 3-5 weeks.",
+			"Inmate down. The queue for care is short: zero.",
+			"One inmate has fallen. Gravity commends them.",
+			"Stabilise the inmate. Politely, if possible.",
+			"Man down. Gender-neutral concern.",
+			"Staff shortage detected. It is you.",
+			"Inmate resting involuntarily.",
+			"The infirmary is open. In theory.",
+			"Someone is bleeding. Please be efficient.",
+			"First aid is available as a concept."
+		],
+		"colonist_died": [
+			"An inmate has been discharged. Permanently.",
+			"Staffing level reduced by one. Sentence served.",
+			"The Warden sends thoughts. Not funds.",
+			"Inmate lost. Please do not ask for a refund.",
+			"Moment of silence: one second. Time's up.",
+			"Labour pool decreased. Grief is unbudgeted.",
+			"Departed inmate's tasks reassigned to you.",
+			"Please remove the remains. Politely.",
+			"Death noted. No bonus was available.",
+			"We regret to inform you. We do not regret much.",
+			"One fewer mouth. The ration is slightly less sad.",
+			"A cot is now free. Silver lining.",
+			"Inmate expired before the contract did.",
+			"Condolences. Please keep working.",
+			"Memorial scheduled for never."
+		],
+		"outpost_lost": [
+			"Outpost lost. Please update the map.",
+			"Remote site gone. The map is smaller now.",
+			"Outpost status: former.",
+			"We have lost contact with a site. Permanently.",
+			"An outpost has been repossessed by the planet.",
+			"Crew and outpost unreachable. Thoughts and prayers.",
+			"Outpost closed due to extreme consequences.",
+			"Remote operations ceased. Without notice.",
+			"Outpost removed from the portfolio.",
+			"Another asset transferred to the dust."
+		],
+		"quiet_day": [
+			"Nothing happened. The Warden is uneasy.",
+			"A calm day. Treat it with suspicion.",
+			"No incidents today. The quota is unimpressed.",
+			"Quiet. That's the loud kind.",
+			"Silence reported. Please investigate silence.",
+			"Day {n} closed without incident. Suspicious.",
+			"All is well. This is a mistake.",
+			"Nothing to report. The paperwork is lonely.",
+			"An uneventful day. Enjoy it. Do not trust it.",
+			"The planet is holding its breath.",
+			"Peace detected. File a complaint if needed.",
+			"Rest day for the walls, at least.",
+			"The Warden notes a lack of drama.",
+			"Smooth operations. Management is bored.",
+			"No attacks. Statistically, concerning."
+		]
+	},
+	"barks": {
+		"working": [
+			"Another day, another rock.",
+			"I was told the pick was ergonomic.",
+			"At least the ore doesn't talk back.",
+			"Work is the sentence. Also the reward.",
+			"Stone. Again. Fascinating.",
+			"I have a system. It's mostly sighing."
+		],
+		"fleeing": [
+			"Not in the contract!",
+			"I have a pod to hide in, and a will to use it.",
+			"Retreat is just fast paperwork!",
+			"Nope nope nope nope.",
+			"Someone else's problem now!",
+			"I'm on break! Permanently!"
+		],
+		"idle": [
+			"Nothing to do. Suspicious.",
+			"Is anyone watching? Good.",
+			"I'm resting my eyes. And my back.",
+			"This is the good part of the sentence.",
+			"I'd file a complaint, but I'm resting.",
+			"Is it lunch? It feels like lunch."
+		],
+		"hungry": [
+			"The ration was a rumour.",
+			"My stomach filed a complaint.",
+			"Any food? Any? Crumbs count.",
+			"I could eat the contract.",
+			"Hunger is a form of motivation. I'm told.",
+			"The soup would be a luxury."
+		],
+		"low_mood": [
+			"Is it supposed to be this grey?",
+			"I've had better sentences.",
+			"The Warden's smile is getting to me.",
+			"Morale is a state of mind. Mine is elsewhere.",
+			"I miss having a ceiling that stays up.",
+			"Can I resign? I mean again."
+		],
+		"refining": [
+			"It glows. Is it supposed to glow?",
+			"The gauge is in the red. It's fine, probably.",
+			"Refining is a lifestyle choice.",
+			"Smells like profit. And headaches.",
+			"I'm told fumes build character.",
+			"Do not breathe this. I'm breathing this."
+		],
+		"wave_won": [
+			"Put that on my record. Slowly.",
+			"We won! Does that mean a raise?",
+			"Another day on the wrong side of dead.",
+			"Are they all gone? I'm checking nothing.",
+			"I think I earned a ribbon.",
+			"Tell the Warden I was brave. Just once."
+		]
+	},
+	"nicknames": {
+		"kills": [
+			"Paperwork",
+			"Reaper",
+			"Bouncer",
+			"Trigger",
+			"Pest Control",
+			"Sharpshooter"
+		],
+		"downs": [
+			"Rug",
+			"Floor Model",
+			"Pancake",
+			"Timber",
+			"Napper",
+			"Doormat"
+		],
+		"haul": [
+			"Donkey",
+			"Mule",
+			"Sherpa",
+			"Forklift",
+			"Backache",
+			"Crate Expectations"
+		],
+		"refine": [
+			"Glow",
+			"Sludge",
+			"Fumes",
+			"Slag",
+			"Greenhand",
+			"Cauldron"
+		]
+	},
+	"rapsheet": {
+		"crime": [
+			"Embezzled 40 tonnes of air",
+			"Unlicensed optimism",
+			"Arson (self-defence, lighter)",
+			"Forgery of a forged signature",
+			"Loitering with intent to loiter",
+			"Smuggling a very small moon",
+			"Insulting a pigeon"
+		],
+		"sentence": [
+			"6 years, 4 remaining, 2 rumoured",
+			"Until further notice",
+			"Life, with time off for complaints",
+			"11 years, pending review",
+			"Indefinite, but cozy",
+			"Twelve moons, renewable"
+		],
+		"complaint": [
+			"The pillow",
+			"The ore. It looks at me",
+			"Sunday",
+			"Lack of a better word",
+			"The Warden's tone",
+			"Gravity, on principle"
+		],
+		"last_words": [
+			"Tell them I was punctual",
+			"It was already like that",
+			"I regret nothing. Mostly",
+			"Please do not file this",
+			"Not the face",
+			"It's fine. It's fine. It's"
+		]
+	},
+	"epitaph": {
+		"generic": [
+			"{who}. Dug well. Died poorly.",
+			"{who}: worked hard. Mostly.",
+			"{who}. Left on time, for once.",
+			"{who}. Owed 3 days. Forgiven.",
+			"{who}: sentence complete. Paperwork not.",
+			"{who}. Gone, but still on the rota."
+		],
+		"bleed_out": [
+			"{who}. Ran short of blood. And time.",
+			"{who}: bled for the cause. Unfunded.",
+			"{who}. Died of insufficient bandage.",
+			"{who}. A red mark on the ledger.",
+			"{who}: left no forwarding address.",
+			"{who}. Fell down, stayed down."
+		],
+		"starvation": [
+			"{who}. Hungry to the end.",
+			"{who}: owed a meal. Never collected.",
+			"{who}. The ration was a rumour.",
+			"{who}. Out of food. Out of patience.",
+			"{who}: lived on promises. Not enough.",
+			"{who}. Starved of everything, including humour."
+		],
+		"killed": [
+			"{who}. Lost a fight with {enemy}.",
+			"{who}: the {enemy} sends no regrets.",
+			"{who}. Eaten by circumstances. Mainly {enemy}.",
+			"{who}. Met {enemy}. The meeting ran short.",
+			"{who}: gave their all to a {enemy}.",
+			"{who}. Cause of death: {cause}."
+		]
+	},
+	"tips": [
+		"Mining is safe. Refining is a lifestyle choice.",
+		"Creatures follow noise. Build a cheaper noise.",
+		"A turret is a friend that doesn't talk back.",
+		"Taint rises. The Warden's patience does not.",
+		"Store ore near the refinery. Not in it.",
+		"A full belt is a happy belt.",
+		"The pod survives you. Mostly.",
+		"Feed the inmates. They cannot eat the ore.",
+		"Waves come on schedule. Prepare for the schedule.",
+		"Walls are cheaper than regret.",
+		"Check the forecast before refining.",
+		"Nothing is as permanent as a temporary shed.",
+		"Research is optional. So is survival.",
+		"The Warden counts it twice."
+	],
+	"gameover": {
+		"pod_lost": [
+			"Your pod has been reclassified as debris.",
+			"The pod is gone. So is the point.",
+			"Pod lost. The Warden is disappointed in advance.",
+			"All that remains is the paperwork.",
+			"Pod destroyed. Sentences abruptly ended.",
+			"Colony closed due to extreme consequences."
+		],
+		"all_dead": [
+			"No staff remaining. The audit is over.",
+			"Inmates: zero. The planet: undefeated.",
+			"Nobody left to blame. Awkward.",
+			"The colony has been fully discharged.",
+			"Roster empty. Lights stay on, sadly.",
+			"Sentence served by everyone. Simultaneously."
+		]
+	},
+	"splat": {
+		"audited": [
+			"AUDITED",
+			"AUDITED!",
+			"FLAGGED",
+			"STAMPED",
+			"FILED",
+			"INSPECTED"
+		],
+		"oof": [
+			"OOF",
+			"OW",
+			"URK",
+			"NOT AGAIN",
+			"HEY",
+			"DENIED"
+		]
+	}
+}

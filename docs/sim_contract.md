@@ -124,6 +124,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `event_chains.json` | random_enabled, chance, steps[], complication, inspection_quota_default |
 | `events.json` | id -> {weight, min_day, harmful, max_per_game, requires, text, ...} |
 | `events_prison.json` | same schema as events.json, prison-themed |
+| `flavor.json` | view-only text bank (F1): dotted key paths -> arrays of lines; never read by sim |
 | `expedition.json` | campaign: travel_ticks, map_size, buffer_cap, rate_ticks, upkeep, collateral, raid_*, flush_radius (read by Campaign/Autopilot; upkeep item = `raw_food`; sling numbers live on the `sling` building def) |
 | `health.json` | parts, kinds, pain_scale/weight, downed_consciousness, shelter_collapse |
 | `idle_work.json` | cleanup{}, patrol{}, training{} |
@@ -239,3 +240,6 @@ View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`,
 
 ## C3 telegraphed attacks (`ThreatSystem` region C3)
 `data/enemies.json` `telegraph {windup_ticks, shape cell|line|area, radius|length, dmg_mult}` (brute area r1/20, spitter line 6/14, burrower cell/24, crawler none). When an enemy in range would strike, it stands still, locks the marked cells (`e` meta `tg`, no rng) and after `windup_ticks` hits every colonist/the target building still inside them; units that left are untouched. A killed enemy cancels its strike. `telegraphs()` (view) and `telegraph_state()` (appended to `state_hash` only while a wind-up is active).
+
+## F1 Flavor text bank (`view/flavor_picker.gd`, `data/flavor.json`)
+View-side only: no sim state, no `sim.rng`, not in `state_hash`/saves, goldens unaffected. `FlavorPicker.load_bank()` (alias `load_default()`), `pick(key, ctx)`, `pick_first([keys], ctx)`, `has_key`, `all_keys`, `K_*` key constants. Keys are dotted paths (`feed.<enemy>.<cause>`, `pa.<signal>`, `barks.<state>`...). ctx: `tick`, `id` (seed = hash([tick,key,id])), placeholders `who victim enemy n cause`. Ring of last 4 lines per key is picker state.
