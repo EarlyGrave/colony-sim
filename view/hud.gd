@@ -490,6 +490,7 @@ func _exit_tree() -> void:
 
 func bind(p_sim: Simulation) -> void:
 	sim = p_sim
+	invalidate()  # region W2c
 	_game_over.visible = false
 	_alarm_btn.set_pressed_no_signal(false)
 	close_side()
@@ -639,9 +640,47 @@ func show_game_over(reason: String) -> void:
 	_game_over.visible = true
 
 
+# region W2c
+const HUD_REFRESH := 0.1  ## texts/layout are rebuilt at most at 10 Hz, and only when a sim tick passed
+const HUD_REFRESH_IDLE := 0.5  ## paused: still pick up player commands that change counters
+var _w2c_acc := 99.0
+var _w2c_tick := -1
+
+
+## Marks the HUD texts/layout stale so the next _process rebuilds them at once.
+func invalidate() -> void:
+	_w2c_acc = 99.0
+
+
 func _process(delta: float) -> void:
 	if sim == null:
 		return
+	_w2c_acc += delta
+	var o2_live := tutorial_card != null and tutorial_card.visible
+	if _w2c_acc >= HUD_REFRESH_IDLE or (_w2c_acc >= HUD_REFRESH and sim.tick != _w2c_tick):
+		_w2c_acc = 0.0
+		_w2c_tick = sim.tick
+		_refresh_texts()
+		_place_side()
+	elif o2_live:
+		_o2_update()  # region O2: the highlight follows its target every frame
+	_alarm_btn.set_pressed_no_signal(sim.alarm)
+	for rule_id: String in _rule_buttons:
+		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
+	if _message.text != "" and Time.get_ticks_msec() / 1000.0 > _message_until:
+		_message.text = ""
+		_next_toast()
+	_panel_timer += delta
+	if _panel_timer >= PANEL_REFRESH:
+		_panel_timer = 0.0
+		_colonist_bar.refresh()
+		if _side != null:
+			_side.refresh()
+			if _side_id == "letters":
+				_letters.mark_read()
+
+
+func _refresh_texts() -> void:
 	var it := sim.items
 	var night: bool = sim.clock.is_night()
 	_clock.text = "%s %d, %02d:%02d" % ["Night" if night else "Day", sim.day() + 1, sim.clock.hour_int(), int(fposmod(sim.clock.hour(), 1.0) * 60.0)]
@@ -662,23 +701,9 @@ func _process(delta: float) -> void:
 	_o2_update()  # region O2
 	_o4_update()  # region O4
 	_c5_update()  # region C5
-	_alarm_btn.set_pressed_no_signal(sim.alarm)
-	for rule_id: String in _rule_buttons:
-		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
-	if _message.text != "" and Time.get_ticks_msec() / 1000.0 > _message_until:
-		_message.text = ""
-		_next_toast()
 	_letters_btn.text = "Letters (%d)" % _letters.unread if _letters.unread > 0 else "Letters"
 	_menu_btn.text = "More (%d)" % _letters.unread if _letters.unread > 0 else "More"
-	_place_side()
-	_panel_timer += delta
-	if _panel_timer >= PANEL_REFRESH:
-		_panel_timer = 0.0
-		_colonist_bar.refresh()
-		if _side != null:
-			_side.refresh()
-			if _side_id == "letters":
-				_letters.mark_read()
+# endregion
 
 
 func _threat_text() -> String:
