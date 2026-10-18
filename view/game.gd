@@ -270,6 +270,7 @@ func _inspect(world_pos: Vector2, cell: Vector2i) -> void:
 	if best != null:
 		_select_colonist(best.id, false)
 		return
+	world3d.selected_colonist = -1  # region G1c
 	hud.show_inspector(inspect_target(sim, cell))
 
 
@@ -281,6 +282,7 @@ static func inspect_target(p_sim: Simulation, cell: Vector2i) -> Dictionary:
 
 func _select_colonist(id: int, center := true) -> void:
 	combat_selected = id  # region combat
+	world3d.selected_colonist = id  # region G1c
 	for col in sim.colonists.list:
 		if col.id == id and col.alive:
 			world.selected_cell = col.cell

@@ -629,6 +629,28 @@ def food_art():
 # endregion
 
 
+# region G1c
+def atmosphere_art():
+    """Soft ground-contact shadow blob and the selection ring (32 px, alpha only look)."""
+    import math
+    n = 32
+    sh = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    ring = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    for y in range(n):
+        for x in range(n):
+            d = math.hypot((x + 0.5 - n / 2) / (n / 2), (y + 0.5 - n / 2) / (n / 2))
+            if d < 1.0:
+                a = int(120 * (1.0 - d) ** 0.8)
+                sh.putpixel((x, y), (10, 8, 16, a))
+            if 0.72 <= d <= 0.92:
+                ring.putpixel((x, y), (255, 236, 90, 235))
+            elif 0.62 <= d < 0.72 or 0.92 < d <= 0.98:
+                ring.putpixel((x, y), (40, 30, 10, 140))
+    save(sh, "shadow_blob")
+    save(ring, "select_ring")
+# endregion
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     colonists()
@@ -642,6 +664,7 @@ def main():
     pickaxe()
     terrain()
     food_art()  # region needs
+    atmosphere_art()  # region G1c
     print("sprites written to", os.path.normpath(OUT))
 
 
