@@ -98,7 +98,7 @@ func decline(id: int) -> bool:
 
 func can_deliver(c: Dictionary) -> bool:
 	return c.get("state", "") == "active" \
-		and sim.items.count_stored("refined_essence") >= int(c["essence"]) \
+		and sim.items.count_stored("refined_essence") >= required_essence(c) \
 		and sim.items.count_stored("machine_parts") >= int(c["parts"])
 
 
@@ -107,7 +107,7 @@ func deliver(id: int) -> bool:
 	if c.is_empty() or not can_deliver(c):
 		return false
 	var near := sim.map_center()
-	for pair: Array in [["refined_essence", int(c["essence"])], ["machine_parts", int(c["parts"])]]:
+	for pair: Array in [["refined_essence", required_essence(c)], ["machine_parts", int(c["parts"])]]:
 		if int(pair[1]) > 0:
 			sim.items.consume_stored(str(pair[0]), int(pair[1]), near)
 			sim.ledger.record_consumed(str(pair[0]), int(pair[1]), "contract")
@@ -181,3 +181,15 @@ func _sanction() -> void:
 
 func _say(event_id: String, text: String) -> void:
 	sim.bus.story_event.emit(event_id, text)
+
+
+# region B2
+## Essence actually due: clean-mining discount when the planet is clean (needs b2_pollution on).
+func required_essence(c: Dictionary) -> int:
+	var n := int(c["essence"])
+	var cb: Dictionary = cfg.get("clean_bonus", {})
+	if bool(sim.defs.balance.get("b2_pollution", {}).get("enabled", false)) and not cb.is_empty() \
+			and sim.contamination.is_clean(float(cb["max_pollution_frac"])):
+		return maxi(1, int(ceil(n * (1.0 - float(cb["essence_discount"])))))
+	return n
+# endregion

@@ -3,6 +3,7 @@
 	"offer_interval_days": 4,
 	"offer_ttl_days": 2,
 	"max_open": 2,
+	"clean_bonus": {"essence_discount": 0.15, "max_pollution_frac": 0.5},
 	"anger": {
 		"max": 6.0,
 		"on_fail": 1.5,

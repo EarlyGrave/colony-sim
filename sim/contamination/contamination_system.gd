@@ -31,6 +31,7 @@ func _on_first_refine() -> void:
 
 func tick() -> void:
 	level += waste_units() * float(_cfg["per_waste_per_day"]) * float(sim.opts.get("waste_mult", 1.0)) / sim.ticks_per_day  # region O3
+	_b2_decay()  # region B2
 	var per_day := (level - _last_level) * sim.ticks_per_day
 	_last_level = level
 	var alpha := 1.0 / (float(_cfg["rate_smoothing_days"]) * sim.ticks_per_day)
@@ -80,3 +81,24 @@ func machine_rate_per_day() -> float:
 			continue
 		s += float(sim.ticks_per_day) / maxf(1.0, float(b.recipe.get("work_ticks", 100))) * float(_cfg["per_batch"])
 	return s
+
+
+# region B2
+## Natural recovery (balance b2_pollution, off by default): while no refiner is mid-batch the
+## planet slowly heals below `decay_below_frac`; the "refine_cap" throttle rule multiplies it.
+func _b2_decay() -> void:
+	var c: Dictionary = sim.defs.balance.get("b2_pollution", {})
+	if not bool(c.get("enabled", false)) or level <= 0.0 or fraction() > float(c["decay_below_frac"]):
+		return
+	if sim.tick % 10 != 0 or machine_rate_per_day() > 0.0:
+		return
+	var per_day := float(c["idle_decay_per_day"])
+	if sim.is_rule_on("refine_cap"):
+		per_day *= float(c["throttle_decay_mult"])
+	level = maxf(0.0, level - per_day * 10.0 / sim.ticks_per_day)
+
+
+## True while pollution is low enough to count as "clean" for the mining bonuses.
+func is_clean(max_frac: float) -> bool:
+	return fraction() <= max_frac
+# endregion
