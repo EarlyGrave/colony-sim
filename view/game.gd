@@ -60,6 +60,7 @@ func _ready() -> void:
 		world.patrol_draft.clear())
 	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
 		camera.focus = WorldView.cell_to_world(cell))
+	_r4e_connect()  # region R4e
 	EventBus.game_over.connect(_on_game_over_meta)  # region meta
 	new_game(_initial_seed(), _web_size_opts(MetaStore.load_state().make_opts()))  # region meta
 	_setup_save_load()  # save-load
@@ -88,7 +89,7 @@ func _exit_tree() -> void:
 	if sim:
 		world.unbind()
 		world3d.unbind()
-		sim.dispose()
+		_r4e_dispose()  # region R4e
 		sim = null
 
 
@@ -150,10 +151,11 @@ func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	if sim:
 		world.unbind()
 		world3d.unbind()
-		sim.dispose()
+		_r4e_dispose()  # region R4e
 	opts["research_locked"] = true  # real game: tech gating on (tests keep it off)
-	sim = Simulation.new(seed_value, EventBus, null, opts)  # region meta
-	sim.start_new_game()
+	if not _r4e_make_campaign(seed_value, opts):  # region R4e
+		sim = Simulation.new(seed_value, EventBus, null, opts)  # region meta
+		sim.start_new_game()
 	combat_selected = -1  # region combat
 	world.bind(sim)
 	_bind_3d()
@@ -162,6 +164,7 @@ func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	world.patrol_draft.clear()
 	_belt_reset()  # region A2d
 	hud.bind(sim)
+	hud.bind_campaign(campaign)  # region R4e
 	camera.world_size = world.world_size()
 	camera.focus = WorldView.cell_to_world(sim.map_center())
 	camera.zoom_level = 1.0
@@ -182,7 +185,7 @@ func _process(delta: float) -> void:
 	var n := mini(int(_accum), MAX_TICKS_PER_FRAME)
 	_accum -= int(_accum)
 	for i in n:
-		sim.step()
+		_r4e_step()  # region R4e
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -324,6 +327,8 @@ func load_game() -> void:
 	if text == "":
 		hud.show_message("No save found.", 3.0)
 		return
+	if await _r4e_load_campaign(text):  # region R4e
+		return
 	_loading = true
 	var prev_speed := speed
 	set_speed(0)
@@ -342,7 +347,8 @@ func load_game() -> void:
 	if sim:
 		world.unbind()
 		world3d.unbind()
-		sim.dispose()
+		_r4e_dispose()  # region R4e
+	campaign = null  # region R4e
 	sim = res["sim"]
 	world.bind(sim)
 	_bind_3d()
@@ -359,6 +365,8 @@ func load_game() -> void:
 
 func autosave() -> void:
 	if sim != null and sim.game_over_reason == "" and not _loading:
+		if _r4e_autosave():  # region R4e
+			return
 		SaveStore.write(sim)
 
 
@@ -552,4 +560,149 @@ func undo_belt() -> void:
 	var path: Array = _belt_history.pop_back()
 	sim.remove_belt(path)
 	hud.show_message("Last belt path removed.", 2.0)
+# endregion
+
+
+# region R4e
+## The campaign (maps of the expedition layer); null when sim/campaign is absent
+## or the game is a plain single map. `sim` is always campaign.active_sim().
+var campaign: Object = null
+var _bus_count := 0
+
+
+func _r4e_connect() -> void:
+	hud.map_chosen.connect(switch_map)
+	EventBus.map_switched.connect(func(_id: int) -> void: _r4e_sync_active())
+	EventBus.expedition_arrived.connect(func(id: int) -> void:
+		hud.show_message("Letter: the expedition reached %s." % CampaignView.label(campaign, id), 8.0))
+	EventBus.expedition_loss.connect(func(id: int, debt: int) -> void:
+		hud.show_message("Letter: %s was lost. Debt +%d." % [CampaignView.label(campaign, id), debt], 8.0))
+	EventBus.cargo_arrived.connect(func(id: int, n: int) -> void:
+		hud.show_message("Cargo arrived at %s: %d items." % [CampaignView.label(campaign, id), n], 5.0))
+
+
+## Home gets the real EventBus (HUD listens there); other maps get isolated buses.
+func _r4e_bus() -> Node:
+	_bus_count += 1
+	if _bus_count == 1:
+		return EventBus
+	var b: Node = load("res://autoload/event_bus.gd").new()
+	add_child(b)
+	return b
+
+
+func _r4e_make_campaign(seed_value: int, opts: Dictionary) -> bool:
+	var scr := CampaignView.campaign_script()
+	if scr == null:
+		return false
+	_bus_count = 0
+	campaign = scr.new(seed_value, Callable(self, "_r4e_bus"), null, opts)
+	if campaign.has_method("start"):
+		campaign.call("start")
+	sim = campaign.call("active_sim")
+	return true
+
+
+## Attaches an already built campaign (tests, loaded saves).
+func attach_campaign(c: Object) -> void:
+	world.unbind()
+	world3d.unbind()
+	campaign = c
+	sim = c.call("active_sim")
+	_r4e_rebind()
+
+
+func switch_map(id: int) -> bool:
+	if campaign == null or not campaign.has_method("switch_map") or not campaign.call("switch_map", id):
+		return false
+	_r4e_sync_active()
+	return true
+
+
+func _r4e_sync_active() -> void:
+	if campaign != null and campaign.call("active_sim") != sim:
+		world.unbind()
+		world3d.unbind()
+		sim = campaign.call("active_sim")
+		_r4e_rebind()
+
+
+## Points WorldView / WorldView3D / camera / HUD at the active map's Simulation.
+func _r4e_rebind() -> void:
+	world.bind(sim)
+	_bind_3d()
+	world.pending_corner = Vector2i(-1, -1)
+	world.selected_cell = Vector2i(-1, -1)
+	world.patrol_draft.clear()
+	combat_selected = -1
+	_belt_reset()
+	hud.bind(sim)
+	hud.bind_campaign(campaign)
+	camera.world_size = world.world_size()
+	camera.focus = WorldView.cell_to_world(sim.map_center())
+	camera.zoom_level = 1.0
+	_accum = 0.0
+
+
+func _r4e_step() -> void:
+	if campaign != null:
+		campaign.call("step")
+		_r4e_sync_active()  # a campaign may switch the active map itself
+	else:
+		sim.step()
+
+
+func _r4e_dispose() -> void:
+	if campaign != null:
+		if campaign.has_method("dispose"):
+			campaign.call("dispose")
+		else:
+			for m: Dictionary in CampaignView.maps(campaign):
+				var s: Variant = m.get("sim")
+				if s is Simulation and s != sim:
+					s.dispose()
+			sim.dispose()
+		campaign = null
+	else:
+		sim.dispose()
+
+
+## Save v3 (SaveGame.campaign_to_dict). Returns true when it handled the save.
+func _r4e_autosave() -> bool:
+	var sg: Script = SaveGame
+	if campaign == null or not sg.has_method("campaign_to_dict"):
+		return false
+	var f := FileAccess.open(SaveStore.PATH, FileAccess.WRITE)
+	if f == null:
+		return true
+	f.store_string(JSON.stringify(sg.call("campaign_to_dict", campaign)))
+	f.close()
+	return true
+
+
+func _r4e_save_script() -> Script:
+	return SaveGame
+
+
+## Loads a v3 save when the text holds a campaign; returns true when handled.
+func _r4e_load_campaign(text: String) -> bool:
+	var d: Variant = JSON.parse_string(text)
+	if not (d is Dictionary) or not d.has("maps") or not _r4e_save_script().has_method("campaign_from_dict"):
+		return false
+	_bus_count = 0
+	var res: Variant = _r4e_save_script().call("campaign_from_dict", d, Callable(self, "_r4e_bus"))
+	var c: Object = res.get("campaign") if res is Dictionary else res
+	if c == null or (res is Dictionary and not res.get("ok", true)):
+		hud.show_message("Could not load the save.", 5.0)
+		return true
+	world.unbind()
+	world3d.unbind()
+	_r4e_dispose()
+	campaign = c
+	sim = c.call("active_sim")
+	_r4e_rebind()
+	set_speed(1)
+	_update_continue()
+	hud.show_message("Game loaded.", 3.0)
+	return true
 # endregion

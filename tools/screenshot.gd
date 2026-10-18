@@ -49,7 +49,21 @@ func _ready() -> void:
 		r.queue.push_front("assembly")
 		r.progress["assembly"] = float(r.bench_ticks("assembly")) * 0.45
 		game.sim.queue_research("filters", true)
-	if panel != "":
+	if panel.begins_with("exp_"):  # region R4e: demo campaign UI with a stub campaign
+		var stub: Object = (load("res://tests/test_expedition_ui.gd") as GDScript).new()
+		var c: Object = stub.call("_stub")
+		game.attach_campaign(c)
+		if panel == "exp_map":
+			c.call("switch_map", 1)
+			game._r4e_sync_active()
+		else:
+			game.hud.open_expedition("cargo" if panel == "exp_cargo" else "expedition")
+			var p: ExpeditionPanel = game.hud._side
+			if panel == "exp_crew":
+				p.biome = "ash"
+				p.step = ExpeditionPanel.Step.CREW
+				p._render()
+	elif panel != "":
 		game.hud.toggle_panel(panel)
 	for i in 20:
 		await get_tree().process_frame
