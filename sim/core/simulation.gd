@@ -92,6 +92,10 @@ func is_refining_building(def_id: String) -> bool:
 	return false
 
 
+func _arg_text(v: Variant) -> String:
+	return v if v is String else JSON.stringify(v, "", true)
+
+
 func _arg_array(v: Variant) -> Array:
 	if v is String:
 		var r: Variant = JSON.parse_string(v)
@@ -108,13 +112,12 @@ func _arg_dict(v: Variant) -> Dictionary:
 
 ## Player/campaign command: sends colonists and stored supplies away on an expedition.
 ## Atomic: unknown/dead/duplicate ids or supplies not in storage change nothing.
-## Returns {"ok": bool, "crew": [snapshot], "supplies": {item: n}}; snapshot =
+## Args are logged as JSON text (the save log holds scalars only). Returns {"ok": bool, "crew": [snapshot], "supplies": {item: n}}; snapshot =
 ## {name, engineer, skills{id: level}, passions{id: int}}.
 func dispatch_party(ids_in: Variant, supplies_in: Variant) -> Dictionary:
-	# Logged as JSON text (the save log holds scalars only); replay passes the text back in.
+	_record("dispatch_party", [_arg_text(ids_in), _arg_text(supplies_in)])  # save-load
 	var ids: Array = _arg_array(ids_in)
 	var supplies: Dictionary = _arg_dict(supplies_in)
-	_record("dispatch_party", [JSON.stringify(ids), JSON.stringify(supplies, "", true)])  # save-load
 	var fail := {"ok": false, "crew": [], "supplies": {}}
 	if ids.is_empty():
 		return fail
@@ -152,8 +155,8 @@ func dispatch_party(ids_in: Variant, supplies_in: Variant) -> Dictionary:
 ## Campaign command: spawns a crate of `items` within `radius` of the HQ (sim.rng picks the
 ## cell). Returns the number of items that were lost for lack of room.
 func receive_cargo(cargo_in: Variant, radius: int) -> int:
+	_record("receive_cargo", [_arg_text(cargo_in), radius])  # save-load
 	var cargo: Dictionary = _arg_dict(cargo_in)
-	_record("receive_cargo", [JSON.stringify(cargo, "", true), radius])  # save-load
 	var center := map_center()
 	var at := center
 	for _try in 20:
