@@ -51,6 +51,40 @@ static func apply(sim: Simulation, opts: Dictionary) -> void:
 		sim.rng.seed = sim.seed_value * 31 + site * 104729
 
 
+# region O3
+## Preset overrides as start opts (keys: wave_mult, waste_mult, debt_mult, crate, hint_density).
+## Only non-neutral values are emitted, so standard_term yields {} (identical to today).
+## wave_mult/waste_mult/debt_mult are read by ThreatSystem/ContaminationSystem/DebtSystem.
+static func preset_opts(defs: Defs, id: String) -> Dictionary:
+	var p: Dictionary = defs.presets.get("presets", {}).get(id, {})
+	var o := {}
+	for pair: Array in [["wave_strength_mult", "wave_mult"], ["waste_mult", "waste_mult"], ["starting_debt_mult", "debt_mult"]]:
+		var v := float(p.get(pair[0], 1.0))
+		if v != 1.0:
+			o[pair[1]] = v
+	var crate: Dictionary = p.get("crate", {})
+	if not crate.is_empty():
+		o["crate"] = crate.duplicate()
+	var hd := str(p.get("hint_density", "new"))
+	if hd != "new":
+		o["hint_density"] = hd
+	return o
+
+
+## Merges preset opts into `o` (crates add up).
+static func merge_preset(o: Dictionary, defs: Defs, id: String) -> void:
+	var p := preset_opts(defs, id)
+	for k: String in p:
+		if k == "crate":
+			var c: Dictionary = o.get("crate", {}).duplicate()
+			for item: String in p["crate"]:
+				c[item] = int(c.get(item, 0)) + int(p["crate"][item])
+			o["crate"] = c
+		else:
+			o[k] = p[k]
+# endregion
+
+
 static func _scout(sim: Simulation, n: int) -> void:
 	var center := sim.map_center()
 	var cells: Array = []

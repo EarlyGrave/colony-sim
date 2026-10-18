@@ -30,7 +30,7 @@ func _on_first_refine() -> void:
 
 
 func tick() -> void:
-	level += waste_units() * float(_cfg["per_waste_per_day"]) / sim.ticks_per_day
+	level += waste_units() * float(_cfg["per_waste_per_day"]) * float(sim.opts.get("waste_mult", 1.0)) / sim.ticks_per_day  # region O3
 	var per_day := (level - _last_level) * sim.ticks_per_day
 	_last_level = level
 	var alpha := 1.0 / (float(_cfg["rate_smoothing_days"]) * sim.ticks_per_day)

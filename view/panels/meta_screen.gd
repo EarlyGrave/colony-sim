@@ -56,6 +56,7 @@ func _rebuild() -> void:
 		int(s.get("days", 0)), int(s.get("contracts", 0)), int(s.get("essence", 0)),
 		int(s.get("freed", 0)), int(s.get("perks", 0))])
 	_label("Legacy: +%d   (balance: %d)" % [int(s.get("legacy", 0)), meta.balance], Color(0.8, 0.9, 1.0))
+	_label("Sentence: %s" % str(meta.defs.presets["presets"].get(meta.preset, {}).get("name", meta.preset)), Color(0.8, 0.9, 1.0))  # region O3
 	_button("New Sentence (new planet)", func() -> void: new_link.emit(meta.make_opts()))
 	var nb := meta.can_next_batch()
 	_button("Next run (same planet, taint ×%.0f%%)" % (

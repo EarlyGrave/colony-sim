@@ -29,6 +29,8 @@ func _assign(c: Colonist) -> void:
 		return
 	var st := DebtState.new()
 	st.total = _rng.randi_range(int(cfg["debt_min"]), int(cfg["debt_max"]))
+	if sim.opts.has("debt_mult"):  # region O3
+		st.total = roundi(st.total * float(sim.opts["debt_mult"]))
 	st.due_day = sim.day() + int(cfg["due_days"])
 	states[c.id] = st
 
