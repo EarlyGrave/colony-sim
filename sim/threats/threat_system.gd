@@ -116,7 +116,7 @@ func pick_raid_type(points: float) -> String:
 	var total := 0.0
 	for id: String in sim.defs.raids:
 		var r: Dictionary = sim.defs.raids[id]
-		if float(r["min_points"]) <= points:
+		if float(r["min_points"]) <= points and not r.get("scripted", false):  # region O1
 			ids.append(id)
 			total += float(r["weight"])
 	if ids.is_empty():
@@ -131,6 +131,11 @@ func pick_raid_type(points: float) -> String:
 
 ## Spends `points` on units of the raid type; returns enemy ids in spawn order.
 func compose_raid(id: String, points: float) -> Array[String]:
+	if sim.defs.raids[id].has("fixed"):  # region O1: scripted raid, no rng
+		var fixed: Array[String] = []
+		for u: Variant in sim.defs.raids[id]["fixed"]:
+			fixed.append(str(u))
+		return fixed
 	var units: Array = sim.defs.raids[id]["units"]
 	var out: Array[String] = []
 	var budget := points
@@ -156,9 +161,10 @@ func compose_raid(id: String, points: float) -> Array[String]:
 
 
 func tick() -> void:
-	if awakened and not wave_active and sim.tick >= next_wave_tick:
+	var held := sim.tutorial != null and sim.tutorial.waves_held()  # region O1
+	if awakened and not wave_active and not held and sim.tick >= next_wave_tick:
 		start_wave()
-	if awakened and not wave_active and not _warned \
+	if awakened and not wave_active and not held and not _warned \
 			and next_wave_tick - sim.tick < int(cfg["warning_ticks"]) + sim.idle_work.warning_bonus():  # region idle-work
 		_warned = true
 		sim.bus.wave_incoming.emit(next_spawn_origin, next_wave_tick - sim.tick)
@@ -180,6 +186,21 @@ func tick() -> void:
 		shots.pop_front()
 
 
+# region O1
+## True if the current raid is data-flagged with `flag` (scripted tutorial audit).
+func _scripted(flag: String) -> bool:
+	return raid_id != "" and bool(sim.defs.raids.get(raid_id, {}).get(flag, false))
+
+
+## Tutorial: arm the scripted audit `delay` ticks from now (warning fires at once).
+func schedule_scripted(delay: int) -> void:
+	awaken()
+	force_raid_id = "tutorial_audit"
+	next_wave_tick = sim.tick + delay
+	_schedule_origin()
+# endregion
+
+
 func start_wave() -> void:
 	wave_index += 1
 	wave_active = true
@@ -195,10 +216,13 @@ func start_wave() -> void:
 	raid_dead = 0
 	retreating = false
 	pending_drop = {}
+	if raid_id != "" and sim.defs.raids[raid_id].has("wave_ticks"):  # region O1
+		wave_end_tick = sim.tick + int(sim.defs.raids[raid_id]["wave_ticks"])
 	if raid_id != "":
 		var r: Dictionary = sim.defs.raids[raid_id]
 		var units := compose_raid(raid_id, strength)
-		units = sim.ecology.muster(units)  # region T5
+		if not r.has("fixed"):  # region O1
+			units = sim.ecology.muster(units)  # region T5
 		raid_total = units.size()
 		if str(r["spawn"]) == "drop" and not sim.buildings.list.is_empty():
 			var b: Building = sim.buildings.list[sim.rng.randi_range(0, sim.buildings.list.size() - 1)]
@@ -250,6 +274,8 @@ func _check_morale() -> void:
 
 func end_wave() -> void:
 	var repelled := wave_active and _attackers() == 0 and pending_drop.is_empty()
+	if wave_active and _scripted("scripted"):  # region O1: the audit always counts as repelled
+		repelled = true
 	wave_active = false
 	raid_id = ""
 	pending_drop = {}
@@ -381,7 +407,8 @@ func _tick_enemy(e: Enemy) -> void:
 			e.clear_path()
 			if e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
-				sim.buildings.damage(b, float(e.def["damage"]) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell))
+				if not (b.def.get("critical", false) and _scripted("hq_immune")):  # region O1
+					sim.buildings.damage(b, float(e.def["damage"]) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell))
 		elif _approach_building(e, b) == GridMover.Move.FAILED:
 			e.retarget_at = sim.tick + 5
 	else:
@@ -395,6 +422,8 @@ func _tick_enemy(e: Enemy) -> void:
 				if dodge > 0.0 and not e.def.get("ranged", false) and sim.rng.randf() < dodge:
 					return
 				# endregion
+				if _scripted("colonist_harmless"):  # region O1
+					return
 				sim.health.apply_damage(c, float(e.def["damage"]) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell), "", str(e.def.get("damage_kind", "bite")))  # region health
 		elif _approach_colonist(e, c) == GridMover.Move.FAILED:  # region perf-threat
 			e.retarget_at = sim.tick + 5

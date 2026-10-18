@@ -86,6 +86,9 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `receive_cargo` | items: {item: n} (logged as JSON text), radius: int | int (lost count) | R4b: spawns a crate near HQ (cell via `sim.rng`), ledger source `cargo`; items without room are recorded as `lost` |
 | `set_patrol_route_text` | text: str ("x,y;x,y") | void | empty = automatic ring around the base |
 | `purify_cell` | c: cell | bool | spends refined essence, cleans the field around c |
+| `tutorial_ack` | - | void | R5 O1: view-mirrored confirmation (portrait selected, forecast opened, release tap); completes only an `ack`-type step. No-op unless `opts.tutorial` |
+| `tutorial_skip_step` | - | void | completes the current step without its condition (still runs the next step's entry, e.g. arms the audit) |
+| `tutorial_skip_all` | - | void | step = 12, `skipped` = true, `tutorial_finished` emitted once |
 
 ### Research (pending R2a)
 Research commands (queue/cancel research, audit delivery) are being added by R2a. Placeholder: R2a/orchestrator must add each new `_record`
@@ -132,7 +135,8 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `perks.json` | caps, respec_cost, perks id -> {skill, level, effect}, levels_per_point |
 | `plants.json` | id -> {item, yield, grow_ticks, sow_ticks, harvest_ticks, min_daylight} |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
-| `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]} |
+| `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
+| `tutorial.json` | R5 O1: settings{audit_step, audit_delay_ticks}, steps[12] -> {id,title,text,reason,target{kind,id},done{signal,count/min_cells/where/or/latch},nudge_ticks} |
 | `recipes.json` | id -> {name, inputs{}, outputs{}, work_ticks, station} |
 | `research.json` | techs id -> {name, tier, prereqs[], cost{essence}, bench_ticks, unlocks{buildings,recipes,rules}, waste_mult} |
 | `chips.json` | T4: item, tech, recipe, chip_speed 0.8, chip_threat_mult 2.0, chip_waste_mult 1.3, upkeep_item/upkeep_per_day, calibration_days 3, calibrate_ticks, calibrate_min_skill (operating) |
@@ -206,3 +210,10 @@ Nests (2-4, map edge, reachable) are placed from the ecology stream at `start_ne
 `pollution_at(nest) * absorb_rate * dt * chip_pressure` (local mutation field + planet level), capped. A raid keeps `starved_max` units free and
 pays `unit_cost` per further unit from the banks, dropping what it cannot afford; waves leave from the fullest nest. `letter_received`
 "Creatures are massing" fires `rally_ticks` before the wave. Mutant variants roll per unit from the nest's pollution tier (hysteresis `revert_ratio`).
+
+## 11. Warden's Orientation (R5 O1, `sim.tutorial`, `sim/tutorial/tutorial_system.gd`)
+Exists only with `opts.tutorial == true` (else `sim.tutorial == null`, commands are recorded no-ops, hashes unchanged). No rng. Runs last in `step()` (after `storyteller.tick`, before the colonists-dead check); `sim.in_step` is true during `step()`.
+State: `step` (0..12, 12 = finished), `done[]`, `skipped`, `ticks_in_step`, `seen[]` cells, per-step flags, latched facts; appended to `state_hash` only in tutorial mode. Bus: `tutorial_step_changed(step)`, `tutorial_finished()`.
+Each step advances only on its `done.signal` (ack command, 3 mine designations, 4 zone cells, 10 stored ore after `item_mined`, workbench/refinery placed, `first_refine_done`, `research_completed`, >=3 belts + an item arriving in a port building, `forecast_revealed` or ack, `wave_repelled` with player alarm or a turret, decoy placed or `wave_incoming`, ack).
+Normal waves are held (`waves_held()`) until the audit step; entering it calls `threats.schedule_scripted(delay)`: raid `tutorial_audit` (2 crawlers, 1800-tick limit, always counts as repelled, pod takes 0 damage, inmates take 0 damage).
+View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`, `step_count()`.

@@ -131,6 +131,10 @@ signal cell_purified(cell: Vector2i)
 # region R2a
 signal research_completed(tech_id: String)
 # endregion
+# region O1
+signal tutorial_step_changed(step: int)
+signal tutorial_finished()
+# endregion
 # region R4
 signal map_switched(id: int)
 signal expedition_sent(id: int)
