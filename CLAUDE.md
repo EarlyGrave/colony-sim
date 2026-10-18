@@ -25,7 +25,10 @@ mode — the main session does NOT implement features itself:
    `docs/agents/<agent>/<batch>-report.md`.
 4. Budget: one wave per batch, Sonnet for subagents, the orchestrator does not
    re-read files the agents already read; short reports.
-5. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
+5. **Merge to `main`** (owner rule 2026-10-18): when a whole batch is merged into the
+   dev branch and the full suite is green, fast-forward/merge it into `main` and push
+   (Pages deploys from `main`). Never merge a half-done batch.
+6. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
 
 ## Stack
 - Godot **4.7.2-stable**, GDScript only (no C#: we need the web build).
