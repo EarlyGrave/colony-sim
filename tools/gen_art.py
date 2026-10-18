@@ -706,6 +706,88 @@ def atmosphere_art():
 # endregion
 
 
+# region A2c
+def _arrow(d, x0, y0, col, outline):
+    """Right-pointing arrow in a 16 px box at (x0, y0)."""
+    pts = [(x0 + 3, y0 + 5), (x0 + 9, y0 + 5), (x0 + 9, y0 + 2), (x0 + 14, y0 + 8), (x0 + 9, y0 + 13),
+           (x0 + 9, y0 + 10), (x0 + 3, y0 + 10)]
+    d.polygon(pts, fill=col, outline=outline)
+
+
+def belt_art():
+    k = rgba("#14121a")
+    # belt tile: art points +x; tiles seamlessly along x (rollers every 4 px)
+    img = Image.new("RGBA", (16, 16), rgba("#3a3d46"))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, 15, 1], fill=rgba("#e0b030"))
+    d.rectangle([0, 14, 15, 15], fill=rgba("#e0b030"))
+    for x in range(0, 16, 4):
+        d.line([(x, 2), (x, 13)], fill=rgba("#2a2c33"))
+        d.line([(x + 1, 2), (x + 1, 13)], fill=rgba("#4e525e"))
+    for x in (2, 10):
+        d.polygon([(x, 4), (x + 3, 7), (x, 10), (x + 1, 10), (x + 4, 7), (x + 1, 4)], fill=rgba("#ffd23a"))
+    save(img, "belt_tile")
+    # port arrows (point +x): in = green, out = orange
+    for name, col in (("port_in", "#4fe08a"), ("port_out", "#ff9a30")):
+        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        _arrow(ImageDraw.Draw(img), 0, 0, rgba(col), k)
+        save(img, name)
+
+
+def _plate(d, size, base):
+    k = rgba("#14121a")
+    d.rectangle([0, 0, size - 1, size - 1], fill=rgba(base), outline=k)
+    d.rectangle([1, 1, size - 2, 1], fill=rgba("#ffffff", 70))
+    for c in ((2, 2), (size - 3, 2), (2, size - 3), (size - 3, size - 3)):
+        d.point(c, fill=rgba("#c8d0d8"))
+
+
+def machine_art():
+    k = rgba("#14121a")
+    # miner 32x32: drill head on a rock-brown housing
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    _plate(d, 32, "#6a5c40")
+    d.ellipse([7, 7, 24, 24], fill=rgba("#2a2418"), outline=k)
+    d.ellipse([10, 10, 21, 21], fill=rgba("#9a9aa6"), outline=k)
+    d.line([(12, 12), (19, 19)], fill=rgba("#d8d8e0"), width=2)
+    d.line([(19, 12), (12, 19)], fill=rgba("#d8d8e0"), width=2)
+    d.rectangle([27, 12, 31, 19], fill=rgba("#ff9a30"), outline=k)
+    save(img, "machine_miner")
+    # smelter 32x32: furnace mouth with glow and a chimney
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    _plate(d, 32, "#5a4a44")
+    d.rectangle([6, 8, 21, 24], fill=rgba("#2a1c18"), outline=k)
+    d.rectangle([8, 12, 19, 22], fill=rgba("#e0661c"))
+    d.rectangle([10, 14, 17, 20], fill=rgba("#ffc04a"))
+    d.rectangle([23, 4, 28, 11], fill=rgba("#555b66"), outline=k)
+    d.rectangle([24, 5, 27, 7], fill=rgba("#7fbf3f"))
+    d.rectangle([0, 14, 2, 18], fill=rgba("#4fe08a"))
+    d.rectangle([29, 14, 31, 18], fill=rgba("#ff9a30"))
+    save(img, "machine_smelter")
+    # assembler 32x32: blue housing with a robot arm
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    _plate(d, 32, "#3c5f7a")
+    d.rectangle([5, 5, 26, 26], fill=rgba("#2a3e50"), outline=k)
+    d.ellipse([12, 12, 19, 19], fill=rgba("#b8c2cc"), outline=k)
+    d.line([(15, 15), (24, 8)], fill=rgba("#e0b030"), width=2)
+    d.rectangle([23, 6, 26, 9], fill=rgba("#ff4040"))
+    d.rectangle([0, 14, 2, 18], fill=rgba("#4fe08a"))
+    d.rectangle([29, 14, 31, 18], fill=rgba("#ff9a30"))
+    save(img, "machine_assembler")
+    # storage in / out 16x16: crates with a chute marker
+    for name, base, col in (("machine_storage_in", "#6a5a3c", "#4fe08a"), ("machine_storage_out", "#4e6a3c", "#ff9a30")):
+        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        _plate(d, 16, base)
+        d.rectangle([4, 4, 11, 11], fill=rgba("#2a2418"), outline=k)
+        d.rectangle([6, 6, 9, 9], fill=rgba(col))
+        save(img, name)
+# endregion
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     colonists()
@@ -721,6 +803,8 @@ def main():
     terrain()
     food_art()  # region needs
     atmosphere_art()  # region G1c
+    belt_art()  # region A2c
+    machine_art()  # region A2c
     print("sprites written to", os.path.normpath(OUT))
 
 

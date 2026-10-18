@@ -74,6 +74,7 @@ var _time := 0.0
 var _tint := Color.WHITE
 var world_view: WorldView  # region G1b: source of turret aim
 var _buildings3d := Building3D.new()  # region G1b
+var _belt_layer := BeltLayer.new()  # region A2c
 
 
 func _ready() -> void:
@@ -87,6 +88,7 @@ func _ready() -> void:
 	add_child(chunks)
 	_g1c_ready()  # region G1c
 	add_child(_buildings3d)  # region G1b
+	add_child(_belt_layer)  # region A2c
 
 
 func bind(p_sim: Simulation, world_2d: World2D) -> void:
@@ -97,6 +99,7 @@ func bind(p_sim: Simulation, world_2d: World2D) -> void:
 	_g1d_bind()  # region G1d hook
 	sim.bus.tile_changed.connect(_on_tile_changed)
 	_g1c_bind()  # region G1c
+	_belt_layer.bind(sim)  # region A2c
 	if overlay and not overlay.draw.is_connected(_draw_overlay):
 		overlay.draw.connect(_draw_overlay)
 
@@ -108,6 +111,7 @@ func unbind() -> void:
 		sim.bus.tile_changed.disconnect(_on_tile_changed)
 	_clear_units()
 	_buildings3d.clear()  # region G1b
+	_belt_layer.clear()  # region A2c
 	sim = null
 
 
@@ -234,6 +238,7 @@ func _process(delta: float) -> void:
 	_update_tint()
 	_g1c_update()  # region G1c
 	_buildings3d.sync(sim, _aim_of, _tint)  # region G1b
+	_a2c_update(delta)  # region A2c
 	var seen := {}
 	for c: Colonist in sim.colonists.list:
 		var k := "c%d" % c.id
@@ -545,4 +550,11 @@ func _update_piles() -> void:
 # region G1b
 func _aim_of(id: int) -> float:
 	return world_view.turret_aim(id) if world_view else -PI / 2
+# endregion
+
+
+# region A2c
+func _a2c_update(delta: float) -> void:
+	var vis := ChunkLayer.chunks_in_rect(view_rect.grow(ChunkLayer.CHUNK * 0.25), sim.map.width, sim.map.height)
+	_belt_layer.sync(delta, _tint, vis)
 # endregion
