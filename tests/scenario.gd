@@ -4,6 +4,13 @@ extends RefCounted
 ## refinery next to the capsule, a waste dump, mining designated nearby.
 
 
+## Hand-mined essence budget of the scenario: ten old deposits held 30..60 ore
+## each (~450). Infinite nodes would let the scenario refine without limit and
+## the planet dies of contamination before any defence matters, so the
+## scenario player stops mining once the old total is reached.
+const ESSENCE_BUDGET := 380
+
+
 static func standard_colony(sim: Simulation, turrets: int) -> void:
 	var center := sim.map_center()
 	var ref := find_spot(sim, "refinery", center, 3)
@@ -61,18 +68,46 @@ static func find_zone_spot(sim: Simulation, near: Vector2i, size: Vector2i) -> V
 	return near
 
 
+static func _purity_rank(sim: Simulation, c: Vector2i) -> int:
+	if not sim.map.is_node(c):
+		return 1
+	return NodeData.PURITY_IDS.find(sim.map.node_purity_id(c))
+
+
+## Designates the `n` nearest ESSENCE nodes (the refinery's input) and keeps
+## them designated: mining a node clears its designation, so a sensible
+## player (this scenario) re-designates after every cycle. Nodes are infinite,
+## so this models the old "mine the same ten deposits all game" income.
+## Falls back to legacy finite deposits when the map has no essence node.
 static func designate_nearest_deposits(sim: Simulation, n: int) -> void:
 	var center := sim.map_center()
 	var cells: Array[Vector2i] = []
 	for y in sim.map.height:
 		for x in sim.map.width:
 			var c := Vector2i(x, y)
-			if sim.map.is_deposit(c) and sim.map.is_adjacent_to_passable(c):
-				cells.append(c)
+			if not sim.map.is_deposit(c) or not sim.map.is_adjacent_to_passable(c):
+				continue
+			if sim.map.is_node(c) and sim.map.node_resource(c) != "essence_ore":
+				continue
+			cells.append(c)
+	# A sensible player takes the purest nodes (yield x0.5 / x1 / x2) near the capsule.
 	cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		return a.distance_squared_to(center) < b.distance_squared_to(center))
+	var near_cells := cells.slice(0, mini(cells.size(), n * 2))
+	near_cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		var pa := _purity_rank(sim, a)
+		var pb := _purity_rank(sim, b)
+		if pa != pb:
+			return pa > pb
+		return a.distance_squared_to(center) < b.distance_squared_to(center))
+	cells.assign(near_cells)
+	var chosen: Array[Vector2i] = []
 	for i in mini(n, cells.size()):
+		chosen.append(cells[i])
 		sim.designate_mine(cells[i], true)
+	sim.bus.item_mined.connect(func(c: Vector2i, _item: String, _n: int) -> void:
+		if c in chosen and sim.map.is_node(c) and sim.ledger.get_count("mining:essence_ore") < ESSENCE_BUDGET:
+			sim.designate_mine(c, true))
 
 
 ## Runs until game over or `max_waves` waves have ended. Returns a summary.

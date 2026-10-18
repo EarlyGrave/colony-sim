@@ -30,6 +30,8 @@ func tick(c: Colonist, sim: Simulation) -> int:
 	var cfg: Dictionary = sim.defs.balance["mining"]
 	var item: String = cfg["item"]
 	var got := 0
+	if sim.map.node_rubbled(target, sim.tick):
+		return Status.DONE  # buried while walking/digging
 	if sim.map.is_node(target):  # region A1a: infinite node, resource + purity decide the yield
 		item = String(NodeData.resource(sim.map.node_resource(target)).get("item", item))
 		if not sim.defs.items.has(item):

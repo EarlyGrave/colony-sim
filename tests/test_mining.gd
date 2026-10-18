@@ -2,43 +2,49 @@ extends TestCase
 ## E3: mining, stockpiles, conservation of items.
 
 
-func _designate_near(sim: Simulation, n: int) -> int:
+## Designates the `n` nodes of `res` nearest to the map centre (mining a node
+## clears its designation, so callers re-designate to keep mining).
+func _designate_nodes(sim: Simulation, n: int, res := "essence_ore") -> int:
 	var center := sim.map_center()
 	var cells: Array[Vector2i] = []
-	for y in sim.map.height:
-		for x in sim.map.width:
-			var c := Vector2i(x, y)
-			if sim.map.is_deposit(c) and sim.map.is_adjacent_to_passable(c):
-				cells.append(c)
+	for c in sim.map.node_cells():
+		if sim.map.node_resource(c) == res and sim.map.is_adjacent_to_passable(c):
+			cells.append(c)
 	cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		return a.distance_squared_to(center) < b.distance_squared_to(center))
-	var total := 0
 	for i in mini(n, cells.size()):
 		sim.designate_mine(cells[i], true)
-		total += sim.map.get_deposit_amount(cells[i])
-	return total
+	return mini(n, cells.size())
+
+
+func _mine_for(sim: Simulation, n: int, ticks: int, step := 100, res := "essence_ore") -> void:
+	for i in ticks / step:
+		_designate_nodes(sim, n, res)
+		sim.run_ticks(step)
 
 
 func test_mined_ore_reaches_stockpile() -> void:
 	var sim := make_sim(11)
 	var start_stored := sim.items.count_stored("essence_ore")
-	_designate_near(sim, 4)
-	sim.run_ticks(3000)
+	assert_gt(_designate_nodes(sim, 4), 0, "no essence node reachable")
+	_mine_for(sim, 4, 3000)
 	assert_gt(sim.ledger.get_count("mining:essence_ore"), 20, "too little mined")
 	assert_gt(sim.items.count_stored("essence_ore"), start_stored + 20, "ore not delivered to stockpile")
 
 
-func test_resources_are_conserved() -> void:
+func test_nodes_never_deplete_and_ore_is_conserved() -> void:
 	for seed_value in [11, 12, 13]:
 		var sim := make_sim(seed_value)
-		var deposits_before := sim.map.total_deposit_amount()
-		_designate_near(sim, 6)
+		var nodes_before := sim.map.node_cells().size()
+		var lost_before := sim.map.deposit_lost
 		for i in 8:
-			sim.run_ticks(500)
+			_mine_for(sim, 6, 500)
 			var ore_world := sim.items.count_world("essence_ore")
 			assert_eq(ore_world, sim.ledger.balance_of("essence_ore"), "seed %d: ore appeared/vanished at tick %d" % [seed_value, sim.tick])
-			var mined := sim.ledger.get_count("mining:essence_ore")
-			assert_eq(deposits_before - sim.map.total_deposit_amount(), mined + sim.map.deposit_lost, "seed %d: deposit accounting" % seed_value)
+		assert_gt(sim.ledger.get_count("mining:essence_ore"), 0, "seed %d: nothing mined" % seed_value)
+		assert_eq(sim.map.node_cells().size(), nodes_before, "seed %d: nodes are infinite" % seed_value)
+		assert_eq(sim.map.deposit_lost, lost_before, "seed %d: nothing is lost from nodes" % seed_value)
+		assert_eq(sim.map.total_deposit_amount(), 0, "seed %d: nodes carry no finite amount" % seed_value)
 
 
 func test_mining_stops_when_designation_removed() -> void:
@@ -58,10 +64,8 @@ func test_mining_stops_when_designation_removed() -> void:
 func test_same_seed_same_game() -> void:
 	var a := make_sim(99)
 	var b := make_sim(99)
-	_designate_near(a, 5)
-	_designate_near(b, 5)
-	a.run_ticks(1500)
-	b.run_ticks(1500)
+	_mine_for(a, 5, 1500)
+	_mine_for(b, 5, 1500)
 	for i in a.colonists.list.size():
 		assert_eq(a.colonists.list[i].cell, b.colonists.list[i].cell)
 	assert_eq(a.items.stacks, b.items.stacks)

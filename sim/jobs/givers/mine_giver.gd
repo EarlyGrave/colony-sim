@@ -15,6 +15,8 @@ func find(c: Colonist) -> Job:
 	for i in m.mine_indices():
 		var cell := Vector2i(i % m.width, i / m.width)
 		var key := "dep:%d,%d" % [cell.x, cell.y]
+		if m.node_rubbled(cell, sim.tick):
+			continue
 		var d := c.cell.distance_squared_to(cell)
 		if d >= best_d or not sim.jobs._free(c, key):
 			continue
