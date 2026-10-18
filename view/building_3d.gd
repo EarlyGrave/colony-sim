@@ -13,7 +13,7 @@ const HEIGHTS := {
 	"power_pole": 1.5, "coal_generator": 1.6, "nitrogen_extractor": 1.3, "nitrogen_turbine": 1.4, "nuclear_reactor": 2.1, "solar_array": 0.6,  # region L4
 }
 ## Explicit flat fallbacks (drawn by WorldView on the ground layer).
-const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt", "warden_terminal", "sling"]  # belts: BeltLayer; warden_terminal: region R2b
+const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt", "warden_terminal", "sling", "beacon_launcher"]  # region S2: flat until S3 model  # belts: BeltLayer; warden_terminal: region R2b
 const TOP_ART := {"hq": "capsule", "refinery": "refinery", "turret": "turret_base", "stove": "stove", "bed": "bed", "door": "door",
 	"miner": "machine_miner", "smelter": "machine_smelter", "assembler": "machine_assembler",
 	"storage_in": "machine_storage_in", "storage_out": "machine_storage_out"}  # region A2c

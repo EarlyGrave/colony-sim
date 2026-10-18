@@ -70,6 +70,7 @@ var mutation: MutationSystem  # region mutation
 var ecology: EcologySystem  # region T5
 var milestones: MilestoneSystem  # region R2b
 var petition: PetitionSystem  # region E1
+var beacons: BeaconSystem  # region S2
 # endregion
 # region perks
 var perks: PerkSystem
@@ -306,6 +307,7 @@ func _init_systems() -> void:
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	petition = PetitionSystem.new(self)  # region E1
+	beacons = BeaconSystem.new(self)  # region S2
 	chips = ChipSystem.new(self)  # region T4
 	power = PowerSystem.new(self)  # region L3
 	squads = SquadSystem.new(self)  # region C1
@@ -421,6 +423,7 @@ func step() -> void:
 	if profiling:
 		_lap("health")
 	debt.tick()  # region debt
+	beacons.tick()  # region S2
 	if profiling:
 		_lap("debt")
 	mood.tick()  # region mood
@@ -969,6 +972,12 @@ func remove_chip(building_id: int) -> bool:
 func deliver_audit(tier: int) -> bool:
 	_record("deliver_audit", [tier])  # save-load
 	return milestones.deliver(tier)
+# endregion
+
+
+# region S2: Penance Beacons (needs balance s2_enabled; the launcher is placed via place_building)
+func get_beacon_state() -> Dictionary:
+	return beacons.state()
 # endregion
 
 

@@ -444,5 +444,10 @@
 		"name": "Solar Array", "size": [2, 2], "color": "#2a3f6a", "max_hp": 100,
 		"cost": {"essence_ore": 30, "refined_essence": 6}, "build_work": 100, "buildable": true, "threat_priority": 1,
 		"threat": 4, "power_gen": 25, "k5_power_gen": 12, "fuel": null
+	},
+	"beacon_launcher": {
+		"name": "Beacon Launcher", "size": [2, 2], "color": "#c8a24a", "max_hp": 120,
+		"cost": {"essence_ore": 40, "plate": 10}, "build_work": 120, "buildable": true, "threat_priority": 2,
+		"threat": 5, "power_use": 5, "s2_beacon": true
 	}
 }

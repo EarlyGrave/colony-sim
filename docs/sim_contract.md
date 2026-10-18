@@ -128,7 +128,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `event_chains.json` | random_enabled, chance, steps[], complication, inspection_quota_default |
 | `fuels.json` | L5 power fuels: threat_idle_mult, fuels{coal,nitrogen,uranium -> tier, generator, tech, energy_per_unit (= power_gen*burn_ticks/TPS), waste_per_unit, threat, spent_item/spent_per_burn, meltdown{}}, solar{}; buildings carry `power_use` (consumer), `power_gen` + `fuel{item,burn_ticks,waste_per_burn,spent_item?}` (generator, `fuel:null` = passive), `power_range` (pole); research `unlocks.belt_nodes`; `balance.json` keys `logistics2`, `power`, `map.extra_share` (biome `extra_resources` conversion, 0 = off); resources `appended: 2` = byte order after R4a |
 | `events.json` | id -> {weight, min_day, harmful, max_per_game, requires, text, ...} |
-| `events_prison.json` | same schema as events.json, prison-themed |
+| `events_prison.json` | same schema as events.json |
 | `fx.json` | view-only juice (bursts, splats, drips, AUDITED text); not read by sim |
 | `flavor.json` | view-only text bank (F1): dotted key paths -> arrays of lines; never read by sim |
 | `expedition.json` | campaign: travel_ticks, map_size, buffer_cap, rate_ticks, upkeep, collateral, raid_*, flush_radius (read by Campaign/Autopilot; upkeep item = `raw_food`; sling numbers live on the `sling` building def) |
@@ -140,6 +140,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `presets.json` | default, order, presets{id: name, sentence, wave_strength_mult, waste_mult, starting_debt_mult, crate, hint_density} (O3; become opts `wave_mult`, `waste_mult`, `debt_mult`, `crate`, `hint_density` via `StartOpts.preset_opts`; neutral values emit no key, so standard_term = `{}`) |
 | `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter} (E1, gated by balance e1_enabled) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
+| `beacons.json` | S2: building, build_ticks, cost, life_days, cut_pct, diminish, cap_pct, max_alive (gated by balance s2_enabled) |
 | `models.json` | art model descriptors (view only, not read by sim) |
 | `mood.json` | base, check_ticks, thresholds, chances, thoughts |
 | `mutation.json` | update_ticks, cap, diffusion, decay, bloom/illness chances |
@@ -242,7 +243,6 @@ Normal waves are held (`waves_held()`) until the audit step; entering it calls `
 `HealthState.band(cfg)` / `sim.health.band(c)` derives `fit | wounded | down` from the existing model (down = `downed`; wounded = blood < `band.wounded_blood` or total damage >= `band.wounded_damage`). `sim.health.bleed_out_seconds(c)` = ceil(blood / bleed_rate / TICKS_PER_SECOND) while Down and bleeding, else -1. `sim.health.stabilise(c, medic)` tends all injuries at `band.stabilise_quality` (C2 Medic hook). Auto-rescue is the existing `RescueGiver` (any colonist with doctoring enabled carries a Down colonist to a free bed). No new RNG, no goldens change (derived reads only); data in `health.json` `band`.
 
 ## C3 telegraphed attacks (`ThreatSystem` region C3)
-`data/enemies.json` `telegraph {windup_ticks, shape cell|line|area, radius|length, dmg_mult}` (brute area r1/20, spitter line 6/14, burrower cell/24, crawler none). When an enemy in range would strike, it stands still, locks the marked cells (`e` meta `tg`, no rng) and after `windup_ticks` hits every colonist/the target building still inside them; units that left are untouched. A killed enemy cancels its strike. `telegraphs()` (view) and `telegraph_state()` (appended to `state_hash` only while a wind-up is active).
 
 ## F1 Flavor text bank (`view/flavor_picker.gd`, `data/flavor.json`)
 View-side only: no sim state, no `sim.rng`, not in `state_hash`/saves, goldens unaffected. `FlavorPicker.load_bank()` (alias `load_default()`), `pick(key, ctx)`, `pick_first([keys], ctx)`, `has_key`, `all_keys`, `K_*` key constants. Keys are dotted paths (`feed.<enemy>.<cause>`, `pa.<signal>`, `barks.<state>`...). ctx: `tick`, `id` (seed = hash([tick,key,id])), placeholders `who victim enemy n cause`. Ring of last 4 lines per key is picker state.
