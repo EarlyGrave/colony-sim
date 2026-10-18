@@ -1,8 +1,60 @@
 {
 	"start": {
-		"resources": {"essence_ore": 5, "copper_ore": 3, "iron_ore": 3},
-		"purity_weights": {"impure": 3, "normal": 5, "pure": 2},
+		"resources": {
+			"essence_ore": 5,
+			"copper_ore": 3,
+			"iron_ore": 3
+		},
+		"purity_weights": {
+			"impure": 3,
+			"normal": 5,
+			"pure": 2
+		},
 		"node_density": 1.0,
-		"hazard": 0
+		"hazard": 0,
+		"yield_mult": 1.0,
+		"refining_allowed": true
+	},
+	"ash": {
+		"resources": {
+			"cinder_ore": 1
+		},
+		"purity_weights": {
+			"impure": 4,
+			"normal": 4,
+			"pure": 2
+		},
+		"node_density": 1.0,
+		"hazard": 2,
+		"yield_mult": 1.2,
+		"refining_allowed": false
+	},
+	"crystal": {
+		"resources": {
+			"prism_ore": 1
+		},
+		"purity_weights": {
+			"impure": 1,
+			"normal": 3,
+			"pure": 6
+		},
+		"node_density": 1.0,
+		"hazard": 1,
+		"yield_mult": 1.0,
+		"refining_allowed": false
+	},
+	"swamp": {
+		"resources": {
+			"bog_resin": 1
+		},
+		"purity_weights": {
+			"impure": 4,
+			"normal": 4,
+			"pure": 2
+		},
+		"node_density": 1.0,
+		"hazard": 3,
+		"yield_mult": 1.0,
+		"refining_allowed": false
 	}
 }

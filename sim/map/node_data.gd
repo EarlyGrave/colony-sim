@@ -23,7 +23,13 @@ static func _ensure() -> void:
 	ids.sort()
 	_res_ids.clear()
 	for k in ids:
-		_res_ids.append(String(k))
+		if not bool(_res[k].get("appended", false)):
+			_res_ids.append(String(k))
+	# region R4a: expedition resources get bytes AFTER the legacy ones so existing map hashes stay identical
+	for k in ids:
+		if bool(_res[k].get("appended", false)):
+			_res_ids.append(String(k))
+	# endregion
 
 
 static func resource_ids() -> Array[String]:

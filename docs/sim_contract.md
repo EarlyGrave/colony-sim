@@ -102,7 +102,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `ammo.json` | item, turret{}, pouch{}, policies[], default_policy |
 | `arrivals.json` | max_colonists, choice_timeout_ticks, age_min/max, max_traits, trait_chance, stories |
 | `balance.json` | ticks_per_day, automation, map{width,height,clusters}, colony{colonists,engineers,start_items,start_stockpile_size}, colonist, mining, construction, waves... |
-| `biomes.json` | biome id -> {resources, purity_weights, node_density, hazard} |
+| `biomes.json` | biome id -> {resources, purity_weights, node_density, hazard, yield_mult, refining_allowed}; R4: start, ash (cinder_ore), crystal (prism_ore), swamp (bog_resin) |
 | `buildings.json` | id -> {name, size[2], color, max_hp, cost{item:n}, buildable, shelter, critical, threat, repair_cost{item:n}, decoy{fuel_item,burn_ticks,unlit_mult,pollution_per_burn,burst_mult,burst_ticks,cooldown_ticks,essence_item,essence_cost}, ...} |
 | `contracts.json` | first_offer_day, offer_interval_days, offer_ttl_days, max_open, anger, templates[] |
 | `crafting.json` | modes[], priorities[], default_priority, default_bill_target |
@@ -132,7 +132,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `recipes.json` | id -> {name, inputs{}, outputs{}, work_ticks, station} |
 | `research.json` | techs id -> {name, tier, prereqs[], cost{essence}, bench_ticks, unlocks{buildings,recipes,rules}, waste_mult} |
 | `chips.json` | T4: item, tech, recipe, chip_speed 0.8, chip_threat_mult 2.0, chip_waste_mult 1.3, upkeep_item/upkeep_per_day, calibration_days 3, calibrate_ticks, calibrate_min_skill (operating) |
-| `resources.json` | id -> {item, tier, biomes, base_rate, purity_mult} (infinite nodes) |
+| `resources.json` | id -> {item, tier, biomes, base_rate, purity_mult, appended?}; `appended` resources get node_res bytes after legacy ones (keeps start-map hashes) |
 | `rules.json` | id -> {name, default: bool (or mode string when `modes` present), hidden?, ...} player rules (`set_rule`) |
 | `skills.json` | max_level, xp_base, xp_step, xp_per_work_tick, speed_per_level, passion_xp |
 | `time.json` | start_hour, dawn/dusk hours, night_daylight |
