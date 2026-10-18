@@ -14,7 +14,7 @@ flags `k2_enabled`, `k5_enabled` (default false; K4 is behaviour-preserving, no 
   clean-colony hard gets >=1 audit by d10; seed 3 planet_dead d21 not worse on standard; deaths short < standard < hard.
 - Tests: audit fires on schedule per preset; calm suppresses pollution wave; determinism (same seed twice); goldens regenerated, changed ticks listed in report.
 
-## K2 — preset-scaled Parole Review + outposts (owner: sim/research/milestone_system.gd review section, data/milestones.json, sim/world/* outpost files, view/panels/reviews_panel.gd, tests/test_k2_reviews.gd)
+## K2 — preset-scaled Parole Review + outposts (owner: sim/research/milestone_system.gd review section, data/milestones.json, sim/campaign/expedition.gd + sim/campaign/campaign.gd (outpost parts), view/panels/reviews_panel.gd, tests/test_k2_reviews.gd)
 - Review demands scale per preset: debt% and waves-repelled (short -1 wave, standard base 2, hard +1 and debt +2 pts).
 - New review step "outpost held N days" (standard/hard; free on short). Outposts count as audit decoys: while an outpost is held,
   the next audit patrol hits it first (skip home audit once, uses K1 `next_audit_tick` hook via a `# region K2` call; if K1 absent, no-op).
