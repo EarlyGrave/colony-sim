@@ -2,10 +2,10 @@ extends TestCase
 ## O3 difficulty presets: opts mapping, raid ladder, waste scaling, dialog.
 
 
-func _sim_with(id: String, seed_value := 2) -> Simulation:
+func _sim_with(id: String, seed_value := 2, defs_override: Defs = null) -> Simulation:
 	var defs := Defs.get_default()
 	var opts := StartOpts.preset_opts(defs, id)
-	var sim := Simulation.new(seed_value, make_bus(), null, opts)
+	var sim := Simulation.new(seed_value, make_bus(), defs_override, opts)
 	sim.start_new_game()
 	_sims.append(sim)
 	return sim
@@ -24,7 +24,9 @@ func test_raid_points_ladder() -> void:
 
 
 func _contam_after_batch(id: String) -> float:
-	var sim := _sim_with(id, 7)
+	var nd := Defs.get_default().duplicate_defs()
+	nd.balance["b2_pollution"]["enabled"] = false  # idle decay would mask the small waste delta
+	var sim := _sim_with(id, 7, nd)
 	sim.items.drop(sim.map_center() + Vector2i(5, 5), "waste", 20)
 	var before := sim.contamination.level
 	for i in 20:

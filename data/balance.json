@@ -52,7 +52,7 @@
 		"error_growth": 0.5
 	},
 	"b2_pollution": {
-		"enabled": false,
+		"enabled": true,
 		"idle_decay_per_day": 0.25,
 		"decay_below_frac": 0.9,
 		"throttle_decay_mult": 8.0,
@@ -64,7 +64,7 @@
 		"overlay_rows_per_frame": 12
 	},
 	"b3": {
-		"enabled": false
+		"enabled": true
 	},
 	"storyteller": {
 		"enabled": true,
@@ -123,5 +123,5 @@
 		"free_tiers": 1,
 		"essence_item": "refined_essence"
 	},
-	"b4_enabled": false
+	"b4_enabled": true
 }

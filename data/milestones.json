@@ -61,9 +61,9 @@
 		{
 			"id": "review_1",
 			"title": "Parole Review I",
-			"text": "Debt paid is noted. The wardens grant a small essence allowance.",
+			"text": "Early repayments are noted. The wardens grant a small essence allowance.",
 			"kind": "debt_paid_pct",
-			"value": 25,
+			"value": 8,
 			"reward": {
 				"refined_essence": 10
 			}
@@ -71,9 +71,9 @@
 		{
 			"id": "review_2",
 			"title": "Parole Review II",
-			"text": "Audit Tier 3 cleared. The wardens release a research allowance.",
-			"kind": "tier",
-			"value": 3,
+			"text": "The colony held against the creatures. The wardens release a research allowance.",
+			"kind": "waves_repelled",
+			"value": 2,
 			"reward": {
 				"refined_essence": 20
 			}
@@ -81,9 +81,9 @@
 		{
 			"id": "review_3",
 			"title": "Parole Review III",
-			"text": "The colony held against the creatures. The wardens approve a final allowance.",
-			"kind": "waves_repelled",
-			"value": 3,
+			"text": "The debt book looks healthier. The wardens approve a final allowance.",
+			"kind": "debt_paid_pct",
+			"value": 14,
 			"reward": {
 				"refined_essence": 30
 			}

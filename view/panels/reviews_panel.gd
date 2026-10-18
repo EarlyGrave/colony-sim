@@ -1,6 +1,6 @@
 class_name ReviewsPanel
 extends GamePanel
-## Parole Reviews strip: current review goal and progress. Reads sim state only (not yet wired into the HUD).
+## Parole Reviews strip: current review goal and progress. Reads sim state only (opened from the panel bar).
 
 var _sig := ""
 
