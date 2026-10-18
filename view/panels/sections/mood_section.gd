@@ -3,7 +3,7 @@ extends InspectorSection
 
 
 func _init() -> void:
-	title = "Настроение"
+	title = "Mood"
 
 
 func applies(_sim: Simulation, target: Dictionary) -> bool:
@@ -18,10 +18,10 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 		col = Color(0.9, 0.2, 0.2)
 	elif m.value < float(sim.defs.mood["minor_threshold"]):
 		col = Color(0.9, 0.7, 0.2)
-	add_line(box, "Настроение: %d / 100" % roundi(m.value))
+	add_line(box, "Mood: %d / 100" % roundi(m.value))
 	add_bar(box, m.value / 100.0, col)
 	if m.break_kind != "":
-		add_line(box, "Срыв: " + m.break_kind, Color(0.9, 0.3, 0.3))
+		add_line(box, "Breakdown: " + m.break_kind, Color(0.9, 0.3, 0.3))
 	for t: Dictionary in m.thoughts:
 		var def: Dictionary = sim.defs.mood["thoughts"].get(t["id"], {})
 		add_line(box, "%+d  %s" % [int(t["value"]), str(def.get("label", t["id"]))])

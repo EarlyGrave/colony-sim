@@ -1,39 +1,39 @@
 {
 	"_comment": "Storyteller events. Each one breaks exactly one link of the colony.",
 	"lightning": {
-		"name": "Молния",
+		"name": "Lightning",
 		"weight": 3,
 		"min_day": 2,
-		"text": "Молния ударила в постройку «{target}» — машина сломана, нужен ремонт.",
+		"text": "Lightning struck the {target} - the machine is broken and needs repair.",
 		"max_per_game": 2,
 		"harmful": true
 	},
 	"sickness": {
-		"name": "Лихорадка",
+		"name": "Fever",
 		"weight": 3,
 		"min_day": 2,
 		"duration_ticks": 360,
-		"text": "{target} слёг с лихорадкой и полдня не сможет работать.",
+		"text": "{target} came down with a fever and can't work for half a day.",
 		"harmful": true
 	},
 	"cave_in": {
-		"name": "Обвал",
+		"name": "Cave-in",
 		"weight": 2,
 		"min_day": 3,
 		"max_cells": 3,
-		"text": "Обвал засыпал часть месторождения — руда потеряна.",
+		"text": "A cave-in buried part of the deposit - ore lost.",
 		"harmful": true
 	},
 	"wanderer": {
-		"name": "Странник",
+		"name": "Wanderer",
 		"weight": 3,
 		"min_day": 1,
 		"harmful": false,
 		"kind": "choice",
-		"text": "{target} подошёл к периметру и просит принять его в колонию. Откройте вкладку «События»."
+		"text": "{target} reached the perimeter and begs to join the colony. Open the Events tab."
 	},
 	"pod_crash": {
-		"name": "Спасательная капсула",
+		"name": "Escape Pod",
 		"weight": 2,
 		"min_day": 2,
 		"harmful": false,
@@ -44,10 +44,10 @@
 		],
 		"tend_delay_ticks": 60,
 		"max_per_game": 3,
-		"text": "Рядом упала спасательная капсула: {target} ранен. Откройте вкладку «События», чтобы спасти."
+		"text": "An escape pod crashed nearby: {target} is wounded. Open the Events tab to rescue."
 	},
 	"transport_drop": {
-		"name": "Этап",
+		"name": "Prisoner Transfer",
 		"weight": 2,
 		"min_day": 3,
 		"harmful": false,
@@ -56,10 +56,10 @@
 			2
 		],
 		"max_per_game": 3,
-		"text": "Охрана сбросила новых заключённых: к колонии присоединились {target}."
+		"text": "The guards dumped new prisoners: {target} joined the colony."
 	},
 	"toxic_fallout": {
-		"name": "Токсичные осадки",
+		"name": "Toxic Rain",
 		"weight": 3,
 		"min_day": 2,
 		"harmful": true,
@@ -67,10 +67,10 @@
 		"duration_ticks": 300,
 		"severity": 0.8,
 		"max_per_game": 4,
-		"text": "Токсичные осадки: заболели {target}."
+		"text": "Toxic rain: {target} fell ill."
 	},
 	"cargo_pod": {
-		"name": "Грузовая капсула",
+		"name": "Cargo Pod",
 		"weight": 3,
 		"min_day": 1,
 		"harmful": false,
@@ -85,6 +85,6 @@
 				12
 			]
 		},
-		"text": "С орбиты упала грузовая капсула с припасами: {target}."
+		"text": "A cargo pod of supplies fell from orbit: {target}."
 	}
 }

@@ -28,22 +28,22 @@ func _init(p_sim: Simulation) -> void:
 	_prng.seed = sim.seed_value ^ 0x9E3779
 	cfg = sim.defs.balance["storyteller"]
 	sim.listen(sim.bus.first_refine_done, func() -> void:
-		_say("first_refine", "Первая партия очищена. Отходы отравляют планету — запущен прогноз конца."))
+		_say("first_refine", "First batch refined. The waste is poisoning the planet - the doom forecast is running."))
 	sim.listen(sim.bus.threat_awakened, func() -> void:
-		_say("awakened", "Из-под земли доносится скрежет. Твари проснулись."))
+		_say("awakened", "Scraping rises from underground. The creatures have woken."))
 	sim.listen(sim.bus.wave_started, func(i: int, _s: float) -> void:
-		_say("wave", "Волна %d! Колонисты бегут в капсулу." % i)
+		_say("wave", "Wave %d! Colonists run for the pod." % i)
 		_maybe_complicate(i))  # region event-chains
 	sim.listen(sim.bus.enemy_killed, func(_id: int) -> void:  # region event-chains
 		if not lore_seen and sim.defs.event_chains.has("first_kill_hint"):
 			lore_seen = true
 			_say("secret_hint", str(sim.defs.event_chains["first_kill_hint"])))
 	sim.listen(sim.bus.wave_incoming, func(origin: Vector2i, _t: int) -> void:
-		_say("wave_incoming", "Твари идут с %s!" % sim.threats.side_name(origin)))
+		_say("wave_incoming", "Creatures coming from the %s!" % sim.threats.side_name(origin)))
 	sim.listen(sim.bus.building_broken, func(id: int) -> void:
 		var b := sim.buildings.get_by_id(id)
 		if b:
-			_say("broken", "%s сломалась — нужен ремонт." % b.def["name"]))
+			_say("broken", "%s broke down - needs repair." % b.def["name"]))
 
 
 func tick() -> void:
@@ -252,7 +252,7 @@ func answer(uid: int, accept: bool) -> bool:
 	var c: Colonist = p["colonist"]
 	if accept and _room_for(1):
 		sim.colonists.add(c)
-		_say("joined", "%s присоединился к колонии." % c.display_name)
+		_say("joined", "%s joined the colony." % c.display_name)
 	else:
 		accept = false
 	sim.bus.event_choice_resolved.emit(uid, accept)
@@ -284,11 +284,11 @@ func _tick_pending() -> void:
 				pending.erase(p)
 				if _room_for(1):
 					sim.colonists.add(c)
-					_say("joined", "%s выздоравливает и присоединился к колонии." % c.display_name)
+					_say("joined", "%s recovered and joined the colony." % c.display_name)
 		elif int(p["expires"]) >= 0 and sim.tick >= int(p["expires"]):
 			pending.erase(p)
 			sim.bus.event_choice_resolved.emit(int(p["uid"]), false)
-			_say("declined", "%s ушёл: никто не ответил." % c.display_name)
+			_say("declined", "%s left: nobody answered." % c.display_name)
 
 
 func _post(kind: String, c: Colonist, text: String) -> void:

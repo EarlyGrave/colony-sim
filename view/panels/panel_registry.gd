@@ -12,17 +12,17 @@ extends RefCounted
 
 const PANELS: Array = [
 	# slot 1
-	["work", "Работа", "res://view/panels/work_panel.gd"],
+	["work", "Work", "res://view/panels/work_panel.gd"],
 	# slot 2
-	["draft", "Бой", "res://view/panels/draft_panel.gd"],
-	["events", "События", "res://view/panels/event_choice.gd"],
+	["draft", "Combat", "res://view/panels/draft_panel.gd"],
+	["events", "Events", "res://view/panels/event_choice.gd"],
 	# slot 3
-	["perks", "Перки", "res://view/panels/perk_panel.gd"],
+	["perks", "Perks", "res://view/panels/perk_panel.gd"],
 	# slot 4
-	["contracts", "Контракты", "res://view/panels/contracts_panel.gd"],
+	["contracts", "Contracts", "res://view/panels/contracts_panel.gd"],
 	# slot 5
 	# slot 6
-	["save", "Меню", "res://view/panels/save_panel.gd"],
+	["save", "Menu", "res://view/panels/save_panel.gd"],
 ]
 
 const INSPECTOR_SECTIONS: Array = [

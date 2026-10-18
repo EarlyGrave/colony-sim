@@ -55,7 +55,7 @@ func test_crisis_banner_buttons_resolve() -> void:
 	assert_true(a._panel.visible, "banner shown")
 	var bs: Array[Button] = []
 	_buttons(a._box, bs)
-	var opt: Array[Button] = bs.filter(func(b: Button) -> bool: return b.text.begins_with("Держать"))
+	var opt: Array[Button] = bs.filter(func(b: Button) -> bool: return b.text.begins_with("Hold"))
 	assert_eq(opt.size(), 1)
 	assert_true(opt[0].custom_minimum_size.y >= 64.0)
 	opt[0].pressed.emit()
@@ -71,7 +71,7 @@ func test_banner_collapses() -> void:
 	var bs: Array[Button] = []
 	_buttons(a._box, bs)
 	for b in bs:
-		if b.text == "Скрыть":
+		if b.text == "Hide":
 			b.pressed.emit()
 	assert_true(a._strip.visible)
 	assert_false(a._panel.visible)
@@ -88,7 +88,7 @@ func test_payoff_popup_calls_command() -> void:
 	assert_true(a._panel.visible)
 	var bs: Array[Button] = []
 	_buttons(a._box, bs)
-	var stay: Array[Button] = bs.filter(func(b: Button) -> bool: return b.text == "Остаться")
+	var stay: Array[Button] = bs.filter(func(b: Button) -> bool: return b.text == "Stay")
 	stay[0].pressed.emit()
 	assert_eq(st.outcome, "stayed")
 
@@ -97,7 +97,7 @@ func test_hud_builds_with_crisis_and_contract() -> void:
 	var game := _game()
 	var sim := game.sim
 	_crisis_level(sim)
-	var c := {"id": 99, "template": "t", "name": "Тест", "essence": 5, "parts": 0, "offered_day": 0, "expire_day": 9,
+	var c := {"id": 99, "template": "t", "name": "Test", "essence": 5, "parts": 0, "offered_day": 0, "expire_day": 9,
 		"deadline_day": 5, "deadline_days": 5, "reward": {"kind": "supplies"}, "state": "active"}
 	sim.contracts.list.append(c)
 	game.hud._process(0.3)

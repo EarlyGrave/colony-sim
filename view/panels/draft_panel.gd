@@ -6,7 +6,7 @@ var _buttons := {}  # colonist id -> Button
 
 
 func build() -> void:
-	add_line("Призвать в строй: призванный колонист не работает и стреляет. Выбери его и нажми на землю (идти) или на врага (атаковать).")
+	add_line("Draft: a drafted colonist stops working and fights. Select one, then tap the ground (move) or an enemy (attack).")
 	for c in sim.colonists.list:
 		var b := Button.new()
 		b.custom_minimum_size = Vector2(0, 64)
@@ -29,5 +29,5 @@ func refresh() -> void:
 			continue
 		var w: String = sim.defs.weapons["weapons"][c.combat.weapon]["name"]
 		b.disabled = not c.alive
-		b.text = "%s (%s) — %s" % [c.display_name, w, "в строю" if c.combat.drafted else "работает"]
+		b.text = "%s (%s) — %s" % [c.display_name, w, "drafted" if c.combat.drafted else "working"]
 		b.modulate = Color(1.0, 0.45, 0.45) if c.combat.drafted else Color.WHITE

@@ -5,7 +5,7 @@ const BTN_H := 64
 
 
 func _init() -> void:
-	title = "Зона хранения"
+	title = "Storage zone"
 
 
 func applies(sim: Simulation, target: Dictionary) -> bool:
@@ -15,7 +15,7 @@ func applies(sim: Simulation, target: Dictionary) -> bool:
 func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 	var c: Vector2i = target["cell"]
 	var zone: Dictionary = sim.defs.zones[sim.map.get_zone(c)]
-	add_line(box, "Хранение: " + str(zone["name"])).add_theme_font_size_override("font_size", 20)
+	add_line(box, "Storage: " + str(zone["name"])).add_theme_font_size_override("font_size", 20)
 	var prios: Array = sim.defs.crafting["priorities"]
 	var cur := sim.storage.priority(c)
 	var row := HBoxContainer.new()
@@ -36,10 +36,10 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 func _prio_name(id: String) -> String:
 	match id:
 		"low":
-			return "Низкий"
+			return "Low"
 		"high":
-			return "Высокий"
-	return "Обычный"
+			return "High"
+	return "Normal"
 
 
 func _button(text: String) -> Button:

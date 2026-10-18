@@ -14,7 +14,7 @@
 		"flee_watch_range": 6.0
 	},
 	"weapons": {
-		"prison_shiv": {"name": "Заточка", "kind": "melee", "damage": 7.0, "cooldown_ticks": 8, "range": 1.5, "skill": "melee"},
-		"rifle": {"name": "Винтовка", "kind": "ranged", "damage": 12.0, "cooldown_ticks": 14, "range": 9.0, "skill": "shooting"}
+		"prison_shiv": {"name": "Shiv", "kind": "melee", "damage": 7.0, "cooldown_ticks": 8, "range": 1.5, "skill": "melee"},
+		"rifle": {"name": "Rifle", "kind": "ranged", "damage": 12.0, "cooldown_ticks": 14, "range": 9.0, "skill": "shooting"}
 	}
 }

@@ -42,7 +42,7 @@ func test_letter_log_collects_bus_events() -> void:
 	var sim := make_sim(3)
 	var letters := LetterLog.new()
 	letters.bind(sim, sim.bus)
-	sim.bus.story_event.emit("x", "Привет")
+	sim.bus.story_event.emit("x", "Hello")
 	sim.bus.wave_started.emit(1, 5.0)
 	assert_true(letters.entries.size() >= 2)
 	assert_eq(letters.unread, letters.entries.size())
@@ -50,7 +50,7 @@ func test_letter_log_collects_bus_events() -> void:
 	assert_eq(letters.unread, 0)
 	var n := letters.entries.size()
 	letters.unbind()
-	sim.bus.story_event.emit("x", "ещё")
+	sim.bus.story_event.emit("x", "more")
 	assert_eq(letters.entries.size(), n)
 
 

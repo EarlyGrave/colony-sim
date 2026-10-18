@@ -3,7 +3,7 @@ extends InspectorSection
 
 
 func _init() -> void:
-	title = "Здоровье"
+	title = "Health"
 
 
 func applies(_sim: Simulation, target: Dictionary) -> bool:

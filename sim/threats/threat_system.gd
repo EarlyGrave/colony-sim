@@ -270,12 +270,12 @@ func _schedule_origin() -> void:
 	next_spawn_origin = _pick_spawn_origin()
 
 
-## Compass side of a map cell relative to the map center: "север", "юг", ...
+## Compass side of a map cell relative to the map center: "north", "south", ...
 func side_name(c: Vector2i) -> String:
 	var d := c - sim.map_center()
 	if absi(d.x) >= absi(d.y):
-		return "востока" if d.x > 0 else "запада"
-	return "юга" if d.y > 0 else "севера"
+		return "east" if d.x > 0 else "west"
+	return "south" if d.y > 0 else "north"
 
 
 func _pick_spawn_origin() -> Vector2i:

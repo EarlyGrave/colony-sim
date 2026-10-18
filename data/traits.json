@@ -1,12 +1,12 @@
 {
 	"_comment": "Colonist traits. skills: level bonus at creation. work_speed: extra multiplier on all work.",
 	"traits": {
-		"strong": {"name": "Сильный", "skills": {"mining": 3}, "work_speed": 0.0},
-		"handy": {"name": "Рукастый", "skills": {"construction": 2, "crafting": 2}, "work_speed": 0.0},
-		"careful": {"name": "Внимательный", "skills": {"medicine": 3}, "work_speed": 0.0},
-		"hasty": {"name": "Торопыга", "skills": {}, "work_speed": 0.1},
-		"lazy": {"name": "Ленивый", "skills": {}, "work_speed": -0.1},
-		"clumsy": {"name": "Неуклюжий", "skills": {"crafting": -2, "operating": -2}, "work_speed": 0.0},
-		"green_thumb": {"name": "Зелёные пальцы", "skills": {"plants": 4}, "work_speed": 0.0}
+		"strong": {"name": "Strong", "skills": {"mining": 3}, "work_speed": 0.0},
+		"handy": {"name": "Handy", "skills": {"construction": 2, "crafting": 2}, "work_speed": 0.0},
+		"careful": {"name": "Careful", "skills": {"medicine": 3}, "work_speed": 0.0},
+		"hasty": {"name": "Hasty", "skills": {}, "work_speed": 0.1},
+		"lazy": {"name": "Lazy", "skills": {}, "work_speed": -0.1},
+		"clumsy": {"name": "Clumsy", "skills": {"crafting": -2, "operating": -2}, "work_speed": 0.0},
+		"green_thumb": {"name": "Green Thumb", "skills": {"plants": 4}, "work_speed": 0.0}
 	}
 }

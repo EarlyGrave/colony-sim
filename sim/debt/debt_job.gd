@@ -69,4 +69,4 @@ func on_end(c: Colonist, _sim: Simulation) -> void:
 
 
 func describe() -> String:
-	return "Бунт: громит постройки" if kind == "riot" else "Побег к краю карты"
+	return "Rioting: wrecking buildings" if kind == "riot" else "Running for the map edge"

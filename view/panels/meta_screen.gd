@@ -51,19 +51,19 @@ func _rebuild() -> void:
 	for c in _box.get_children():
 		c.queue_free()
 	var s := _summary
-	_label("Смена окончена: %s" % str(s.get("reason", "")), Color(1, 0.8, 0.5))
-	_label("Дней: %d  Контрактов: %d  Эссенции сдано: %d\nОсвобождено: %d  Перков: %d" % [
+	_label("Sentence over: %s" % str(s.get("reason", "")), Color(1, 0.8, 0.5))
+	_label("Days: %d  Contracts: %d  Essence delivered: %d\nFreed: %d  Perks: %d" % [
 		int(s.get("days", 0)), int(s.get("contracts", 0)), int(s.get("essence", 0)),
 		int(s.get("freed", 0)), int(s.get("perks", 0))])
-	_label("Наследие: +%d   (на счёте: %d)" % [int(s.get("legacy", 0)), meta.balance], Color(0.8, 0.9, 1.0))
-	_button("Новая ссылка (новая планета)", func() -> void: new_link.emit(meta.make_opts()))
+	_label("Legacy: +%d   (balance: %d)" % [int(s.get("legacy", 0)), meta.balance], Color(0.8, 0.9, 1.0))
+	_button("New Sentence (new planet)", func() -> void: new_link.emit(meta.make_opts()))
 	var nb := meta.can_next_batch()
-	_button("Следующая партия (та же планета, зараженность ×%.0f%%)" % (
+	_button("Next run (same planet, taint ×%.0f%%)" % (
 		float(meta.defs.meta["next_batch"]["contamination_keep"]) * 100.0),
 		func() -> void:
 			var nbd := meta.make_next_batch()
 			next_batch.emit(int(nbd["seed"]), nbd["opts"]), not nb)
-	_label("Наследие — знания, не сила:", Color(0.7, 0.7, 0.7))
+	_label("Legacy - knowledge, not power:", Color(0.7, 0.7, 0.7))
 	var un: Dictionary = meta.defs.meta["unlocks"]
 	for id: String in un:
 		var u: Dictionary = un[id]
@@ -72,12 +72,12 @@ func _rebuild() -> void:
 		if why == "owned":
 			if str(u["kind"]) == "crate":
 				var sel := meta.crate == id
-				_button(("[выбран] " if sel else "") + str(u["name"]), func() -> void:
+				_button(("[chosen] " if sel else "") + str(u["name"]), func() -> void:
 					meta.select_crate("" if sel else id)
 					MetaStore.save_state(meta)
 					_rebuild())
 			else:
-				_label("[есть] " + str(u["name"]), Color(0.6, 1, 0.6))
+				_label("[owned] " + str(u["name"]), Color(0.6, 1, 0.6))
 		else:
 			_button(txt, func() -> void:
 				if meta.buy(id):

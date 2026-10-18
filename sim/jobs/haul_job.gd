@@ -105,4 +105,4 @@ func _building_cell(sim: Simulation, id: int) -> Vector2i:
 
 
 func describe() -> String:
-	return "Несёт: " + item
+	return "Hauling: " + item

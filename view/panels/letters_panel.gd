@@ -12,7 +12,7 @@ var _shown := -1
 
 func _init() -> void:
 	super()
-	title = "Письма"
+	title = "Letters"
 
 
 func bind_log(l: LetterLog) -> void:
@@ -30,7 +30,7 @@ func refresh() -> void:
 		content.remove_child(ch)
 		ch.queue_free()
 	if letters.entries.is_empty():
-		add_line("Пока писем нет.", Color(0.7, 0.7, 0.7))
+		add_line("No letters yet.", Color(0.7, 0.7, 0.7))
 	for e: Dictionary in letters.entries:
 		var col := Color.WHITE
 		match e["level"]:
@@ -43,13 +43,13 @@ func refresh() -> void:
 		if sim:
 			day = int(e["tick"]) / sim.ticks_per_day + 1
 			hour = int(e["tick"]) % sim.ticks_per_day * 24 / sim.ticks_per_day
-		var l := add_line("д%d %02d:00  %s" % [day, hour, e["text"]], col)
+		var l := add_line("d%d %02d:00  %s" % [day, hour, e["text"]], col)
 		if e.has("panel"):
 			var pid: String = e["panel"]
 			var cid: int = int(e.get("colonist_id", -1))
 			var sk: String = str(e.get("skill", ""))
 			var pb := Button.new()
-			pb.text = "Открыть"
+			pb.text = "Open"
 			pb.custom_minimum_size = Vector2(0, 64)
 			pb.focus_mode = Control.FOCUS_NONE
 			pb.pressed.connect(func() -> void: panel_requested.emit(pid, cid, sk))
@@ -57,7 +57,7 @@ func refresh() -> void:
 		if e.has("cell"):
 			var cell: Vector2i = e["cell"]
 			var b := Button.new()
-			b.text = "Показать"
+			b.text = "Show"
 			b.custom_minimum_size = Vector2(0, 64)
 			b.focus_mode = Control.FOCUS_NONE
 			b.pressed.connect(func() -> void: show_cell_requested.emit(cell))

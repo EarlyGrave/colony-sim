@@ -11,7 +11,7 @@ var _sections: Array[InspectorSection] = []
 
 func _init() -> void:
 	super()
-	title = "Осмотр"
+	title = "Inspect"
 
 
 func set_target(t: Dictionary) -> void:

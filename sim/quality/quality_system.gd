@@ -27,7 +27,7 @@ func _level(q: String) -> Dictionary:
 	for l: Dictionary in _cfg["levels"]:
 		if str(l["id"]) == (q if q != "" else "normal"):
 			return l
-	return {"id": "normal", "name": "Обычное", "mult": 1.0}
+	return {"id": "normal", "name": "Standard", "mult": 1.0}
 
 
 func quality_name(q: String) -> String:

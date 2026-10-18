@@ -254,7 +254,7 @@ func set_zone(c: Vector2i, zone_id: String) -> bool:
 
 func can_place_building(def_id: String, c: Vector2i) -> String:
 	if not defs.buildings.has(def_id) or not defs.buildings[def_id].get("buildable", false):
-		return "Нельзя построить"
+		return "Cannot build"
 	return buildings.placement_error(def_id, c, false)  # blueprints need no materials up front
 
 

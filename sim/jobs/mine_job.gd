@@ -52,4 +52,4 @@ func _mine_legacy(c: Colonist, sim: Simulation, cfg: Dictionary) -> int:
 
 
 func describe() -> String:
-	return "Добывает руду"
+	return "Mining ore"

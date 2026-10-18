@@ -6,13 +6,13 @@ extends GamePanel
 ## Reads sim state only; changes go through sim.learn_perk / sim.respec_perks.
 
 const REASONS := {
-	"level": "Не хватает уровня навыка",
-	"requires": "Нужен предыдущий перк",
-	"no_points": "Нет свободных очков",
-	"excluded": "Закрыт: выбран взаимоисключающий перк",
-	"dead": "Колонист мёртв",
-	"already_learned": "Уже изучен",
-	"unknown_perk": "Неизвестный перк",
+	"level": "Skill level too low",
+	"requires": "Previous perk required",
+	"no_points": "No free points",
+	"excluded": "Locked: a conflicting perk is chosen",
+	"dead": "Colonist is dead",
+	"already_learned": "Already learned",
+	"unknown_perk": "Unknown perk",
 }
 const COL_LEARNED := Color(0.35, 0.75, 0.4)
 const COL_AVAILABLE := Color(0.95, 0.8, 0.3)
@@ -141,7 +141,7 @@ func _build_content(c: Colonist) -> void:
 		if not o.alive:
 			continue
 		var pts := _total_points(o)
-		var b := _btn(crow, "%s%s" % [o.display_name, "\n*%d очк." % pts if pts > 0 else ""], Vector2(84, 64),
+		var b := _btn(crow, "%s%s" % [o.display_name, "\n*%d pt" % pts if pts > 0 else ""], Vector2(84, 64),
 			_select_colonist.bind(o.id))
 		b.add_theme_font_size_override("font_size", 16)
 		if o.id == colonist_id:
@@ -149,14 +149,14 @@ func _build_content(c: Colonist) -> void:
 		elif pts > 0:
 			b.modulate = COL_AVAILABLE
 	if c == null:
-		add_line("Нет колонистов.")
+		add_line("No colonists.")
 		return
 	var srow := HFlowContainer.new()
 	srow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_child(srow)
 	for s in _skill_ids():
 		var pts := sim.perks.points_available(c, s)
-		var b := _btn(srow, "%s\nур.%d%s" % [_skill_label(s), c.skills.level(s), "  *%d" % pts if pts > 0 else ""],
+		var b := _btn(srow, "%s\nlv.%d%s" % [_skill_label(s), c.skills.level(s), "  *%d" % pts if pts > 0 else ""],
 			Vector2(84, 64), _select_skill.bind(s))
 		b.add_theme_font_size_override("font_size", 12)
 		if s == skill:
@@ -164,7 +164,7 @@ func _build_content(c: Colonist) -> void:
 		elif pts > 0:
 			b.modulate = COL_AVAILABLE
 	var free := sim.perks.points_available(c, skill)
-	add_line("Очков: %d  (навык %d)" % [free, c.skills.level(skill)], COL_AVAILABLE if free > 0 else Color.WHITE)
+	add_line("Points: %d  (skill %d)" % [free, c.skills.level(skill)], COL_AVAILABLE if free > 0 else Color.WHITE)
 	_tree = PerkTree.new()
 	_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_child(_tree)
@@ -218,8 +218,8 @@ func _populate_tree(c: Colonist) -> void:
 			b.clip_text = true
 			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			b.add_theme_font_size_override("font_size", 14)
-			b.text = "%s\nур.%d%s" % [str(d.get("name", pid)), int(row["level"]),
-				" [акт]" if str(d.get("type", "")) == "active" else ""]
+			b.text = "%s\nlv.%d%s" % [str(d.get("name", pid)), int(row["level"]),
+				" [act]" if str(d.get("type", "")) == "active" else ""]
 			var col := COL_LOCKED
 			match st:
 				"learned":
@@ -245,30 +245,30 @@ func _populate_tree(c: Colonist) -> void:
 
 func _build_details(c: Colonist) -> void:
 	if selected_perk == "" or sim.perks.perk_def(selected_perk).is_empty():
-		add_line("Нажми на перк, чтобы увидеть описание.", Color(0.7, 0.7, 0.7))
+		add_line("Tap a perk to see its description.", Color(0.7, 0.7, 0.7))
 		return
 	var d := sim.perks.perk_def(selected_perk)
 	var st := state_of_perk(c, selected_perk)
 	add_line(str(d.get("name", selected_perk))).add_theme_font_size_override("font_size", 22)
 	add_line(str(d.get("desc", "")))
 	var dim := Color(0.75, 0.75, 0.8)
-	add_line("Нужен уровень навыка: %d" % int(d.get("skill_level", 1)), dim)
+	add_line("Skill level needed: %d" % int(d.get("skill_level", 1)), dim)
 	for r: String in d.get("requires", []):
-		add_line("Требует: " + str(sim.perks.perk_def(r).get("name", r)), dim)
+		add_line("Requires: " + str(sim.perks.perk_def(r).get("name", r)), dim)
 	var any: Array = d.get("requires_any", [])
 	if not any.is_empty():
 		var names: Array = any.map(func(r: String) -> String: return str(sim.perks.perk_def(r).get("name", r)))
-		add_line("Требует одного из: " + ", ".join(names), dim)
+		add_line("Requires one of: " + ", ".join(names), dim)
 	for r: String in d.get("excludes", []):
-		add_line("Исключает: " + str(sim.perks.perk_def(r).get("name", r)), Color(0.9, 0.55, 0.5))
+		add_line("Excludes: " + str(sim.perks.perk_def(r).get("name", r)), Color(0.9, 0.55, 0.5))
 	if str(d.get("type", "")) == "active":
-		add_line("Активный, перезарядка %d с" % (int(d.get("cooldown_ticks", 0)) / Simulation.TICKS_PER_SECOND),
+		add_line("Active, cooldown %d s" % (int(d.get("cooldown_ticks", 0)) / Simulation.TICKS_PER_SECOND),
 			Color(0.7, 0.85, 1.0))
 	match st:
 		"learned":
-			add_line("Изучен", COL_LEARNED)
+			add_line("Learned", COL_LEARNED)
 		"available":
-			var b := _btn(content, "Подтвердить изучение?" if _confirm else "Изучить", Vector2(0, 64), on_learn_pressed)
+			var b := _btn(content, "Confirm learning?" if _confirm else "Learn", Vector2(0, 64), on_learn_pressed)
 			b.modulate = COL_AVAILABLE
 		_:
 			var r := sim.perks.can_learn(c, selected_perk)
@@ -300,7 +300,7 @@ func on_respec_pressed() -> bool:
 func _build_respec(c: Colonist) -> void:
 	var cost := sim.perks.respec_cost()
 	var nm := str(sim.defs.items.get(str(cost["item"]), {}).get("name", cost["item"]))
-	var b := _btn(content, "Сброс (%d %s)" % [int(cost["count"]), nm], Vector2(0, 64), on_respec_pressed)
+	var b := _btn(content, "Reset (%d %s)" % [int(cost["count"]), nm], Vector2(0, 64), on_respec_pressed)
 	b.disabled = not sim.perks.can_respec(c)
 
 

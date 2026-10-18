@@ -16,13 +16,13 @@
 	},
 	"scout_cells": 12,
 	"unlocks": {
-		"rule_raid_engineer": {"name": "Знание: инженер чинит турели", "desc": "Правило «Инженер» включено со старта.", "cost": 6, "kind": "start_rule", "rule": "raid_engineer"},
-		"rule_refine_cap": {"name": "Знание: лимит заражения", "desc": "Правило «Лимит заражения» включено со старта.", "cost": 8, "kind": "start_rule", "rule": "refine_cap"},
-		"rule_ore_reserve": {"name": "Знание: резерв руды", "desc": "Правило «Резерв руды» включено со старта.", "cost": 5, "kind": "start_rule", "rule": "ore_reserve"},
-		"skill_xp": {"name": "Опыт прошлых смен", "desc": "Каждый колонист стартует с лишним опытом в лучшем навыке.", "cost": 10, "kind": "start_xp", "amount": 40.0},
-		"forecast": {"name": "Карты планеты", "desc": "Прогноз конца планеты открыт сразу.", "cost": 12, "kind": "reveal_forecast"},
-		"scout": {"name": "Разведзонд", "desc": "Ближайшая руда отмечена для добычи с самого начала.", "cost": 8, "kind": "scout"},
-		"crate_food": {"name": "Ящик: провизия", "desc": "Дополнительные припасы еды при посадке.", "cost": 5, "kind": "crate", "items": {"raw_food": 30}},
-		"crate_parts": {"name": "Ящик: детали", "desc": "Запас деталей для первых построек.", "cost": 9, "kind": "crate", "items": {"machine_parts": 10}}
+		"rule_raid_engineer": {"name": "Lore: engineer repairs turrets", "desc": "The Engineer rule is enabled from the start.", "cost": 6, "kind": "start_rule", "rule": "raid_engineer"},
+		"rule_refine_cap": {"name": "Lore: taint cap", "desc": "The Taint Cap rule is enabled from the start.", "cost": 8, "kind": "start_rule", "rule": "refine_cap"},
+		"rule_ore_reserve": {"name": "Lore: ore reserve", "desc": "The Ore Reserve rule is enabled from the start.", "cost": 5, "kind": "start_rule", "rule": "ore_reserve"},
+		"skill_xp": {"name": "Past Shifts' Experience", "desc": "Every colonist starts with bonus experience in their best skill.", "cost": 10, "kind": "start_xp", "amount": 40.0},
+		"forecast": {"name": "Planet Charts", "desc": "The planet doom forecast is revealed from the start.", "cost": 12, "kind": "reveal_forecast"},
+		"scout": {"name": "Scout Probe", "desc": "The nearest ore is marked for mining from the start.", "cost": 8, "kind": "scout"},
+		"crate_food": {"name": "Crate: provisions", "desc": "Extra food supplies on landing.", "cost": 5, "kind": "crate", "items": {"raw_food": 30}},
+		"crate_parts": {"name": "Crate: parts", "desc": "A stock of parts for the first buildings.", "cost": 9, "kind": "crate", "items": {"machine_parts": 10}}
 	}
 }

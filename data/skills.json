@@ -8,13 +8,13 @@
 	"passion_xp": {"none": 1.0, "minor": 1.5, "major": 2.0},
 	"init": {"level_min": 0, "level_max": 4, "minor_chance": 0.25, "major_chance": 0.1},
 	"skills": {
-		"mining": {"label": "Добыча"},
-		"construction": {"label": "Стройка"},
-		"crafting": {"label": "Ремесло"},
-		"shooting": {"label": "Стрельба"},
-		"melee": {"label": "Ближний бой"},
-		"medicine": {"label": "Медицина"},
-		"plants": {"label": "Растения"},
-		"operating": {"label": "Установки"}
+		"mining": {"label": "Mining"},
+		"construction": {"label": "Construction"},
+		"crafting": {"label": "Crafting"},
+		"shooting": {"label": "Shooting"},
+		"melee": {"label": "Melee"},
+		"medicine": {"label": "Medicine"},
+		"plants": {"label": "Plants"},
+		"operating": {"label": "Machinery"}
 	}
 }

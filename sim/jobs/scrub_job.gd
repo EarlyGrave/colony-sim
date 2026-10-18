@@ -27,4 +27,4 @@ func tick(c: Colonist, sim: Simulation) -> int:
 
 
 func describe() -> String:
-	return "Убирает отходы"
+	return "Scrubbing waste"

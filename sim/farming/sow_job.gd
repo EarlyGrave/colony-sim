@@ -29,4 +29,4 @@ func tick(c: Colonist, sim: Simulation) -> int:
 
 
 func describe() -> String:
-	return "Сажает"
+	return "Sowing"

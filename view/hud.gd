@@ -23,38 +23,38 @@ const SIDE_W := 340
 const SPR := "res://assets/sprites/"
 ## [tool id, label, icon sprite or ""]
 const TOOLS: Array = [
-	["inspect", "Осмотр", ""],
-	["mine", "Добыча", "designation_mine"],
-	["stockpile", "Склад", "item_ore"],
-	["waste_dump", "Свалка", "item_waste"],
-	["clear_zone", "Убрать", ""],
-	["refinery", "Установка", "refinery"],
-	["turret", "Турель", "turret_base"],
-	["workbench", "Верстак", "refinery"],
-	["deconstruct", "Снести", ""],
-	["wall", "Стена", "wall"],  # region construction
-	["door", "Дверь", "door"],  # region construction
+	["inspect", "Inspect", ""],
+	["mine", "Mine", "designation_mine"],
+	["stockpile", "Stockpile", "item_ore"],
+	["waste_dump", "Dump", "item_waste"],
+	["clear_zone", "Clear", ""],
+	["refinery", "Refinery", "refinery"],
+	["turret", "Turret", "turret_base"],
+	["workbench", "Bench", "refinery"],
+	["deconstruct", "Demolish", ""],
+	["wall", "Wall", "wall"],  # region construction
+	["door", "Door", "door"],  # region construction
 	# region needs
-	["growing", "Грядки", "plant_ripe"],
-	["stove", "Печь", "stove"],
-	["bed", "Кровать", "bed"],
+	["growing", "Crops", "plant_ripe"],
+	["stove", "Stove", "stove"],
+	["bed", "Bunk", "bed"],
 	# endregion
-	["training_dummy", "Манекен", ""],  # region batch3 ui
-	["patrol", "Патруль", ""],
-	["overlay", "Заражение", ""],
+	["training_dummy", "Dummy", ""],  # region batch3 ui
+	["patrol", "Patrol", ""],
+	["overlay", "Taint", ""],
 ]
 const COMPACT_H := 500.0  ## logical viewport height below which the compact layout is used
 const BAR_H := 64.0
 ## Compact bottom bar: category -> [label, tool ids]. "alarm" and rule ids are handled separately.
 const CATS: Array = [
-	["zones", "Зоны", ["stockpile", "waste_dump", "clear_zone", "growing"]],
-	["build", "Стройка", ["refinery", "turret", "workbench", "wall", "door", "stove", "bed", "training_dummy", "deconstruct"]],
-	["orders", "Приказы", ["mine", "patrol", "overlay", "@rules"]],
+	["zones", "Zones", ["stockpile", "waste_dump", "clear_zone", "growing"]],
+	["build", "Build", ["refinery", "turret", "workbench", "wall", "door", "stove", "bed", "training_dummy", "deconstruct"]],
+	["orders", "Orders", ["mine", "patrol", "overlay", "@rules"]],
 ]
 const REASONS := {
-	"hq_destroyed": "Капсула разрушена. Колония пала.",
-	"colonists_dead": "Все колонисты погибли.",
-	"planet_dead": "Планета погибла от заражения.",
+	"hq_destroyed": "The pod is destroyed. The colony has fallen.",
+	"colonists_dead": "All colonists are dead.",
+	"planet_dead": "The planet died of contamination.",
 }
 
 var sim: Simulation
@@ -146,7 +146,7 @@ func _ready() -> void:
 	var speed_row := HBoxContainer.new()
 	speed_row.add_theme_constant_override("separation", 4)
 	top_flow.add_child(speed_row)
-	_contract_btn = _button(speed_row, "Контракт", Vector2(120, 64))
+	_contract_btn = _button(speed_row, "Contract", Vector2(120, 64))
 	_contract_btn.add_theme_font_size_override("font_size", 16)
 	_contract_btn.pressed.connect(func() -> void: toggle_panel("contracts"))
 	_contract_btn.visible = false
@@ -161,7 +161,7 @@ func _ready() -> void:
 	_panel_row = panel_row
 	panel_row.add_theme_constant_override("separation", 4)
 	top_flow.add_child(panel_row)
-	_letters_btn = _button(panel_row, "Письма", Vector2(84, 64))
+	_letters_btn = _button(panel_row, "Letters", Vector2(84, 64))
 	_letters_btn.add_theme_font_size_override("font_size", 17)
 	_letters_btn.pressed.connect(func() -> void: toggle_panel("letters"))
 	for e: Array in PanelRegistry.panel_entries():
@@ -171,7 +171,7 @@ func _ready() -> void:
 		pb.pressed.connect(func() -> void: toggle_panel(pid))
 		_panel_buttons[pid] = pb
 
-	_menu_btn = _button(speed_row, "Ещё", Vector2(88, 64))
+	_menu_btn = _button(speed_row, "More", Vector2(88, 64))
 	_menu_btn.pressed.connect(func() -> void: _menu_popup.visible = not _menu_popup.visible)
 	_menu_btn.visible = false
 
@@ -212,7 +212,7 @@ func _ready() -> void:
 				_patrol_bar.visible = id == "patrol")
 		_tool_buttons[id] = b
 		_tool_order.append(b)
-	_alarm_btn = _button(tools_row, "Тревога", BTN_MIN, "capsule")
+	_alarm_btn = _button(tools_row, "Alarm", BTN_MIN, "capsule")
 	_alarm_btn.toggle_mode = true
 	_alarm_btn.toggled.connect(func(on: bool) -> void: alarm_toggled.emit(on))
 	_tool_order.append(_alarm_btn)
@@ -254,7 +254,7 @@ func _ready() -> void:
 	_game_over_label = Label.new()
 	_game_over_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	go_box.add_child(_game_over_label)
-	var again := _button(go_box, "Новая ссылка", Vector2(260, 80))
+	var again := _button(go_box, "New Sentence", Vector2(260, 80))
 	again.pressed.connect(func() -> void: new_game_requested.emit())
 	_game_over.visible = false
 
@@ -280,12 +280,12 @@ func _build_batch3_widgets(root: Control) -> void:
 	prow.add_theme_constant_override("separation", 8)
 	_patrol_bar.add_child(prow)
 	var pl := Label.new()
-	pl.text = "Маршрут: нажимай точки"
+	pl.text = "Route: tap waypoints"
 	pl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	prow.add_child(pl)
-	_button(prow, "Назад", Vector2(96, 64)).pressed.connect(func() -> void: patrol_undo.emit())
-	_button(prow, "Готово", Vector2(112, 64)).pressed.connect(func() -> void: patrol_done.emit())
-	_button(prow, "Авто", Vector2(96, 64)).pressed.connect(func() -> void: patrol_auto.emit())
+	_button(prow, "Undo", Vector2(96, 64)).pressed.connect(func() -> void: patrol_undo.emit())
+	_button(prow, "Done", Vector2(112, 64)).pressed.connect(func() -> void: patrol_done.emit())
+	_button(prow, "Auto", Vector2(96, 64)).pressed.connect(func() -> void: patrol_auto.emit())
 	# Contamination overlay legend.
 	_legend = PanelContainer.new()
 	_legend.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -296,7 +296,7 @@ func _build_batch3_widgets(root: Control) -> void:
 	var lrow := HBoxContainer.new()
 	lrow.add_theme_constant_override("separation", 6)
 	_legend.add_child(lrow)
-	for e: Array in [[Color(0.35, 0.8, 0.25, 0.8), "заражено"], [Color(0.6, 0.25, 0.8, 0.9), "мутация"]]:
+	for e: Array in [[Color(0.35, 0.8, 0.25, 0.8), "tainted"], [Color(0.6, 0.25, 0.8, 0.9), "mutated"]]:
 		var sw := ColorRect.new()
 		sw.color = e[0]
 		sw.custom_minimum_size = Vector2(18, 18)
@@ -322,7 +322,7 @@ func _update_batch3() -> void:
 			next_m = t - f
 			next_name = str(sim.defs.crises["crises"][id]["name"])
 	if next_name != "":
-		_forecast.text += " · до «%s» %.1f%%" % [next_name, next_m * 100.0]
+		_forecast.text += " · to \"%s\" %.1f%%" % [next_name, next_m * 100.0]
 	_alerts.top_inset = _stack.size.y
 	_alerts.refresh()
 	# Contract indicator: the active contract with the nearest deadline, else an open offer.
@@ -337,10 +337,10 @@ func _update_batch3() -> void:
 	_contract_btn.visible = not best.is_empty() or offers > 0
 	if not best.is_empty():
 		var have := sim.items.count_stored("refined_essence")
-		_contract_btn.text = "Контракт\n%d/%d эсс · %d дн" % [mini(have, int(best["essence"])), int(best["essence"]), maxi(0, int(best["deadline_day"]) - sim.day())]
+		_contract_btn.text = "Contract\n%d/%d ess · %dd" % [mini(have, int(best["essence"])), int(best["essence"]), maxi(0, int(best["deadline_day"]) - sim.day())]
 		_contract_btn.modulate = Color(0.6, 1.0, 0.6) if sim.contracts.can_deliver(best) else Color.WHITE
 	elif offers > 0:
-		_contract_btn.text = "Контракт\nпредложен (%d)" % offers
+		_contract_btn.text = "Contract\noffered (%d)" % offers
 		_contract_btn.modulate = Color(1.0, 0.85, 0.4)
 	_legend.visible = _overlay_on
 	_legend.offset_bottom = -_bottom_inset - 4
@@ -422,7 +422,7 @@ func _apply_layout(compact: bool) -> void:
 	_panel_row.visible = false
 	if _cat_row.get_parent() != null:
 		_cat_row.get_parent().remove_child(_cat_row)
-	# Category bottom bar and "Ещё" menu on every screen size.
+	# Category bottom bar and "More" menu on every screen size.
 	_bottom_inset = BAR_H + 22
 	_message.offset_top = -(BAR_H + 90)
 	_message.offset_bottom = -(BAR_H + 24)
@@ -648,7 +648,7 @@ func _sync_panel_buttons() -> void:
 
 
 func show_game_over(reason: String) -> void:
-	_game_over_label.text = "%s\nПродержались %d дн." % [REASONS.get(reason, reason), sim.day()]
+	_game_over_label.text = "%s\nSurvived %d days." % [REASONS.get(reason, reason), sim.day()]
 	_game_over.visible = true
 
 
@@ -657,16 +657,16 @@ func _process(delta: float) -> void:
 		return
 	var it := sim.items
 	var night: bool = sim.clock.is_night()
-	_clock.text = "%s %d, %02d:%02d" % ["Ночь" if night else "День", sim.day() + 1, sim.clock.hour_int(), int(fposmod(sim.clock.hour(), 1.0) * 60.0)]
-	_stats.text = _clock.text + " · Руда %d · Эсс. %d · Отх. %d · Люди %d" % [
+	_clock.text = "%s %d, %02d:%02d" % ["Night" if night else "Day", sim.day() + 1, sim.clock.hour_int(), int(fposmod(sim.clock.hour(), 1.0) * 60.0)]
+	_stats.text = _clock.text + " · Ore %d · Ess %d · Waste %d · Crew %d" % [
 		it.count_stored("essence_ore"), it.count_stored("refined_essence"),
 		it.count_world("waste"), sim.colonists.alive_count()]
 	var cont := sim.contamination
 	if cont.revealed:
 		var f := cont.forecast()
-		_forecast.text = "Заражение %.1f%% · конец ~%.0f±%.0f дн." % [cont.fraction() * 100.0, f["days"], f["error"]]
+		_forecast.text = "Taint %.1f%% · end ~%.0f±%.0f d" % [cont.fraction() * 100.0, f["days"], f["error"]]
 	else:
-		_forecast.text = "Заражение %.1f%% · прогноз неизвестен" % (cont.fraction() * 100.0)
+		_forecast.text = "Taint %.1f%% · forecast unknown" % (cont.fraction() * 100.0)
 	_threat.text = ""
 	_threat.visible = false
 	_forecast.text += " · " + _threat_text()
@@ -677,8 +677,8 @@ func _process(delta: float) -> void:
 	if _message.text != "" and Time.get_ticks_msec() / 1000.0 > _message_until:
 		_message.text = ""
 		_next_toast()
-	_letters_btn.text = "Письма (%d)" % _letters.unread if _letters.unread > 0 else "Письма"
-	_menu_btn.text = "Ещё (%d)" % _letters.unread if _letters.unread > 0 else "Ещё"
+	_letters_btn.text = "Letters (%d)" % _letters.unread if _letters.unread > 0 else "Letters"
+	_menu_btn.text = "More (%d)" % _letters.unread if _letters.unread > 0 else "More"
 	_place_side()
 	_panel_timer += delta
 	if _panel_timer >= PANEL_REFRESH:
@@ -695,12 +695,12 @@ func _threat_text() -> String:
 		return ""
 	var t: ThreatSystem = sim.threats
 	if t.wave_active:
-		return "ВОЛНА %d: тварей %d (с %s)" % [t.wave_index, t.enemies.size(), t.side_name(t.next_spawn_origin)]
+		return "WAVE %d: %d creatures (from the %s)" % [t.wave_index, t.enemies.size(), t.side_name(t.next_spawn_origin)]
 	if not t.awakened:
-		return "Твари спят"
+		return "Creatures asleep"
 	var ticks := t.next_wave_tick - sim.tick
-	var side := " с %s" % t.side_name(t.next_spawn_origin) if ticks < int(t.cfg["warning_ticks"]) else ""
-	return "Волна через %.1f ч%s, сила ~%.0f" % [ticks * 24.0 / sim.ticks_per_day, side, t.wave_strength(t.wave_index + 1)]
+	var side := " from the %s" % t.side_name(t.next_spawn_origin) if ticks < int(t.cfg["warning_ticks"]) else ""
+	return "Wave in %.1f h%s, strength ~%.0f" % [ticks * 24.0 / sim.ticks_per_day, side, t.wave_strength(t.wave_index + 1)]
 
 
 func _label(parent: Control) -> Label:

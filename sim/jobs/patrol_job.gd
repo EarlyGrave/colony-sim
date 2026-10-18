@@ -44,4 +44,4 @@ func on_end(c: Colonist, sim: Simulation) -> void:
 
 
 func describe() -> String:
-	return "Патрулирует"
+	return "Patrolling"

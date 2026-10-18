@@ -33,4 +33,4 @@ func tick(c: Colonist, sim: Simulation) -> int:
 
 
 func describe() -> String:
-	return "Спит" + (" в кровати" if bed_id >= 0 else " на полу")
+	return "Sleeping" + (" in a bunk" if bed_id >= 0 else " on the floor")

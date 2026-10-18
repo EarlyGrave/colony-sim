@@ -1,46 +1,46 @@
 {
 	"inspection_notice": {
-		"name": "Инспекция",
+		"name": "Inspection",
 		"weight": 2, "min_day": 4, "harmful": true, "max_per_game": 3,
 		"requires": [],
-		"text": "По радио: «Через два дня прибудет инспекция. Проверим склад. Улыбайтесь — камеры пишут».",
+		"text": "Over the radio: \"An inspection arrives in two days. We'll check the stockpile. Smile - the cameras are rolling.\"",
 		"then": {"step": "inspection_arrive", "delay_days": 2.0}
 	},
 	"escape_rumors": {
-		"name": "Слухи о побеге",
+		"name": "Escape Rumors",
 		"weight": 2, "min_day": 3, "harmful": true, "max_per_game": 3,
 		"requires": ["debtors"],
-		"text": "По баракам ползут слухи, что с планеты есть выход. Охранники подозрительно ухмыляются.",
+		"text": "Rumors crawl through the barracks that there is a way off the planet. The guards smirk suspiciously.",
 		"effects": [{"op": "despair", "amount": 12.0}, {"op": "thought", "who": "all", "id": "escape_rumors"}],
 		"then": {"step": "rumors_fade", "delay_days": 1.5}
 	},
 	"smuggler_signal": {
-		"name": "Сигнал контрабандистов",
+		"name": "Smuggler Signal",
 		"weight": 2, "min_day": 4, "harmful": false, "max_per_game": 4,
 		"requires": ["essence"],
-		"text": "Ночью на частоте охраны чей-то голос: «Есть что почище? Беру по двойной цене. Только тихо».",
+		"text": "At night, a voice on the guard frequency: \"Got anything cleaner? I pay double. Keep it quiet.\"",
 		"then": {"step": "smuggler_offer", "delay_days": 0.4}
 	},
 	"new_prisoners": {
-		"name": "Этап с долгами",
+		"name": "Debt Transfer",
 		"weight": 2, "min_day": 3, "harmful": false, "max_per_game": 3,
 		"requires": ["room"],
 		"count": [1, 2],
-		"text": "Баржа сбросила этап: {target}. Каждому прилагается счёт за доставку.",
+		"text": "A barge dropped a transfer: {target}. Each comes with a bill for delivery.",
 		"effects": [{"op": "prisoners"}]
 	},
 	"metropolis_decree": {
-		"name": "Указ Метрополии",
+		"name": "Metropole Decree",
 		"weight": 2, "min_day": 5, "harmful": false, "max_per_game": 4,
 		"requires": [],
-		"text": "Указ Метрополии огласили между обедом и перекличкой.",
+		"text": "The Metropole decree was read out between lunch and roll call.",
 		"then": {"step": "decree_effect", "delay_days": 0.1}
 	},
 	"letter_home": {
-		"name": "Письмо из дома",
+		"name": "Letter from Home",
 		"weight": 2, "min_day": 3, "harmful": false, "max_per_game": 4,
 		"requires": [],
-		"text": "{target} получил письмо из дома. Цензор вычеркнул почти всё, кроме слов «ждём» и «не пиши».",
+		"text": "{target} received a letter from home. The censor struck out nearly everything except \"we wait\" and \"don't write\".",
 		"effects": [{"op": "thought", "who": "random", "id": "letter_home"}]
 	}
 }

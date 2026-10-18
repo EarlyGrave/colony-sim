@@ -33,4 +33,4 @@ func tick(c: Colonist, sim: Simulation) -> int:
 
 
 func describe() -> String:
-	return "Работает на установке"
+	return "Working a machine"
