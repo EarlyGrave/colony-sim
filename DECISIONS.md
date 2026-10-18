@@ -196,3 +196,9 @@ Creatures pick targets by threat (weighted by distance). Players may deliberatel
 fortified high-threat "decoy/tank" structures to pull and absorb damage. Planned with the
 "creatures damage machines" batch (R3).
 - AI chips: benches/stations only for now, not mines (decided without owner, review).
+
+## Expeditions design (decided without owner, review) — docs/expeditions_batch_plan.md
+Campaign layer over several Simulations; home = map 0 (seed unchanged); only the active map
+steps for real, unattended outposts run an analytic per-day autopilot (yield, buffer cap, raid
+roll, "lost" state); outposts 96x96; biomes ash/crystal/swamp each yield a tier-2 element whose
+part is crafted only at home; sling cargo with travel time; save v3 (v2 rejected).
