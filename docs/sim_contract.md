@@ -69,6 +69,10 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `set_drafted` | colonist_id: int, on: bool | bool | colonist exists and alive |
 | `order_move` | colonist_id: int, cell: cell | bool | colonist drafted, cell reachable |
 | `order_attack` | colonist_id: int, enemy_id: int | bool | drafted colonist, enemy alive |
+| `form_squad` | ids: str (JSON int array), roles: str (JSON array, "" / "auto" / [] = by affinity) | int | C1: squad id or -1; 1..`roles.max_size` (4) living, unsquadded, unique members; members drafted, role weapon equipped |
+| `disband_squad` | sid: int | bool | C1: squad exists; members un-drafted, weapons restored |
+| `squad_hold` | sid: int, cell: cell | bool | C1: cell passable; members `order_move` to cell + role offset (nearest free reachable cell); clears focus |
+| `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` |
 | `resolve_crisis` | crisis_id: str, option_id: str | bool | crisis active, option exists |
 | `answer_event` | event_uid: int, accept: bool | bool | pending storyteller choice with that uid |
 | `set_turret_ammo_policy` | building_id: int, policy: str | bool | turret exists, policy in `ammo.json` policies |
@@ -145,7 +149,8 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `rules.json` | id -> {name, default: bool (or mode string when `modes` present), hidden?, ...} player rules (`set_rule`) |
 | `skills.json` | max_level, xp_base, xp_step, xp_per_work_tick, speed_per_level, passion_xp |
 | `time.json` | start_hour, dawn/dusk hours, night_daylight |
-| `traits.json` | traits id -> {effects} |
+| `roles.json` | C1: max_size, hold_search_radius, slot_spread, affinity{skill_weight,trait_weight}, order[], roles id -> {name, weapon, dmg_taken_mult, threat_mult, formation_offset, affinity_skill, ability} |
+| `traits.json` | traits id -> {effects, role_affinity? {role: bonus}} |
 | `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...} |
 | `work.json` | default_priority, max_priority, types{} |
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
@@ -211,6 +216,12 @@ Nests (2-4, map edge, reachable) are placed from the ecology stream at `start_ne
 `pollution_at(nest) * absorb_rate * dt * chip_pressure` (local mutation field + planet level), capped. A raid keeps `starved_max` units free and
 pays `unit_cost` per further unit from the banks, dropping what it cannot afford; waves leave from the fullest nest. `letter_received`
 "Creatures are massing" fires `rally_ticks` before the wave. Mutant variants roll per unit from the nest's pollution tier (hysteresis `revert_ratio`).
+
+## 12. Squads (C1, `sim.squads`, `sim/squads/`)
+`SquadSystem` (list of `Squad`, ascending id) keeps `members`, `role_of`, `hold` anchor, `focus` enemy id. No rng. `tick()` runs after `threats.tick()`: when a focus target is gone, focus clears and members return to their slots.
+Role = `data/roles.json`; auto-suggest `suggest_roles(ids)`: score = skill level (`affinity_skill`) x `skill_weight` + trait `role_affinity` x `trait_weight`; distinct roles are filled first (best score, ties lower id).
+Commands are logged as text for arrays (`form_squad("[1,2]", "[]")`). Death removes a member (empty squad is deleted). Manual `order_*` on a member is allowed and wins until the next squad command.
+`state_hash` appends `squads.state_parts()` only while a squad exists (goldens unchanged). API for other workers: `get_squad(sid)`, `squad_of(colonist_id)`, `list`, `Squad.role_of[id]`.
 
 ## 11. Warden's Orientation (R5 O1, `sim.tutorial`, `sim/tutorial/tutorial_system.gd`)
 Exists only with `opts.tutorial == true` (else `sim.tutorial == null`, commands are recorded no-ops, hashes unchanged). No rng. Runs last in `step()` (after `storyteller.tick`, before the colonists-dead check); `sim.in_step` is true during `step()`.

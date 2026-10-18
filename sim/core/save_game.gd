@@ -118,6 +118,8 @@ static func state_hash(sim: Simulation) -> int:
 	parts.append(sim.milestones.state_parts())  # region R2b
 	if sim.tutorial != null:  # region O1: only in tutorial mode, so other hashes stay as they were
 		parts.append(sim.tutorial.state_parts())
+	if not sim.squads.list.is_empty():  # region C1: only while a squad exists, other hashes stay as they were
+		parts.append(sim.squads.state_parts())
 	return var_to_str(parts).hash()
 
 
