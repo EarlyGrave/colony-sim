@@ -249,3 +249,8 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 ## Pacing batch K (decided without owner, review)
 - Wave count = pollution-driven cadence (clean x10 slower, dirty x0.5) + preset audit patrols 8/6/5 d; pollution remains the main lever.
 - Solar array gives 12 power (30% of a smelter).
+
+## Endgame batch E (decided without owner, review)
+- Tier 3 audit is gated by petition phase 3 instead of a 120-plate wall.
+- Review 4 "Ledger" loosened to debt left <75% (5% was unreachable); Review 5 "Range" threshold 50.
+- Dispatch bundles are mostly food (the economy's real surplus).

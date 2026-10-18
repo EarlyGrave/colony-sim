@@ -245,3 +245,11 @@ HP); волны заканчиваются по таймеру и твари о�
 - K5 solar 12 power (30% of a smelter), expedition bot: Frontier Quota on 3/5 seeds.
 - 718 green x2, web smoke PASS.
 - Open: threats bench 2.2 ms vs 2.0 budget; hard preset 7.2 waves (target 8); deaths flat across presets at d21.
+
+## Session 4 — Endgame batch E
+- E1 Sentence Commutation Petition (4 phases: plates+parts, iron+copper ingots, coal+nitrogen, refined essence; debt cuts 5/8/10/25%); tier 3 now unlocks via P3. Bot (scripted supply): P1-P3 5/5, P4 1/5.
+- E2 Sector Dispatch (contracts): T1 200 food / T2 130 food + 6 refined / T3 60 ore; modifiers calm (-10% raids), recruit (+1), smelting. Bot: T1 5/5 d5-8, T2 3/5, T3 1/5.
+- E3 Reviews 4-5: Ledger (debt left <75%), Range (power surplus x clean air >= 50). Bot: R4 5/5, R5 1/5 with power bot.
+- E4 Petition / Dispatch panels + HUD chip. E5 hard preset audits 4.2 d (7.8 waves by d21), threats bench ~2.08 ms.
+- 735 green x2, web smoke PASS.
+- Open: petition bot uses scripted supply (no real production bot); planets die ~d28-34 in long runs; food income dies ~d17; threats 2.08 vs 2.0 ms.
