@@ -77,6 +77,9 @@
 		"spawn_scatter": 3,
 		"warning_ticks": 200,
 		"turret_target_bonus": 1000.0,
-		"priority_weight": 100.0
+		"priority_weight": 100.0,
+		"hash_bucket": 8,
+		"chase_flow_radius": 16,
+		"flow_cells_per_tick": 2000
 	}
 }

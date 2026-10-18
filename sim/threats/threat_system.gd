@@ -36,11 +36,18 @@ var _alarm_before_wave := false
 ## Own stream for raid type/composition/origin (D24): the same seed brings the same
 ## waves whatever the player does, so play-style comparisons are not luck.
 var wave_rng := RandomNumberGenerator.new()
+# region perf-threat
+## Enemies by cell bucket, for turret / combat range queries.
+var hash: SpatialHash
+## Times an enemy re-evaluated its target (test / bench counter).
+var retarget_count := 0
+# endregion
 
 
 func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	cfg = sim.defs.balance["threat"]
+	hash = SpatialHash.new(int(cfg.get("hash_bucket", 8)))  # region perf-threat
 	wave_rng.seed = sim.seed_value ^ 0x57A7E
 	sim.listen(sim.bus.first_refine_done, awaken)
 	sim.listen(sim.bus.item_mined, _on_item_mined)
@@ -148,12 +155,16 @@ func tick() -> void:
 			and next_wave_tick - sim.tick < int(cfg["warning_ticks"]) + sim.idle_work.warning_bonus():  # region idle-work
 		_warned = true
 		sim.bus.wave_incoming.emit(next_spawn_origin, next_wave_tick - sim.tick)
+	sim.pathfinder.advance_flows(int(cfg.get("flow_cells_per_tick", 6000)))  # region perf-threat
 	_tick_turrets()
 	for e: Enemy in enemies.duplicate():
+		var before := e.cell  # region perf-threat
 		if e.leaving:
 			_tick_leaving(e)
 		else:
 			_tick_enemy(e)
+		if e.cell != before and hash.has(e):  # region perf-threat
+			hash.update(e)
 	if wave_active and not pending_drop.is_empty() and sim.tick >= int(pending_drop["tick"]):
 		_do_drop()
 	if wave_active and (_attackers() == 0 and pending_drop.is_empty() or sim.tick >= wave_end_tick):
@@ -307,6 +318,7 @@ func _spawn(def_id: String, c: Vector2i) -> Enemy:
 	var e := Enemy.new(_next_id, def_id, sim.defs.enemies[def_id], c)
 	_next_id += 1
 	enemies.append(e)
+	hash.insert(e)  # region perf-threat
 	# region mutation: creatures born on mutated ground are tougher
 	if sim.mutation.is_mutated(c):
 		e.max_hp *= 1.0 + float(sim.defs.mutation["enemy_hp_bonus"])
@@ -321,12 +333,13 @@ func _tick_enemy(e: Enemy) -> void:
 	e.attack_cd = maxi(0, e.attack_cd - 1)
 	if sim.tick >= e.retarget_at or not _target_valid(e):
 		_choose_target(e)
-		e.retarget_at = sim.tick + int(cfg["retarget_ticks"])
+		retarget_count += 1  # region perf-threat
+		e.retarget_at = _next_retarget(e)  # region perf-threat
 	if e.target_kind == Enemy.Target.NONE:
 		return
-	var range_ := float(e.def["attack_range"])
+	var range_ := e.attack_range
 	if e.target_kind == Enemy.Target.BUILDING:
-		var b := sim.buildings.get_by_id(e.target_id)
+		var b := e.target_b  # region perf-threat
 		if b.distance_to(Vector2(e.cell)) <= range_:
 			e.clear_path()
 			if e.attack_cd == 0:
@@ -335,7 +348,7 @@ func _tick_enemy(e: Enemy) -> void:
 		elif _approach_building(e, b) == GridMover.Move.FAILED:
 			e.retarget_at = sim.tick + 5
 	else:
-		var c := sim.colonists.get_by_id(e.target_id)
+		var c := e.target_c  # region perf-threat
 		if Vector2(c.cell).distance_to(Vector2(e.cell)) <= range_:
 			e.clear_path()
 			if e.attack_cd == 0:
@@ -346,21 +359,22 @@ func _tick_enemy(e: Enemy) -> void:
 					return
 				# endregion
 				sim.health.apply_damage(c, float(e.def["damage"]) * sim.mutation.enemy_damage_mult(e.cell), "", str(e.def.get("damage_kind", "bite")))  # region health
-		elif e.move_toward(c.cell, sim) == GridMover.Move.FAILED:
+		elif _approach_colonist(e, c) == GridMover.Move.FAILED:  # region perf-threat
 			e.retarget_at = sim.tick + 5
 
 
 func _tick_leaving(e: Enemy) -> void:
-	if e.move_toward(e.spawn_cell, sim) != GridMover.Move.MOVING:
+	if _leave_step(e) != GridMover.Move.MOVING:  # region perf-threat
 		enemies.erase(e)
+		hash.remove(e)
 
 
 func _target_valid(e: Enemy) -> bool:
 	match e.target_kind:
 		Enemy.Target.BUILDING:
-			return sim.buildings.get_by_id(e.target_id) != null
+			return e.target_b != null and not e.target_b.destroyed  # region perf-threat
 		Enemy.Target.COLONIST:
-			var c := sim.colonists.get_by_id(e.target_id)
+			var c := e.target_c  # region perf-threat
 			return c != null and c.alive and not c.hidden
 	return false
 
@@ -377,6 +391,7 @@ func _choose_target(e: Enemy) -> void:
 				best_d = d
 				e.target_kind = Enemy.Target.COLONIST
 				e.target_id = c.id
+				e.target_c = c  # region perf-threat
 	if e.target_kind != Enemy.Target.NONE:
 		return
 	# 2) A turret shooting at us; 3) the most valuable building.
@@ -397,6 +412,7 @@ func _choose_target(e: Enemy) -> void:
 	if best != null:
 		e.target_kind = Enemy.Target.BUILDING
 		e.target_id = best.id
+		e.target_b = best  # region perf-threat
 		if not sim.pathfinder.can_approach(e.cell, best.nearest_cell_to(e.cell)):
 			_sapper_target(e)
 
@@ -405,6 +421,7 @@ func damage_enemy(e: Enemy, amount: float) -> void:
 	e.hp -= amount
 	if e.hp <= 0.0 and enemies.has(e):
 		enemies.erase(e)
+		hash.remove(e)  # region perf-threat
 		kills += 1
 		if wave_active:
 			raid_dead += 1
@@ -425,13 +442,15 @@ func _tick_turrets() -> void:
 		var from: Vector2 = b.center()
 		var target: Enemy = null
 		var best_d := float(t["range"])
-		for e in enemies:
+		# region perf-threat: nearest in range; ties go to the newest (same as the old full scan)
+		for e: Enemy in hash.query(from, best_d):
 			if e.leaving:
 				continue
 			var d := Vector2(e.cell).distance_to(from)
-			if d <= best_d:
+			if d < best_d or (d == best_d and (target == null or e.id > target.id)):
 				best_d = d
 				target = e
+		# endregion
 		if target == null:
 			continue
 		if sim.ammo != null and not sim.ammo.turret_try_fire(b, best_d):  # region ammo
@@ -444,30 +463,31 @@ func _tick_turrets() -> void:
 # region combat
 ## Living (not leaving) enemies within `r` cells of `pos`, nearest first.
 func enemies_in_range(pos: Vector2, r: float) -> Array[Enemy]:
+	var found: Array = []
+	for e: Enemy in hash.query(pos, r):
+		if not e.leaving:
+			found.append([Vector2(e.cell).distance_to(pos), e.id, e])
+	found.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
 	var out: Array[Enemy] = []
-	var dists: Array[float] = []
-	for e in enemies:
-		if e.leaving:
-			continue
-		var d := Vector2(e.cell).distance_to(pos)
-		if d > r:
-			continue
-		var i := 0
-		while i < dists.size() and dists[i] <= d:
-			i += 1
-		dists.insert(i, d)
-		out.insert(i, e)
+	for f: Array in found:
+		out.append(f[2])
 	return out
 
 # region construction
 ## Walks toward a building; a solid target (wall) is approached from a free neighbour.
 func _approach_building(e: Enemy, b: Building) -> int:
-	var goal := b.nearest_cell_to(e.cell)
-	if not sim.pathfinder.is_walkable(goal):
-		goal = sim.pathfinder.best_adjacent(e.cell, goal)
-		if goal.x < 0:
+	var pf := sim.pathfinder
+	var f := pf.flow_cached(b.id)
+	if f == null:
+		var sources: Array[Vector2i] = []
+		for p in b.footprint():
+			for s in pf.approach_cells(p):
+				if not sources.has(s):
+					sources.append(s)
+		if sources.is_empty():
 			return GridMover.Move.FAILED
-	return e.move_toward(goal, sim)
+		f = pf.flow_to(b.id, sources)
+	return e.move_flow(f, sim)
 
 
 ## Sapper-lite: the real target is walled off, so chew through the nearest wall
@@ -485,4 +505,49 @@ func _sapper_target(e: Enemy) -> void:
 	if best != null:
 		e.target_kind = Enemy.Target.BUILDING
 		e.target_id = best.id
+		e.target_b = best  # region perf-threat
+# endregion
+
+# region perf-threat
+## Flow cache key spaces (building ids are small).
+const FLOW_CELL := 1 << 30
+const FLOW_LEAVE := 1 << 31
+
+## Next re-target tick: one slot every `retarget_ticks`, phase = id % retarget_ticks.
+func _next_retarget(e: Enemy) -> int:
+	var n := maxi(1, int(cfg["retarget_ticks"]))
+	return sim.tick + n - posmod(sim.tick - e.id, n)
+
+
+## Chase a colonist along a small bounded field around their current cell.
+func _approach_colonist(e: Enemy, c: Colonist) -> int:
+	var pf := sim.pathfinder
+	var key := FLOW_CELL + c.cell.y * sim.map.width + c.cell.x
+	var f := pf.flow_cached(key)
+	if f == null:
+		var sources := pf.approach_cells(c.cell)
+		if sources.is_empty():
+			return GridMover.Move.FAILED
+		f = pf.flow_to(key, sources, int(cfg.get("chase_flow_radius", 16)))
+	return e.move_flow(f, sim)
+
+
+## Survivors walk back to the (4x4 block around the) cell they spawned at.
+func _leave_step(e: Enemy) -> int:
+	var pf := sim.pathfinder
+	var bx := e.spawn_cell.x / 4 * 4
+	var by := e.spawn_cell.y / 4 * 4
+	var key := FLOW_LEAVE + by * sim.map.width + bx
+	var f := pf.flow_cached(key)
+	if f == null:
+		var sources: Array[Vector2i] = []
+		for y in 4:
+			for x in 4:
+				var p := Vector2i(bx + x, by + y)
+				if pf.is_walkable(p):
+					sources.append(p)
+		if sources.is_empty():
+			return GridMover.Move.FAILED
+		f = pf.flow_to(key, sources)
+	return e.move_flow(f, sim)
 # endregion

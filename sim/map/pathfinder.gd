@@ -7,6 +7,18 @@ var map: MapGrid
 var astar := AStarGrid2D.new()
 var _component := PackedInt32Array()
 var _components_dirty := true
+# region perf-threat
+## Bumped whenever a cell's walkability changes; invalidates flow fields.
+var version := 0
+## A* searches run (colonists, fallbacks). Creatures in steady state add none.
+var astar_calls := 0
+var flow_builds := 0
+var _walk := PackedByteArray()
+var _flows: Dictionary = {}
+var _flows_version := -1
+var _pending: Array[FlowField] = []
+const MAX_CACHED_FLOWS := 48
+# endregion
 # region construction
 ## Cells made solid by buildings (walls): Vector2i -> true. MapGrid stays terrain-only.
 var blocked: Dictionary = {}
@@ -27,16 +39,27 @@ func _init(p_map: MapGrid) -> void:
 
 
 func rebuild() -> void:
+	_walk.resize(map.width * map.height)  # region perf-threat
 	for y in map.height:
 		for x in map.width:
 			var c := Vector2i(x, y)
-			astar.set_point_solid(c, not is_walkable(c))
+			var ok := is_walkable(c)
+			astar.set_point_solid(c, not ok)
+			_walk[y * map.width + x] = 1 if ok else 0  # region perf-threat
 	_components_dirty = true
+	version += 1  # region perf-threat
 
 
 func refresh_cell(c: Vector2i) -> void:
-	astar.set_point_solid(c, not is_walkable(c))
+	var ok := is_walkable(c)
+	astar.set_point_solid(c, not ok)
 	_components_dirty = true
+	# region perf-threat
+	var i := c.y * map.width + c.x
+	if map.in_bounds(c) and _walk[i] != (1 if ok else 0):
+		_walk[i] = 1 if ok else 0
+		version += 1
+	# endregion
 
 
 # region construction
@@ -76,6 +99,7 @@ func find_path(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	if from == to or not reachable(from, to):
 		return out
+	astar_calls += 1  # region perf-threat
 	var p := astar.get_id_path(from, to)
 	for i in range(1, p.size()):
 		out.append(p[i])
@@ -122,22 +146,99 @@ func _ensure_components() -> void:
 
 
 func _label(comp: PackedInt32Array, with_blocks: bool) -> void:
-	comp.resize(map.width * map.height)
+	var w := map.width
+	var h := map.height
+	comp.resize(w * h)
 	comp.fill(-1)
+	# region perf-threat: flat-index flood fill (no Vector2i / Dictionary per cell)
 	var next_id := 0
+	var queue := PackedInt32Array()
 	for i in comp.size():
-		var start := Vector2i(i % map.width, i / map.width)
-		if comp[i] != -1 or map.tiles[i] != MapGrid.Tile.GROUND or (with_blocks and blocked.has(start)):
+		if comp[i] != -1 or not _label_ok(i, with_blocks):
 			continue
-		var queue: Array[Vector2i] = [start]
+		queue.clear()
+		queue.append(i)
 		comp[i] = next_id
 		var head := 0
 		while head < queue.size():
 			var c := queue[head]
 			head += 1
-			for d in MapGrid.NEIGHBORS_4:
-				var n := c + d
-				if map.is_passable(n) and comp[map.idx(n)] == -1 and not (with_blocks and blocked.has(n)):
-					comp[map.idx(n)] = next_id
-					queue.append(n)
+			var x := c % w
+			var y := c / w
+			if x + 1 < w and comp[c + 1] == -1 and _label_ok(c + 1, with_blocks):
+				comp[c + 1] = next_id
+				queue.append(c + 1)
+			if x > 0 and comp[c - 1] == -1 and _label_ok(c - 1, with_blocks):
+				comp[c - 1] = next_id
+				queue.append(c - 1)
+			if y + 1 < h and comp[c + w] == -1 and _label_ok(c + w, with_blocks):
+				comp[c + w] = next_id
+				queue.append(c + w)
+			if y > 0 and comp[c - w] == -1 and _label_ok(c - w, with_blocks):
+				comp[c - w] = next_id
+				queue.append(c - w)
 		next_id += 1
+	# endregion
+
+
+func _label_ok(i: int, with_blocks: bool) -> bool:
+	return _walk[i] != 0 if with_blocks else map.tiles[i] == MapGrid.Tile.GROUND
+
+
+# region perf-threat
+## Walkability bytes (1 = walkable), row-major, for FlowField.
+func walk_grid() -> PackedByteArray:
+	return _walk
+
+
+## Cached field under `key`, or null (also when the map changed since it was built).
+func flow_cached(key: int) -> FlowField:
+	if _flows_version != version:
+		_flows.clear()
+		_pending.clear()
+		_flows_version = version
+	return _flows.get(key)
+
+
+## New field to `sources` stored under `key`. `max_dist` >= 0 bounds it and builds it at once;
+## unbounded fields are built incrementally by `advance_flows` (creatures wait for the wavefront).
+func flow_to(key: int, sources: Array[Vector2i], max_dist := -1) -> FlowField:
+	var f := flow_cached(key)
+	if f != null:
+		return f
+	if _flows.size() >= MAX_CACHED_FLOWS:
+		_flows.clear()
+		_pending.clear()
+	f = FlowField.new()
+	f.build(_walk, map.width, map.height, sources, max_dist, -1 if max_dist >= 0 else 0)
+	_flows[key] = f
+	if not f.complete:
+		_pending.append(f)
+	flow_builds += 1
+	return f
+
+
+## Spends `budget` cells of search on unfinished fields, oldest first.
+func advance_flows(budget: int) -> void:
+	while budget > 0 and not _pending.is_empty():
+		var f: FlowField = _pending[0]
+		var before := f._head
+		f.expand(budget)
+		budget -= maxi(1, f._head - before)
+		if f.complete:
+			_pending.pop_front()
+		else:
+			return
+
+
+## Walkable goal cells for reaching `c`: the cell itself, or its walkable neighbours when solid.
+func approach_cells(c: Vector2i) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if is_walkable(c):
+		out.append(c)
+		return out
+	for d in MapGrid.NEIGHBORS_4:
+		if is_walkable(c + d):
+			out.append(c + d)
+	return out
+# endregion
