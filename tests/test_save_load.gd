@@ -61,3 +61,16 @@ func test_replay_speed() -> void:
 	_sims.append(res["sim"])
 	print("replay 2000 ticks: %d ms" % ms)
 	assert_true(res["ok"])
+
+
+func test_multi_item_crate_order_survives_save() -> void:
+	var opts := {"crate": {"refined_essence": 30, "essence_ore": 40, "raw_food": 20}}  # unsorted on purpose
+	var sim := Simulation.new(13, make_bus(), peaceful_defs(), opts)
+	_sims.append(sim)
+	sim.start_new_game()
+	sim.run_ticks(50)
+	var res := SaveGame.load_json(SaveGame.to_json(sim), make_bus(), peaceful_defs())
+	assert_true(res["ok"], str(res["error"]))
+	var sim2: Simulation = res["sim"]
+	_sims.append(sim2)
+	assert_eq(SaveGame.state_hash(sim2), SaveGame.state_hash(sim), "crate drop order identical after load")

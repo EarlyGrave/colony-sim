@@ -42,6 +42,13 @@ func _ready() -> void:
 	game.camera.zoom_level = zoom
 	if cat != "":
 		game.hud._toggle_cat(cat)
+	if panel == "research":  # demo state: T2 audited, essence in stock, one tech half done, one queued
+		var r: ResearchSystem = game.sim.research
+		r.unlock_tier(2)
+		r.paid.append("assembly")  # demo shortcut: essence already spent
+		r.queue.push_front("assembly")
+		r.progress["assembly"] = float(r.bench_ticks("assembly")) * 0.45
+		game.sim.queue_research("filters", true)
 	if panel != "":
 		game.hud.toggle_panel(panel)
 	for i in 20:

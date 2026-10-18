@@ -1,28 +1,37 @@
 extends TestCase
-## Research bench + job (R2c). Uses a stub research core until R2a is merged.
+## Research bench + job (R2c). Uses the real research core (sim.research).
 
 
-class StubResearch:
+const TECH := "hand_tools"  # 600 bench ticks, no essence
+
+
+## Real research core; gating off, the tech is queued so the bench has work.
+class Probe:
 	extends RefCounted
-	var progress := 0.0
+	var sim: Simulation
 	var goal := 600.0
-	var is_active := true
-	var done_tick := -1
 
-	func active() -> String:
-		return "stub_tech" if is_active and progress < goal else ""
+	func _init(p_sim: Simulation) -> void:
+		sim = p_sim
 
-	func add_progress(t: float) -> void:
-		progress += t
+	var progress: float:
+		get:
+			return goal if sim.research.is_done(TECH) else sim.research.progress_of(TECH)
+	var is_active: bool:
+		get:
+			return sim.research.queue.has(TECH)
+		set(v):
+			sim.queue_research(TECH, v)
 
 
 func _setup(skill: int, benches := 1, with_stub := true) -> Array:
 	var defs := peaceful_defs()
 	defs.skills["xp_per_work_tick"] = 0.0  # keep the rate constant (no level-ups mid-run)
 	var sim := make_sim(5, false, 24, 20, defs)
-	var stub := StubResearch.new()
+	var stub := Probe.new(sim)
+	sim.research.done.erase(TECH)  # start techs are done; re-open one to research
 	if with_stub:
-		sim.set_meta("research_stub", stub)
+		sim.queue_research(TECH, true)
 	var c := sim.colonists.spawn(Vector2i(3, 3))
 	c.skills.levels["crafting"] = skill
 	for i in benches:
@@ -30,7 +39,7 @@ func _setup(skill: int, benches := 1, with_stub := true) -> Array:
 	return [sim, stub, c]
 
 
-func _run(sim: Simulation, stub: StubResearch, ticks: int) -> int:
+func _run(sim: Simulation, stub: Probe, ticks: int) -> int:
 	for i in ticks:
 		sim.step()
 		if stub.progress >= stub.goal:
@@ -50,8 +59,9 @@ func test_speed_ratio_skill() -> void:
 
 func test_no_bench_no_progress() -> void:
 	var sim := make_sim(5, false, 24, 20, peaceful_defs())
-	var stub := StubResearch.new()
-	sim.set_meta("research_stub", stub)
+	var stub := Probe.new(sim)
+	sim.research.done.erase(TECH)
+	sim.queue_research(TECH, true)
 	sim.colonists.spawn(Vector2i(3, 3))
 	sim.run_ticks(1000)
 	assert_eq(stub.progress, 0.0)

@@ -1,6 +1,6 @@
 class_name ResearchPanel
 extends GamePanel
-## Tech tree: one column per tier (T0..T3), horizontal scroll, node cards >= 64 px high.
+## Tech tree: one section per tier (T0..T3) stacked vertically, cards wrap to the panel width, >= 64 px high.
 ## Tap a card = queue/unqueue; each tier has an audit strip with a Deliver button.
 ## Reads sim state only (through ResearchAdapter) and calls sim.queue_research / sim.deliver_audit.
 
@@ -8,26 +8,21 @@ const COL_DONE := Color(0.35, 0.75, 0.4)
 const COL_AVAILABLE := Color(0.95, 0.8, 0.3)
 const COL_ACTIVE := Color(0.4, 0.7, 1.0)
 const COL_LOCKED := Color(0.45, 0.45, 0.5)
-const CARD_MIN := Vector2(160, 96)
+const CARD_MIN := Vector2(146, 72)
 const COL_W := 176.0
 const TIERS := 4
 
 var adapter: ResearchAdapter
 var _key := ""
-var _holder: HBoxContainer
+var _holder: VBoxContainer
 
 
 func build() -> void:
 	adapter = ResearchAdapter.new(sim)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size = Vector2(0, 820)
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_child(scroll)
-	_holder = HBoxContainer.new()
-	_holder.add_theme_constant_override("separation", 8)
-	scroll.add_child(_holder)
+	_holder = VBoxContainer.new()
+	_holder.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_holder.add_theme_constant_override("separation", 10)
+	content.add_child(_holder)
 
 
 func refresh() -> void:
@@ -46,15 +41,19 @@ func refresh() -> void:
 
 func _build_column(tier: int) -> Control:
 	var col := VBoxContainer.new()
-	col.custom_minimum_size = Vector2(COL_W, 0)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_theme_constant_override("separation", 6)
 	var head := Label.new()
 	head.text = "Tier %d" % tier
 	head.add_theme_font_size_override("font_size", 20)
 	col.add_child(head)
 	col.add_child(_build_audit(tier))
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 8)
+	flow.add_theme_constant_override("v_separation", 8)
 	for id in adapter.tech_ids(tier):
-		col.add_child(_build_card(id))
+		flow.add_child(_build_card(id))
+	col.add_child(flow)
 	return col
 
 
@@ -64,7 +63,7 @@ func _build_audit(tier: int) -> Control:
 	var parts := adapter.audit_parts(tier)
 	if parts.is_empty():
 		var l0 := Label.new()
-		l0.text = "Audit: not required"
+		l0.text = "Audit: not required" if adapter.audit_done(tier) else "Audit T%d: pending" % tier
 		l0.add_theme_font_size_override("font_size", 14)
 		l0.modulate = Color(0.7, 0.7, 0.7)
 		box.add_child(l0)
@@ -111,7 +110,8 @@ func _build_card(id: String) -> Button:
 	b.add_theme_font_size_override("font_size", 14)
 	var lines: Array[String] = []
 	lines.append(("[x] " if st == "done" else "") + str(d.get("name", id)))
-	lines.append(adapter.cost_text(id))
+	if st != "done":
+		lines.append(adapter.cost_text(id))
 	if float(d.get("waste_mult", 1.0)) > 1.0:
 		lines.append("adds %d%% waste" % roundi((float(d["waste_mult"]) - 1.0) * 100.0))
 	match st:
@@ -122,7 +122,7 @@ func _build_card(id: String) -> Button:
 		"queued":
 			lines.append("Queued #%d" % adapter.queue_pos(id))
 		"done":
-			lines.append("Done")
+			pass
 	b.text = "\n".join(lines)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = col.darkened(0.65)
@@ -158,189 +158,100 @@ func on_deliver_pressed(tier: int) -> bool:
 	return ok
 
 
-## Thin read/command layer. Reads `sim.research` when R2a provides it, else falls back to the
-## shape in docs/research_batch_plan.md loaded from data/research.json (state kept locally, so the
-## panel is usable and testable before the sim core lands). If that file is absent too, a small
-## built-in sample tree is shown.
+## Thin read/command layer over `sim.research` (R2a). Audit part lists come from
+## data/milestones.json when R2b provides it; `deliver_audit` is called only if the sim has it.
 class ResearchAdapter extends RefCounted:
-	const SAMPLE_TECHS := {
-		"hand_tools": {"name": "Hand tools", "tier": 0, "prereqs": [], "cost": {"bench_ticks": 600, "essence": 0}},
-		"storage_rack": {"name": "Storage racks", "tier": 0, "prereqs": [], "cost": {"bench_ticks": 600, "essence": 0}},
-		"field_smelting": {"name": "Field smelting", "tier": 0, "prereqs": ["hand_tools"], "cost": {"bench_ticks": 900, "essence": 0}},
-		"turret_basic": {"name": "Turret basics", "tier": 0, "prereqs": [], "cost": {"bench_ticks": 900, "essence": 0}},
-		"miner": {"name": "Auto miner", "tier": 1, "prereqs": ["hand_tools"], "cost": {"bench_ticks": 1800, "essence": 0}},
-		"belts": {"name": "Belts", "tier": 1, "prereqs": ["hand_tools"], "cost": {"bench_ticks": 1800, "essence": 0}},
-		"smelter": {"name": "Smelter", "tier": 1, "prereqs": ["field_smelting"], "cost": {"bench_ticks": 2400, "essence": 0}},
-		"sorting": {"name": "Sorting", "tier": 1, "prereqs": ["belts"], "cost": {"bench_ticks": 2400, "essence": 0}},
-		"assembler": {"name": "Assembler", "tier": 2, "prereqs": ["smelter"], "cost": {"bench_ticks": 7200, "essence": 20}},
-		"adv_recipes": {"name": "Advanced recipes", "tier": 2, "prereqs": ["assembler"], "cost": {"bench_ticks": 9600, "essence": 30}, "waste_mult": 1.25},
-		"filters": {"name": "Waste filters", "tier": 2, "prereqs": ["smelter"], "cost": {"bench_ticks": 7200, "essence": 25}},
-		"fast_belts": {"name": "Fast belts", "tier": 3, "prereqs": ["assembler"], "cost": {"bench_ticks": 14400, "essence": 60}},
-		"mass_refining": {"name": "Mass refining", "tier": 3, "prereqs": ["adv_recipes"], "cost": {"bench_ticks": 19200, "essence": 80}, "waste_mult": 1.6},
-		"overdrive": {"name": "Overdrive", "tier": 3, "prereqs": ["fast_belts"], "cost": {"bench_ticks": 19200, "essence": 90}, "waste_mult": 1.4},
-	}
-	const SAMPLE_MILESTONES := {
-		"2": {"parts": {"iron_plate": 40, "gear": 10}},
-		"3": {"parts": {"iron_plate": 120, "gear": 40}},
-	}
-
 	var sim: Simulation
-	var _techs: Dictionary = {}
 	var _milestones: Dictionary = {}
-	var _local_queue: Array = []
-	var _local_done: Array = []
-	var _local_delivered: Dictionary = {}
 
 	func _init(p_sim: Simulation) -> void:
 		sim = p_sim
-		_techs = _unwrap(_from_sim("techs"), "res://data/research.json", "techs")
-		if _techs.is_empty():
-			_techs = SAMPLE_TECHS
-		_milestones = _unwrap(_from_sim("milestones"), "res://data/milestones.json", "tiers")
-		if _milestones.is_empty():
-			_milestones = SAMPLE_MILESTONES
-
-	func _from_sim(prop: String) -> Variant:
-		var r: Variant = sim.get("research")
-		if r != null and r is Object and prop in r:
-			return r.get(prop)
-		return null
-
-	func _unwrap(v: Variant, path: String, wrap: String) -> Dictionary:
-		if v is Dictionary and not (v as Dictionary).is_empty():
-			return v
-		if not FileAccess.file_exists(path):
-			return {}
-		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-		if parsed is Dictionary:
-			var dd: Dictionary = parsed
-			if dd.has(wrap) and dd[wrap] is Dictionary:
-				dd = dd[wrap]
-			var out := {}
-			for k: String in dd:
-				if not k.begins_with("_"):
-					out[k] = dd[k]
-			return out
-		return {}
-
-	func has_sim_research() -> bool:
-		return sim.get("research") != null
+		var path := "res://data/milestones.json"
+		if FileAccess.file_exists(path):
+			var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+			if parsed is Dictionary:
+				var dd: Dictionary = parsed
+				if dd.has("tiers") and dd["tiers"] is Dictionary:
+					dd = dd["tiers"]
+				for k: String in dd:
+					if not k.begins_with("_"):
+						_milestones[k] = dd[k]
 
 	func done_list() -> Array:
-		if has_sim_research():
-			var v: Variant = _from_sim("done")
-			if v is Array:
-				return v
-		return _local_done
+		return sim.research.done
 
 	func queue_list() -> Array:
-		if has_sim_research():
-			var v: Variant = _from_sim("queue")
-			if v is Array:
-				return v
-		return _local_queue
+		return sim.research.queue
 
 	func tech(id: String) -> Dictionary:
-		return _techs.get(id, {})
+		return sim.research.tech(id)
 
 	func tech_ids(tier: int) -> Array[String]:
 		var out: Array[String] = []
-		for id: String in _techs:
-			if int(_techs[id].get("tier", 0)) == tier:
+		for id: String in sim.defs.research:
+			if int(sim.defs.research[id].get("tier", 0)) == tier:
 				out.append(id)
 		out.sort()
 		return out
 
 	func tier_count() -> int:
-		return _techs.size()
+		return sim.defs.research.size()
 
 	func audit_parts(tier: int) -> Dictionary:
 		var m: Dictionary = _milestones.get(str(tier), {})
 		return m.get("parts", {})
 
 	func audit_delivered(tier: int) -> Dictionary:
-		var d: Variant = _from_sim("delivered") if has_sim_research() else _local_delivered
-		if d is Dictionary:
-			return (d as Dictionary).get(str(tier), (d as Dictionary).get(tier, {}))
+		var d: Variant = sim.get("milestones")
+		if d != null and "delivered" in d:
+			var dd: Dictionary = d.delivered
+			return dd.get(str(tier), dd.get(tier, {}))
 		return {}
 
 	func audit_done(tier: int) -> bool:
-		var parts := audit_parts(tier)
-		if parts.is_empty():
-			return true
-		if has_sim_research():
-			var r: Object = sim.get("research")
-			if r.has_method("tier_unlocked"):
-				return bool(r.call("tier_unlocked", tier))
-		var got := audit_delivered(tier)
-		for item: String in parts:
-			if int(got.get(item, 0)) < int(parts[item]):
-				return false
-		return true
+		return sim.research.tier_unlocked(tier)
 
 	func item_name(item: String) -> String:
 		return str(sim.defs.items.get(item, {}).get("name", item))
 
-	func prereq_missing(id: String) -> Array[String]:
-		var out: Array[String] = []
-		for p: String in tech(id).get("prereqs", []):
-			if not done_list().has(p) and int(tech(p).get("tier", 0)) > 1:
-				out.append(str(tech(p).get("name", p)))
-		return out
-
-	## "done" | "active" | "queued" | "available" | "locked". Tiers 0/1 count as researched
-	## when no sim.research exists (they are unlocked at start per the plan).
+	## "done" | "active" | "queued" | "available" | "locked".
 	func state_of(id: String) -> String:
-		if done_list().has(id) or (not has_sim_research() and int(tech(id).get("tier", 0)) <= 1):
+		var r := sim.research
+		if r.is_done(id):
 			return "done"
-		if lock_reason(id) != "":
+		if r.lock_reason(id) != "":
 			return "locked"
-		var q := queue_list()
-		if not q.is_empty() and q[0] == id:
+		if r.active() == id:
 			return "active"
-		if q.has(id):
+		if r.queue.has(id):
 			return "queued"
 		return "available"
 
 	func lock_reason(id: String) -> String:
-		var miss := prereq_missing(id)
-		if not miss.is_empty():
-			return "needs " + ", ".join(miss)
-		var tier := int(tech(id).get("tier", 0))
-		if tier > 0 and not audit_done(tier):
-			return "audit T%d" % tier
-		return ""
+		var why := sim.research.lock_reason(id)
+		if why.begins_with("needs "):
+			var p := why.substr(6)
+			return "needs " + str(sim.research.tech(p).get("name", p))
+		return why
 
 	func queue_pos(id: String) -> int:
-		return queue_list().find(id) + 1
+		return sim.research.queue.find(id) + 1
 
 	func progress_frac(id: String) -> float:
-		var total := float(tech(id).get("cost", {}).get("bench_ticks", 0))
-		if total <= 0.0 or not has_sim_research():
-			return 0.0
-		var p: Variant = _from_sim("progress")
-		var v := 0.0
-		if p is Dictionary:
-			v = float((p as Dictionary).get(id, 0.0))
-		return clampf(v / total, 0.0, 1.0)
+		return sim.research.fraction(id)
 
 	func cost_text(id: String) -> String:
 		var c: Dictionary = tech(id).get("cost", {})
-		var tpd := sim.ticks_per_day
-		var hours := int(round(float(int(c.get("bench_ticks", 0))) / float(tpd) * 24.0))
+		var hours := int(round(float(sim.research.bench_ticks(id)) / float(sim.ticks_per_day) * 24.0))
 		var s := "%dd %dh" % [hours / 24, hours % 24]
 		if int(c.get("essence", 0)) > 0:
 			s += ", %d essence" % int(c["essence"])
+			if not sim.research.can_afford(id) and state_of(id) != "done":
+				s += " (short)"
 		return s
 
 	func set_queued(id: String, on: bool) -> bool:
-		if sim.has_method("queue_research"):
-			return bool(sim.call("queue_research", id, on))
-		if on and not _local_queue.has(id):
-			_local_queue.append(id)
-		elif not on:
-			_local_queue.erase(id)
-		return true
+		return sim.queue_research(id, on)
 
 	func deliver(tier: int) -> bool:
 		if sim.has_method("deliver_audit"):
@@ -349,11 +260,10 @@ class ResearchAdapter extends RefCounted:
 
 	## Cheap change detector for refresh().
 	func signature() -> String:
-		var s := ",".join(done_list()) + "|" + ",".join(queue_list())
-		if has_sim_research():
-			var p: Variant = _from_sim("progress")
-			if p is Dictionary:
-				for k: String in (p as Dictionary).keys():
-					s += "%s%d" % [k, int(float(p[k]) / 20.0)]
-			s += "|" + JSON.stringify(_from_sim("delivered"))
+		var r := sim.research
+		var s := ",".join(r.done) + "|" + ",".join(r.queue) + "|" + str(r.audit_tiers)
+		for k: String in r.progress.keys():
+			s += "%s%d" % [k, int(float(r.progress[k]) / 20.0)]
+		s += "|" + JSON.stringify(audit_delivered(2)) + JSON.stringify(audit_delivered(3))
+		s += "|" + str(sim.items.count_stored(str(sim.defs.balance["research"]["essence_item"])) / 5)
 		return s

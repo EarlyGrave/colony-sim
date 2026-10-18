@@ -38,7 +38,9 @@ static func apply(sim: Simulation, opts: Dictionary) -> void:
 	var crate: Dictionary = opts.get("crate", {})
 	if not crate.is_empty():
 		var at := sim.map_center() + Vector2i(3, -1)
-		for item: String in crate:
+		var items: Array = crate.keys()
+		items.sort()  # JSON round-trips sort keys: drop in sorted order everywhere
+		for item: String in items:
 			sim.ledger.record_produced(item, int(crate[item]), "meta_crate")
 			sim.items.drop(at, item, int(crate[item]))
 	var site := int(opts.get("site", 0))

@@ -155,6 +155,7 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 				n = 0
 			else:
 				n = PerkHooks.scaled(operator, "waste_mult", float(n), 1.0 + sim.perks.mod(operator, "waste_mult"))
+				n = _research_waste(n)  # region R2a: finished techs add waste
 		elif b.recipe_id == "refine_essence":  # region crises
 			n = int(round(float(n) * sim.crises.mult("refine_output_mult")))
 		if n <= 0:
@@ -177,6 +178,19 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 		first_refine_done = true
 		sim.bus.first_refine_done.emit()
 	return true
+
+
+## Scales a waste amount by finished techs; the fraction is rolled on sim.rng (only when mult != 1).
+func _research_waste(n: int) -> int:
+	var m := sim.research.waste_multiplier()
+	if n <= 0 or is_equal_approx(m, 1.0):
+		return n
+	var f := float(n) * m
+	var whole := int(floor(f))
+	var frac := f - float(whole)
+	if frac > 0.0001 and sim.rng.randf() < frac:
+		whole += 1
+	return whole
 
 
 func wear(b: Building, amount: float) -> void:

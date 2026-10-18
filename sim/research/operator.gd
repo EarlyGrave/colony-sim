@@ -5,16 +5,11 @@ extends RefCounted
 ##
 ## Research core interface used (owned by R2a, `sim.research`):
 ##   active() -> String            id of the tech being researched, "" if none
-##   add_progress(ticks: float)    adds bench-ticks to the active tech
-## R2c-STUB: until R2a is merged, tests inject a stub via sim.set_meta("research_stub", obj).
+##   add_progress(work: float)     adds bench-ticks to the active tech
 
 
-## The research system, or null when absent (R2c-STUB fallback via meta).
-static func system(sim: Simulation) -> Object:
-	var r: Variant = sim.get("research")
-	if r == null and sim.has_meta("research_stub"):
-		r = sim.get_meta("research_stub")
-	return r
+static func system(sim: Simulation) -> ResearchSystem:
+	return sim.research
 
 
 static func active(sim: Simulation) -> String:
