@@ -12,7 +12,15 @@ const DY: Array[int] = [0, 0, 1, -1, 1, -1, 1, -1]
 var w := 0
 var h := 0
 var version := 0
-## Steps to the nearest goal; -1 when unreached (or beyond max_dist).
+## Window of the map covered by `dist` (the whole map for unbounded fields; the sources'
+## bounding box grown by max_dist for bounded ones - nothing outside it can be reached).
+var x0 := 0
+var y0 := 0
+var ww := 0
+var wh := 0
+## Last-use stamp for the Pathfinder's LRU eviction.
+var last_use := 0
+## Steps to the nearest goal inside the window (row-major, ww x wh); -1 when unreached (or beyond max_dist).
 var dist := PackedInt32Array()
 ## True once the search has exhausted its frontier (otherwise `dist` is final only where >= 0).
 var complete := false
@@ -28,15 +36,38 @@ func build(walk: PackedByteArray, p_w: int, p_h: int, sources: Array[Vector2i], 
 	h = p_h
 	_walk = walk
 	_max_dist = max_dist
-	dist.resize(w * h)
+	x0 = 0
+	y0 = 0
+	ww = w
+	wh = h
+	if max_dist >= 0 and not sources.is_empty():
+		var lx := w
+		var ly := h
+		var hx := -1
+		var hy := -1
+		for s in sources:
+			if s.x < 0 or s.y < 0 or s.x >= w or s.y >= h:
+				continue
+			lx = mini(lx, s.x)
+			ly = mini(ly, s.y)
+			hx = maxi(hx, s.x)
+			hy = maxi(hy, s.y)
+		if hx >= 0:
+			x0 = maxi(0, lx - max_dist)
+			y0 = maxi(0, ly - max_dist)
+			ww = mini(w - 1, hx + max_dist) - x0 + 1
+			wh = mini(h - 1, hy + max_dist) - y0 + 1
+		else:
+			ww = 0
+			wh = 0
+	dist.resize(ww * wh)
 	dist.fill(-1)
 	for s in sources:
-		if s.x < 0 or s.y < 0 or s.x >= w or s.y >= h:
+		if s.x < x0 or s.y < y0 or s.x >= x0 + ww or s.y >= y0 + wh:
 			continue
-		var i := s.y * w + s.x
-		if dist[i] == -1 and walk[i] != 0:
-			dist[i] = 0
-			_queue.append(i)
+		if dist[(s.y - y0) * ww + s.x - x0] == -1 and walk[s.y * w + s.x] != 0:
+			dist[(s.y - y0) * ww + s.x - x0] = 0
+			_queue.append(s.y * w + s.x)
 	complete = false
 	expand(budget)
 
@@ -53,31 +84,39 @@ func expand(budget: int) -> void:
 		done += 1
 		var i := _queue[_head]
 		_head += 1
-		var d := dist[i] + 1
-		if _max_dist >= 0 and d > _max_dist:
-			continue
 		var cx := i % w
 		var cy := i / w
+		var d := dist[(cy - y0) * ww + cx - x0] + 1
+		if _max_dist >= 0 and d > _max_dist:
+			continue
 		for k in 8:
 			var nx := cx + DX[k]
 			var ny := cy + DY[k]
-			if nx < 0 or ny < 0 or nx >= w or ny >= h:
+			if nx < x0 or ny < y0 or nx >= x0 + ww or ny >= y0 + wh:
 				continue
 			var ni := ny * w + nx
-			if dist[ni] != -1 or walk[ni] == 0:
+			var di := (ny - y0) * ww + nx - x0
+			if dist[di] != -1 or walk[ni] == 0:
 				continue
 			if k >= 4 and (walk[cy * w + nx] == 0 or walk[ny * w + cx] == 0):
 				continue
-			dist[ni] = d
+			dist[di] = d
 			_queue.append(ni)
 	complete = true
 	_queue = PackedInt32Array()
 
 
 func dist_at(c: Vector2i) -> int:
-	if c.x < 0 or c.y < 0 or c.x >= w or c.y >= h:
+	if c.x < x0 or c.y < y0 or c.x >= x0 + ww or c.y >= y0 + wh:
 		return -1
-	return dist[c.y * w + c.x]
+	return dist[(c.y - y0) * ww + c.x - x0]
+
+
+## True when a walkability change at `c` can alter this field.
+func touches(c: Vector2i) -> bool:
+	if ww == 0:
+		return true  # sourceless: any change may give it sources
+	return c.x >= x0 and c.y >= y0 and c.x < x0 + ww and c.y < y0 + wh
 
 
 ## Best neighbour of `c` (strictly closer to the goal), or (-1, -1) when `c`
@@ -91,9 +130,9 @@ func next_step(c: Vector2i, walk: PackedByteArray) -> Vector2i:
 	for k in 8:
 		var nx := c.x + DX[k]
 		var ny := c.y + DY[k]
-		if nx < 0 or ny < 0 or nx >= w or ny >= h:
+		if nx < x0 or ny < y0 or nx >= x0 + ww or ny >= y0 + wh:
 			continue
-		var d := dist[ny * w + nx]
+		var d := dist[(ny - y0) * ww + nx - x0]
 		if d < 0 or d >= best_d:
 			continue
 		if k >= 4 and (walk[c.y * w + nx] == 0 or walk[ny * w + c.x] == 0):
