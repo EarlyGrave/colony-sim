@@ -21,6 +21,7 @@ const PANELS: Array = [
 	# slot 4
 	["contracts", "Contracts", "res://view/panels/contracts_panel.gd"],
 	# slot 5
+	["research", "Research", "res://view/panels/research_panel.gd"],  # region R2d
 	# slot 6
 	["save", "Menu", "res://view/panels/save_panel.gd"],
 ]

@@ -10,6 +10,7 @@ func _ready() -> void:
 	var ui_scale := 0.0
 	var win := Vector2i.ZERO
 	var cat := ""
+	var panel := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out = a.substr(6)
@@ -23,6 +24,8 @@ func _ready() -> void:
 			win.y = int(a.substr(4))
 		elif a.begins_with("--cat="):
 			cat = a.substr(6)  # open a compact HUD category popup (zones/build/orders)
+		elif a.begins_with("--panel="):
+			panel = a.substr(8)  # open a registered side panel by id
 		elif a.begins_with("--zoom="):
 			zoom = float(a.substr(7))
 	if win != Vector2i.ZERO:
@@ -39,6 +42,8 @@ func _ready() -> void:
 	game.camera.zoom_level = zoom
 	if cat != "":
 		game.hud._toggle_cat(cat)
+	if panel != "":
+		game.hud.toggle_panel(panel)
 	for i in 20:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
