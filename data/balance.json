@@ -66,6 +66,8 @@
 	"b3": {
 		"enabled": true
 	},
+	"e3_enabled": false,
+	"e3": {"clean_ref": 0.5},
 	"k2_enabled": true,
 	"k2": {
 		"outpost_days": 2,

@@ -378,7 +378,7 @@ func _k1_tick(held: bool) -> void:
 	if sim.tick >= _k1_audit_at and not wave_active and not held and not _k1_audit_now:
 		var pc: Dictionary = sim.defs.balance.get("pacing", {})
 		_k1_audit_points = float(pc.get("floor_pts_per_day", 0.7)) * _k1_audit_days * _o3_mult()
-		_k1_audit_at = sim.tick + int(_k1_audit_days * sim.ticks_per_day)
+		_k1_audit_at = sim.tick + int((_k1_audit_days + sim.milestones.e3_audit_bonus_days()) * sim.ticks_per_day)  # region E3
 		if sim.milestones.k2_consume_decoy():  # region K2: an outpost absorbs this audit
 			return
 		_k1_audit_now = true
