@@ -8,7 +8,11 @@
 			"machine_parts",
 			"raw_food",
 			"meal",
-			"essence_rounds"
+			"essence_rounds",
+			"ingot_copper",
+			"ingot_iron",
+			"plate",
+			"parts"
 		],
 		"waste_emission_factor": 1.0
 	},

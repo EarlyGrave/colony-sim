@@ -311,5 +311,21 @@
 		"buildable": false,
 		"threat_priority": 0,
 		"belt": true
+	},
+	"warden_terminal": {
+		"name": "Warden Terminal",
+		"size": [
+			2,
+			1
+		],
+		"color": "#6a8fb0",
+		"max_hp": 200,
+		"cost": {
+			"essence_ore": 20
+		},
+		"build_work": 60,
+		"buildable": true,
+		"unique": true,
+		"threat_priority": 2
 	}
 }

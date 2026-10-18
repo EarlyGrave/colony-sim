@@ -67,6 +67,7 @@ var progression: ProgressionSystem
 # region idle-work
 var idle_work: IdleWorkSystem
 var mutation: MutationSystem  # region mutation
+var milestones: MilestoneSystem  # region R2b
 # endregion
 # region perks
 var perks: PerkSystem
@@ -151,6 +152,7 @@ func _init_systems() -> void:
 	debt = DebtSystem.new(self)  # region debt
 	idle_work = IdleWorkSystem.new(self)  # region idle-work
 	mutation = MutationSystem.new(self)  # region mutation
+	milestones = MilestoneSystem.new(self)  # region R2b
 
 
 func _place_starting_colony() -> void:
@@ -546,4 +548,11 @@ func set_patrol_route_text(text: String) -> void:
 func purify_cell(c: Vector2i) -> bool:
 	_record("purify_cell", [c])  # save-load
 	return mutation.purify(c)
+# endregion
+
+
+# region R2b
+func deliver_audit(tier: int) -> bool:
+	_record("deliver_audit", [tier])  # save-load
+	return milestones.deliver(tier)
 # endregion
