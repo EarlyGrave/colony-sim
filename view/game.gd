@@ -291,6 +291,8 @@ func _on_tapped(world_pos: Vector2) -> void:
 	if _combat_tap(world_pos, cell):
 		return
 	# endregion
+	if _l2_tap(cell):  # region L2
+		return
 	if tool in RECT_TOOLS:
 		if world.pending_corner.x < 0:
 			world.pending_corner = cell
@@ -521,6 +523,7 @@ func _setup_automation() -> void:
 	camera.stroke_began.connect(func(p: Vector2) -> void: stroke_begin(WorldView.world_to_cell(p)))
 	camera.stroke_moved.connect(func(p: Vector2) -> void: stroke_move(WorldView.world_to_cell(p)))
 	camera.stroke_ended.connect(func(p: Vector2, cancelled: bool) -> void: stroke_end(WorldView.world_to_cell(p), cancelled))
+	_l2_setup(layer)  # region L2
 
 
 func _on_auto_tool(id: String) -> void:
@@ -534,12 +537,15 @@ func _on_auto_tool(id: String) -> void:
 			hud.show_message("Remove belt: drag over belts.", 5.0)
 		"belt_rotate":
 			hud.show_message("Rotate belt: tap a belt to turn it 90 degrees.", 5.0)
+		_:
+			if id.begins_with("node_"):  # region L2
+				hud.show_message("Tap a cell to place it (faces the last belt direction).", 5.0)
 
 
 func _leave_belt_tools() -> void:
 	if camera != null:
 		camera.capture_drag = false
-	if auto_panel != null and tool not in BELT_TOOLS and tool not in AutomationPanel.MACHINES.map(func(m: Array) -> String: return m[0]):
+	if auto_panel != null and tool not in BELT_TOOLS and not tool.begins_with("node_") and tool not in AutomationPanel.MACHINES.map(func(m: Array) -> String: return m[0]):
 		auto_panel.clear_selection()
 	_belt_reset()
 
@@ -923,4 +929,36 @@ func _f5_avoid() -> Array:
 	if auto_panel != null and auto_panel.is_visible_in_tree():
 		out.append(auto_panel.get_global_rect())
 	return out
+# endregion
+
+
+# region L2
+var splitter_panel: SplitterPanel
+
+
+func _l2_setup(layer: CanvasLayer) -> void:
+	splitter_panel = SplitterPanel.new()
+	layer.add_child(splitter_panel)
+	auto_panel._logic_btn.toggled.connect(func(_on: bool) -> void: auto_panel.refresh_locks(sim))
+	EventBus.research_completed.connect(func(_id: String) -> void: auto_panel.refresh_locks(sim))
+
+
+## Logic tools place a node on tap; with no tool, tapping a node opens its sheet.
+func _l2_tap(cell: Vector2i) -> bool:
+	if splitter_panel == null:
+		return false
+	splitter_panel.visible = false
+	if tool.begins_with("node_"):
+		var kind := int(tool.substr(5))
+		var dir: int = clampi(world.belt_last_dir, 0, 3)
+		if sim.place_belt_node(kind, cell, dir):
+			hud.show_message("Placed.", 2.0)
+		else:
+			hud.show_message("Can't place it there (locked or blocked).", 3.0)
+		return true
+	if tool == "inspect" and sim.get_belt_node_kind(cell) > 0:
+		world.selected_cell = cell
+		splitter_panel.open(sim, cell, 8.0)
+		return true
+	return false
 # endregion

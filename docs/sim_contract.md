@@ -54,6 +54,8 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `place_belt` | cells: [cell], last_dir: int | bool | atomic: non-empty, dir 0..3 (N,E,S,W), no repeats, each cell free (passable, no building or blueprint), consecutive cells 4-adjacent |
 | `remove_belt` | cells: [cell] | bool | true if any belt removed |
 | `set_belt_dir` | c: cell, dir: int | bool | dir 0..3 and belt at c |
+| `place_belt_node` | kind: int, c: cell, dir: int | bool | L2: kind 1..4 (splitter_basic/smart/priority, merger), dir 0..3, building def of that kind researched, cell free or plain belt (replaced) |
+| `set_splitter_filter` | c: cell, slot: int, value: str | bool | L2: smart node at c, slot 0..2 (left/front/right), value `any`/`overflow`/item id |
 | `add_bill` | building_id: int, recipe_id: str, mode: str, target: int | int (bill id or -1) | building takes bills, recipe valid for station, mode in `crafting.modes` |
 | `remove_bill` | building_id: int, bill_id: int | bool | bill exists |
 | `update_bill` | building_id: int, bill_id: int, mode: str, target: int, paused: bool | bool | bill exists, valid mode |

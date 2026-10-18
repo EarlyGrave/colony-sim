@@ -17,7 +17,9 @@ uniform float scroll = 0.0;
 uniform vec4 tint : source_color = vec4(1.0);
 varying float d;
 varying float dmg;  // T3
-void vertex() { d = INSTANCE_CUSTOM.x; dmg = INSTANCE_CUSTOM.y; }
+varying float nk;  // L2: node kind
+varying float fm;  // L2: filter bitmask (bit0 left, bit1 front, bit2 right)
+void vertex() { d = INSTANCE_CUSTOM.x; dmg = INSTANCE_CUSTOM.y; nk = INSTANCE_CUSTOM.z; fm = INSTANCE_CUSTOM.w; }
 void fragment() {
 	vec2 dv = vec2(0.0, -1.0);
 	if (d > 0.5 && d < 1.5) dv = vec2(1.0, 0.0);
@@ -26,7 +28,26 @@ void fragment() {
 	vec2 l = UV - vec2(0.5);
 	float a = dot(l, dv);
 	float b = dot(l, vec2(-dv.y, dv.x));
-	ALBEDO = mix(texture(tile, vec2(a + 0.5 - scroll, b + 0.5)).rgb, vec3(0.8, 0.15, 0.1), dmg * 0.6) * tint.rgb;  // T3
+	vec3 col = mix(texture(tile, vec2(a + 0.5 - scroll, b + 0.5)).rgb, vec3(0.8, 0.15, 0.1), dmg * 0.6);  // T3
+	// region L2: one glyph per node kind, drawn in flow-local coords (a = front, b = right)
+	if (nk > 0.5) {
+		float k = floor(nk + 0.5);
+		float m = 0.0;
+		vec3 gc = vec3(1.0);
+		if (k < 1.5) { m = step(length(vec2(a, b)), 0.3); gc = vec3(1.0, 0.6, 0.15); }  // basic: disc
+		else if (k < 2.5) { m = step(abs(a) + abs(b), 0.34); gc = vec3(0.3, 0.85, 1.0); }  // smart: diamond
+		else if (k < 3.5) { m = step(abs(b), 0.34 - (a + 0.3) * 0.55) * step(-0.3, a) * step(a, 0.3); gc = vec3(1.0, 0.9, 0.2); }  // priority: arrow wedge
+		else { m = step(max(abs(a), abs(b)), 0.28); gc = vec3(0.45, 0.95, 0.4); }  // merger: square
+		col = mix(col, gc, m);
+		float bits = floor(fm + 0.5);
+		float f0 = mod(bits, 2.0);
+		float f1 = mod(floor(bits / 2.0), 2.0);
+		float f2 = floor(bits / 4.0);
+		float dotm = max(max(f0 * step(length(vec2(a, b + 0.38)), 0.1), f1 * step(length(vec2(a - 0.38, b)), 0.1)), f2 * step(length(vec2(a, b - 0.38)), 0.1));
+		col = mix(col, vec3(1.0), dotm);
+	}
+	// endregion
+	ALBEDO = col * tint.rgb;
 }
 """
 
@@ -50,6 +71,8 @@ var rebuilds := 0  ## belt MultiMesh rebuilds (perf counter)
 var _belt_mat: ShaderMaterial
 var _item_mat: ShaderMaterial
 var _last_dir := PackedByteArray()
+var _l2_kind := PackedByteArray()  # region L2
+var _l2_version := -1
 var _dirty := {}
 var _item_colors := {}  # item id -> Color
 var _time := 0.0
@@ -174,6 +197,7 @@ func sync(delta: float, tint: Color, view_chunks: Array[Vector2i]) -> void:
 					_dirty[ci] = true
 					break
 		_last_dir = belts.dir.duplicate()
+	_l2_sync_nodes(belts)  # region L2
 	# region T3: damaged / repaired tiles re-tint their chunk
 	for i: int in belts.hp_dirty:
 		var cx := (i % belts.width) / ChunkLayer.CHUNK
@@ -208,7 +232,7 @@ func _rebuild_belts(ci: int) -> void:
 	for i in cells.size():
 		var c := cells[i]
 		mm.set_instance_transform(i, Transform3D(Basis(), Vector3(c.x + 0.5, BELT_Y, c.y + 0.5)))
-		mm.set_instance_custom_data(i, Color(float(belts.dir[c.y * belts.width + c.x]), 1.0 - belts.hp[c.y * belts.width + c.x] / belts.max_hp, 0, 0))  # T3
+		mm.set_instance_custom_data(i, Color(float(belts.dir[c.y * belts.width + c.x]), 1.0 - belts.hp[c.y * belts.width + c.x] / belts.max_hp, _l2_kind_at(belts, c), _l2_mask_at(belts, c)))  # T3, L2
 
 
 func _update_items(ci: int) -> void:
@@ -238,3 +262,52 @@ func _color_of(id: int) -> Color:
 		var nm := sim.logistics.item_name(id)
 		_item_colors[id] = Color(String(sim.defs.items.get(nm, {}).get("color", "#cccccc")))
 	return _item_colors[id]
+
+
+# region L2
+## Node kind at a cell (0 = plain belt). Needs BeltGrid.kind from L1; plain belts without it.
+func _l2_kind_at(belts: BeltGrid, c: Vector2i) -> float:
+	var k: Variant = belts.get("kind")
+	return float((k as PackedByteArray)[c.y * belts.width + c.x]) if k != null else 0.0
+
+
+## Bitmask of smart outputs with a non-"any" filter: 1 left, 2 front, 4 right.
+func _l2_mask_at(belts: BeltGrid, c: Vector2i) -> float:
+	var f: Variant = belts.get("filters")
+	var i := c.y * belts.width + c.x
+	if not (f is Dictionary) or not (f as Dictionary).has(i):
+		return 0.0
+	var m := 0
+	var vals: PackedStringArray = (f as Dictionary)[i]
+	for slot in mini(3, vals.size()):
+		if vals[slot] != "any":
+			m |= 1 << slot
+	return float(m)
+
+
+## Marks chunks dirty when node kinds or filters changed (only runs when belts.version moved).
+func _l2_sync_nodes(belts: BeltGrid) -> void:
+	var k: Variant = belts.get("kind")
+	if k == null or belts.version == _l2_version:
+		return
+	_l2_version = belts.version
+	var kinds: PackedByteArray = k
+	var w := belts.width
+	if _l2_kind.size() != kinds.size():
+		_l2_kind.resize(kinds.size())
+		_l2_kind.fill(0)
+	for ci in cols * rows:
+		var ch := Vector2i(ci % cols, ci / cols)
+		var r := ChunkLayer.chunk_cells(ch, w, belts.height)
+		for y in range(r.position.y, r.end.y):
+			var a := y * w + r.position.x
+			var hit := false
+			for x in r.size.x:
+				if kinds[a + x] != 0 or kinds[a + x] != _l2_kind[a + x]:
+					hit = true
+					break
+			if hit:
+				_dirty[ci] = true
+				break
+	_l2_kind = kinds.duplicate()
+# endregion

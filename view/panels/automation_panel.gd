@@ -16,6 +16,7 @@ const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), 
 var _group := ButtonGroup.new()
 var _buttons := {}
 var _machine_row: HBoxContainer
+var _logic_row: HBoxContainer  # region L2
 
 
 func _init() -> void:
@@ -28,6 +29,7 @@ func _init() -> void:
 	box.add_child(_machine_row)
 	for m: Array in MACHINES:
 		_add(_machine_row, str(m[0]), str(m[1]))
+	_l2_build_row(box)  # region L2
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 	box.add_child(row)
@@ -41,12 +43,7 @@ func _init() -> void:
 	mb.focus_mode = Control.FOCUS_NONE
 	mb.toggled.connect(func(on: bool) -> void: _machine_row.visible = on)
 	row.add_child(mb)
-	var ub := Button.new()
-	ub.text = "Undo"
-	ub.custom_minimum_size = BTN
-	ub.focus_mode = Control.FOCUS_NONE
-	ub.pressed.connect(func() -> void: undo_pressed.emit())
-	row.add_child(ub)
+	_l2_logic_toggle(row)  # region L2: Undo moved to the Logic row (six buttons do not fit beside the HUD toolbar)
 
 
 func _add(parent: Control, id: String, text: String) -> void:
@@ -95,3 +92,51 @@ static func path_last_dir(path: Array[Vector2i], fallback: int) -> int:
 		return fallback
 	var d := DIRS.find(path[-1] - path[-2])
 	return d if d >= 0 else fallback
+
+
+# region L2
+## Logic tool ids -> belt node kind (Simulation.NODE_DEFS index).
+const LOGIC: Array = [
+	["node_1", "Splitter", 1], ["node_2", "Smart", 2], ["node_3", "Priority", 3], ["node_4", "Merger", 4],
+]
+var _logic_btn: Button
+
+
+func _l2_build_row(box: VBoxContainer) -> void:
+	_logic_row = HBoxContainer.new()
+	_logic_row.add_theme_constant_override("separation", 6)
+	_logic_row.visible = false
+	box.add_child(_logic_row)
+	for m: Array in LOGIC:
+		_add(_logic_row, str(m[0]), str(m[1]))
+	var ub := Button.new()
+	ub.text = "Undo"
+	ub.custom_minimum_size = BTN
+	ub.focus_mode = Control.FOCUS_NONE
+	ub.pressed.connect(func() -> void: undo_pressed.emit())
+	_logic_row.add_child(ub)
+
+
+func _l2_logic_toggle(row: HBoxContainer) -> void:
+	_logic_btn = Button.new()
+	_logic_btn.text = "Logic"
+	_logic_btn.toggle_mode = true
+	_logic_btn.custom_minimum_size = BTN
+	_logic_btn.focus_mode = Control.FOCUS_NONE
+	_logic_btn.toggled.connect(func(on: bool) -> void: _logic_row.visible = on)
+	row.add_child(_logic_btn)
+
+
+## Disables Logic buttons whose tech is not researched; the label then names the tech.
+func refresh_locks(sim: Simulation) -> void:
+	for m: Array in LOGIC:
+		var b: Button = _buttons[str(m[0])]
+		var def_id: String = Simulation.NODE_DEFS[int(m[2])]
+		var ok := sim == null or sim.research.building_unlocked(def_id)
+		b.disabled = not ok
+		if ok:
+			b.text = str(m[1])
+		else:
+			var t: Dictionary = sim.research.tech(sim.research.building_tech(def_id))
+			b.text = "%s\n(%s)" % [m[1], str(t.get("name", "locked"))]
+# endregion
