@@ -25,5 +25,13 @@
 				{"kind": "supplies", "items": {"machine_parts": 4, "meal": 8}},
 				{"kind": "xp", "amount": 40.0}
 			]}
+	],
+	"b4_templates": [
+		{"id": "frontier_quota", "name": "Frontier Quota", "essence": [2, 4], "parts": [0, 0], "deadline_days": 7,
+			"demand": {"cinder_ore": 3},
+			"rewards": [
+				{"kind": "supplies", "items": {"machine_parts": 3, "meal": 6}},
+				{"kind": "xp", "amount": 50.0}
+			]}
 	]
 }

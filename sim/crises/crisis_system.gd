@@ -21,6 +21,12 @@ func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	cfg = sim.defs.crises["settings"]
 	crises = sim.defs.crises["crises"]
+	if bool(sim.defs.balance.get("b4_enabled", false)):  # region B4
+		crises = crises.duplicate(true)
+		var extra: Dictionary = sim.defs.crises.get("b4_options", {})
+		for cid: String in extra:
+			if crises.has(cid):
+				(crises[cid]["options"] as Dictionary).merge(extra[cid])
 
 
 func tick() -> void:

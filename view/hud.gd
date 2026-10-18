@@ -826,6 +826,9 @@ func bind_campaign(c: Object) -> void:
 		map_switcher.map_chosen.connect(func(id: int) -> void: map_chosen.emit(id))
 		map_switcher.expedition_pressed.connect(func() -> void: open_expedition("expedition"))
 		map_switcher.cargo_pressed.connect(func() -> void: open_expedition("cargo"))
+		map_switcher.recall_pressed.connect(func(rid: int) -> void:  # region B4
+			if _campaign != null and _campaign.has_method("recall"):
+				_campaign.call("recall", rid))
 		_stack.add_child(map_switcher)
 	map_switcher.visible = true
 	map_switcher.bind(c)
