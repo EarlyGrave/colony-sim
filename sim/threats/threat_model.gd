@@ -40,6 +40,18 @@ var _bw := 0
 # endregion
 # region R3X
 var _belt_tick := -1000000
+var _d0 := 1.0
+var _flags_live := false  # region W2d: any ability flag live (read per pick)
+var _line_on := true  # region W2d: balance line_damage.enabled, read once per pick
+var _gen := 0  # region W2d: pick memo generation (candidate epoch / belt set change)
+var _gen_cache := -1
+var _cand_gen := 0
+var _p_kind: Array[int] = []
+var _p_id: Array[int] = []
+var _p_val: Array[float] = []
+var _p_geo := PackedInt32Array()
+var _p_ref: Array = []
+var _gen_ver := -1
 ## Belt candidates per region: [region_key, cell, count], rebuilt every `belt_recompute_ticks`.
 var _belts: Array = []
 # endregion
@@ -114,6 +126,8 @@ func refresh(force := false) -> void:
 	if not force and sim.tick - _cache_tick < int(cfg["recompute_ticks"]):
 		return
 	_cache_tick = sim.tick
+	_d0 = float(cfg["d0"])  # region W2d
+	_line_on = bool(sim.defs.balance["line_damage"]["enabled"])
 	_kind.clear()
 	_id.clear()
 	_ref.clear()
@@ -179,6 +193,15 @@ func refresh(force := false) -> void:
 		_geo.append(0)
 	for i in _val.size():  # region W1a
 		_index[(_kind[i] << 32) | _id[i]] = i
+	# region W2d: identical candidates (same ids, values, geometry, refs) keep the per-enemy pick memos alive
+	if _kind != _p_kind or _id != _p_id or _val != _p_val or _geo != _p_geo or _ref != _p_ref:
+		_cand_gen += 1
+		_p_kind = _kind.duplicate()
+		_p_id = _id.duplicate()
+		_p_val = _val.duplicate()
+		_p_geo = _geo.duplicate()
+		_p_ref = _ref.duplicate()
+	# endregion
 
 
 # region W1a
@@ -222,7 +245,7 @@ func _best_belt(e: Enemy, best_s: float, best_i: int, bias: float, d0: float) ->
 	# Memo: the best belt for a cell does not depend on best_s/best_i (they only decide whether it wins), and it only
 	# changes when the belt set changes (place/remove/destroy => belt_count/destroyed) or the candidates are rebuilt.
 	var bg := _belts_grid_ref
-	var sig := bg.belt_count + _belt_tick * 7919 + _cache_tick * 104729  # place/remove or candidate rebuild
+	var sig := bg.version + _belt_tick * 7919 + _cache_tick * 104729  # place/remove or candidate rebuild
 	if sig != _memo_sig:
 		_memo_sig = sig
 		_memo.clear()
@@ -339,12 +362,12 @@ func _refresh_belts() -> void:
 
 
 func _belt_ok(c: Vector2i, e: Enemy) -> bool:
-	return sim.logistics.belts.has_belt(c) and float(e.def.get("structure_dmg", 0.0)) > 0.0 \
-		and bool(sim.defs.balance["line_damage"]["enabled"])
+	return e.structure_dmg > 0.0 and _line_on and sim.logistics.belts.has_belt(c)  # region W2d
 # endregion
 
 
 func score(i: int, e: Enemy) -> float:
+	_flags_live = not sim.abilities.flags.is_empty()  # region W2d
 	return _score(i, e, _entry_for(e)[0], float(cfg["d0"]))
 
 
@@ -376,11 +399,12 @@ func _score(i: int, e: Enemy, bias: PackedFloat64Array, d0: float) -> float:
 		if not c.alive or c.hidden:
 			return -1.0
 		d = Vector2(c.cell).distance_to(Vector2(e.cell))
-		var cf := sim.abilities.flags_of(c.id)  # region C2: radius-limited flags (taunt) fade beyond their radius
-		for f: String in cf:
-			var fl: Array = cf[f]
-			if float(fl[2]) > 0.0 and d > float(fl[2]):
-				val /= float(fl[1])
+		if _flags_live:  # region C2: radius-limited flags (taunt) fade beyond their radius
+			var cf := sim.abilities.flags_of(c.id)
+			for f: String in cf:
+				var fl: Array = cf[f]
+				if float(fl[2]) > 0.0 and d > float(fl[2]):
+					val /= float(fl[1])
 	var r := d / d0
 	return val * bias[i] / (1.0 + r * r)
 
@@ -425,7 +449,7 @@ var _nc: Dictionary = {}  # def_id -> {cell index -> [best, score]}
 
 func _best_static(e: Enemy, entry: Array, d0: float) -> int:
 	var bias: PackedFloat64Array = entry[0]
-	var sig := sim.logistics.belts.belt_count
+	var sig := sim.logistics.belts.version
 	if _nc_epoch != _cache_tick or _nc_sig != sig:
 		_nc_epoch = _cache_tick
 		_nc_sig = sig
@@ -469,16 +493,49 @@ func _best_static(e: Enemy, entry: Array, d0: float) -> int:
 ## come from _best_static, colonists (highest indices) are scored live and win only with a strictly higher score.
 func pick(e: Enemy) -> Dictionary:
 	refresh()
+	# region W2d: per-enemy memo. The result is a pure function of (candidate epoch, belt set, enemy cell, sticky target)
+	# as long as no colonist can out-score the winner (checked once when storing) and no ability flag is live.
+	var bgv := sim.logistics.belts.version
+	if _cand_gen != _gen_cache or bgv != _gen_ver:
+		_gen_cache = _cand_gen
+		_gen_ver = bgv
+		_gen += 1
+	var flagged := not sim.abilities.flags.is_empty()  # ability flags are read live and may raise a score
+	_flags_live = flagged
+	if e.pk_gen == _gen and not flagged and e.pk_cell == e.cell and e.pk_tk == e.target_kind and e.pk_tid == e.target_id \
+			and e.pk_tcell == e.target_cell and (e.pk_bld == null or not e.pk_bld.destroyed):
+		# Static part unchanged; colonists move, so they are re-scored live: the memo holds while none beats the winner.
+		var held := true
+		var pbias := e.pk_bias
+		var ps := e.pk_s
+		var ex := e.cell.x
+		var ey := e.cell.y
+		var d0sq := _d0 * _d0
+		for i in range(_belt_hi, _val.size()):
+			var vb := _val[i] * pbias[i]
+			if vb * 1.0001 < ps:
+				continue
+			var c: Colonist = _ref[i]
+			if not c.alive or c.hidden:
+				continue
+			var dx := c.cell.x - ex
+			var dy := c.cell.y - ey
+			if float(dx * dx + dy * dy) >= d0sq * (vb / ps) * 1.001:  # score = vb / (1 + d2/d0sq) < ps for sure
+				continue
+			if _score(i, e, pbias, _d0) > ps:
+				held = false
+				break
+		if held:
+			return e.pk_res
 	var cur := -1
 	if e.target_kind != Enemy.Target.NONE:
 		var ek := 0 if e.target_kind == Enemy.Target.BUILDING else (2 if e.target_kind == Enemy.Target.BELT else 1)
 		cur = int(_index.get((ek << 32) | e.target_id, -1))
 	var entry := _entry_for(e)
 	var bias: PackedFloat64Array = entry[0]
-	var d0 := float(cfg["d0"])
+	var d0 := _d0
 	var best := _best_static(e, entry, d0)
 	var best_s := _nc_s
-	var flagged := not sim.abilities.flags.is_empty()  # ability flags are read live and may raise a score
 	for i in range(_belt_hi, _val.size()):
 		if not flagged and _val[i] * bias[i] * 1.0001 < best_s:
 			continue
@@ -486,7 +543,22 @@ func pick(e: Enemy) -> Dictionary:
 		if s > best_s:
 			best_s = s
 			best = i
-	return _finish(e, best, best_s, cur)
+	var res := _finish(e, best, best_s, cur)
+	# Keep fixed points only (the result is the target the enemy already has, which the caller stores as the next sticky
+	# target) whose static winner no colonist beat; see the hit check above.
+	e.pk_gen = -1
+	if not flagged and cur >= 0 and best >= 0 and _kind[best] != 1 and not res.is_empty() and (_kind[cur] == 0 or _kind[cur] == 2) \
+			and int(res["id"]) == _id[cur] and (res["kind"] == "belt") == (_kind[cur] == 2):
+		e.pk_gen = _gen
+		e.pk_cell = e.cell
+		e.pk_tk = e.target_kind
+		e.pk_tid = e.target_id
+		e.pk_tcell = e.target_cell
+		e.pk_res = res
+		e.pk_s = best_s
+		e.pk_bias = bias
+		e.pk_bld = _ref[cur] if _kind[cur] == 0 else null
+	return res
 
 
 ## Stickiness to the current target `cur` (candidate index or -1) and the result dictionary for the best candidate.

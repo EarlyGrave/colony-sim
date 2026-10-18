@@ -177,3 +177,39 @@ func test_pick_matches_brute_force_with_belts_and_destruction() -> void:
 		sim.remove_belt(cut)
 	assert_eq(mismatches, 0, "pick == brute force")
 # endregion
+
+
+func test_belt_version_bumps_on_place_remove_rotate() -> void:
+	var g := BeltGrid.new(8, 8)
+	var v := g.version
+	g.set_belt(Vector2i(2, 2), 0)
+	assert_true(g.version > v, "place bumps")
+	v = g.version
+	g.set_belt(Vector2i(2, 2), 0)
+	assert_eq(g.version, v, "same dir is a no-op")
+	g.set_belt(Vector2i(2, 2), 1)
+	assert_true(g.version > v, "rotate bumps")
+	v = g.version
+	g.remove_belt(Vector2i(2, 2))
+	assert_true(g.version > v, "remove bumps")
+
+
+func test_belt_memo_survives_remove_replace_between_picks() -> void:
+	var sim := make_sim(12, false, 64, 64, peaceful_defs())
+	sim.buildings.place("bed", Vector2i(32, 32), false)
+	var cells: Array = []
+	for x in range(6, 58):
+		cells.append(Vector2i(x, 10))
+		cells.append(Vector2i(x, 50))
+	sim.place_belt(cells, 0)
+	sim.tick += 10
+	var e: Enemy = sim.threats._spawn("crawler", Vector2i(30, 12))
+	var m: ThreatModel = sim.threats.model
+	assert_eq(m.pick(e), _brute_pick(m, e), "first pick")
+	# Same belt_count, different belt set, no tick in between.
+	sim.remove_belt([Vector2i(30, 10)])
+	sim.place_belt([Vector2i(30, 12)], 0)
+	assert_eq(m.pick(e), _brute_pick(m, e), "pick after remove+place at equal count")
+	sim.remove_belt([Vector2i(30, 12)])
+	sim.place_belt([Vector2i(30, 10)], 0)
+	assert_eq(m.pick(e), _brute_pick(m, e), "pick after restoring")
