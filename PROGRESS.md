@@ -165,6 +165,15 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
   runner tools/run_tests_sharded.sh: suite 372 s -> ~130 s. Goldens byte-identical. Tests: 599.
 - Open: belt cache invalidates on belt_count only (stale candidate if remove+place in one epoch).
 
+## Session 4 — optimization wave 2 (W2a–W2e)
+- W2a ground redraws only dirty chunks (UPDATE_ONCE): xvfb frame 64/0 102 -> 71 ms, 250/300 409 -> 262 ms.
+- W2b creatures/colonists as MultiMesh billboards (shader frames/walk): unit script 2.1-3.7 -> 0.6-0.9 ms/frame
+  (zoom 2: 12.4 -> 1.07). W2c HUD throttled to tick rate: 0.62-0.73 -> 0.12 ms/frame.
+- W2d threat hot loop + BeltGrid.version cache key + pick memo: 8.2k belts + 300 enemies 11.8 -> 5.8 ms;
+  no belts 3.6 -> 3.0 (target 2.5 missed: flow BFS expand).
+- W2e lazy chunks: static memory at 250 map 185 -> 69 MB; tools/web_smoke.py (Playwright, PASS).
+- Tests 601 green (sharded ~2 min), goldens byte-identical.
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
