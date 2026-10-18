@@ -146,8 +146,8 @@ func supply_of(b: Building) -> float:
 	if b.broken or b.destroyed or not is_generator(b):
 		return 0.0
 	if fuel_items(b).is_empty():
-		return float(b.def["power_gen"])
-	return float(b.def["power_gen"]) if b.burn_left > 0 or fuel_left(b) > 0 else 0.0
+		return gen_of(b)
+	return gen_of(b) if b.burn_left > 0 or fuel_left(b) > 0 else 0.0
 
 
 ## Waste units per 1000 ticks if the generator burned continuously (for panels).
@@ -225,7 +225,7 @@ func _tick_generator(g: Building, demand: PackedFloat32Array, supply: PackedFloa
 	if g.destroyed:
 		return
 	var items := fuel_items(g)
-	var cap := float(g.def["power_gen"])
+	var cap := gen_of(g)
 	var net := g.power_net
 	var want := net >= 0 and demand[net] > 0.0
 	if items.is_empty():  # passive (solar)
@@ -279,7 +279,7 @@ func _burn_params(g: Building, item: String) -> Dictionary:
 	var fd: Dictionary = f if f is Dictionary else {}
 	var ticks := int(e.get("burn_ticks", fd.get("burn_ticks", 0)))
 	if ticks <= 0 and e.has("energy"):  # energy per unit (power x seconds) -> ticks at the generator's output
-		ticks = int(round(float(e["energy"]) / maxf(0.001, float(g.def["power_gen"])) * Simulation.TICKS_PER_SECOND))
+		ticks = int(round(float(e["energy"]) / maxf(0.001, gen_of(g)) * Simulation.TICKS_PER_SECOND))
 	return {
 		"ticks": maxi(1, ticks),
 		"waste": float(e.get("waste", e.get("waste_per_burn", fd.get("waste_per_burn", 0.0)))),
@@ -457,3 +457,12 @@ func _rebuild() -> void:
 	_net_demand.resize(nets.size())
 	_net_supply.fill(0.0)
 	_net_demand.fill(0.0)
+
+
+# region K5
+## Nominal output; with balance k5_enabled a def may override it via `k5_power_gen` (solar ~30% of a smelter).
+func gen_of(b: Building) -> float:
+	if b.def.has("k5_power_gen") and bool(sim.defs.balance.get("k5_enabled", false)):
+		return float(b.def["k5_power_gen"])
+	return float(b.def["power_gen"])
+# endregion
