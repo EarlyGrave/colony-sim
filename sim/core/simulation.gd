@@ -451,6 +451,7 @@ func step() -> void:
 	if tutorial != null:  # region O1
 		tutorial.tick()
 	militia.tick()  # region C5
+	milestones.tick_reviews()  # region B3
 	if profiling:
 		_lap("militia")
 	in_step = false  # region O1

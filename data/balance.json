@@ -63,6 +63,9 @@
 		"zero_eps": 0.00001,
 		"overlay_rows_per_frame": 12
 	},
+	"b3": {
+		"enabled": false
+	},
 	"storyteller": {
 		"enabled": true,
 		"checks_per_day": 2,
