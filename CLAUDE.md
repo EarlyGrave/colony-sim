@@ -28,7 +28,8 @@ mode — the main session does NOT implement features itself:
    factory games, roguelikes, survival, strategy…), picks mechanics that fit our
    pillars, REWORKS them so they are not direct copies (new twist tied to the prison
    planet / essence / contamination), and writes `docs/scout/<topic>.md` (≤ 80 lines:
-   source inspiration, our version, why it fits, cost S/M/L). Its output goes to the
+   source inspiration, our version, why it fits, cost S/M/L). It must load WebSearch/
+   WebFetch via ToolSearch and check facts live. Its output goes to the
    game designer and the prompter, never straight to workers.
 5. Budget: one wave per batch, Sonnet for subagents, the orchestrator does not
    re-read files the agents already read; short reports.
