@@ -43,7 +43,12 @@ mode — the main session does NOT implement features itself:
    the next wave. Undecided design questions: decide, log in DECISIONS.md as
    "decided without owner, review", keep it reversible. Never stop the loop just
    because a batch ended.
-8. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
+8. **Ship checks** (from the "Birds With Guns" workflow; decided without owner, review):
+   before every merge to `main` run `tools/web_smoke.py` (real web build in Chromium at phone
+   size); new content (map/biome/creature/machine) merges only with bot numbers; balance is
+   tuned from a model/table (e.g. tools/combat_model.gd), not by eye; owner feedback is best as
+   a phone screenshot + one blunt sentence — turn each into a task.
+9. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
 
 ## Stack
 - Godot **4.7.2-stable**, GDScript only (no C#: we need the web build).

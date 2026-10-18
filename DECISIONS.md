@@ -224,3 +224,4 @@ Both: squads ("Wardens of the Line") are the main way, and single-inmate draftin
 - Role numbers come from `tools/combat_model.gd` (analytic DPS/TTK from the data), not by eye: Bulwark `dmg_taken_mult` 0.6 -> 0.45 (lasts 2.2x an unsquadded inmate), Lancer volley `dmg_mult` 2.0 -> 2.5 (TTK on a brute 40% of a rifle inmate). `tests/test_combat_model.gd` guards both targets.
 - `dmg_taken_mult` (HealthSystem.apply_damage) and `threat_mult` (ThreatModel.colonist_value) were declared in roles.json but read nowhere; both now go through `SquadSystem.role_mult`, 1.0 outside squads (goldens unchanged).
 - `test_player_intervention_keeps_colony_alive_longer` measures the intent over seeds 1..5 (telegraph wind-ups made single seeds chaotic) instead of a per-seed floor.
+- Process: adopted "Birds With Guns" ship checks into CLAUDE.md (decided without owner, review).
