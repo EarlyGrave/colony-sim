@@ -34,18 +34,22 @@ func tick_colonist(c: Colonist) -> void:
 		return
 	if sim.alarm and not c.hidden and (c.job == null or c.job.type != "flee") and not c.is_unreachable("flee", sim.tick):
 		var shelter := sim.buildings.find_shelter(c.cell) if sim.buildings else null
-		# region B3: rule "evacuate_low_hq": a hurt HQ becomes the shelter when no other exists
-		if shelter == null and sim.buildings and sim.milestones.b3_on() and sim.is_rule_on("evacuate_low_hq"):
-			for hb in sim.buildings.list:
-				if hb.def_id == "hq" and hb.hp < hb.max_hp * float(sim.defs.rules["evacuate_low_hq"]["hq_hp_fraction"]):
-					shelter = hb
-					break
+		# region B3: rule "evacuate_low_hq": a badly hurt shelter would collapse on its occupants, so nobody hides in it
+		if shelter != null and sim.milestones.b3_on() and sim.is_rule_on("evacuate_low_hq") and _b3_hurt(shelter):
+			shelter = null
 		# endregion
 		if shelter != null:
 			end_job(c, Job.Status.FAILED, false)
 			_start(c, FleeJob.new(shelter.id))
 	if c.hidden:
 		if sim.alarm:
+			# region B3: evacuate a hurt shelter
+			if sim.milestones.b3_on() and sim.is_rule_on("evacuate_low_hq"):
+				for hb in sim.buildings.list:
+					if _b3_hurt(hb) and hb.contains(c.cell):
+						c.hidden = false
+						return
+			# endregion
 			return
 		c.hidden = false
 	if c.is_sick(sim.tick) and (c.job == null or c.job.type != "flee"):
@@ -263,3 +267,9 @@ func _building_needing(item: String, near: Vector2i, c: Colonist) -> Building:
 			best = b
 			best_d = d
 	return best
+
+
+# region B3
+func _b3_hurt(b: Building) -> bool:
+	return b.def.get("shelter", false) and b.hp < b.max_hp * float(sim.defs.rules["evacuate_low_hq"]["hq_hp_fraction"])
+# endregion

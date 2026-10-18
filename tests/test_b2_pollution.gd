@@ -21,9 +21,9 @@ func _run(on: bool, throttle: bool) -> float:
 	return sim.contamination.level
 
 
-func test_off_by_default() -> void:
-	assert_true(not bool(Defs.get_default().balance["b2_pollution"]["enabled"]))
-	assert_true(not bool(Defs.get_default().threat["b2_clean_outpost"]["enabled"]))
+func test_on_by_default_and_off_switch() -> void:
+	assert_true(bool(Defs.get_default().balance["b2_pollution"]["enabled"]))
+	assert_true(bool(Defs.get_default().threat["b2_clean_outpost"]["enabled"]))
 	assert_true(_run(false, false) >= 39.99, "no decay when off")
 
 

@@ -55,16 +55,14 @@
 	},
 	"auto_throttle_above": {
 		"name": "Auto-throttle: stop refining above contamination X",
-		"short": "Auto\nthrottle",
+		"short": "Throttle",
 		"default": false,
-		"hidden": true,
 		"max_contamination_percent": 40
 	},
 	"evacuate_low_hq": {
-		"name": "Evacuate: on alarm, colonists shelter in HQ when it is badly hurt",
-		"short": "Evac\nHQ",
+		"name": "Evacuate: on alarm, nobody shelters in a badly hurt HQ",
+		"short": "Evac HQ",
 		"default": false,
-		"hidden": true,
 		"hq_hp_fraction": 0.5
 	}
 }

@@ -465,7 +465,7 @@ func _toggle_cat(cid: String) -> void:
 			if tid == "@rules":
 				for rb: Button in _rule_buttons.values():
 					_reparent_to(rb, _cat_popup_row)
-					rb.custom_minimum_size = Vector2(96, 72)
+					rb.custom_minimum_size = Vector2(80, 72)  # BX: 80 px so the unhidden B3 rules still fit one row at 844 px
 			elif _tool_buttons.has(tid):
 				_reparent_to(_tool_buttons[tid], _cat_popup_row)
 				_tool_buttons[tid].custom_minimum_size = Vector2(96, 72)
@@ -1166,7 +1166,7 @@ func _o4_layout() -> void:
 			b.add_theme_constant_override("icon_max_width", 26)
 			b.add_theme_font_size_override("font_size", 16)
 		if b is Button:
-			b.custom_minimum_size = Vector2(96, 72)
+			b.custom_minimum_size = Vector2(80, 72)  # BX: 80 px so the unhidden B3 rules still fit one row at 844 px
 	var mw := _menu_box.get_combined_minimum_size().x + 28.0
 	_menu_popup.anchor_left = 0.0
 	_menu_popup.anchor_right = 1.0
@@ -1386,6 +1386,15 @@ func _f2_layout(y0: float, limit: float, cluster_h: float, pop_open: bool) -> vo
 	pa_banner.visible = pa_banner.visible and w >= 160.0
 	_o4_anchor_tl(pa_banner, O4_LEFT + (right - O4_LEFT - w) * 0.5, y0 + F2_BANNER_DROP, w, 0.0)
 	pa_banner.grow_vertical = Control.GROW_DIRECTION_END
+	# BX: the hint toast (bottom-left) and the banner share the left band on a 390 px phone; the banner
+	# is transient, so the toast yields while their rects would overlap.
+	if pa_banner.visible and _message.visible and _message.text != "":
+		var b_top := y0 + F2_BANNER_DROP
+		var b_bot := b_top + maxf(pa_banner.get_combined_minimum_size().y, 36.0)
+		var m_top := vp.y + _message.offset_top
+		var m_bot := vp.y + _message.offset_bottom
+		if b_bot > m_top and b_top < m_bot:
+			_message.visible = false
 # endregion
 
 

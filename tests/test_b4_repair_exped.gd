@@ -34,7 +34,7 @@ func test_hand_plate_produces_plate() -> void:
 func test_expedition_contract_demand() -> void:
 	var sim := make_sim(3, false, 24, 24, _b4_defs())
 	var c: Dictionary = {}
-	for _i in 12:
+	for _i in 80:
 		sim.contracts._offer(sim.day())
 		c = sim.contracts.list.back()
 		if c.has("demand"):

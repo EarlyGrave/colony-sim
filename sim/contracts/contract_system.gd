@@ -210,6 +210,8 @@ func _say(event_id: String, text: String) -> void:
 ## Essence actually due: clean-mining discount when the planet is clean (needs b2_pollution on).
 func required_essence(c: Dictionary) -> int:
 	var n := int(c["essence"])
+	if n <= 0:
+		return n
 	var cb: Dictionary = cfg.get("clean_bonus", {})
 	if bool(sim.defs.balance.get("b2_pollution", {}).get("enabled", false)) and not cb.is_empty() \
 			and sim.contamination.is_clean(float(cb["max_pollution_frac"])):
