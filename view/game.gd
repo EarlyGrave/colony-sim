@@ -818,6 +818,7 @@ func _o5_setup() -> void:
 	radial = RadialMenu.new()
 	layer.add_child(radial)
 	radial.slot_picked.connect(_o5_pick)
+	radial.avoid_provider = _f5_avoid  # region F5
 
 
 func _o5_pick(id: String) -> void:
@@ -905,4 +906,14 @@ func _squad_tap(world_pos: Vector2, cell: Vector2i) -> bool:
 		bar.api.squad_hold(sid, cell)
 		hud.show_message("Squad, hold here.", 2.0)
 	return true
+# endregion
+
+
+# region F5
+## Rects the radial ring keeps clear of: the belt / automation strip.
+func _f5_avoid() -> Array:
+	var out: Array = []
+	if auto_panel != null and auto_panel.is_visible_in_tree():
+		out.append(auto_panel.get_global_rect())
+	return out
 # endregion

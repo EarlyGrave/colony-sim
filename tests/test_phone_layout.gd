@@ -195,6 +195,28 @@ func test_side_sheets_clear_of_column_and_toolbars() -> void:
 		_drop_sheets(game))
 
 
+# region F5
+func test_radial_ring_clear_of_belt_strip() -> void:
+	var game := _make_game()
+	game.sim.run_ticks(60)
+	_each_size(func(size: Vector2i, sc: float) -> void:
+		var tag := "%dx%d@%.2f" % [size.x, size.y, sc]
+		_settle(game, size, sc)
+		var vp := game.hud.get_viewport().get_visible_rect().size
+		var strip := game.auto_panel.get_global_rect()
+		assert_true(game.auto_panel.visible and strip.size.x > 0.0, tag + " strip shown")
+		assert_true(strip.end.y <= vp.y - 4.0 and strip.end.y >= vp.y - 16.0, "%s strip docked: bottom gap %.1f" % [tag, vp.y - strip.end.y])
+		var presses: Array[Vector2] = [strip.get_center(), strip.position, strip.end, Vector2(1, 1), vp - Vector2(1, 1), Vector2(1, vp.y - 1), Vector2(vp.x - 1, 1), vp * 0.5]
+		for pos in presses:
+			game.radial.open_at(pos)
+			assert_false(game.radial.ring_hits(game.radial.center, [strip]), "%s ring vs strip, press %s" % [tag, pos])
+			for i in RadialMenu.SLOTS.size():
+				var p: Vector2 = game.radial.slot_center(i)
+				assert_true(p.x >= 35.0 and p.y >= 35.0 and p.x <= vp.x - 35.0 and p.y <= vp.y - 35.0, "%s slot inside viewport" % tag)
+			game.radial.close())
+# endregion
+
+
 func test_column_strip_and_map_budget() -> void:
 	var game := _make_game()
 	game.sim.run_ticks(60)

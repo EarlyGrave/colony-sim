@@ -20,6 +20,8 @@ const SLOTS: Array = [
 	["inspect", "Inspect"],
 ]
 
+## Optional region F5 hook: returns Array[Rect2] the ring must not overlap (belt strip).
+var avoid_provider: Callable = Callable()
 var is_open := false
 var center := Vector2.ZERO
 var hovered := -1
@@ -97,6 +99,7 @@ func open_at(pos: Vector2) -> void:
 	var vs := get_viewport_rect().size if is_inside_tree() else Vector2(1280, 720)
 	var m := RING_RADIUS + SLOT_SIZE * 0.5
 	center = Vector2(clampf(pos.x, m, maxf(m, vs.x - m)), clampf(pos.y, m, maxf(m, vs.y - m)))
+	center = _f5_clear_center(center, pos, vs, m)  # region F5
 	is_open = true
 	hovered = -1
 	visible = true
@@ -133,3 +136,40 @@ func _draw() -> void:
 		var label := str(SLOTS[i][1])
 		var w := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		draw_string(font, c + Vector2(-w * 0.5, 6), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color.WHITE)
+
+
+# region F5
+func ring_hits(c: Vector2, rects: Array) -> bool:
+	for i in SLOTS.size():
+		var a := -PI * 0.5 + TAU * float(i) / float(SLOTS.size())
+		var sc := c + Vector2(cos(a), sin(a)) * RING_RADIUS
+		for r: Rect2 in rects:
+			var nx := clampf(sc.x, r.position.x, r.end.x)
+			var ny := clampf(sc.y, r.position.y, r.end.y)
+			if sc.distance_to(Vector2(nx, ny)) < SLOT_SIZE * 0.5:
+				return true
+	return false
+
+
+## Nearest ring center (to the press) whose slots clear every avoid rect.
+func _f5_clear_center(c: Vector2, pos: Vector2, vs: Vector2, m: float) -> Vector2:
+	if not avoid_provider.is_valid():
+		return c
+	var rects: Array = avoid_provider.call()
+	if rects.is_empty() or not ring_hits(c, rects):
+		return c
+	var best := c
+	var best_d := INF
+	var y := m
+	while y <= maxf(m, vs.y - m):
+		var x := m
+		while x <= maxf(m, vs.x - m):
+			var cand := Vector2(x, y)
+			var d := cand.distance_squared_to(pos)
+			if d < best_d and not ring_hits(cand, rects):
+				best = cand
+				best_d = d
+			x += 6.0
+		y += 6.0
+	return best
+# endregion

@@ -6,6 +6,7 @@ extends PanelContainer
 signal start_requested(opts: Dictionary)
 
 const BTN := Vector2(0, 88)
+const PAD := 20  # region F5: inner margin (px)
 
 var meta: MetaState
 var select_count := 0  # times a card changed the stored preset (tests)
@@ -24,7 +25,12 @@ func _init(p_meta: MetaState, on_save: Callable = Callable()) -> void:
 	add_theme_stylebox_override("panel", bg)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	add_child(scroll)
+	var pad := MarginContainer.new()  # region F5: inner margin, the title no longer hugs the screen edge
+	for side in ["left", "top", "right", "bottom"]:
+		pad.add_theme_constant_override("margin_" + side, PAD)
+	pad.name = "Pad"
+	add_child(pad)
+	pad.add_child(scroll)
 	var box := VBoxContainer.new()
 	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_theme_constant_override("separation", 10)
