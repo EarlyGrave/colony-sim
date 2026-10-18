@@ -237,3 +237,11 @@ HP); волны заканчиваются по таймеру и твари о�
 - B5 wave report card, radial +3 machines, bulwark 0.40 (model -32% squad damage).
 - All flags on by default, goldens regenerated, 701 green x2, web smoke PASS.
 - Open: waves-repelled ramp across presets (waves paced by pollution); seed 3 planet_dead d21 in qa_r3; expedition bot play; throttle crop/mood reward.
+
+## Session 4 — Pacing batch K
+- K1 audit patrol (preset interval 8/6/5 d) + calm-after-hit; KX added pollution-driven wave cadence. Waves by d21: short 4.8 / standard 6.6 / hard 7.2. Standard: baseline 6.6 vs throttle 4.2 vs mining 4.0 waves (pillar holds).
+- K2 preset-scaled Parole Reviews, outpost-held step, outposts as audit decoys. K3 "Next audit in Nd" chip + Reviews lines.
+- K4 flow BFS 2.3x faster (threats 300@250: ~2.2 ms), fair splitter->merger rotation (bug: belt input starved).
+- K5 solar 12 power (30% of a smelter), expedition bot: Frontier Quota on 3/5 seeds.
+- 718 green x2, web smoke PASS.
+- Open: threats bench 2.2 ms vs 2.0 budget; hard preset 7.2 waves (target 8); deaths flat across presets at d21.

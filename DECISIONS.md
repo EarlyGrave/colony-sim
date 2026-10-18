@@ -245,3 +245,7 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 - Parole Review thresholds lowered to debt 8% / 2 waves / debt 14% (tier-3 review dropped: bots never reach it).
 - Evac HQ rule = a shelter below 50% hp is abandoned on alarm.
 - Clean-pollution raid multiplier left at 1.0 (0.8 shifted baseline too much).
+
+## Pacing batch K (decided without owner, review)
+- Wave count = pollution-driven cadence (clean x10 slower, dirty x0.5) + preset audit patrols 8/6/5 d; pollution remains the main lever.
+- Solar array gives 12 power (30% of a smelter).
