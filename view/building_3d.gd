@@ -7,10 +7,13 @@ extends Node3D
 const HEIGHTS := {
 	"hq": 0.9, "refinery": 1.0, "workbench": 0.5, "turret": 0.4,
 	"door": 0.65, "stove": 0.45, "bed": 0.25,
+	"miner": 0.6, "smelter": 0.85, "assembler": 0.7, "storage_in": 0.35, "storage_out": 0.35,  # region A2c
 }
 ## Explicit flat fallbacks (drawn by WorldView on the ground layer).
-const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "miner", "smelter", "assembler", "storage_in", "storage_out", "belt"]  # A1b: flat until A2c models
-const TOP_ART := {"hq": "capsule", "refinery": "refinery", "turret": "turret_base", "stove": "stove", "bed": "bed", "door": "door"}
+const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt"]  # belts: BeltLayer
+const TOP_ART := {"hq": "capsule", "refinery": "refinery", "turret": "turret_base", "stove": "stove", "bed": "bed", "door": "door",
+	"miner": "machine_miner", "smelter": "machine_smelter", "assembler": "machine_assembler",
+	"storage_in": "machine_storage_in", "storage_out": "machine_storage_out"}  # region A2c
 const DOOR_OPEN_HEIGHT := 0.08
 const DOOR_OPEN_RADIUS := 1.3
 const BARREL_LEN := 0.17  ## how far the barrel sprite sits ahead of the turret centre
@@ -70,7 +73,9 @@ static func damage_tint(b: Building) -> float:
 func _ready() -> void:
 	_shader = Shader.new()
 	_shader.code = SHADER
-	for n in ["capsule", "refinery", "turret_base", "turret_barrel", "stove", "bed", "door"]:
+	for n in ["capsule", "refinery", "turret_base", "turret_barrel", "stove", "bed", "door",
+			"machine_miner", "machine_smelter", "machine_assembler", "machine_storage_in", "machine_storage_out",
+			"port_in", "port_out"]:
 		_tex[n] = load(WorldView.SPR + n + ".png")
 
 
@@ -116,6 +121,7 @@ func _create(b: Building) -> Dictionary:
 		var barrel := _flat_sprite(_tex["turret_barrel"], b.size.x * 1.1)
 		root.add_child(barrel)
 		d["barrel"] = barrel
+	_a2c_ports(b, root)
 	add_child(root)
 	return d
 
@@ -167,3 +173,32 @@ func _door_open(sim: Simulation, b: Building) -> bool:
 		if e.visual_pos().distance_to(c) < DOOR_OPEN_RADIUS:
 			return true
 	return false
+
+
+# region A2c
+const PORT_DIRS := {"N": 0, "E": 1, "S": 2, "W": 3}
+const PORT_Y := 0.03
+
+## Y rotation of a flat +x-pointing arrow so it faces belt direction `d` (0N 1E 2S 3W).
+static func arrow_rotation(d: int) -> float:
+	return [PI / 2, 0.0, -PI / 2, PI][d]
+
+
+## Direction an arrow shows for a port: "out" points away along its side,
+## "in" points back into the machine (a feeding belt must point that way).
+static func port_arrow_dir(side: int, kind: String) -> int:
+	return side if kind == "out" else (side + 2) % 4
+
+
+func _a2c_ports(b: Building, root: Node3D) -> void:
+	for p: Dictionary in b.def.get("ports", []):
+		var side: int = PORT_DIRS.get(String(p["dir"]), 1)
+		var kind := String(p["kind"])
+		var a := _flat_sprite(_tex["port_in" if kind == "in" else "port_out"], 0.9)
+		var pc := b.cell + Vector2i(int(p["dx"]), int(p["dy"]))
+		# port cells are in world space; the root node sits at the origin.
+		a.position = Vector3(pc.x + 0.5, PORT_Y, pc.y + 0.5)
+		a.rotation.y = arrow_rotation(port_arrow_dir(side, kind))
+		a.modulate = Color(1, 1, 1, 0.9)
+		root.add_child(a)
+# endregion
