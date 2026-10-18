@@ -67,6 +67,9 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `install_chip` | building_id: int | bool | T4: building has `chip_slots` > 0 (bench/smelter/assembler, never a miner), no chip yet, not broken, tech `ai_chips` done (when gating), one `ai_chip` in storage (ledger sink `chip_install`) |
 | `remove_chip` | building_id: int | bool | T4: chip drops on the building cell (ledger source `chip_remove`) |
 | `deliver_petition` | phase: int (1..4) | bool | e1_enabled + audit tier 2 + warden_terminal; phases sequential; consumes only still-required items; completing pays the reward (debt cut %, items, tier 3 on P3) and emits petition_phase_done |
+| `deliver_shuttle_parts` | none | int | s1_enabled + petition P4 done + a Release Gantry; consumes part_cost per part from storage up to the need; returns parts added (S1) |
+| `launch_shuttle` | none | bool | phase ready (all parts, gantry powered); starts the countdown and siege waves (S1) |
+| `repair_gantry` | none | bool | pays repair_cost, restores gantry HP (S1) |
 | `deliver_audit` | tier: int | bool | warden_terminal exists; consumes only still-required parts of that tier's set from storage; completes -> research.unlock_tier(tier) + warden letter once |
 | `trigger_bell` | building_id: int | bool | Mourning Bell exists, not broken, no burst running, cooldown 0; starts burst (threat x`burst_mult` for `burst_ticks`, then `cooldown_ticks`); debits `essence_cost` refined essence from storage, shortfall -> ledger event `decoy_essence_debt` |
 | `set_drafted` | colonist_id: int, on: bool | bool | colonist exists and alive |
@@ -139,6 +142,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `meta.json` | legacy, next_batch, scout_cells, unlocks (cross-run meta, enters the sim via `opts`) |
 | `presets.json` | default, order, presets{id: name, sentence, wave_strength_mult, waste_mult, starting_debt_mult, crate, hint_density} (O3; become opts `wave_mult`, `waste_mult`, `debt_mult`, `crate`, `hint_density` via `StartOpts.preset_opts`; neutral values emit no key, so standard_term = `{}`) |
 | `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter} (E1, gated by balance e1_enabled) |
+| `shuttle.json` | preset_mult, gantry, parts_need, part_cost, countdown_days, siege_* numbers, repair_cost, win_letter (S1, gated by balance s1_enabled) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
 | `models.json` | art model descriptors (view only, not read by sim) |
 | `mood.json` | base, check_ticks, thresholds, chances, thoughts |
@@ -160,9 +164,6 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `time.json` | start_hour, dawn/dusk hours, night_daylight |
 | `roles.json` | C1: max_size, hold_search_radius, slot_spread, affinity{skill_weight,trait_weight}, order[], roles id -> {name, weapon, dmg_taken_mult, threat_mult, formation_offset, affinity_skill, ability} |
 | `traits.json` | traits id -> {effects, role_affinity? {role: bonus}} |
-| `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...} |
-
-| `traits.json` | traits id -> {effects} |
 | `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...}, C2 `abilities` id -> {role, cooldown_ticks, essence_cost, contam_puff, noise_burst{mult,ticks}, taunt/volley/radius} |
 | `work.json` | default_priority, max_priority, types{} |
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
@@ -240,10 +241,8 @@ Normal waves are held (`waves_held()`) until the audit step; entering it calls `
 
 ## 12. Health bands (C4)
 `HealthState.band(cfg)` / `sim.health.band(c)` derives `fit | wounded | down` from the existing model (down = `downed`; wounded = blood < `band.wounded_blood` or total damage >= `band.wounded_damage`). `sim.health.bleed_out_seconds(c)` = ceil(blood / bleed_rate / TICKS_PER_SECOND) while Down and bleeding, else -1. `sim.health.stabilise(c, medic)` tends all injuries at `band.stabilise_quality` (C2 Medic hook). Auto-rescue is the existing `RescueGiver` (any colonist with doctoring enabled carries a Down colonist to a free bed). No new RNG, no goldens change (derived reads only); data in `health.json` `band`.
-
 ## C3 telegraphed attacks (`ThreatSystem` region C3)
 `data/enemies.json` `telegraph {windup_ticks, shape cell|line|area, radius|length, dmg_mult}` (brute area r1/20, spitter line 6/14, burrower cell/24, crawler none). When an enemy in range would strike, it stands still, locks the marked cells (`e` meta `tg`, no rng) and after `windup_ticks` hits every colonist/the target building still inside them; units that left are untouched. A killed enemy cancels its strike. `telegraphs()` (view) and `telegraph_state()` (appended to `state_hash` only while a wind-up is active).
-
 ## F1 Flavor text bank (`view/flavor_picker.gd`, `data/flavor.json`)
 View-side only: no sim state, no `sim.rng`, not in `state_hash`/saves, goldens unaffected. `FlavorPicker.load_bank()` (alias `load_default()`), `pick(key, ctx)`, `pick_first([keys], ctx)`, `has_key`, `all_keys`, `K_*` key constants. Keys are dotted paths (`feed.<enemy>.<cause>`, `pa.<signal>`, `barks.<state>`...). ctx: `tick`, `id` (seed = hash([tick,key,id])), placeholders `who victim enemy n cause`. Ring of last 4 lines per key is picker state.
 ## L3 Power (`sim.power`, `sim/power/`, API in `docs/power_api.md`)
