@@ -63,6 +63,11 @@ var needs: Dictionary = {}
 var plants: Dictionary = {}
 # endregion
 
+# region A1b
+var resources: Dictionary = {}
+var biomes: Dictionary = {}
+# endregion
+
 static var _default: Defs = null
 
 
@@ -132,6 +137,12 @@ func load_from(dir: String) -> void:
 	needs = _load_json(dir + "needs.json")
 	plants = _load_json(dir + "plants.json")
 	# endregion
+	# region A1b
+	if FileAccess.file_exists(dir + "resources.json"):
+		resources = _load_json(dir + "resources.json")
+	if FileAccess.file_exists(dir + "biomes.json"):
+		biomes = _load_json(dir + "biomes.json")
+	# endregion
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -191,7 +202,64 @@ func duplicate_defs() -> Defs:
 	d.needs = needs.duplicate(true)
 	d.plants = plants.duplicate(true)
 	# endregion
+	d.resources = resources.duplicate(true)  # region A1b
+	d.biomes = biomes.duplicate(true)  # region A1b
 	return d
+
+
+# region A1b
+const _DIRS := ["N", "E", "S", "W"]
+
+
+## Consistency check of automation data. Returns human-readable errors (empty = ok).
+func validate() -> Array[String]:
+	var errs: Array[String] = []
+	for rid: String in recipes:
+		var r: Dictionary = recipes[rid]
+		for key in ["inputs", "outputs"]:
+			for item: String in r.get(key, {}):
+				if not items.has(item):
+					errs.append("recipe %s: unknown item %s" % [rid, item])
+		var stations: Array = r.get("station", [])
+		for st: String in stations:
+			if not buildings.has(st):
+				errs.append("recipe %s: unknown station %s" % [rid, st])
+		if ("smelter" in stations or "refinery" in stations) and int(r.get("outputs", {}).get("waste", 0)) <= 0:
+			errs.append("recipe %s: refining recipe without waste" % rid)
+	for bid: String in buildings:
+		var b: Dictionary = buildings[bid]
+		var ports: Array = b.get("ports", [])
+		var n_in := 0
+		var n_out := 0
+		for p: Dictionary in ports:
+			if not str(p.get("dir", "")) in _DIRS:
+				errs.append("building %s: bad port dir" % bid)
+			if p.get("kind", "") == "in":
+				n_in += 1
+			elif p.get("kind", "") == "out":
+				n_out += 1
+			else:
+				errs.append("building %s: bad port kind" % bid)
+		var mk: String = str(b.get("machine", ""))
+		if mk == "processor" and (n_in < 1 or n_out < 1):
+			errs.append("machine %s needs >=1 in and >=1 out port" % bid)
+		if mk == "extractor" and n_out < 1:
+			errs.append("machine %s needs >=1 out port" % bid)
+		if b.get("port_building", false) and ports.is_empty():
+			errs.append("building %s: no ports" % bid)
+		if mk == "processor" and not buildings.has(str(b.get("station", ""))):
+			errs.append("machine %s: station is not a building" % bid)
+	for res_id: String in resources:
+		if not items.has(str(resources[res_id].get("item", ""))):
+			errs.append("resource %s: unknown item" % res_id)
+	for biome_id: String in biomes:
+		var bw: Variant = biomes[biome_id].get("resources", {})
+		if typeof(bw) == TYPE_DICTIONARY:
+			for res_id: String in bw:
+				if not resources.has(res_id):
+					errs.append("biome %s: unknown resource %s" % [biome_id, res_id])
+	return errs
+# endregion
 
 
 func bal(section: String, key: String) -> Variant:

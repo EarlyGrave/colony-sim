@@ -47,5 +47,41 @@
 		"color": "#ffd24a",
 		"stack": 50,
 		"value": 2.0
+	},
+	"copper_ore": {
+		"name": "Copper ore",
+		"color": "#c8743c",
+		"stack": 50,
+		"value": 1.0
+	},
+	"iron_ore": {
+		"name": "Iron ore",
+		"color": "#8d8f99",
+		"stack": 50,
+		"value": 1.0
+	},
+	"ingot_copper": {
+		"name": "Copper ingot",
+		"color": "#e0925a",
+		"stack": 50,
+		"value": 3.0
+	},
+	"ingot_iron": {
+		"name": "Iron ingot",
+		"color": "#b4b8c4",
+		"stack": 50,
+		"value": 3.0
+	},
+	"plate": {
+		"name": "Plate",
+		"color": "#9fa6b8",
+		"stack": 50,
+		"value": 5.0
+	},
+	"parts": {
+		"name": "Components",
+		"color": "#d8d0a0",
+		"stack": 50,
+		"value": 12.0
 	}
 }
