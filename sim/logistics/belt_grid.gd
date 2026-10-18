@@ -17,6 +17,8 @@ var inserted := 0
 var extracted := 0
 var destroyed := 0
 var belt_count := 0
+## Bumped on every place / remove / direction change (caches key on it, not on belt_count).
+var version := 0
 var item_count := 0
 
 # region T3
@@ -98,6 +100,8 @@ func set_belt(c: Vector2i, d: int, level: int = 0) -> bool:
 	if dir[i] == 255:
 		belt_count += 1
 		hp[i] = max_hp  # region T3
+	if dir[i] != d:
+		version += 1
 	dir[i] = d
 	return true
 
@@ -117,6 +121,7 @@ func remove_belt(c: Vector2i, level: int = 0) -> int:
 	hp[i] = 0.0  # region T3
 	hp_damaged.erase(i)
 	belt_count -= 1
+	version += 1
 	return it
 
 

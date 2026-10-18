@@ -41,6 +41,13 @@ var wave_rng := RandomNumberGenerator.new()
 var hash: SpatialHash
 ## Times an enemy re-evaluated its target (test / bench counter).
 var retarget_count := 0
+## region W2d: hot-loop scalars. Held in an object so the golden state dump (script variables of this system) is unchanged.
+class Hot:
+	extends RefCounted
+	var retarget_n := 20  ## cfg retarget_ticks
+	var bite_ok := true  ## belts exist and line damage is on (per tick; _attack_structure re-checks)
+	var line_on := true  ## balance line_damage.enabled, per tick
+var _hot := Hot.new()
 # endregion
 # region T1
 var model: ThreatModel
@@ -53,6 +60,7 @@ func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	cfg = sim.defs.balance["threat"]
 	hash = SpatialHash.new(int(cfg.get("hash_bucket", 8)))  # region perf-threat
+	_hot.retarget_n = maxi(1, int(cfg["retarget_ticks"]))  # region W2d
 	model = ThreatModel.new(sim)  # region T1
 	threat_v2 = bool(sim.defs.threat.get("enabled", false))  # region T1
 	wave_rng.seed = sim.seed_value ^ 0x57A7E
@@ -177,6 +185,8 @@ func tick() -> void:
 		sim.bus.wave_incoming.emit(next_spawn_origin, next_wave_tick - sim.tick)
 	sim.pathfinder.advance_flows(int(cfg.get("flow_cells_per_tick", 6000)))  # region perf-threat
 	_tick_turrets()
+	_hot.line_on = bool(sim.defs.balance["line_damage"]["enabled"])  # region W2d
+	_hot.bite_ok = _hot.line_on and sim.logistics.belts.belt_count > 0
 	for e: Enemy in enemies.duplicate():
 		var before := e.cell  # region perf-threat
 		if e.leaving:
@@ -392,13 +402,13 @@ func _spawn(def_id: String, c: Vector2i) -> Enemy:
 
 func _tick_enemy(e: Enemy) -> void:
 	e.attack_cd = maxi(0, e.attack_cd - 1)
-	if e.has_meta("tg"):  # region C3: winding up, stand still
+	if e.winding:  # region C3: winding up, stand still
 		_c3_wind(e)
 		return
-	var biting := _attack_structure(e)  # region T3
+	var biting := e.structure_dmg > 0.0 and _hot.bite_ok and _attack_structure(e)  # region T3
 	if biting and e.target_kind == Enemy.Target.NONE:
 		return
-	if sim.tick >= e.retarget_at or not _target_valid(e):
+	if sim.tick >= e.retarget_at or not ((e.target_kind == Enemy.Target.BUILDING and e.target_b != null and not e.target_b.destroyed) or _target_valid(e)):
 		_choose_target(e)
 		retarget_count += 1  # region perf-threat
 		e.retarget_at = _next_retarget(e)  # region perf-threat
@@ -413,7 +423,11 @@ func _tick_enemy(e: Enemy) -> void:
 		return
 	if e.target_kind == Enemy.Target.BUILDING:
 		var b := e.target_b  # region perf-threat
-		if b.distance_to(Vector2(e.cell)) <= range_:
+		if e.rc_b != b or e.rc_cell != e.cell:  # region W2d: a building never moves, so the range test only changes with the cell
+			e.rc_b = b
+			e.rc_cell = e.cell
+			e.rc_in = b.distance_to(Vector2(e.cell)) <= range_
+		if e.rc_in:
 			e.clear_path()
 			if e.attack_cd == 0 and _c3_begin(e, b.nearest_cell_to(e.cell)):  # region C3
 				pass
@@ -608,7 +622,7 @@ const FLOW_LEAVE := 1 << 31
 
 ## Next re-target tick: one slot every `retarget_ticks`, phase = id % retarget_ticks.
 func _next_retarget(e: Enemy) -> int:
-	var n := maxi(1, int(cfg["retarget_ticks"]))
+	var n := _hot.retarget_n
 	return sim.tick + n - posmod(sim.tick - e.id, n)
 
 
@@ -656,7 +670,7 @@ func pick_target(e: Enemy) -> Dictionary:
 
 
 func _choose_target_v2(e: Enemy) -> void:
-	var t := pick_target(e)
+	var t := model.pick(e)  # region W2d: = pick_target(e)
 	e.target_kind = Enemy.Target.NONE
 	if t.is_empty():
 		return
@@ -691,17 +705,23 @@ func _choose_target_v2(e: Enemy) -> void:
 ## line_damage.enabled). Own cooldown, so normal attacks are untouched. True if it bit this tick.
 ## O(5) array reads per enemy; skipped entirely when there are no belts.
 func _attack_structure(e: Enemy) -> bool:
+	if e.structure_dmg <= 0.0 or e.bite_at > sim.tick or not _hot.line_on or sim.logistics.belts.belt_count == 0:
+		return false
 	var belts := sim.logistics.belts
-	if belts.belt_count == 0 or int(e.get_meta("bite_cd", 0)) > sim.tick:  # meta: golden dumps list script properties
-		return false
-	var dmg := float(e.def.get("structure_dmg", 0.0))
-	if dmg <= 0.0 or not bool(sim.defs.balance["line_damage"]["enabled"]):
-		return false
+	var w := belts.width
+	var dir := belts.dir
+	var hp := belts.hp
+	var ex := e.cell.x
+	var ey := e.cell.y
 	for off: Vector2i in BeltGrid.BITE_OFFSETS:
-		var c := e.cell + off
-		if belts.has_belt(c) and belts.hp[belts.index(c)] > 0.0:
-			e.set_meta("bite_cd", sim.tick + int(e.def["attack_cooldown_ticks"]))
-			return sim.logistics.damage_belt(c, dmg * sim.mutation.enemy_damage_mult(e.cell))
+		var x := ex + off.x
+		var y := ey + off.y
+		if x < 0 or y < 0 or x >= w or y >= belts.height:
+			continue
+		var i := y * w + x
+		if dir[i] != 255 and hp[i] > 0.0:
+			e.bite_at = sim.tick + e.cd_ticks
+			return sim.logistics.damage_belt(Vector2i(x, y), e.structure_dmg * sim.mutation.enemy_damage_mult(e.cell))
 	return false
 
 
@@ -754,6 +774,7 @@ func _c3_begin(e: Enemy, at: Vector2i) -> bool:
 		_:
 			cells.append(at)
 	var total := maxi(1, int(tg.get("windup_ticks", 1)))
+	e.winding = true
 	e.set_meta("tg", {"left": total, "total": total, "cells": cells, "mult": float(tg.get("dmg_mult", 1.0))})
 	e.clear_path()
 	return true
@@ -765,6 +786,7 @@ func _c3_wind(e: Enemy) -> void:
 	if int(tg["left"]) > 0:
 		return
 	e.remove_meta("tg")
+	e.winding = false
 	e.attack_cd = int(e.def["attack_cooldown_ticks"])
 	var cells: Array[Vector2i] = tg["cells"]
 	var dmg := float(e.def["damage"]) * float(tg.get("mult", 1.0)) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell)
@@ -798,7 +820,7 @@ func telegraph_state() -> Array:
 func _c3_list(full: bool) -> Array:
 	var out: Array = []
 	for e: Enemy in enemies:
-		if e.has_meta("tg"):
+		if e.winding:
 			var tg: Dictionary = e.get_meta("tg")
 			out.append([e.id, tg["left"]] if full else {"id": e.id, "cells": tg["cells"], "frac": float(tg["left"]) / float(tg["total"])})
 	return out

@@ -4,6 +4,15 @@ extends SceneTree
 const TestCase := preload("res://tests/test_case.gd")
 
 
+## On-CPU time of the main thread (ns); immune to a busy box.
+func _cpu_ns() -> int:
+	var f := FileAccess.open("/proc/self/stat", FileAccess.READ)
+	if f == null:
+		return 0
+	var parts := f.get_line().rsplit(")", true, 1)[1].strip_edges().split(" ")
+	return (int(parts[11]) + int(parts[12])) * 10000000  # utime + stime, 10 ms clock ticks
+
+
 func _arg(name: String, def: int) -> int:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--%s=" % name):
@@ -40,12 +49,17 @@ func _init() -> void:
 	for i in n:
 		sim.threats._spawn("crawler", Vector2i(1 + sim.rng.randi_range(0, 3), 1 + (i * 7) % (size - 2)))
 	var times: Array[int] = []
+	var cpu_sum := 0
+	var nocol := _arg("nocol", 0)
+	var c0 := _cpu_ns()
 	for t in ticks:
 		sim.tick += 1
 		var t0 := Time.get_ticks_usec()
 		sim.threats.tick()
 		times.append(Time.get_ticks_usec() - t0)
-		sim.colonists.tick()
+		if nocol == 0:
+			sim.colonists.tick()
+	cpu_sum = _cpu_ns() - c0  # whole loop incl. colonists.tick (not threats only)
 	var sorted := times.duplicate()
 	sorted.sort()
 	var sum := 0
@@ -53,5 +67,8 @@ func _init() -> void:
 		sum += x
 	print("n=%d size=%d belts=%d alive=%d avg=%.2fms p95=%.2fms max=%.2fms hash=%d" % [n, size, sim.logistics.belts.belt_count, sim.threats.enemies.size(),
 		sum / 1000.0 / times.size(), sorted[int(sorted.size() * 0.95)] / 1000.0, times.max() / 1000.0, SaveGame.state_hash(sim)])
+	print("DBG builds=", sim.pathfinder.flow_builds, " pend=", sim.pathfinder._pending.size(), " flows=", sim.pathfinder._flows.size())
+	print("cpu_avg=%.2fms" % (cpu_sum / 1.0e6 / ticks))
+	print("retargets=%d picks_per_tick=%.1f" % [sim.threats.retarget_count, sim.threats.retarget_count / float(ticks)])
 	sim.dispose()
 	quit()
