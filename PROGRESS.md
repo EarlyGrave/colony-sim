@@ -156,6 +156,15 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
   squad total deaths -33%, per wave faced -53%, per repelled wave only -11% (target 30% not met).
 - Tests: 594 green twice.
 
+## Session 4 — optimization wave 1 (docs/optimization_strategy.md by Fable consultant; W1a–W1e)
+- W1a threat targeting: 8.2k belts + 300 enemies 297 -> 11.8 ms/tick (target 4 missed), no belts 3.8 -> 3.6.
+- W1b sparse belts: 8k belts 2.8 -> 1.1 ms (jammed), 0.83 -> 0.15 ms (600 items).
+- W1c bounded flow fields + LRU invalidation: first tick 78 -> 31 ms, threats p95 8.4 -> 6.4 ms.
+- W1d deliver-materials index + O(1) item counters: colonists 0.55-0.76 -> 0.29-0.36 ms (8 colonists, 250).
+- W1e real-step profiler + tools/perf_bench, test_perf_budget (budgets x1.5, PERF_SKIP), sharded
+  runner tools/run_tests_sharded.sh: suite 372 s -> ~130 s. Goldens byte-identical. Tests: 599.
+- Open: belt cache invalidates on belt_count only (stale candidate if remove+place in one epoch).
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
