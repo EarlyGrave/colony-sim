@@ -23,7 +23,7 @@ static func line(defs_: Defs, n: int, mix: Dictionary) -> Dictionary:
 	for bid: String in mix:
 		var g: Dictionary = defs_.buildings[bid]
 		var k := int(mix[bid])
-		supply += float(g["power_gen"]) * k
+		supply += gen_of(defs_, bid) * k
 		threat += float(g.get("threat", 0)) * k
 		var fu: Variant = g.get("fuel", null)
 		if fu != null:
@@ -41,6 +41,21 @@ static func line(defs_: Defs, n: int, mix: Dictionary) -> Dictionary:
 		"waste_powered": base * f * waste_batch + gen_waste,
 		"gen_waste": gen_waste, "spent": spent, "threat": threat, "fuel": fuel,
 	}
+
+
+# region K5
+## Generator output; k5 = true uses the `k5_power_gen` override (solar ~30% of a smelter).
+static func gen_of(defs_: Defs, bid: String) -> float:
+	var g: Dictionary = defs_.buildings[bid]
+	if g.has("k5_power_gen") and bool(defs_.balance.get("k5_enabled", false)):
+		return float(g["k5_power_gen"])
+	return float(g["power_gen"])
+
+
+## Solar arrays a "sane build" needs so n smelters run at >= target factor.
+static func solars_for(defs_: Defs, n: int, target := 0.75) -> int:
+	return ceili(target * float(n) * float(defs_.buildings["smelter"]["power_use"]) / gen_of(defs_, "solar_array"))
+# endregion
 
 
 ## Essence cost of a building (ore + 3 x refined), for the solar-vs-burner gate.
@@ -80,5 +95,14 @@ func _init() -> void:
 	var g3 := line(d, 3, {"coal_generator": 1})
 	print("3-smelter line on 1 coal: ratio %.2f (want 1.6..2.0), waste x%.2f (want >= 1.3)" % [g3["ratio"], float(g3["waste_powered"]) / float(g3["waste_unpowered"])])
 	print("1 solar covers %.1f%% of a smelter's demand at 0 waste; 4 solars cost %.0f vs 1 coal gen %.0f (want >= 2x)" % [100.0 * 25.0 / 40.0, 4.0 * essence_cost(d, "solar_array"), essence_cost(d, "coal_generator")])
+	# region K5
+	var d5 := d.duplicate_defs()
+	d5.balance["k5_enabled"] = true
+	print("\n== K5 (k5_enabled) solar %.0f = %.0f%% of a smelter ==" % [gen_of(d5, "solar_array"), 100.0 * gen_of(d5, "solar_array") / 40.0])
+	for n in [1, 2, 3, 4]:
+		var k := solars_for(d5, n)
+		var r5 := line(d5, n, {"solar_array": k})
+		print("%d smelters: %d solars -> factor %.2f, cost %.0f essence" % [n, k, r5["factor"], k * essence_cost(d5, "solar_array")])
+	# endregion
 	bus.free()
 	quit()

@@ -5,6 +5,7 @@ extends SceneTree
 ## godot --headless --path . -s tools/bot_report.gd [-- --days=25 --seeds=5 --verbose]
 
 const Scenario := preload("res://tests/scenario.gd")
+static var k5_mode := false  # region K5
 static var preset_id := ""  # region B1: difficulty preset for play() (tools/b1_preset_table.gd)
 
 
@@ -30,15 +31,27 @@ func _init() -> void:
 	quit()
 
 
-static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -> Dictionary:
+static func play(seed_value: int, days: int, bus: Node, profile := "baseline", k5_arg := false) -> Dictionary:
 	var b4 := "--b4" in OS.get_cmdline_user_args()  # region B4
 	var bdefs: Defs = null
 	var popts: Dictionary = StartOpts.preset_opts(Defs.get_default(), preset_id) if preset_id != "" else {}  # region B1
 	if b4:
 		bdefs = Defs.get_default().duplicate_defs()
 		bdefs.balance["b4_enabled"] = true
-	var sim := Simulation.new(seed_value, bus, bdefs, popts)
-	sim.start_new_game()
+	var k5 := "--k5" in OS.get_cmdline_user_args() or k5_mode or k5_arg  # region K5
+	var camp: Object = null  # region K5
+	var sim: Simulation = null
+	if k5:  # region K5: home map lives inside a Campaign so the bot can send/recall expeditions
+		if bdefs == null:
+			bdefs = Defs.get_default().duplicate_defs()
+		bdefs.balance["b4_enabled"] = true
+		bdefs.balance["k5_enabled"] = true
+		camp = Campaign.new(seed_value, func() -> Node: return bus, bdefs, {"home_opts": popts})
+		camp.start()
+		sim = camp.home_sim()
+	else:
+		sim = Simulation.new(seed_value, bus, bdefs, popts)
+		sim.start_new_game()
 	Scenario.standard_colony(sim, 3)
 	var center := sim.map_center()
 	# Farming: growing patch; workbench with a standing ammo bill.
@@ -62,7 +75,10 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -
 	sim.bus.riot_started.connect(func(_i: int) -> void: r["riots"] += 1)
 	sim.bus.colonist_escaped.connect(func(_i: int) -> void: r["escapes"] += 1)
 	sim.bus.escape_stopped.connect(func(_i: int) -> void: r["caught"] += 1)
-	sim.bus.contract_fulfilled.connect(func(_i: int) -> void: r["c_ok"] += 1)
+	sim.bus.contract_fulfilled.connect(func(i: int) -> void:
+		r["c_ok"] += 1
+		if str(sim.contracts.get_by_id(i).get("template", "")) == "frontier_quota":  # region K5
+			r["frontier_ok"] = int(r.get("frontier_ok", 0)) + 1)
 	sim.bus.contract_failed.connect(func(_i: int, _w: String) -> void: r["c_fail"] += 1)
 	sim.bus.colonist_died.connect(func(_i: int) -> void: r["died"] += 1)
 	sim.bus.crisis_started.connect(func(id: String, _t: String) -> void: r["crises"].append("%s@d%d" % [id, sim.day()]))
@@ -78,7 +94,10 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -
 					hq = b.hp
 			print("  ended %d hq %.0f kills %d" % [i, hq, sim.threats.kills]))
 	for i in sim.ticks_per_day * days:
-		sim.step()
+		if camp != null:  # region K5
+			camp.step()
+		else:
+			sim.step()
 		if sim.game_over_reason != "":
 			break
 		if profile == "power" and sim.tick % 20 == 0 and sim.power != null and sim.power.enabled:  # region LX: power columns
@@ -114,6 +133,8 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -
 		if sim.tick % sim.ticks_per_day == 0:
 			_t5_profile(sim, profile, r)  # region T5
 		if sim.tick % 20 == 0:
+			if camp != null:
+				_k5_expedition(camp, sim, r)  # region K5
 			_act(sim, base_turrets, r)
 			for cell: Vector2i in sim.mutation._blooms.keys():
 				blooms_seen[cell] = true
@@ -139,7 +160,10 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -
 	r["refined"] = sim.buildings.refined_batches * int(sim.defs.recipes["refine_essence"]["outputs"]["refined_essence"])
 	r["smelter_ok"] = sim.buildings.count_of("smelter") > 0 and sim.buildings.count_of("miner") > 0
 	r["final_contam"] = sim.contamination.fraction() * 100.0
-	sim.dispose()
+	if camp != null:  # region K5
+		camp.dispose()
+	else:
+		sim.dispose()
 	return r
 
 
@@ -209,6 +233,8 @@ static func _format(r: Dictionary, verbose: bool) -> String:
 		r["c_ok"], r["c_fail"], r["c_decl"], r["anger"], r["peak_anger"], r["debts_paid"],
 		r["riots"], r["escapes"], r["caught"], idle_pct, float(sum) / maxi(pts.size(), 1),
 		str(r["crises"]), r["blooms"]]
+	if r.has("frontier_ok") or r.has("exp_sent"):  # region K5
+		s += " frontier_ok=%d exp_sent=%d" % [int(r.get("frontier_ok", 0)), int(r.get("exp_sent", 0))]
 	if verbose:
 		s += " points=" + str(pts)
 	return s
@@ -254,4 +280,42 @@ static func _t5_profile(sim: Simulation, profile: String, r: Dictionary) -> void
 				sim.items.drop(sim.map_center(), "ai_chip", 1)
 				if sim.install_chip(b.id):
 					r["chips"] = int(r.get("chips", 0)) + 1
+# endregion
+
+
+# region K5
+## Expedition helper: with a Frontier Quota (cinder_ore demand) accepted, send one colonist to the ash biome,
+## recall the outpost once its buffer holds the ore. The cargo lands near home and _act delivers the contract.
+static func _k5_expedition(camp: Object, sim: Simulation, r: Dictionary) -> void:
+	if not sim.research.done.has("expeditions"):
+		sim.research.done.append("expeditions")
+	var need := 0
+	for c in sim.contracts.open_contracts("active"):
+		need += int((c.get("demand", {}) as Dictionary).get("cinder_ore", 0))
+	var have := sim.items.count_stored("cinder_ore")
+	if "--k5trace" in OS.get_cmdline_user_args() and sim.tick % 600 == 0:
+		var bufs: Array = []
+		for m: Dictionary in camp.maps:
+			if str(m["kind"]) == "outpost":
+				bufs.append(str(camp.ledgers.get(int(m["id"]), {}).get("buffer", {})) + str(camp.ledgers.get(int(m["id"]), {}).get("lost", false)))
+		print("  d%d need %d have %d flight %s bufs %s contracts %s" % [sim.day(), need, have, str(camp.in_flight.size()), str(bufs), str(sim.contracts.list.map(func(c: Dictionary) -> String: return "%s:%s" % [c["template"], c["state"]]))])
+	var out_n := 0
+	for f: Dictionary in camp.in_flight:
+		if str(f.get("kind", "")) == "party":
+			out_n += 1
+	for m: Dictionary in camp.maps:
+		if str(m["kind"]) != "outpost":
+			continue
+		out_n += 1
+		var led: Dictionary = camp.ledgers.get(int(m["id"]), {})
+		if int((led.get("buffer", {}) as Dictionary).get("cinder_ore", 0)) >= maxi(need, 3) or bool(led.get("lost", false)):
+			camp.recall(int(m["id"]))
+			return
+	if need > have and out_n == 0 and int(camp.in_flight.size()) == 0:
+		for c in sim.colonists.list:
+			if c.alive and not c.hidden and not (c.health != null and c.health.downed):
+				var food := mini(sim.items.count_stored("raw_food"), 5)  # outpost upkeep: 1 raw_food per miner-day
+				if food >= 2 and camp.send_expedition("ash", [c.id], {"raw_food": food}):
+					r["exp_sent"] = int(r.get("exp_sent", 0)) + 1
+				return
 # endregion

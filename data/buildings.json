@@ -443,6 +443,6 @@
 	"solar_array": {
 		"name": "Solar Array", "size": [2, 2], "color": "#2a3f6a", "max_hp": 100,
 		"cost": {"essence_ore": 30, "refined_essence": 6}, "build_work": 100, "buildable": true, "threat_priority": 1,
-		"threat": 4, "power_gen": 25, "fuel": null
+		"threat": 4, "power_gen": 25, "k5_power_gen": 12, "fuel": null
 	}
 }
