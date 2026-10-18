@@ -503,6 +503,7 @@ func bind(p_sim: Simulation) -> void:
 	_alerts.bind(p_sim)
 	_patrol_bar.visible = false
 	_o2_bind(p_sim)  # region O2
+	_c5_bind(p_sim)  # region C5
 
 
 func select_tool(id: String) -> void:
@@ -660,6 +661,7 @@ func _process(delta: float) -> void:
 	_t5_update()  # region T5
 	_o2_update()  # region O2
 	_o4_update()  # region O4
+	_c5_update()  # region C5
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
 	for rule_id: String in _rule_buttons:
 		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
@@ -999,6 +1001,7 @@ func _o4_build() -> void:
 	for b: Button in _menu_box.get_children():
 		b.custom_minimum_size = Vector2(96, 64)
 		b.add_theme_font_size_override("font_size", 16)
+	_c5_build()  # region C5
 	_root.move_child(_alerts, -1)
 	_root.move_child(_game_over, -1)
 
@@ -1148,9 +1151,10 @@ func _o4_layout() -> void:
 	_o4_slot.visible = (slot_r - x) >= O4_SLOT_MIN_W
 	# Bottom-left stack: legend, toast, belt strip / patrol bar.
 	var quiet := not pop_open and not side_open
-	_o4_place_corner(_legend, O4_LEFT, -8.0)
-	_legend.visible = _overlay_on and quiet and _legend.get_combined_minimum_size().x + O4_LEFT <= lim2
-	var toast_b := -(8.0 + O4_LEGEND_H + 4.0)
+	var c5h := _c5_layout(lim2, pop_open)  # region C5: squad bar takes the bottom row, the stack moves up
+	_o4_place_corner(_legend, O4_LEFT, -8.0 - c5h)
+	_legend.visible = c5h == 0.0 and _overlay_on and quiet and _legend.get_combined_minimum_size().x + O4_LEFT <= lim2
+	var toast_b := -(8.0 + c5h + (O4_LEGEND_H + 4.0 if c5h == 0.0 else 0.0))
 	_message.anchor_left = 0.0
 	_message.anchor_right = 0.0
 	_message.anchor_top = 1.0
@@ -1180,7 +1184,7 @@ func _o4_layout() -> void:
 			for b in _o4_buttons(apc):
 				b.custom_minimum_size = Vector2(88, 64)
 		_o4_place_corner(apc, O4_LEFT, tool_b)
-		apc.visible = quiet and not _patrol_bar.visible
+		apc.visible = quiet and not _patrol_bar.visible and c5h == 0.0
 	# Save/Continue prompt: above the cluster, never under a menu.
 	var cont: Variant = g.get("_continue_btn") if g != null else null
 	if cont is Button:
@@ -1198,4 +1202,50 @@ func _o4_buttons(n: Node) -> Array[Button]:
 			out.append(ch)
 		out.append_array(_o4_buttons(ch))
 	return out
+# endregion
+
+
+# region C5
+## Squad banners along the bottom row (left of the thumb cluster) and the Wave forecast button.
+var squad_bar: SquadBar
+
+
+func _c5_build() -> void:
+	if squad_bar != null:
+		return
+	squad_bar = SquadBar.new()
+	squad_bar.name = "SquadBar"
+	_root.add_child(squad_bar)
+	_root.add_child(squad_bar.radial)
+	squad_bar.forecast_requested.connect(func() -> void: toggle_panel("forecast"))
+
+
+func _c5_bind(p_sim: Simulation) -> void:
+	if squad_bar != null:
+		squad_bar.api = p_sim
+		squad_bar.selected = -1
+
+
+func _c5_update() -> void:
+	if squad_bar != null:
+		squad_bar.refresh()
+
+
+## Places the bar; returns the height the bottom-left stack must leave free (0 when hidden).
+func _c5_layout(right_edge: float, popup_open: bool) -> float:
+	if squad_bar != null and popup_open:
+		squad_bar.visible = false  # category popups need the room; the bar returns when they close
+	if squad_bar == null or not squad_bar.visible:
+		return 0.0
+	var w := maxf(0.0, right_edge - O4_LEFT)
+	squad_bar.anchor_left = 0.0
+	squad_bar.anchor_right = 0.0
+	squad_bar.anchor_top = 1.0
+	squad_bar.anchor_bottom = 1.0
+	squad_bar.offset_left = O4_LEFT
+	squad_bar.offset_right = O4_LEFT + w
+	squad_bar.offset_bottom = -8.0
+	squad_bar.offset_top = -8.0 - SquadBar.BTN_H
+	_root.move_child(squad_bar.radial, -1)
+	return SquadBar.BTN_H + 4.0
 # endregion

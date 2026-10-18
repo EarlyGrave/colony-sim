@@ -37,5 +37,11 @@
 		"short": "Expedi-\ntions",
 		"default": false,
 		"hidden": true
+	},
+	"militia_rally": {
+		"name": "Militia: idle inmates rally to the squad banner on alarm",
+		"short": "Militia",
+		"default": true,
+		"hidden": true
 	}
 }
