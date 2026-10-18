@@ -66,10 +66,6 @@ var _wall_keys := {}  # chunk index -> wall signature
 var block_rebuilds := 0  ## chunk block MultiMeshes rebuilt (perf counter)
 var view_rect := Rect2(-1e6, -1e6, 2e6, 2e6)  ## visible cells, refreshed per frame
 const CULL_MARGIN := 3.0  ## cells around the view where sprites stay alive
-var _seen := {}  # region W2c: reused per-frame scratch
-var _units := {}  # int key (colonist id * 2, enemy id * 2 + 1) -> Sprite3D
-var _carry := {}  # colonist id -> Sprite3D
-var _facing := {}  # int key -> [last_pos: Vector2, row: int, moving_until: float]
 var _tex := {}
 var _time := 0.0
 var _tint := Color.WHITE
@@ -88,6 +84,7 @@ func _ready() -> void:
 	_block_shader.code = BLOCK_SHADER
 	add_child(chunks)
 	_g1c_ready()  # region G1c
+	_w2b_ready()  # region W2b
 	add_child(_buildings3d)  # region G1b
 	add_child(_belt_layer)  # region A2c
 
@@ -162,11 +159,7 @@ func _build_chunks(world_2d: World2D) -> void:
 
 
 func _clear_units() -> void:
-	for s: Node in _units.values():
-		s.queue_free()
-	_units.clear()
-	_carry.clear()
-	_facing.clear()
+	_w2b_clear()  # region W2b
 
 
 # --- Blocks -------------------------------------------------------------------
@@ -240,34 +233,7 @@ func _process(delta: float) -> void:
 	_g1c_update()  # region G1c
 	_buildings3d.sync(sim, _aim_of, _tint)  # region G1b
 	_a2c_update(delta)  # region A2c
-	# region W2c
-	var seen := _seen
-	seen.clear()
-	for c: Colonist in sim.colonists.list:
-		var k := c.id * 2
-		if not c.alive or c.hidden:
-			continue
-		seen[k] = true
-		if not _in_view(c.visual_pos() + Vector2(0.5, 0.5)):
-			_cull(k)
-			continue
-		_update_colonist(k, c)
-	for e: Enemy in sim.threats.enemies:
-		var k := e.id * 2 + 1
-		seen[k] = true
-		if not _in_view(e.visual_pos() + Vector2(0.5, 0.5)):
-			_cull(k)
-			continue
-		_update_enemy(k, e)
-	for k: int in _units.keys():
-		if not seen.has(k):
-			(_units[k] as Node).queue_free()
-			_units.erase(k)
-			_facing.erase(k)
-	for id: int in _carry.keys():
-		if not seen.has(id * 2):
-			_carry.erase(id)
-	# endregion
+	_w2b_update()  # region W2b
 	if overlay:
 		overlay.queue_redraw()
 
@@ -298,112 +264,159 @@ func _update_tint() -> void:
 	_tint = t
 
 
-func _cull(k: int) -> void:
-	if _units.has(k):
-		(_units[k] as Sprite3D).visible = false
+# region W2b
+## Colonists and creatures via UnitLayer (one MultiMesh per sheet); the walk
+## cycle runs in the shader, this code only pushes position/facing per unit.
+var _units3d := UnitLayer.new()
+var _carry := {}  # colonist id -> Sprite3D (carried item, shown over the head)
+var _facing := {}  # key -> Vector4(last x, last y, row, moving_until)
+var _egroups := {}  # creature def_id -> UnitLayer.Group
+var _cgroups := {}  # colonist sheet name -> UnitLayer.Group
+var _w2b_frame := 0
+const ENEMY_KEY := 1 << 40
 
 
-func _sprite(k: int) -> Sprite3D:
-	if _units.has(k):
-		var u: Sprite3D = _units[k]
-		u.visible = true
-		return u
-	var s := Sprite3D.new()
-	s.pixel_size = UNIT_PX
-	s.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	s.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	s.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
-	s.shaded = false
-	s.offset = Vector2(0, 8)  # feet on the ground
-	add_child(s)
-	_units[k] = s
-	return s
+func _w2b_ready() -> void:
+	add_child(_units3d)
 
 
-## Facing row from movement on screen (camera always looks north).
-func _face(k: int, p: Vector2) -> Array:
-	var f: Array = _facing.get(k, [p, ROW_DOWN, 0.0])
-	var d: Vector2 = p - Vector2(f[0])
-	if d.length() > 0.0005:
-		if absf(d.x) > absf(d.y):
-			f[1] = ROW_RIGHT if d.x > 0 else ROW_LEFT
+func _w2b_clear() -> void:
+	_units3d.clear()
+	_egroups.clear()
+	_cgroups.clear()
+	for s: Sprite3D in _carry.values():
+		s.queue_free()
+	_carry.clear()
+	_facing.clear()
+
+
+## Facing row (x) and moving flag (y) of a unit at screen-plane position p.
+func _w2b_face(k: int, p: Vector2, extra_moving: bool) -> Vector2:
+	var f: Vector4 = _facing.get(k, Vector4(p.x, p.y, ROW_DOWN, 0.0))
+	var dx := p.x - f.x
+	var dy := p.y - f.y
+	if dx * dx + dy * dy > 0.0005 * 0.0005:
+		if absf(dx) > absf(dy):
+			f.z = ROW_RIGHT if dx > 0.0 else ROW_LEFT
 		else:
-			f[1] = ROW_DOWN if d.y > 0 else ROW_UP
-		f[2] = _time + 0.15
-	f[0] = p
+			f.z = ROW_DOWN if dy > 0.0 else ROW_UP
+		f.w = _time + 0.15
+	f.x = p.x
+	f.y = p.y
 	_facing[k] = f
-	return f
+	return Vector2(f.z, 1.0 if (_time < f.w or extra_moving) else 0.0)
 
 
-func _update_colonist(k: int, c: Colonist) -> void:
-	var s := _sprite(k)
-	var name := "colonist"
-	if c.engineer:
-		name += "_engineer"
-	if c.is_sick(sim.tick):
-		name += "_sick"
-	s.texture = _tex[name + "_sheet"]
-	s.hframes = 3
-	s.vframes = 4
-	var p := c.visual_pos() + Vector2(0.5, 0.5)
-	var f := _face(k, p)
-	var moving := _time < float(f[2]) or not c.path.is_empty()
-	var col := WALK_CYCLE[int(_time * 8.0 + c.id) % WALK_CYCLE.size()] if moving else 0
-	s.frame = int(f[1]) * 3 + col
-	s.position = Vector3(p.x, 0.0, p.y + 0.05)
-	s.modulate = _tint
-	if c.carry_count > 0:
-		var cs: Sprite3D = _carry.get(c.id)
-		if cs == null:
-			cs = Sprite3D.new()
-			cs.pixel_size = UNIT_PX * 0.6
-			cs.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			cs.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			cs.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
-			cs.shaded = false
-			cs.position = Vector3(0, 1.35, 0.02)
-			s.add_child(cs)
-			_carry[c.id] = cs
-		cs.texture = _tex.get(WorldView.ITEM_SPRITES.get(c.carry_item, "item_ore"), _tex["item_ore"])
-		cs.modulate = _tint
-		cs.visible = true
-	elif _carry.has(c.id):
-		(_carry[c.id] as Sprite3D).visible = false
+func _w2b_update() -> void:
+	_units3d.begin()
+	for c: Colonist in sim.colonists.list:
+		if not c.alive or c.hidden:
+			_w2b_drop_carry(c.id)
+			continue
+		var p := c.visual_pos() + Vector2(0.5, 0.5)
+		if not _in_view(p):
+			_w2b_hide_carry(c.id)
+			continue
+		var name := "colonist"
+		if c.engineer:
+			name += "_engineer"
+		if c.is_sick(sim.tick):
+			name += "_sick"
+		var cg: UnitLayer.Group = _cgroups.get(name)
+		if cg == null:
+			cg = _units3d.group(name, _tex[name + "_sheet"], 3, 4, UNIT_PX * 16.0)
+			_cgroups[name] = cg
+		var fm := _w2b_face(c.id, p, not c.path.is_empty())
+		cg.push(p.x, p.y + 0.05, int(fm.x), fm.y > 0.5, c.id)
+		_w2b_carry(c, p)
+	var vr := view_rect.grow(CULL_MARGIN)
+	var half := Vector2(0.5, 0.5)
+	var now := _time
+	var last_def := ""
+	var g: UnitLayer.Group = null
+	for e: Enemy in sim.threats.enemies:
+		var p := e.visual_pos() + half
+		if not vr.has_point(p):
+			continue
+		if e.def_id != last_def:
+			last_def = e.def_id
+			g = _egroups.get(last_def)
+			if g == null:
+				g = _w2b_enemy_group(last_def)
+		var k := ENEMY_KEY | e.id
+		var f: Vector4 = _facing.get(k, Vector4(p.x, p.y, ROW_DOWN, 0.0))
+		var dx := p.x - f.x
+		var dy := p.y - f.y
+		if dx * dx + dy * dy > 0.00000025:
+			if absf(dx) > absf(dy):
+				f.z = ROW_RIGHT if dx > 0.0 else ROW_LEFT
+			else:
+				f.z = ROW_DOWN if dy > 0.0 else ROW_UP
+			f.w = now + 0.15
+		f.x = p.x
+		f.y = p.y
+		_facing[k] = f
+		g.push(p.x, p.y + 0.05, int(f.z), now < f.w, e.id)
+	_units3d.finish(_tint)
+	_w2b_frame += 1
+	if _w2b_frame % 120 == 0:
+		_w2b_prune()
 
 
-func _update_enemy(k: int, e: Enemy) -> void:
-	var s := _sprite(k)
-	var p := e.visual_pos() + Vector2(0.5, 0.5)
-	var f := _face(k, p)
-	if not _update_enemy_sheet(s, e, f):  # region G1a
-		s.texture = _tex.get(e.def_id, _tex["crawler"])
-		s.hframes = 1
-		s.vframes = 1
-		s.frame = 0
-		s.flip_h = int(f[1]) == ROW_LEFT
-	var big := 1.5 if e.def_id == "brute" else 1.0
-	s.pixel_size = UNIT_PX * big
-	var wobble := absf(sin(_time * 10.0 + e.id)) * 0.06
-	s.position = Vector3(p.x, wobble, p.y + 0.05)
-	var mod := _tint
-	if e.leaving:
-		mod.a = 0.55
-	s.modulate = mod
+func _w2b_enemy_group(def_id: String) -> UnitLayer.Group:
+	var big := 1.5 if def_id == "brute" else 1.0
+	var tex := CreatureSheets.get_sheet(def_id)
+	var g: UnitLayer.Group
+	var shadow := 1.5 if big > 1.2 else 0.95
+	if tex != null:
+		g = _units3d.group(def_id, tex, CreatureSheets.COLS, CreatureSheets.ROWS, UNIT_PX * 16.0 * big, 0.0, shadow)
+	else:  # single-sprite creature: hops, "left" mirrors
+		g = _units3d.group(def_id, _tex.get(def_id, _tex["crawler"]), 1, 1, UNIT_PX * 16.0 * big, 0.06, shadow)
+	_egroups[def_id] = g
+	return g
 
 
-# region G1a
-func _update_enemy_sheet(s: Sprite3D, e: Enemy, f: Array) -> bool:
-	var tex := CreatureSheets.get_sheet(e.def_id)
-	if tex == null:
-		return false
-	s.texture = tex
-	s.hframes = CreatureSheets.COLS
-	s.vframes = CreatureSheets.ROWS
-	s.flip_h = false
-	var moving := _time < float(f[2])
-	var col := WALK_CYCLE[int(_time * 8.0 + e.id) % WALK_CYCLE.size()] if moving else 0
-	s.frame = CreatureSheets.frame_index(int(f[1]), col)
-	return true
+func _w2b_carry(c: Colonist, p: Vector2) -> void:
+	if c.carry_count <= 0:
+		_w2b_hide_carry(c.id)
+		return
+	var cs: Sprite3D = _carry.get(c.id)
+	if cs == null:
+		cs = Sprite3D.new()
+		cs.pixel_size = UNIT_PX * 0.6
+		cs.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		cs.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		cs.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+		cs.shaded = false
+		add_child(cs)
+		_carry[c.id] = cs
+	cs.texture = _tex.get(WorldView.ITEM_SPRITES.get(c.carry_item, "item_ore"), _tex["item_ore"])
+	cs.position = Vector3(p.x, 1.35, p.y + 0.07)
+	cs.modulate = _tint
+	cs.visible = true
+
+
+func _w2b_hide_carry(id: int) -> void:
+	if _carry.has(id):
+		(_carry[id] as Sprite3D).visible = false
+
+
+func _w2b_drop_carry(id: int) -> void:
+	if _carry.has(id):
+		(_carry[id] as Sprite3D).queue_free()
+		_carry.erase(id)
+
+
+## Forget facing state of units that no longer exist.
+func _w2b_prune() -> void:
+	var live := {}
+	for c: Colonist in sim.colonists.list:
+		live[c.id] = true
+	for e: Enemy in sim.threats.enemies:
+		live[ENEMY_KEY | e.id] = true
+	for k: int in _facing.keys():
+		if not live.has(k):
+			_facing.erase(k)
 # endregion
 
 
@@ -503,19 +516,7 @@ func _g1c_bind() -> void:
 func _g1c_update() -> void:
 	atmosphere.set_tint(_tint)
 	marker.refresh(sim)
-	# One blob per unit, in one MultiMesh.
-	var spots: Array[Vector3] = []  # x, z, size
-	for k: int in _units:
-		var s: Sprite3D = _units[k]
-		if not s.visible:
-			continue
-		spots.append(Vector3(s.position.x, s.position.z, 1.5 if s.pixel_size > UNIT_PX * 1.2 else 0.95))
-	var mm := _shadows.multimesh
-	if mm.instance_count != spots.size():
-		mm.instance_count = spots.size()
-	for i in spots.size():
-		var sp := spots[i]
-		mm.set_instance_transform(i, Transform3D(Basis.from_scale(Vector3(sp.z, 1.0, sp.z * 0.7)), Vector3(sp.x, 0.03, sp.y - 0.02)))
+	# blob shadows are drawn per unit group by UnitLayer  # W2b
 	_pile_frame += 1
 	if _pile_frame % 10 == 1:
 		_update_piles()
