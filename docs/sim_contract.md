@@ -66,6 +66,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `queue_research` | tech_id: str, on: bool | bool | on: as set_research but appended; off: removes, exact essence refund if progress is 0 |
 | `install_chip` | building_id: int | bool | T4: building has `chip_slots` > 0 (bench/smelter/assembler, never a miner), no chip yet, not broken, tech `ai_chips` done (when gating), one `ai_chip` in storage (ledger sink `chip_install`) |
 | `remove_chip` | building_id: int | bool | T4: chip drops on the building cell (ledger source `chip_remove`) |
+| `deliver_petition` | phase: int (1..4) | bool | e1_enabled + audit tier 2 + warden_terminal; phases sequential; consumes only still-required items; completing pays the reward (debt cut %, items, tier 3 on P3) and emits petition_phase_done |
 | `deliver_audit` | tier: int | bool | warden_terminal exists; consumes only still-required parts of that tier's set from storage; completes -> research.unlock_tier(tier) + warden letter once |
 | `trigger_bell` | building_id: int | bool | Mourning Bell exists, not broken, no burst running, cooldown 0; starts burst (threat x`burst_mult` for `burst_ticks`, then `cooldown_ticks`); debits `essence_cost` refined essence from storage, shortfall -> ledger event `decoy_essence_debt` |
 | `set_drafted` | colonist_id: int, on: bool | bool | colonist exists and alive |
@@ -136,6 +137,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `jobs.json` | flee/repair/operate/haul/mine tuning |
 | `meta.json` | legacy, next_batch, scout_cells, unlocks (cross-run meta, enters the sim via `opts`) |
 | `presets.json` | default, order, presets{id: name, sentence, wave_strength_mult, waste_mult, starting_debt_mult, crate, hint_density} (O3; become opts `wave_mult`, `waste_mult`, `debt_mult`, `crate`, `hint_density` via `StartOpts.preset_opts`; neutral values emit no key, so standard_term = `{}`) |
+| `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter} (E1, gated by balance e1_enabled) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
 | `models.json` | art model descriptors (view only, not read by sim) |
 | `mood.json` | base, check_ticks, thresholds, chances, thoughts |
@@ -164,7 +166,6 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `work.json` | default_priority, max_priority, types{} |
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
 | `zones.json` | id -> {name, color, accepts[], waste_emission_factor} |
-
 
 ## 7. Save format v2 (`SaveGame`)
 Saves are command-log replays, not state snapshots:
@@ -201,7 +202,6 @@ each colonist in `colonists.list` `[id, cell, hp, alive, carry_item, carry_count
 
 ### Belt nodes (L1, `BeltGrid.kind`)
 `kind` 0 plain, 1 splitter_basic, 2 splitter_smart, 3 splitter_priority, 4 merger (1x1 cells in the belt grid, `dir` = flow). API: `place_node(kind, cell, dir)`, `remove_node(cell)`, `set_filter(cell, slot, value)` (smart only; slot 0 left, 1 front, 2 right; `"any"|"overflow"|item`), `get_filter`, `node_kind`, `node_count`. Basic: round-robin pointer over free outputs; priority: front, left, right first free; smart: explicit item match, then `any` (round-robin), then `overflow`; merger: round-robin among ready facing inputs (back, left, right). Version bumps on place/remove/filter change. `belts.state_hash()` includes node state only when `node_count > 0` (goldens unchanged).
-
 ### Line damage (T3, `balance.json` `line_damage`)
 `BeltGrid.hp` dense PackedFloat32Array (max `belt_hp`); hp < `stall_frac` x max: tile stops moving items; hp 0 stays as a broken marker (belt kept) until repaired. Creatures bite adjacent belt tiles (`structure_dmg` in `enemies.json`, own `bite_cd`, hook `ThreatSystem._attack_structure`). Machines get `broken` below `machine_broken_frac` hp. `RepairJob` (building or `RepairJob.for_belt(cell)`, reservation `rep:belt:x,y`) pays `belt_repair_cost`/`machine_repair_cost` (building def `repair_cost` overrides) from stored items, only for structural damage; the giver offers it only if affordable.
 (GD) Today it is `var_to_str(parts).hash()` (Godot text serialisation, 32-bit string hash): engine-specific, a port cannot match it bit for bit. Portable definition for cross-engine comparison: canonical JSON of the same parts (UTF-8, no whitespace, sorted keys, shortest round-trip floats, cells as `[x,y]`) fed to a stable hash such as FNV-1a 64; switching changes every golden (`tests/golden/`, R1b), so it is deferred.

@@ -156,3 +156,7 @@ signal outpost_lost(id: int)
 # region B5
 signal wave_report(report: Dictionary)  # {wave, lost:[{name,by,why}], main_attack, colonist_deaths, kills}
 # endregion
+
+# region E1
+signal petition_phase_done(phase: int)
+# endregion

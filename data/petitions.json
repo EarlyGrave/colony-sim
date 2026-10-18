@@ -1,0 +1,30 @@
+{
+	"_comment": "Sentence Commutation Petition (E1): 4 staged deliveries at the warden terminal after audit tier 2. Amounts are scaled by preset_mult. Gated by balance e1_enabled. Phase 3 also clears audit tier 3 (replaces the old tier-3 wall).",
+	"preset_mult": {"short_stay": 0.6, "standard_term": 1.0, "hard_time": 1.3},
+	"phases": [
+		{
+			"id": "p1", "title": "Petition I: Filing Fees",
+			"parts": {"plate": 60, "parts": 20},
+			"reward": {"debt_cut_pct": 5},
+			"letter": "The wardens stamp your petition 'received'. Each debt is trimmed by 5%."
+		},
+		{
+			"id": "p2", "title": "Petition II: Supporting Evidence",
+			"parts": {"ingot_iron": 20, "ingot_copper": 20},
+			"reward": {"debt_cut_pct": 8, "items": {"refined_essence": 15}},
+			"letter": "The evidence is filed. Debts drop another 8% and a small allowance arrives."
+		},
+		{
+			"id": "p3", "title": "Petition III: Proof of Industry",
+			"parts": {"coal": 30, "nitrogen": 20},
+			"reward": {"debt_cut_pct": 10, "unlock_tier": 3},
+			"letter": "The wardens inspect your power plant. Debts drop 10% and high-throughput industry is cleared."
+		},
+		{
+			"id": "p4", "title": "Petition IV: Debt Settlement",
+			"parts": {"refined_essence": 60},
+			"reward": {"debt_cut_pct": 25},
+			"letter": "Sentence commutation granted. A quarter of every remaining debt is forgiven."
+		}
+	]
+}
