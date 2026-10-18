@@ -236,3 +236,6 @@ View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`,
 
 ## 12. Health bands (C4)
 `HealthState.band(cfg)` / `sim.health.band(c)` derives `fit | wounded | down` from the existing model (down = `downed`; wounded = blood < `band.wounded_blood` or total damage >= `band.wounded_damage`). `sim.health.bleed_out_seconds(c)` = ceil(blood / bleed_rate / TICKS_PER_SECOND) while Down and bleeding, else -1. `sim.health.stabilise(c, medic)` tends all injuries at `band.stabilise_quality` (C2 Medic hook). Auto-rescue is the existing `RescueGiver` (any colonist with doctoring enabled carries a Down colonist to a free bed). No new RNG, no goldens change (derived reads only); data in `health.json` `band`.
+
+## C3 telegraphed attacks (`ThreatSystem` region C3)
+`data/enemies.json` `telegraph {windup_ticks, shape cell|line|area, radius|length, dmg_mult}` (brute area r1/20, spitter line 6/14, burrower cell/24, crawler none). When an enemy in range would strike, it stands still, locks the marked cells (`e` meta `tg`, no rng) and after `windup_ticks` hits every colonist/the target building still inside them; units that left are untouched. A killed enemy cancels its strike. `telegraphs()` (view) and `telegraph_state()` (appended to `state_hash` only while a wind-up is active).

@@ -47,6 +47,7 @@ func unbind() -> void:
 
 
 func clear() -> void:
+	_c3_hide(0)  # region C3
 	for f: Array in _fx:
 		(f[0] as Node).queue_free()
 	_fx.clear()
@@ -65,6 +66,7 @@ func tick(delta: float) -> void:
 	_tick_nests(delta)  # region R3X
 	if sim != null:
 		_poll_shots()
+		_c3_sync()  # region C3
 		for e: Enemy in sim.threats.enemies:
 			_enemy_pos[e.id] = e.visual_pos()
 	var keep: Array = []
@@ -214,4 +216,74 @@ func _tick_nests(delta: float) -> void:
 		else:
 			root.scale = Vector3.ONE
 			mat.emission_energy_multiplier = 0.0
+# endregion
+
+
+# region C3 telegraph markers: red cells + a ring that shrinks to the centre as the wind-up ends
+var _c3_cells: Array[MeshInstance3D] = []
+var _c3_rings: Array[MeshInstance3D] = []
+var _c3_shown := 0
+
+
+func c3_visible_cells() -> int:
+	return _c3_shown
+
+
+func _c3_node(pool: Array[MeshInstance3D], i: int, mesh: Mesh) -> MeshInstance3D:
+	if i < pool.size():
+		return pool[i]
+	var m := MeshInstance3D.new()
+	m.mesh = mesh
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.material_override = mat
+	m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(m)
+	pool.append(m)
+	return m
+
+
+func _c3_hide(from: int) -> void:
+	for i in range(from, _c3_cells.size()):
+		_c3_cells[i].visible = false
+	for i in range(0, _c3_rings.size()):
+		if i >= from:
+			_c3_rings[i].visible = false
+
+
+func _c3_sync() -> void:
+	var cell_i := 0
+	var ring_i := 0
+	for t: Dictionary in sim.threats.telegraphs():
+		var cells: Array = t["cells"]
+		var frac: float = t["frac"]
+		var sum := Vector2.ZERO
+		for c: Vector2i in cells:
+			sum += Vector2(c) + Vector2(0.5, 0.5)
+			var n := _c3_node(_c3_cells, cell_i, _quad)
+			cell_i += 1
+			n.visible = true
+			n.rotation = Vector3(-PI / 2.0, 0, 0)
+			n.scale = Vector3.ONE * 0.92
+			n.position = Vector3(c.x + 0.5, 0.07, c.y + 0.5)
+			(n.material_override as StandardMaterial3D).albedo_color = Color(0.95, 0.12, 0.1, 0.35 + 0.35 * (1.0 - frac))
+		var ctr := sum / maxf(1.0, float(cells.size()))
+		var tor := TorusMesh.new()
+		var r := _c3_node(_c3_rings, ring_i, tor)
+		if r.mesh == tor:
+			tor.inner_radius = 0.42
+			tor.outer_radius = 0.5
+		ring_i += 1
+		r.visible = true
+		r.scale = Vector3.ONE * (0.4 + 2.2 * frac)
+		r.position = Vector3(ctr.x, 0.09, ctr.y)
+		(r.material_override as StandardMaterial3D).albedo_color = Color(1.0, 0.85, 0.2, 0.9)
+	for i in range(cell_i, _c3_cells.size()):
+		_c3_cells[i].visible = false
+	for i in range(ring_i, _c3_rings.size()):
+		_c3_rings[i].visible = false
+	_c3_shown = cell_i
 # endregion
