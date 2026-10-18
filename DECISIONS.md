@@ -225,3 +225,6 @@ Both: squads ("Wardens of the Line") are the main way, and single-inmate draftin
 - `dmg_taken_mult` (HealthSystem.apply_damage) and `threat_mult` (ThreatModel.colonist_value) were declared in roles.json but read nowhere; both now go through `SquadSystem.role_mult`, 1.0 outside squads (goldens unchanged).
 - `test_player_intervention_keeps_colony_alive_longer` measures the intent over seeds 1..5 (telegraph wind-ups made single seeds chaotic) instead of a per-seed floor.
 - Process: adopted "Birds With Guns" ship checks into CLAUDE.md (decided without owner, review).
+
+## Logistics 2 (owner, 2026-10-18)
+Do belt splitters and mergers like Satisfactory with three separate splitter kinds: basic (round-robin), smart (per-output filter), priority/overflow; plus mergers. Add electricity now (was "later").
