@@ -66,6 +66,15 @@
 	"b3": {
 		"enabled": true
 	},
+	"k2_enabled": false,
+	"k2": {
+		"outpost_days": 2,
+		"presets": {
+			"short_stay": {"waves_delta": -1, "debt_delta": 0, "outpost_step": false},
+			"standard_term": {"waves_delta": 0, "debt_delta": 0, "outpost_step": true},
+			"hard_time": {"waves_delta": 1, "debt_delta": 2, "outpost_step": true}
+		}
+	},
 	"storyteller": {
 		"enabled": true,
 		"checks_per_day": 2,

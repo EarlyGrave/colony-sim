@@ -88,5 +88,6 @@
 				"refined_essence": 30
 			}
 		}
-	]
+	],
+	"k2_reviews": [{"id": "review_outpost", "title": "Parole Review IV", "text": "An outpost has held. The wardens note the colony can survive off its own land.", "kind": "outpost_days", "value": 2, "reward": {"refined_essence": 30}}]
 }

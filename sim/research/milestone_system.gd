@@ -103,6 +103,8 @@ func state_parts() -> Array:
 		out.append(row)
 	if not reviews_done.is_empty():  # region B3: only after a review, other hashes stay as they were
 		out.append(["reviews", reviews_done.duplicate(), waves_repelled])
+	if k2_outpost_days > 0 or k2_decoys > 0:  # region K2: absent unless an outpost was ever held
+		out.append(["k2", k2_outpost_days, k2_decoys])
 	return out
 
 
@@ -116,7 +118,10 @@ func b3_on() -> bool:
 
 
 func review_defs() -> Array:
-	return sim.defs.milestones.get("reviews", [])
+	var base: Array = sim.defs.milestones.get("reviews", [])
+	if k2_on():  # region K2
+		return k2_review_defs(base)  # region K2
+	return base
 
 
 ## Aggregate debt paid, 0..100.
@@ -140,6 +145,8 @@ func review_progress(r: Dictionary) -> float:
 			return 1.0 if tier() >= int(v) else 0.0
 		"waves_repelled":
 			return clampf(waves_repelled / v, 0.0, 1.0)
+		"outpost_days":  # region K2
+			return clampf(k2_outpost_days / v, 0.0, 1.0)  # region K2
 	return 0.0
 
 
@@ -171,4 +178,65 @@ func tick_reviews() -> void:
 		sim.items.drop(near, item, n)
 	sim.bus.letter_received.emit(str(r.get("title", "")), str(r.get("text", "")))
 	sim.bus.story_event.emit("review_" + str(r["id"]), str(r.get("text", "")))
+# endregion
+
+
+# region K2: preset-scaled Parole Review + outposts. Gated by balance "k2_enabled" (default false).
+var k2_preset := "standard_term"  # set by whoever starts the run (meta preset id)
+var k2_outpost_days := 0  # days an outpost has been held (campaign calls k2_note_day)
+var k2_decoys := 0  # unspent audit decoys (one per newly held outpost period)
+var k2_outposts_held := 0
+
+
+func k2_on() -> bool:
+	return bool(sim.defs.balance.get("k2_enabled", false))
+
+
+func k2_row() -> Dictionary:
+	var t: Dictionary = sim.defs.balance.get("k2", {}).get("presets", {})
+	return t.get(k2_preset, t.get("standard_term", {}))
+
+
+## Reviews with per-preset demands applied; adds the outpost step where the preset asks for it.
+func k2_review_defs(base: Array) -> Array:
+	var row := k2_row()
+	var out: Array = []
+	for r: Dictionary in base:
+		var c := r.duplicate(true)
+		match str(c.get("kind", "")):
+			"waves_repelled":
+				c["value"] = maxi(1, int(c["value"]) + int(row.get("waves_delta", 0)))
+			"debt_paid_pct":
+				c["value"] = int(c["value"]) + int(row.get("debt_delta", 0))
+		out.append(c)
+	if bool(row.get("outpost_step", false)):
+		for r: Dictionary in sim.defs.milestones.get("k2_reviews", []):
+			var c := r.duplicate(true)
+			c["value"] = int(sim.defs.balance.get("k2", {}).get("outpost_days", c["value"]))
+			out.append(c)
+	return out
+
+
+## Called once per campaign day with the number of held (living) outposts.
+func k2_note_day(held: int) -> void:
+	if not k2_on():
+		return
+	if held > 0 and k2_outposts_held == 0:
+		k2_decoys += 1
+	k2_outposts_held = held
+	if held > 0:
+		k2_outpost_days += 1
+
+
+## K1 audit spawn calls this: true = the audit patrol hit an outpost instead (skip home audit once).
+func k2_consume_decoy() -> bool:
+	if not k2_on() or k2_decoys <= 0:
+		return false
+	k2_decoys -= 1
+	return true
+
+
+## Essence stockpiled at an outpost is exempt from a hoard/essence clock (flag only; clock stays off).
+func k2_essence_exempt() -> bool:
+	return k2_on() and k2_outposts_held > 0
 # endregion
