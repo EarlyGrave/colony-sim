@@ -36,7 +36,14 @@ mode — the main session does NOT implement features itself:
 6. **Merge to `main`** (owner rule 2026-10-18): when a whole batch is merged into the
    dev branch and the full suite is green, fast-forward/merge it into `main` and push
    (Pages deploys from `main`). Never merge a half-done batch.
-7. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
+7. **Autonomous mode** (owner rule 2026-10-18): the orchestrator keeps a 5-minute
+   self check-in (`send_later`). On each check-in: if workers are still running,
+   re-arm and wait; if everything is merged, nothing is pending and the owner has
+   not written, call the mechanics scout -> hand its ideas to the prompter -> run
+   the next wave. Undecided design questions: decide, log in DECISIONS.md as
+   "decided without owner, review", keep it reversible. Never stop the loop just
+   because a batch ended.
+8. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
 
 ## Stack
 - Godot **4.7.2-stable**, GDScript only (no C#: we need the web build).
