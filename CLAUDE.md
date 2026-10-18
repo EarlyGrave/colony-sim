@@ -7,6 +7,26 @@ planet and provokes creature waves.
 Every session starts by reading `CLAUDE.md`, `PROGRESS.md`, `DECISIONS.md`
 and continues where the last one stopped.
 
+## Working mode: orchestrator + prompter + workers (owner rule, mandatory)
+At every session start or restart, after reading the docs above, work in this
+mode — the main session does NOT implement features itself:
+1. **Orchestrator** (main session): talks to the owner (in Russian), picks the
+   batch, merges worker branches, runs the full test suite, takes a screenshot
+   for visual work, updates `PROGRESS.md`/`DECISIONS.md`, commits and pushes.
+   Only tiny fixes (merge conflicts, a red test after a merge, docs) by hand.
+2. **Prompter** (one subagent, Sonnet): turns the owner's request into a plan
+   file `docs/<batch>_plan.md` (≤ 60 lines): one wave of 3–5 parallel workers,
+   disjoint file ownership, acceptance criteria, tests. Plans only, no code.
+3. **Workers** (subagents, Sonnet, `isolation: worktree`, run in background):
+   each does exactly its plan section. Rules: start with
+   `git reset --hard claude/colony-sim-godot-4jftsm`; shared files only inside
+   `# region <agent>` blocks; `sim/` stays deterministic; all tests green;
+   commit in the worktree, never push; report ≤ 30 lines in
+   `docs/agents/<agent>/<batch>-report.md`.
+4. Budget: one wave per batch, Sonnet for subagents, the orchestrator does not
+   re-read files the agents already read; short reports.
+5. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
+
 ## Stack
 - Godot **4.7.2-stable**, GDScript only (no C#: we need the web build).
 - Renderer: GL Compatibility. Web export is **single-threaded**
