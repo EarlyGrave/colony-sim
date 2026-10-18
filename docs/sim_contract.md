@@ -63,6 +63,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `set_research` | tech_id: str | bool | tech exists, prereqs done, tier unlocked, affordable; moves it to the queue front, spends essence on first queue |
 | `queue_research` | tech_id: str, on: bool | bool | on: as set_research but appended; off: removes, exact essence refund if progress is 0 |
 | `deliver_audit` | tier: int | bool | warden_terminal exists; consumes only still-required parts of that tier's set from storage; completes -> research.unlock_tier(tier) + warden letter once |
+| `trigger_bell` | building_id: int | bool | Mourning Bell exists, not broken, no burst running, cooldown 0; starts burst (threat x`burst_mult` for `burst_ticks`, then `cooldown_ticks`); debits `essence_cost` refined essence from storage, shortfall -> ledger event `decoy_essence_debt` |
 | `set_drafted` | colonist_id: int, on: bool | bool | colonist exists and alive |
 | `order_move` | colonist_id: int, cell: cell | bool | colonist drafted, cell reachable |
 | `order_attack` | colonist_id: int, enemy_id: int | bool | drafted colonist, enemy alive |
@@ -100,7 +101,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `arrivals.json` | max_colonists, choice_timeout_ticks, age_min/max, max_traits, trait_chance, stories |
 | `balance.json` | ticks_per_day, automation, map{width,height,clusters}, colony{colonists,engineers,start_items,start_stockpile_size}, colonist, mining, construction, waves... |
 | `biomes.json` | biome id -> {resources, purity_weights, node_density, hazard} |
-| `buildings.json` | id -> {name, size[2], color, max_hp, cost{item:n}, buildable, shelter, critical, ...} |
+| `buildings.json` | id -> {name, size[2], color, max_hp, cost{item:n}, buildable, shelter, critical, threat, repair_cost{item:n}, decoy{fuel_item,burn_ticks,unlit_mult,pollution_per_burn,burst_mult,burst_ticks,cooldown_ticks,essence_item,essence_cost}, ...} |
 | `contracts.json` | first_offer_day, offer_interval_days, offer_ttl_days, max_open, anger, templates[] |
 | `crafting.json` | modes[], priorities[], default_priority, default_bill_target |
 | `crises.json` | settings{}, crises id -> {options...} |

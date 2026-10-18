@@ -38,6 +38,10 @@ var node_cell := Vector2i(-1, -1)
 var mach_acc := 0.0
 var mach_items := 0
 # endregion
+# region T2
+## Decoy runtime state (fuel_left, burst_left, cooldown_left); see Decoy.
+var decoy: Dictionary = {}
+# endregion
 
 
 func _init(p_id: int, p_def_id: String, p_def: Dictionary, p_cell: Vector2i, recipes: Dictionary) -> void:
@@ -93,6 +97,9 @@ func is_machine() -> bool:
 # --- Production buffers -------------------------------------------------------
 
 func input_space(item_id: String) -> int:
+	if def.has("decoy"):  # region T2: beacons accept only their fuel
+		var d: Dictionary = def["decoy"]
+		return int(def.get("input_capacity", 0)) - int(input.get(item_id, 0)) if str(d.get("fuel_item", "")) == item_id else 0
 	if def.get("port_building", false):  # region A2b
 		return PortLink.manual_input_space(self)
 	if not station_recipes.is_empty():  # region A2a: processor takes inputs of any station recipe

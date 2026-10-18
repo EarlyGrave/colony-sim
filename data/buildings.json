@@ -338,5 +338,45 @@
 		"buildable": true,
 		"unique": true,
 		"threat_priority": 2
+	},
+	"ash_beacon": {
+		"name": "Ash Beacon",
+		"size": [1, 1],
+		"color": "#d9822b",
+		"max_hp": 300,
+		"cost": {"essence_ore": 12},
+		"build_work": 60,
+		"buildable": true,
+		"threat": 20,
+		"threat_priority": 5,
+		"input_capacity": 10,
+		"repair_cost": {"essence_ore": 6},
+		"decoy": {"fuel_item": "waste", "burn_ticks": 300, "unlit_mult": 0.25, "pollution_per_burn": 0.02}
+	},
+	"penitent_wall": {
+		"name": "Penitent Wall",
+		"size": [2, 1],
+		"color": "#8c8579",
+		"max_hp": 800,
+		"cost": {"essence_ore": 20},
+		"build_work": 90,
+		"buildable": true,
+		"threat": 8,
+		"threat_priority": 4,
+		"repair_cost": {"essence_ore": 10},
+		"decoy": {}
+	},
+	"mourning_bell": {
+		"name": "Mourning Bell",
+		"size": [1, 1],
+		"color": "#c9a227",
+		"max_hp": 400,
+		"cost": {"essence_ore": 15, "refined_essence": 5},
+		"build_work": 80,
+		"buildable": true,
+		"threat": 6,
+		"threat_priority": 4,
+		"repair_cost": {"essence_ore": 8},
+		"decoy": {"burst_mult": 3.0, "burst_ticks": 600, "cooldown_ticks": 1800, "essence_item": "refined_essence", "essence_cost": 4}
 	}
 }

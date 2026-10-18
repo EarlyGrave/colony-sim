@@ -294,6 +294,14 @@ func set_rule(rule_id: String, on: bool) -> void:
 	bus.rule_changed.emit(rule_id, on)
 
 
+# region T2
+## Player command: Mourning Bell burst (x threat for a while, costs essence; shortfall becomes debt).
+func trigger_bell(building_id: int) -> bool:
+	_record("trigger_bell", [building_id])  # save-load
+	return Decoy.trigger_bell(buildings.get_by_id(building_id), self)
+# endregion
+
+
 func is_rule_on(rule_id: String) -> bool:
 	return bool(rules.get(rule_id, false))
 
