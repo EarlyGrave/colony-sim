@@ -134,5 +134,6 @@
 		"essence_item": "refined_essence"
 	},
 	"b4_enabled": true,
-	"k5_enabled": true
+	"k5_enabled": true,
+	"e2_enabled": false
 }
