@@ -1,5 +1,6 @@
 {
 	"ticks_per_day": 600,
+	"automation": {"belt_ticks_per_cell": 5},
 	"map": {
 		"width": 64,
 		"height": 64,
