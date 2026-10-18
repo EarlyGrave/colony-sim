@@ -233,3 +233,4 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
   consumers without a pole run at 0.5; essence burner 100 power / threat 15 / waste, solar 25 clean
   (no day-night yet); no batteries yet; chip upkeep +10 power. Owner request overrides earlier
   "no power / splitters later".
+- Power fuels (owner): generators burn conventional fuels (coal, nitrogen, uranium/nuclear...), not essence. Essence stays science currency.

@@ -53,3 +53,13 @@ Merge order L5, L1, L3, L2, L4. Full tests + goldens (unchanged), balance_report
 
 ## Risks
 Splitter loops deadlock (stall is legal, no loss); belt perf (nodes must stay in sparse stepping); brownout surprise to existing players (enforcement flag + HUD chip + tutorial letter from Warden); generator death spiral (fuel hauled by colonists competes with defence: burner buffer 20, belts can feed); solar too cheap (balance table gate); hash drift (gated by existence of nodes/power).
+
+## Owner override (2026-10-18) — binding
+Generators do NOT burn essence. They burn conventional fuels, data-driven in data/fuels.json
+(fuel item -> energy per unit, waste/contamination per unit, threat). Tiers:
+- T1 `coal` (new infinite node resource on the start biome; coal_generator; dirtiest per energy).
+- T2 `nitrogen` (gas: extractor on gas vents, outpost biome; nitrogen_turbine; cleaner).
+- T3 `uranium` (outpost biome only; nuclear_reactor; huge output, little smoke but spent fuel =
+  long-lived waste item that must be stored in a waste dump; meltdown risk if it overheats/breaks).
+Essence stays the research/science currency, never fuel. Solar stays as the weak clean option.
+L5 owns fuels.json + resources/biomes entries; L3 reads fuels generically; L4 models per generator.
