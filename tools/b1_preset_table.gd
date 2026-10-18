@@ -27,6 +27,6 @@ func _init() -> void:
 			for c in bus.get_signal_list():
 				for conn in bus.get_signal_connection_list(c["name"]):
 					bus.disconnect(c["name"], conn["callable"])
-		print("%-14s deaths=%d waves=%d pol%%d20=%.1f ends=%s" % [id, deaths, waves, pol / seeds, str(ends)])
+		print("%-14s mean_waves=%.1f deaths=%d waves=%d pol%%d20=%.1f ends=%s" % [id, float(waves) / seeds, deaths, waves, pol / seeds, str(ends)])
 	bus.free()
 	quit()

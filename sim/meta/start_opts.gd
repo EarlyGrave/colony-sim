@@ -62,6 +62,11 @@ static func preset_opts(defs: Defs, id: String) -> Dictionary:
 		var v := float(p.get(pair[0], 1.0))
 		if v != 1.0:
 			o[pair[1]] = v
+	if p.has("audit_interval_days"):  # region K1
+		o["audit_days"] = float(p["audit_interval_days"])
+		o["calm_mult"] = float(p.get("calm_after_hit_days", 1.0))
+		if float(p.get("wave_interval_mult", 1.0)) != 1.0:
+			o["wave_interval_mult"] = float(p["wave_interval_mult"])
 	var crate: Dictionary = p.get("crate", {})
 	if not crate.is_empty():
 		o["crate"] = crate.duplicate()

@@ -68,6 +68,7 @@ func _init(p_sim: Simulation) -> void:
 	wave_rng.seed = sim.seed_value ^ 0x57A7E
 	sim.listen(sim.bus.first_refine_done, awaken)
 	sim.listen(sim.bus.item_mined, _on_item_mined)
+	_k1_init()  # region K1
 
 
 func _on_item_mined(_c: Vector2i, _item: String, _n: int) -> void:
@@ -179,7 +180,8 @@ func compose_raid(id: String, points: float) -> Array[String]:
 
 func tick() -> void:
 	var held := sim.tutorial != null and sim.tutorial.waves_held()  # region O1
-	if awakened and not wave_active and not held and sim.tick >= next_wave_tick:
+	_k1_tick(held)  # region K1
+	if awakened and not wave_active and not held and sim.tick >= next_wave_tick and sim.tick >= _k1_calm_until:  # region K1
 		start_wave()
 	if awakened and not wave_active and not held and not _warned \
 			and next_wave_tick - sim.tick < int(cfg["warning_ticks"]) + sim.idle_work.warning_bonus():  # region idle-work
@@ -225,6 +227,9 @@ func start_wave() -> void:
 	wave_active = true
 	wave_end_tick = sim.tick + int(cfg["wave_duration_ticks"])
 	var strength := raid_points(wave_index)
+	_k1_audit_now_wave = _k1_audit_now  # region K1
+	if _k1_audit_now:
+		strength = _k1_audit_points
 	strength *= sim.contracts.take_raid_mult()  # region contracts
 	if wave_index == 1:
 		strength = minf(strength, float(cfg["first_wave_max_points"]))  # tutorial swarm
@@ -301,12 +306,72 @@ func end_wave() -> void:
 	for e in enemies:
 		e.leaving = true
 		e.clear_path()
-	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
+	var k1_keep := next_wave_tick if _k1_audit_now_wave else -1  # region K1: an audit does not reset the pollution timer
+	_k1_audit_now_wave = false
+	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * _k1_interval_mult * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
+	if k1_keep >= 0:  # region K1
+		next_wave_tick = maxi(k1_keep, sim.tick + 1)
 	_schedule_origin()
 	sim.set_alarm(_alarm_before_wave)
+	_k1_wave_over()  # region K1
 	sim.bus.wave_ended.emit(wave_index)
 	if repelled:
 		sim.bus.wave_repelled.emit(wave_index)  # region progression
+
+
+# region K1
+## Pacing (data/balance.json "pacing"): calm after a hit + sentence-audit floor clock. Active only when the
+## start opts carry preset pacing (audit_days), so plain sims are unchanged.
+var _k1_audit_days := 0.0
+var _k1_calm_mult := 1.0
+var _k1_interval_mult := 1.0
+var _k1_audit_at := -1
+var _k1_audit_now := false
+var _k1_audit_now_wave := false
+var _k1_audit_points := 0.0
+var _k1_calm_until := 0
+var _k1_hit := false
+
+
+func _k1_init() -> void:
+	_k1_audit_days = float(sim.opts.get("audit_days", 0.0))
+	if _k1_audit_days <= 0.0:
+		return
+	_k1_calm_mult = float(sim.opts.get("calm_mult", 1.0))
+	_k1_interval_mult = float(sim.opts.get("wave_interval_mult", 1.0))
+	_k1_audit_at = int(_k1_audit_days * sim.ticks_per_day)
+	sim.listen(sim.bus.colonist_died, func(_id: int) -> void: _k1_hit = _k1_hit or wave_active)
+	sim.listen(sim.bus.building_broken, func(_id: int) -> void: _k1_hit = _k1_hit or wave_active)
+
+
+## Tick of the next sentence audit; -1 when pacing is off.
+func next_audit_tick() -> int:
+	return _k1_audit_at
+
+
+## Days (float) until the next audit; -1.0 when pacing is off.
+func days_to_audit() -> float:
+	return -1.0 if _k1_audit_at < 0 else maxf(0.0, float(_k1_audit_at - sim.tick) / float(sim.ticks_per_day))
+
+
+func _k1_tick(held: bool) -> void:
+	if _k1_audit_at < 0 or not bool(cfg.get("enabled", true)):
+		return
+	if sim.tick >= _k1_audit_at and not wave_active and not held and not _k1_audit_now:
+		var pc: Dictionary = sim.defs.balance.get("pacing", {})
+		_k1_audit_points = float(pc.get("floor_pts_per_day", 0.7)) * _k1_audit_days * _o3_mult()
+		_k1_audit_at = sim.tick + int(_k1_audit_days * sim.ticks_per_day)
+		_k1_audit_now = true
+		start_wave()
+		_k1_audit_now = false
+
+
+func _k1_wave_over() -> void:
+	if _k1_hit:
+		_k1_hit = false
+		var pc: Dictionary = sim.defs.balance.get("pacing", {})
+		_k1_calm_until = sim.tick + int(float(pc.get("calm_after_hit_days", 2.0)) * _k1_calm_mult * sim.ticks_per_day)
+# endregion
 
 
 func _attackers() -> int:
