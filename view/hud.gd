@@ -173,7 +173,7 @@ func _ready() -> void:
 		pb.add_theme_font_size_override("font_size", 17)
 		pb.pressed.connect(func() -> void: toggle_panel(pid))
 		_panel_buttons[pid] = pb
-		if pid == "petition" or pid == "dispatch":  # region E4: shown only while the sim exposes it
+		if pid == "petition" or pid == "dispatch" or pid == "shuttle" or pid == "beacons":  # region S4  # region E4: shown only while the sim exposes it
 			pb.visible = false
 
 	_menu_btn = _button(speed_row, "More", Vector2(88, 64))
@@ -715,6 +715,7 @@ func _refresh_texts() -> void:
 	_c5_update()  # region C5
 	_k3_update()  # region K3
 	_e4_update()  # region E4
+	_s4_update()  # region S4
 	_letters_btn.text = "Letters (%d)" % _letters.unread if _letters.unread > 0 else "Letters"
 	_menu_btn.text = "More (%d)" % _letters.unread if _letters.unread > 0 else "More"
 # endregion
@@ -1536,4 +1537,20 @@ func _e4_update() -> void:
 	if db != null:
 		var ds := DispatchPanel.state_of(sim)
 		db.visible = bool(ds.get("enabled", false)) and sim.day() >= 4
+# endregion
+
+
+# region S4
+## Shuttle / Beacons buttons stay hidden until the sim state exists; the shuttle button is the chip.
+func _s4_update() -> void:
+	var sb: Button = _panel_buttons.get("shuttle")
+	if sb != null:
+		var txt := ShuttlePanel.chip_text(ShuttlePanel.state_of(sim), sim.ticks_per_day)
+		sb.visible = txt != ""
+		if txt != "":
+			sb.text = txt
+			sb.add_theme_font_size_override("font_size", 13)
+	var bb: Button = _panel_buttons.get("beacons")
+	if bb != null:
+		bb.visible = int(BeaconPanel.state_of(sim).get("alive", 0)) > 0
 # endregion
