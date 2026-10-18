@@ -12,6 +12,8 @@ var owned: Array = []  # unlock ids
 var crate := ""  # selected crate unlock id ("" = none)
 var last_run: Dictionary = {}  # summary of the previous run
 var preset := "standard_term"  # region O3: selected difficulty preset id
+var tutorial := true  # region R5X: Warden's Orientation toggle (default ON for a fresh profile)
+var launched := false  # region R5X: false until the first new-game dialog was confirmed
 
 
 func _init(p_defs: Defs = null) -> void:
@@ -90,7 +92,8 @@ func make_next_batch() -> Dictionary:
 
 func to_dict() -> Dictionary:
 	return {"version": 1, "balance": balance, "total": total_earned, "runs": runs,
-		"best_days": best_days, "owned": owned, "crate": crate, "last_run": last_run, "preset": preset}
+		"best_days": best_days, "owned": owned, "crate": crate, "last_run": last_run, "preset": preset,
+		"tutorial": tutorial, "launched": launched}
 
 
 func load_dict(d: Dictionary) -> void:
@@ -101,6 +104,8 @@ func load_dict(d: Dictionary) -> void:
 	owned = (d.get("owned", []) as Array).duplicate()
 	crate = str(d.get("crate", ""))
 	preset = str(d.get("preset", "standard_term"))  # region O3
+	tutorial = bool(d.get("tutorial", false))  # region R5X: old profiles keep today's behaviour
+	launched = bool(d.get("launched", true))
 	last_run = (d.get("last_run", {}) as Dictionary).duplicate(true)
 	for k in ["seed", "days", "legacy", "site"]:
 		if last_run.has(k):

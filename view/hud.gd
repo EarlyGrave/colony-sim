@@ -848,15 +848,38 @@ func o2_target_control(target: Dictionary) -> Control:
 					if (cat[2] as Array).has(id):
 						c = _cat_buttons.get(cat[0])
 		"panel":
-			c = _panel_buttons.get(id)
-			if c != null and not c.is_visible_in_tree():
-				c = _menu_btn
+			match id:  # region R5X: lesson panel ids that are HUD widgets, not registry buttons
+				"colonist_bar":
+					c = _colonist_dock
+				"contamination", "forecast":
+					c = _o4_ticker if _o4_ticker != null else _forecast_bar
+				"tutorial_card":
+					c = tutorial_card
+				_:
+					c = _panel_buttons.get(id)
+					if c != null and not c.is_visible_in_tree():
+						c = _menu_btn
 	return c if c != null and c.is_visible_in_tree() else null
+
+
+## R5X: sends the recorded `tutorial_ack` when the active lesson is `lesson_id` (view-mirrored steps).
+func o2_ack_if(lesson_id: String) -> void:
+	if sim == null or sim.tutorial == null or sim.tutorial.finished():
+		return
+	if str(sim.tutorial.current().get("id", "")) == lesson_id:
+		sim.tutorial_ack()
+
+
+## R5X: the game supplies the screen rect of a "cell" lesson target (id -> Rect2, empty = none).
+var o2_cell_rect: Callable = Callable()
 
 
 func _o2_update() -> void:
 	if tutorial_card == null:
 		return
+	if _o4_slot != null and tutorial_card.get_parent() != _o4_slot:  # R5X: card lives in O4's slot
+		tutorial_card.reparent(_o4_slot, false)
+		tutorial_card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var step := TutorialCard.current_step(sim)
 	var lessons := TutorialCard.lessons(sim)
 	if step != _o2_step:
@@ -865,22 +888,23 @@ func _o2_update() -> void:
 		_o2_start_tick = sim.tick
 		tutorial_highlight.hide_highlight()
 	var on := step >= 0 and step < lessons.size() and _o2_density != "Off"
+	if on and _o4_slot != null and _o4_slot.size.x < 420.0:
+		on = false  # R5X: beside an open sheet the card would be a squeezed column; it returns when the sheet closes
 	tutorial_card.visible = on
 	if not on:
 		tutorial_highlight.hide_highlight()
 		return
 	tutorial_card.refresh()
-	var sw := ((300 if _compact else SIDE_W) + 16) if _side != null else 8
-	tutorial_card.offset_left = 92.0 if _compact else 8.0
-	tutorial_card.offset_right = -float(sw)
-	tutorial_card.offset_top = _stack.size.y + 4
 	var d: Dictionary = lessons[step]
 	var nudge := int(d.get("nudge_ticks", 600)) * (2 if _o2_density == "New" else 1)
 	var target: Control = null
 	if d.get("target") is Dictionary:
 		target = o2_target_control(d["target"])
-	if target != null and sim.tick - _o2_start_tick >= nudge:
-		tutorial_highlight.show_over(target.get_global_rect())
+	var cell_rect := Rect2()
+	if d.get("target") is Dictionary and str(d["target"].get("kind", "")) == "cell" and o2_cell_rect.is_valid():
+		cell_rect = o2_cell_rect.call(str(d["target"].get("id", "")))
+	if sim.tick - _o2_start_tick >= nudge and (target != null or cell_rect.has_area()):
+		tutorial_highlight.show_over(target.get_global_rect() if target != null else cell_rect)
 	else:
 		tutorial_highlight.hide_highlight()
 # endregion
@@ -943,7 +967,9 @@ func _o4_build() -> void:
 	_o4_ticker.custom_minimum_size = Vector2(190, 64)
 	_o4_ticker.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 	_o4_ticker.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
-	_o4_ticker.pressed.connect(func() -> void: toggle_panel("letters"))
+	_o4_ticker.pressed.connect(func() -> void:
+		o2_ack_if("forecast")  # R5X: forecast lesson = the player opened the forecast ticker
+		toggle_panel("letters"))
 	row.add_child(_o4_ticker)
 	var tv := VBoxContainer.new()
 	tv.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1151,6 +1177,7 @@ func _o4_layout() -> void:
 	_o4_place_corner(_legend, O4_LEFT, -8.0)
 	_legend.visible = _overlay_on and quiet and _legend.get_combined_minimum_size().x + O4_LEFT <= lim2
 	var toast_b := -(8.0 + O4_LEGEND_H + 4.0)
+	_message.visible = true
 	_message.anchor_left = 0.0
 	_message.anchor_right = 0.0
 	_message.anchor_top = 1.0
@@ -1179,6 +1206,12 @@ func _o4_layout() -> void:
 			apc.theme = th
 			for b in _o4_buttons(apc):
 				b.custom_minimum_size = Vector2(88, 64)
+		var mrow: Variant = apc.get("_machine_row")
+		var machines_open: bool = mrow is Control and (mrow as Control).visible
+		if machines_open and quiet:  # R5X: the tall Machines row drops into the toast/legend band, clear of the chips
+			_legend.visible = false
+			_message.visible = false
+			tool_b = -8.0
 		_o4_place_corner(apc, O4_LEFT, tool_b)
 		apc.visible = quiet and not _patrol_bar.visible
 	# Save/Continue prompt: above the cluster, never under a menu.

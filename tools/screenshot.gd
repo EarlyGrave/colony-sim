@@ -11,6 +11,11 @@ func _ready() -> void:
 	var win := Vector2i.ZERO
 	var cat := ""
 	var panel := ""
+	var tutorial := false  # R5X: --tutorial[=N] starts Warden's Orientation (N = lessons skipped first)
+	var lesson := 0
+	var nudge := false  # --nudge: wait past the lesson's nudge so the highlight shows
+	var dialog := false  # --dialog: new-game dialog
+	var radial := false  # --radial: radial menu open mid-screen
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out = a.substr(6)
@@ -26,6 +31,15 @@ func _ready() -> void:
 			cat = a.substr(6)  # open a compact HUD category popup (zones/build/orders)
 		elif a.begins_with("--panel="):
 			panel = a.substr(8)  # open a registered side panel by id
+		elif a.begins_with("--tutorial"):
+			tutorial = true
+			lesson = int(a.substr(11)) if a.length() > 11 else 0
+		elif a == "--nudge":
+			nudge = true
+		elif a == "--dialog":
+			dialog = true
+		elif a == "--radial":
+			radial = true
 		elif a.begins_with("--zoom="):
 			zoom = float(a.substr(7))
 	if win != Vector2i.ZERO:
@@ -35,8 +49,13 @@ func _ready() -> void:
 	await get_tree().process_frame
 	if ui_scale > 0.0:
 		get_tree().root.content_scale_factor = ui_scale
-	game.new_game(42)
+	game.new_game(42, {"tutorial": true} if tutorial else {})
 	game.sim.run_ticks(ticks)
+	for i in lesson:
+		game.sim.tutorial_skip_step()
+	if nudge and tutorial:
+		game.hud._process(0.1)  # lets the HUD stamp the lesson's start tick
+		game.sim.run_ticks(int(game.sim.tutorial.current().get("nudge_ticks", 600)) + 20)
 	for c in game.sim.colonists.list:
 		c.hp = c.max_hp * 0.5  # show the overlay bars
 	game.camera.zoom_level = zoom
@@ -74,6 +93,12 @@ func _ready() -> void:
 				p._render()
 	elif panel != "":
 		game.hud.toggle_panel(panel)
+	if dialog:
+		game._o3_open_dialog()
+	if radial:
+		game.radial.open_at(get_viewport().get_visible_rect().size * 0.5)
+	if nudge and tutorial:
+		game.hud._process(0.1)
 	for i in 20:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

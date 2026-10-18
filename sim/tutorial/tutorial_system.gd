@@ -290,6 +290,9 @@ func _enter() -> void:
 		if _has_building(where.get("def_in", [])):
 			sflags["placed"] = true
 	_port_total = 0
+	if sim.research != null:
+		# R5X: the real tier-2 audit (plates + parts) is far beyond a first lesson: the Warden pre-approves it.
+		sim.research.unlock_tier(2)
 	if step == audit_index and sim.threats != null:
 		var delay := int(sim.defs.tutorial.get("settings", {}).get("audit_delay_ticks", 120))
 		sim.threats.schedule_scripted(delay)
