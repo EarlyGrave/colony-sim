@@ -77,31 +77,96 @@ func expand(budget: int) -> void:
 	if complete:
 		return
 	var walk := _walk
+	var dd := dist  # region K4: detach the member so writes go to one unshared buffer
+	dist = PackedInt32Array()
+	var q := _queue
+	_queue = PackedInt32Array()
+	var head := _head
+	var qn := q.size()
 	var done := 0
-	while _head < _queue.size():
+	var W := w
+	var X0 := x0
+	var Y0 := y0
+	var WW := ww
+	var X1 := x0 + ww
+	var Y1 := y0 + wh
+	var maxd := _max_dist
+	# neighbour offsets in walk space (W) and dist space (WW), same order as DX/DY
+	var wo: Array[int] = [1, -1, W, -W, W + 1, -W + 1, W - 1, -W - 1]
+	var do: Array[int] = [1, -1, WW, -WW, WW + 1, -WW + 1, WW - 1, -WW - 1]
+	while head < qn:
 		if budget >= 0 and done >= budget:
-			return
+			break
 		done += 1
-		var i := _queue[_head]
-		_head += 1
-		var cx := i % w
-		var cy := i / w
-		var d := dist[(cy - y0) * ww + cx - x0] + 1
-		if _max_dist >= 0 and d > _max_dist:
+		var i := q[head]
+		head += 1
+		var cy := i / W
+		var cx := i - cy * W
+		var ci := (cy - Y0) * WW + cx - X0
+		var d := dd[ci] + 1
+		if maxd >= 0 and d > maxd:
+			continue
+		if cx > X0 and cy > Y0 and cx < X1 - 1 and cy < Y1 - 1:
+			# interior: unrolled, diagonals reuse the orthogonal walk flags (same visiting order as DX/DY)
+			var fe := walk[i + 1] != 0
+			var fw := walk[i - 1] != 0
+			var fs := walk[i + W] != 0
+			var fn := walk[i - W] != 0
+			if fe and dd[ci + 1] == -1:
+				dd[ci + 1] = d
+				q.append(i + 1)
+				qn += 1
+			if fw and dd[ci - 1] == -1:
+				dd[ci - 1] = d
+				q.append(i - 1)
+				qn += 1
+			if fs and dd[ci + WW] == -1:
+				dd[ci + WW] = d
+				q.append(i + W)
+				qn += 1
+			if fn and dd[ci - WW] == -1:
+				dd[ci - WW] = d
+				q.append(i - W)
+				qn += 1
+			if fe and fs and dd[ci + WW + 1] == -1 and walk[i + W + 1] != 0:
+				dd[ci + WW + 1] = d
+				q.append(i + W + 1)
+				qn += 1
+			if fe and fn and dd[ci - WW + 1] == -1 and walk[i - W + 1] != 0:
+				dd[ci - WW + 1] = d
+				q.append(i - W + 1)
+				qn += 1
+			if fw and fs and dd[ci + WW - 1] == -1 and walk[i + W - 1] != 0:
+				dd[ci + WW - 1] = d
+				q.append(i + W - 1)
+				qn += 1
+			if fw and fn and dd[ci - WW - 1] == -1 and walk[i - W - 1] != 0:
+				dd[ci - WW - 1] = d
+				q.append(i - W - 1)
+				qn += 1
 			continue
 		for k in 8:
 			var nx := cx + DX[k]
 			var ny := cy + DY[k]
-			if nx < x0 or ny < y0 or nx >= x0 + ww or ny >= y0 + wh:
+			if nx < X0 or ny < Y0 or nx >= X1 or ny >= Y1:
 				continue
-			var ni := ny * w + nx
-			var di := (ny - y0) * ww + nx - x0
-			if dist[di] != -1 or walk[ni] == 0:
+			var di := ci + do[k]
+			if dd[di] != -1:
 				continue
-			if k >= 4 and (walk[cy * w + nx] == 0 or walk[ny * w + cx] == 0):
+			var ni := i + wo[k]
+			if walk[ni] == 0:
 				continue
-			dist[di] = d
-			_queue.append(ni)
+			if k >= 4 and (walk[i + DX[k]] == 0 or walk[i + DY[k] * W] == 0):
+				continue
+			dd[di] = d
+			q.append(ni)
+			qn += 1
+	dist = dd
+	if head < qn:
+		_queue = q
+		_head = head
+		return
+	_head = head
 	complete = true
 	_queue = PackedInt32Array()
 

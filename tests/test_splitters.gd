@@ -238,3 +238,31 @@ func test_perf_8k_belts_200_nodes() -> void:
 	var avg := sum / 1000.0 / 300.0
 	if OS.get_environment("PERF_SKIP_WALL") == "":  # timings are meaningless under sharded load
 		assert_true(avg <= 1.0 * 1.5, "avg %.3f ms" % avg)
+
+
+# region K4
+## Splitter feeding a merger side input must take turns with a plain belt on the back input.
+func test_splitter_to_merger_fair() -> void:
+	var g := BeltGrid.new(12, 12, 2)
+	g.place_node(4, Vector2i(5, 5), E)
+	g.set_belt(Vector2i(6, 5), E)
+	for x in range(0, 5):
+		g.set_belt(Vector2i(x, 5), E)
+	for y in range(0, 4):
+		g.set_belt(Vector2i(5, y), S)
+	g.place_node(1, Vector2i(5, 4), S)
+	var a := 0
+	var b := 0
+	for t in 400:
+		g.insert(Vector2i(0, 5), 2)
+		g.insert(Vector2i(5, 0), 1)
+		g.step()
+		var it := g.take_ready(Vector2i(6, 5))
+		if it == 1:
+			a += 1
+		elif it == 2:
+			b += 1
+		assert_eq(g.inserted, g.extracted + g.destroyed + g.item_count)
+	assert_true(a + b > 100, "throughput %d" % (a + b))
+	assert_true(absi(a - b) <= maxi(2, (a + b) / 50), "splitter=%d belt=%d" % [a, b])
+# endregion
