@@ -93,8 +93,12 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
   sample the same texture. Colonists: 4-direction walk sheets (gen_art.py
   `*_sheet.png`, 3x4 frames); creatures: standing billboards. HP bars / drafted
   marker in a screen-space overlay. `tools/screenshot.tscn` renders under xvfb.
-- Not yet: buildings (refinery, turret, capsule) are still flat top-down art; creatures
-  have no 4-direction sheets.
+- Batch G1 (prompter plan docs/graphics_batch_plan.md, 4 Sonnet workers, merged):
+  G1a creature 4-dir sheets; G1b buildings as raised blocks (turret barrel, door slab);
+  G1c sky/fog/edge fade, blob shadows, selection ring, standing item piles; G1d camera
+  inertia + clamps, 3D tracers/sparks/dust/death puffs. Tests: 321 green.
+- Not yet: spitter projectiles (no sim event), refinery smoke in 3D, crowded-scene depth
+  check, real-phone check (needs merge to main for Pages).
 
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
