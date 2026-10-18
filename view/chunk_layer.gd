@@ -17,6 +17,31 @@ var viewports: Array[SubViewport] = []  # index = cy * cols + cx
 var enabled: Array[bool] = []
 var sizes: Array[Vector2i] = []  # region W2e: full pixel size of each chunk viewport
 var update_calls := 0  ## chunk texture refreshes requested (perf counter)
+# region W2a
+## Chunks whose canvas content changed since their viewport last rendered
+## (1 = needs a refresh). Viewports render UPDATE_ONCE, never every frame.
+var dirty := PackedByteArray()
+var _world: World2D
+static var _registry := {}  ## World2D -> ChunkLayer, so WorldView can flag chunks without a scene reference
+
+
+static func find(world_2d: World2D) -> ChunkLayer:
+	return _registry.get(world_2d)
+
+
+func _exit_tree() -> void:
+	if _world != null and _registry.get(_world) == self:
+		_registry.erase(_world)
+
+
+func mark(i: int) -> void:
+	if i >= 0 and i < dirty.size():
+		dirty[i] = 1
+
+
+func mark_all() -> void:
+	dirty.fill(1)
+# endregion
 
 
 static func chunk_of(cell: Vector2i) -> Vector2i:
@@ -73,6 +98,8 @@ func build(w: int, h: int, world_2d: World2D) -> void:
 	clear()
 	map_w = w
 	map_h = h
+	_world = world_2d  # region W2a
+	_registry[world_2d] = self
 	cols = chunk_count(w)
 	rows = chunk_count(h)
 	for cy in rows:
@@ -90,6 +117,8 @@ func build(w: int, h: int, world_2d: World2D) -> void:
 			vp.canvas_transform = Transform2D(0.0, Vector2(-r.position * PX))
 			viewports.append(vp)
 			enabled.append(false)
+	dirty.resize(viewports.size())  # region W2a
+	dirty.fill(1)
 
 
 func clear() -> void:
@@ -98,6 +127,10 @@ func clear() -> void:
 	viewports.clear()
 	enabled.clear()
 	sizes.clear()
+	dirty.clear()  # region W2a
+	if _world != null and _registry.get(_world) == self:
+		_registry.erase(_world)
+	_world = null
 	cols = 0
 	rows = 0
 
@@ -106,7 +139,8 @@ func texture_of(ch: Vector2i) -> Texture2D:
 	return viewports[index_of(ch)].get_texture()
 
 
-## Switches chunk rendering on for exactly the given chunks.
+## Marks exactly the given chunks as on-screen. Each on-screen chunk that is
+## dirty renders once (UPDATE_ONCE); the rest keep their last texture.
 func set_active(chunks: Array[Vector2i]) -> void:
 	var want := {}
 	for ch in chunks:
@@ -117,5 +151,12 @@ func set_active(chunks: Array[Vector2i]) -> void:
 			enabled[i] = on
 			# region W2e: inactive chunks release their render target (1x1), active ones get the full size back
 			viewports[i].size = sizes[i] if on else Vector2i.ONE
-			viewports[i].render_target_update_mode = SubViewport.UPDATE_ALWAYS if on else SubViewport.UPDATE_DISABLED
 			# endregion
+			if on:
+				dirty[i] = 1  # a re-grown target lost its pixels (W2a + W2e)
+			else:
+				viewports[i].render_target_update_mode = SubViewport.UPDATE_DISABLED
+		if on and dirty[i] != 0:  # region W2a
+			dirty[i] = 0
+			update_calls += 1
+			viewports[i].render_target_update_mode = SubViewport.UPDATE_ONCE
