@@ -138,5 +138,6 @@
 	"b4_enabled": true,
 	"k5_enabled": true,
 	"e1_enabled": true,
-	"e2_enabled": true
+	"e2_enabled": true,
+	"s1_enabled": false
 }

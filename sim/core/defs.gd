@@ -63,6 +63,7 @@ var contracts: Dictionary = {}
 var meta: Dictionary = {}  # region meta
 var milestones: Dictionary = {}  # region R2b
 var petitions: Dictionary = {}  # region E1
+var shuttle: Dictionary = {}  # region S1
 var presets: Dictionary = {}  # region O3
 # endregion
 # region needs
@@ -150,6 +151,7 @@ func load_from(dir: String) -> void:
 	meta = _load_json(dir + "meta.json")  # region meta
 	milestones = _load_json(dir + "milestones.json")  # region R2b
 	petitions = _load_json(dir + "petitions.json")  # region E1
+	shuttle = _load_json(dir + "shuttle.json")  # region S1
 	presets = _load_json(dir + "presets.json")  # region O3
 	# endregion
 	# region needs
@@ -236,6 +238,7 @@ func duplicate_defs() -> Defs:
 	d.meta = meta.duplicate(true)  # region meta
 	d.milestones = milestones.duplicate(true)  # region R2b
 	d.petitions = petitions.duplicate(true)  # region E1
+	d.shuttle = shuttle.duplicate(true)  # region S1
 	d.presets = presets.duplicate(true)  # region O3
 	# endregion
 	# region needs

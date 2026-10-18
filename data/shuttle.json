@@ -1,0 +1,16 @@
+{
+	"_comment": "Release Shuttle (S1). Gated by balance s1_enabled. Unlock: petition phase 4 done. parts_need is preset-scaled; part_cost is per release part; countdown/siege numbers in ticks.",
+	"preset_mult": {"short_stay": 0.6, "standard_term": 1.0, "hard_time": 1.3},
+	"gantry": "release_gantry",
+	"parts_need": 40,
+	"part_cost": {"plate": 2, "refined_essence": 1, "fuel_cell": 1},
+	"min_power_factor": 0.5,
+	"countdown_days": 2.0,
+	"parts_lost_frac": 0.5,
+	"siege_first_delay_ticks": 200,
+	"siege_interval_ticks": 1500,
+	"siege_interval_min_ticks": 600,
+	"siege_pollution_speedup": 0.5,
+	"repair_cost": {"plate": 10},
+	"win_letter": "The gantry lights burn through the night. You rise above the grey sky, debt unpaid but sentence ended."
+}

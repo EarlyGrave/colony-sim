@@ -134,5 +134,12 @@
 		"benches": [
 			"workbench"
 		]
+	},
+	"fuel_cell": {
+		"name": "Fuel Cell",
+		"inputs": {"nitrogen": 2, "plate": 1},
+		"outputs": {"fuel_cell": 1},
+		"work_ticks": 90,
+		"benches": ["workbench"]
 	}
 }

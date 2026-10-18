@@ -70,6 +70,7 @@ var mutation: MutationSystem  # region mutation
 var ecology: EcologySystem  # region T5
 var milestones: MilestoneSystem  # region R2b
 var petition: PetitionSystem  # region E1
+var shuttle: ShuttleSystem  # region S1
 # endregion
 # region perks
 var perks: PerkSystem
@@ -306,6 +307,7 @@ func _init_systems() -> void:
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	petition = PetitionSystem.new(self)  # region E1
+	shuttle = ShuttleSystem.new(self)  # region S1
 	chips = ChipSystem.new(self)  # region T4
 	power = PowerSystem.new(self)  # region L3
 	squads = SquadSystem.new(self)  # region C1
@@ -432,6 +434,7 @@ func step() -> void:
 	threats.tick()
 	if profiling:
 		_lap("threats")
+	shuttle.tick()  # region S1
 	squads.tick()  # region C1
 	if profiling:
 		_lap("squads")
@@ -980,4 +983,25 @@ func deliver_petition(phase: int) -> bool:
 
 func get_petition_state() -> Dictionary:
 	return petition.state()
+# endregion
+
+
+# region S1: Release Shuttle (needs balance s1_enabled)
+func deliver_shuttle_parts() -> int:
+	_record("deliver_shuttle_parts", [])  # save-load
+	return shuttle.deliver_parts()
+
+
+func launch_shuttle() -> bool:
+	_record("launch_shuttle", [])  # save-load
+	return shuttle.launch()
+
+
+func repair_gantry() -> bool:
+	_record("repair_gantry", [])  # save-load
+	return shuttle.repair()
+
+
+func get_shuttle_state() -> Dictionary:
+	return shuttle.state()
 # endregion

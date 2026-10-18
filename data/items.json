@@ -96,5 +96,6 @@
 	"coal": {"name": "Coal", "color": "#2b2b30", "stack": 50, "value": 1.0},
 	"nitrogen": {"name": "Nitrogen", "color": "#9fd8e8", "stack": 50, "value": 2.0},
 	"uranium": {"name": "Uranium", "color": "#8fe03a", "stack": 20, "value": 8.0},
-	"spent_fuel": {"name": "Spent Fuel", "color": "#4a6a1f", "stack": 20, "value": 0.0, "contaminates": true, "half_life_days": 30}
+	"spent_fuel": {"name": "Spent Fuel", "color": "#4a6a1f", "stack": 20, "value": 0.0, "contaminates": true, "half_life_days": 30},
+	"fuel_cell": {"name": "Fuel Cell", "color": "#c8e04a", "stack": 50, "value": 6.0}
 }

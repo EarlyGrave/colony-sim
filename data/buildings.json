@@ -444,5 +444,10 @@
 		"name": "Solar Array", "size": [2, 2], "color": "#2a3f6a", "max_hp": 100,
 		"cost": {"essence_ore": 30, "refined_essence": 6}, "build_work": 100, "buildable": true, "threat_priority": 1,
 		"threat": 4, "power_gen": 25, "k5_power_gen": 12, "fuel": null
+	},
+	"release_gantry": {
+		"name": "Release Gantry", "size": [4, 4], "color": "#9aa0b0", "max_hp": 800,
+		"cost": {"plate": 40, "parts": 10}, "build_work": 400, "buildable": true, "threat_priority": 6,
+		"power_use": 20, "deconstructible": false
 	}
 }

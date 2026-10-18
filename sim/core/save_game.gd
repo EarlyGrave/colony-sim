@@ -126,6 +126,8 @@ static func state_hash(sim: Simulation) -> int:
 	var ab: Array = sim.abilities.state_parts()  # region C2: only after an ability was used
 	if not ab.is_empty():
 		parts.append(ab)
+	if sim.shuttle.has_state():  # region S1: only once a shuttle part was delivered
+		parts.append(sim.shuttle.state_parts())
 	var tgs: Array = sim.threats.telegraph_state()  # region C3: only while a wind-up is active
 	if not tgs.is_empty():
 		parts.append(tgs)

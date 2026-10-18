@@ -160,3 +160,8 @@ signal wave_report(report: Dictionary)  # {wave, lost:[{name,by,why}], main_atta
 # region E1
 signal petition_phase_done(phase: int)
 # endregion
+
+# region S1
+signal shuttle_phase(phase: String)
+signal shuttle_won
+# endregion
