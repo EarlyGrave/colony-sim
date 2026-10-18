@@ -120,6 +120,14 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
 - Known: automation strip floats above the toolbar with a gap; smelter glow/smoke not seen in
   a screenshot yet; belt items move per tick (no interpolation).
 
+## Session 4 — research batch (plan docs/research_batch_plan.md; R1a, R1b, R2a–d, RX)
+- 14 techs in 4 tiers (data/research.json), research queue with essence cost/refund, research
+  bench (skill 0.5x..1.5x, operator hook for AI chips), "Audit Deliveries" part sets at the
+  warden terminal unlock T2/T3 (data/milestones.json), research tree panel, gating on in the
+  real game (T0/T1 open), tech waste multiplier on refining. docs/sim_contract.md + 5 golden
+  replays (regen: `godot --headless --path . -s tools/make_golden.gd -- --regen`). Tests: 421.
+- Fixed: duplicate "research" key in balance.json; crate drop order after save/load.
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
