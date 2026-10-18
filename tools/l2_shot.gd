@@ -34,7 +34,6 @@ func _ready() -> void:
 			if c.x < 0 and sim.can_belt_cell_error(Vector2i(x, y)) == "":
 				c = Vector2i(x, y)
 	sim.place_belt_node(2, c, 1)
-	game.splitter_panel.force_kind = 2
 	game.splitter_panel.open(sim, c, 8.0)
 	await _shot(dir + "/l2_sheet.png")
 	game.splitter_panel._open_picker(1)

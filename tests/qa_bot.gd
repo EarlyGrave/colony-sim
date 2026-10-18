@@ -161,9 +161,6 @@ static func _dump(o: Object) -> Array:
 ## Hooks are probed with has_method / get(), so the profile is a no-op until the L1/L2/L3 commands exist.
 ## Layout (t = miner cell): miner t, belt t+2..t+5, splitter t+4, smelters t+6 and t+(6,2), merger t+(9,0), store t+12.
 static func l2_step(sim: Simulation, r: Dictionary) -> void:
-	var d := sim.day()
-	if d < 3:
-		return
 	for t in ["splitting", "electrification"]:
 		if sim.research != null and not sim.research.done.has(t):
 			sim.research.done.append(t)
@@ -208,12 +205,12 @@ static func _l2_try(sim: Simulation, t: Vector2i, r: Dictionary) -> Variant:
 			return null
 	if sim.buildings.placement_error("smelter", t + Vector2i(6, 0), false) != "" or sim.buildings.placement_error("smelter", t + Vector2i(6, 2), false) != "" \
 			or sim.buildings.placement_error("storage_in", t + Vector2i(12, 0), false) != "":
+			return null
+	if sim.buildings.placement_error("miner", t, false) != "" or sim.buildings.place("miner", t, false) == null:
 		return null
-	if sim.buildings.placement_error("miner", t, false) != "" or sim.place_building("miner", t) == null:
+	if sim.buildings.place("smelter", t + Vector2i(6, 0), false) == null or sim.buildings.place("smelter", t + Vector2i(6, 2), false) == null:
 		return null
-	if sim.place_building("smelter", t + Vector2i(6, 0)) == null or sim.place_building("smelter", t + Vector2i(6, 2)) == null:
-		return null
-	sim.place_building("storage_in", t + Vector2i(12, 0))
+	sim.buildings.place("storage_in", t + Vector2i(12, 0), false)  # QA shortcut: instant, free
 	sim.place_belt(path_a, 1)
 	sim.place_belt(path_b, 1)
 	sim.place_belt(path_out_a, 1)
@@ -230,9 +227,9 @@ static func _l2_power(sim: Simulation, t: Vector2i, r: Dictionary) -> void:
 	sim.set_meta("qa_l2_power", true)
 	var n := 0
 	for off: Vector2i in [Vector2i(2, -2), Vector2i(7, -2), Vector2i(7, 4), Vector2i(10, 4)]:
-		if sim.place_building("power_pole", t + off) != null:
+		if sim.buildings.place("power_pole", t + off, false) != null:
 			n += 1
-	if sim.place_building("coal_generator", Scen.find_spot(sim, "coal_generator", t + Vector2i(1, -5), 0)) != null:
+	if sim.buildings.place("coal_generator", Scen.find_spot(sim, "coal_generator", t + Vector2i(1, -5), 0), false) != null:
 		n += 1
 	r["l2_power"] = n
 # endregion

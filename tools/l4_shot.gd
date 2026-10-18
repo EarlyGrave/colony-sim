@@ -34,7 +34,7 @@ func _ready() -> void:
 	game.new_game(42)
 	game.sim.run_ticks(200)
 	var at := game.sim.map_center() + Vector2i(0, 8)
-	PowerStub.build_base(game.sim, at)
+	PowerScene.build_base(game.sim, at)
 	game.camera.focus = WorldView.cell_to_world(at + Vector2i(1, -4))
 	game.camera.zoom_level = 0.95 if sz.x < 1000 else 1.1
 	await _shot("%s/l4_%s_models.png" % [dir, tag])

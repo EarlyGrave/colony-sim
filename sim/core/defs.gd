@@ -79,7 +79,6 @@ var chips: Dictionary = {}  # region T4
 var fuels: Dictionary = {}  # region L3: data/fuels.json (fuel item -> burn/waste/spent fields)
 var roles: Dictionary = {}  # region C1
 # region L5
-var fuels: Dictionary = {}  # data/fuels.json (power fuels)
 # endregion
 
 static var _default: Defs = null
@@ -177,10 +176,6 @@ func load_from(dir: String) -> void:
 		chips = _load_json(dir + "chips.json")
 	# endregion
 	roles = _load_json(dir + "roles.json")  # region C1
-	# region L5
-	if FileAccess.file_exists(dir + "fuels.json"):
-		fuels = _load_json(dir + "fuels.json")
-	# endregion
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -251,7 +246,6 @@ func duplicate_defs() -> Defs:
 	d.chips = chips.duplicate(true)  # region T4
 	d.fuels = fuels.duplicate(true)  # region L3
 	d.roles = roles.duplicate(true)  # region C1
-	d.fuels = fuels.duplicate(true)  # region L5
 	return d
 
 

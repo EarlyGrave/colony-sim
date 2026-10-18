@@ -1,19 +1,10 @@
 class_name PowerReader
 extends RefCounted
-## L4: view-side read adapter for the power grid (L3 owns `sim.power`). Every call is behind a
-## has_method / get() guard, so the view works (shows nothing) before L3 is merged, and a test or
-## screenshot tool can attach a PowerStub with `sim.set_meta("power_stub", stub)`.
-##
-## Calls expected from the grid object (`sim.power`):
-##   power.version: int                      bumped on any topology change (poles/buildings placed, removed, broken)
-##   power.networks() -> Array[Dictionary]   {id:int, supply:float, demand:float, factor:float,
-##                                            poles:Array[int], generators:Array[int], consumers:Array[int]}  (building ids)
-##   power.links() -> Array                  [[building_id_a, building_id_b], ...] one entry per wire
-##   power.generator_info(id:int) -> Dictionary
-##                                           {burning:bool, fuel:int, fuel_cap:int, fuel_item:String, supply:float,
-##                                            overheat:float 0..1 (reactor, optional), waste_per_min:float (optional)}
-##   signal bus.power_changed(net_id)        optional; the HUD refreshes on it, plus a 1 s timer
-## net_of(id) and factor_of(id) are derived here from networks().
+## L4: view-side read adapter over the real grid `sim.power` (PowerSystem, docs/power_api.md).
+## Snapshots are cached and turned into plain dictionaries of building ids:
+##   nets(): {id, supply, demand, factor, poles[], generators[], consumers[]}
+##   links(): [[id_a, id_b], ...] one entry per wire
+##   generator_info(id): {burning, fuel, fuel_cap, fuel_item, supply, overheat 0..1, waste_per_min}
 
 ## Generator building ids with a dedicated voxel model (own keys in data/models.json).
 const GENERATORS: Array[String] = ["coal_generator", "nitrogen_turbine", "nuclear_reactor", "solar_array"]
@@ -30,25 +21,15 @@ static var _net_of := {}  # building id -> index into _nets
 static var _links: Array = []
 
 
-static func grid(sim: Simulation) -> Object:
-	if sim == null:
+static func grid(sim: Simulation) -> PowerSystem:
+	if sim == null or sim.power == null or not sim.power.enabled:
 		return null
-	var g: Variant = sim.get("power")
-	if g is Object and (g as Object).has_method("networks"):
-		return g
-	if sim.has_meta("power_stub"):
-		var s: Variant = sim.get_meta("power_stub")
-		if s is Object and (s as Object).has_method("networks"):
-			return s
-	return null
+	return sim.power
 
 
 static func version(sim: Simulation) -> int:
 	var g := grid(sim)
-	if g == null:
-		return -1
-	var v: Variant = g.get("version")
-	return int(v) if v != null else 0
+	return -1 if g == null else g.version
 
 
 ## Cached snapshot: rebuilt when the grid version changes or after REFRESH_MSEC (factors drift).
@@ -67,14 +48,28 @@ static func refresh(sim: Simulation, force := false) -> void:
 	_sim_id = sim.get_instance_id()
 	_stamp = v
 	_msec = now
-	_nets = g.call("networks") as Array
+	_nets = []
 	_net_of = {}
-	for i in _nets.size():
-		var n: Dictionary = _nets[i]
+	for raw: Dictionary in g.nets:
+		var info := g.net_info(int(raw["id"]))
+		var gens: Array = []
+		for b: Building in raw.get("gens", []):
+			gens.append(b.id)
+		var users: Array = []
+		for b: Building in raw.get("users", []):
+			users.append(b.id)
+		var n := {"id": info["id"], "supply": float(info["supply"]), "demand": float(info["demand"]),
+			"factor": float(info["factor"]), "poles": (raw.get("poles", []) as Array).duplicate(),
+			"generators": gens, "consumers": users}
+		var i := _nets.size()
+		_nets.append(n)
 		for key: String in ["poles", "generators", "consumers"]:
-			for id: Variant in n.get(key, []):
+			for id: Variant in n[key]:
 				_net_of[int(id)] = i
-	_links = g.call("links") as Array if g.has_method("links") else []
+	_links = []
+	var fl := g.links
+	for k in range(0, fl.size() - 1, 2):
+		_links.append([fl[k], fl[k + 1]])
 
 
 static func nets(sim: Simulation) -> Array:
@@ -101,10 +96,18 @@ static func factor_of(sim: Simulation, building_id: int) -> float:
 
 static func generator_info(sim: Simulation, building_id: int) -> Dictionary:
 	var g := grid(sim)
-	if g == null or not g.has_method("generator_info"):
+	var b: Building = null if g == null else sim.buildings.get_by_id(building_id)
+	if b == null or not g.is_generator(b):
 		return {}
-	var d: Variant = g.call("generator_info", building_id)
-	return d if d is Dictionary else {}
+	var items := g.fuel_items(b)
+	var d := {"burning": g.burning(b) or items.is_empty() and g.supply_of(b) > 0.0,
+		"fuel": g.fuel_left(b), "fuel_cap": int(b.def.get("input_capacity", 0)) if not items.is_empty() else 0,
+		"fuel_item": "" if items.is_empty() else items[0], "supply": g.supply_of(b),
+		"waste_per_min": g.waste_per_1000(b) * 60.0 * Simulation.TICKS_PER_SECOND / 1000.0}
+	var m: Variant = b.def.get("meltdown", null)
+	if m is Dictionary:
+		d["overheat"] = clampf(float(b.heat) / maxf(1.0, float(m.get("fuse_ticks", 1))), 0.0, 1.0)
+	return d
 
 
 ## Net with the lowest factor (ties: highest demand); {} when no poles exist.

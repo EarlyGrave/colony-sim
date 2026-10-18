@@ -96,3 +96,31 @@ func test_logistics_budget_8k_belts() -> void:
 	_check(b, "logistics8k.p95", Scenario.p95(m["logistics"]), float(b["systems"]["logistics"]["p95"]), rows)
 	for row in rows:
 		print("        " + row)
+
+
+func test_logistics_budget_8k_belts_200_splitters() -> void:
+	if _skip():
+		return
+	var b := _budget()
+	var sim := _sim(0, 8000, 20)
+	var belts := sim.logistics.belts
+	var placed := 0
+	var n := 0
+	for y in sim.map.height:
+		for x in sim.map.width:
+			var c := Vector2i(x, y)
+			if placed < 200 and belts.has_belt(c):
+				n += 1
+				if n % 40 == 0:
+					belts.place_node(1 + placed % 4, c, sim.logistics.dir_at(c))
+					placed += 1
+	assert_true(placed > 50, "nodes placed %d" % placed)
+	for i in 30:
+		sim.step()
+	var m := Scenario.measure(sim, 200)
+	var rows: Array = []
+	var lim: Dictionary = b["splitters_8k_200"]
+	_check(b, "splitters8k.avg", Scenario.avg(m["logistics"]), float(lim["avg"]), rows)
+	_check(b, "splitters8k.p95", Scenario.p95(m["logistics"]), float(lim["p95"]), rows)
+	for row in rows:
+		print("        " + row)

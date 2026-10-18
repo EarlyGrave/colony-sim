@@ -9,6 +9,7 @@
 		"mutation": {"avg": 0.5, "p95": 2.0},
 		"total": {"avg": 4.0, "p95": 10.0}
 	},
+	"splitters_8k_200": {"avg": 1.0, "p95": 2.0},
 	"first_tick_ms": 20.0,
 	"flow_builds_per_600": 60,
 	"waived": {}

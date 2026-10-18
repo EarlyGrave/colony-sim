@@ -4,7 +4,7 @@ extends SceneTree
 ## chip-heavy = automation-heavy until the T4 chip system exists (printed as "chips: stub").
 
 const BotReport := preload("res://tools/bot_report.gd")
-const PROFILES := ["baseline", "automation", "chip"]
+const PROFILES := ["baseline", "automation", "chip", "power"]
 
 
 func _init() -> void:
@@ -17,6 +17,7 @@ func _init() -> void:
 			seeds = int(a.get_slice("=", 1))
 	var bus: Node = load("res://autoload/event_bus.gd").new()
 	var totals := {}
+	print("power cols (profile power): nodes, poles+gen, avg supply/demand of the worst net, brownout % of samples")
 	print("profile     seed  end_day  cause          kills  lost_bld  died  belt_hp_lost  repairs  peak_pol%  pol%@d10  pol%@d20  waves")
 	for p: String in PROFILES:
 		totals[p] = 0
@@ -27,6 +28,10 @@ func _init() -> void:
 			print("%-11s %4d  %7d  %-13s %6d  %8d  %4d  %12s  %7s  %9.1f  %8s  %8s  %5d" % [
 				p, sv, r["end_day"], r["cause"], r["kills"], int(r.get("lost_bld", 0)), r["died"],
 				"%.0f" % float(r.get("belt_hp_lost", 0.0)), str(r.get("repairs", 0)), r["peak_pol"], _f(cm.get(10)), _f(cm.get(20)), r["waves"]])
+			if p == "power":
+				var n := maxi(int(r.get("pw_samples", 0)), 1)
+				print("    power: nodes=%d built=%d supply=%.0f demand=%.0f brownout=%.0f%%" % [int(r.get("l2_nodes", 0)), int(r.get("l2_power", 0)),
+					float(r.get("pw_sup", 0.0)) / n, float(r.get("pw_dem", 0.0)) / n, 100.0 * float(r.get("pw_brown", 0)) / n])
 			for c in bus.get_signal_list():
 				for conn in bus.get_signal_connection_list(c["name"]):
 					bus.disconnect(c["name"], conn["callable"])

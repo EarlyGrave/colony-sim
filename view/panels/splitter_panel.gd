@@ -18,7 +18,6 @@ var sim: Simulation
 var cell := Vector2i(-1, -1)
 var _box: VBoxContainer
 var _slot := -1
-var force_kind := -1  ## screenshots only: show this kind's sheet before L1 nodes exist
 
 
 func _init() -> void:
@@ -55,7 +54,7 @@ static func slot_label(flow_dir: int, slot: int) -> String:
 func _clear() -> void:
 	for ch in _box.get_children():
 		_box.remove_child(ch)
-		ch.free()
+		ch.queue_free()  # may run inside the pressed signal of one of these buttons
 
 
 func _btn(text: String, cb: Callable, parent: Control = null) -> Button:
@@ -76,7 +75,7 @@ func _title(text: String) -> void:
 
 func _show_slots() -> void:
 	_clear()
-	var kind := force_kind if force_kind >= 0 else sim.get_belt_node_kind(cell)
+	var kind := sim.get_belt_node_kind(cell)
 	var d := maxi(0, sim.logistics.dir_at(cell))
 	if kind == 2:
 		_title("Smart splitter: pick what goes out of each side")
@@ -115,7 +114,8 @@ func _open_picker(slot: int) -> void:
 		var nm: String = "Any" if id == "any" else ("Overflow" if id == "overflow" else str(sim.defs.items[id].get("name", id)))
 		var b := _btn(nm if id != cur else "[%s]" % nm, _pick.bind(id), grid)
 		b.custom_minimum_size = Vector2(88, 64)
-		b.clip_text = true
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART  # "Cinder Ore" wraps to two lines instead of clipping
+		b.add_theme_font_size_override("font_size", 14)
 		b.name = "pick_" + id
 	_btn("Back", _show_slots)
 

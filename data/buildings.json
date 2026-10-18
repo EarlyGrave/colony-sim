@@ -437,7 +437,8 @@
 		"threat": 25, "input_capacity": 10, "output_capacity": 20, "wear_per_batch": 0,
 		"ports": [{"dx": -1, "dy": 1, "dir": "W", "kind": "in"}, {"dx": 3, "dy": 1, "dir": "E", "kind": "out"}],
 		"power_gen": 800,
-		"fuel": {"item": "uranium", "burn_ticks": 1200, "waste_per_burn": 1, "spent_item": "spent_fuel", "spent_per_burn": 1}
+		"fuel": {"item": "uranium", "burn_ticks": 1200, "waste_per_burn": 1, "spent_item": "spent_fuel", "spent_per_burn": 1},
+		"meltdown": {"fuse_ticks": 600, "condition_below": 20, "radius": 5, "damage": 150, "contamination": 40}
 	},
 	"solar_array": {
 		"name": "Solar Array", "size": [2, 2], "color": "#2a3f6a", "max_hp": 100,

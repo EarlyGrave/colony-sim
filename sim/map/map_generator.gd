@@ -146,7 +146,7 @@ static func _convert_extra_nodes(map: MapGrid, seed_value: int, biome: Dictionar
 	var r2 := RandomNumberGenerator.new()
 	r2.seed = seed_value ^ 0x5C0A1
 	var center := Vector2i(map.width / 2, map.height / 2)
-	var min_d := float(int(cfg.get("min_deposit_distance", 7)) + 6)
+	var min_d := float(cfg.get("extra_min_distance", int(cfg.get("min_deposit_distance", 7)) + 6))  # region LX: keeps the near ore essence
 	var done := {}
 	for k in map.node_res.size():
 		if map.tiles[k] != MapGrid.Tile.DEPOSIT or map.node_res[k] == 0 or done.has(k):
@@ -154,21 +154,30 @@ static func _convert_extra_nodes(map: MapGrid, seed_value: int, biome: Dictionar
 		var c := Vector2i(k % map.width, k / map.width)
 		if Vector2(c - center).length() < min_d:
 			continue
-		if r2.randf() >= share:
-			continue
-		# convert the whole 4-connected blob of the same resource so coal comes as a cluster
+		# one roll per blob (flood fill of the same resource), so coal comes as a cluster and the share is per cluster
 		var rid := int(map.node_res[k])
-		var coal := NodeData.res_index(String(ids[r2.randi_range(0, ids.size() - 1)]))
+		var blob: Array[int] = []
 		var stack: Array[int] = [k]
+		var seen := {k: true}
 		while not stack.is_empty():
 			var q: int = stack.pop_back()
-			if done.has(q) or map.tiles[q] != MapGrid.Tile.DEPOSIT or int(map.node_res[q]) != rid:
-				continue
-			done[q] = true
-			map.node_res[q] = coal
+			blob.append(q)
 			var qc := Vector2i(q % map.width, q / map.width)
 			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 				var n: Vector2i = qc + d
 				if map.in_bounds(n):
-					stack.append(map.idx(n))
+					var ni := map.idx(n)
+					if not seen.has(ni) and map.tiles[ni] == MapGrid.Tile.DEPOSIT and int(map.node_res[ni]) == rid:
+						seen[ni] = true
+						stack.append(ni)
+		var near := false
+		for q in blob:
+			done[q] = true
+			if Vector2(Vector2i(q % map.width, q / map.width) - center).length() < min_d:
+				near = true
+		if near or r2.randf() >= share:
+			continue
+		var coal := NodeData.res_index(String(ids[r2.randi_range(0, ids.size() - 1)]))
+		for q in blob:
+			map.node_res[q] = coal
 # endregion
