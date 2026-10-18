@@ -69,6 +69,7 @@ var idle_work: IdleWorkSystem
 var mutation: MutationSystem  # region mutation
 var ecology: EcologySystem  # region T5
 var milestones: MilestoneSystem  # region R2b
+var petition: PetitionSystem  # region E1
 # endregion
 # region perks
 var perks: PerkSystem
@@ -304,6 +305,7 @@ func _init_systems() -> void:
 	ecology = EcologySystem.new(self)  # region T5
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
+	petition = PetitionSystem.new(self)  # region E1
 	chips = ChipSystem.new(self)  # region T4
 	power = PowerSystem.new(self)  # region L3
 	squads = SquadSystem.new(self)  # region C1
@@ -958,4 +960,15 @@ func remove_chip(building_id: int) -> bool:
 func deliver_audit(tier: int) -> bool:
 	_record("deliver_audit", [tier])  # save-load
 	return milestones.deliver(tier)
+# endregion
+
+
+# region E1: Sentence Commutation Petition (needs balance e1_enabled)
+func deliver_petition(phase: int) -> bool:
+	_record("deliver_petition", [phase])  # save-load
+	return petition.deliver(phase)
+
+
+func get_petition_state() -> Dictionary:
+	return petition.state()
 # endregion

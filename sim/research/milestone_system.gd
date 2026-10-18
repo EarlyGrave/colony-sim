@@ -46,6 +46,8 @@ func remaining(t: int) -> Dictionary:
 ## Next tier that still needs an audit (-1 if none).
 func next_tier() -> int:
 	var t := tier() + 1
+	if t == 3 and sim.petition.enabled():  # region E1: the petition replaces the tier-3 wall
+		return -1
 	return t if cfg.has(str(t)) else -1
 
 
@@ -103,6 +105,8 @@ func state_parts() -> Array:
 		out.append(row)
 	if not reviews_done.is_empty():  # region B3: only after a review, other hashes stay as they were
 		out.append(["reviews", reviews_done.duplicate(), waves_repelled])
+	if sim.petition.has_state():  # region E1: absent until a petition delivery happened
+		out.append(sim.petition.state_parts())
 	if k2_outpost_days > 0 or k2_decoys > 0:  # region K2: absent unless an outpost was ever held
 		out.append(["k2", k2_outpost_days, k2_decoys])
 	return out
