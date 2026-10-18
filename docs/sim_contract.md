@@ -7,7 +7,7 @@ the data-file table below in sync with it. "(GD)" marks GDScript-specific behavi
 ## 1. Tick order (`Simulation.step()`)
 `if game_over_reason != "": return`, then `tick += 1`, then in this exact order:
 1. `crafting.tick` (bills)  2. `needs.tick`  3. `farming.tick`  4. `colonists.tick` (jobs, movement)
-5. *research slot (pending R2a): after colonists, before logistics*  6. `logistics.tick` (belts)  7. `buildings.tick_machines`  7b. `chips.tick` (T4)
+5. *research slot (pending R2a): after colonists, before logistics*  6. `logistics.tick` (belts)  7. `power.tick` (L3: networks, fuel burn, brownout) then `buildings.tick_machines`  7b. `chips.tick` (T4)
 8. `perks.tick`  9. `health.tick`  10. `debt.tick`  11. `mood.tick`  12. `threats.tick`  13. `contamination.tick`
 14. `mutation.tick`  14b. `ecology.tick` (T5: nest hunger banks, rally letter)  15. `crises.tick`  16. `storyteller.tick`
 Then: if no colonist is alive (list non-empty) `end_game("colonists_dead")`; if `tick % ticks_per_day == 0` emit `day_started`; emit `tick_advanced`.
@@ -244,3 +244,6 @@ View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`,
 
 ## F1 Flavor text bank (`view/flavor_picker.gd`, `data/flavor.json`)
 View-side only: no sim state, no `sim.rng`, not in `state_hash`/saves, goldens unaffected. `FlavorPicker.load_bank()` (alias `load_default()`), `pick(key, ctx)`, `pick_first([keys], ctx)`, `has_key`, `all_keys`, `K_*` key constants. Keys are dotted paths (`feed.<enemy>.<cause>`, `pa.<signal>`, `barks.<state>`...). ctx: `tick`, `id` (seed = hash([tick,key,id])), placeholders `who victim enemy n cause`. Ring of last 4 lines per key is picker state.
+
+## L3 Power (`sim.power`, `sim/power/`, API in `docs/power_api.md`)
+Off (factor 1, no hash part) until a pole/generator exists; networks = union-find, rebuilt on `buildings.version`; factor = clamp(supply/demand, 0.2, 1); no pole in range = 0.5; fuel from `data/fuels.json`; deterministic, no rng.

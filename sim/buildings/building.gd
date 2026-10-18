@@ -45,6 +45,17 @@ var threat_flags: Dictionary = {}
 # endregion
 
 
+# region L3
+## Power grid state (see PowerSystem): network index (-2 not on the grid, -1 no pole in range),
+## generator burn timer / waste remainder / overheat counter, fractional brownout step accumulator.
+var power_net := -2
+var burn_left := 0
+var waste_acc := 0.0
+var heat := 0
+var power_acc := 0.0
+# endregion
+
+
 # region T2
 ## Decoy runtime state (fuel_left, burst_left, cooldown_left); see Decoy.
 var decoy: Dictionary = {}
@@ -111,6 +122,14 @@ func is_machine() -> bool:
 # --- Production buffers -------------------------------------------------------
 
 func input_space(item_id: String) -> int:
+	if def.has("power_gen"):  # region L3: generators accept only their fuel
+		var fd: Variant = def.get("fuel", null)
+		var fi: Array = []
+		if fd is Dictionary:
+			fi = fd.get("items", [fd.get("item", "")])
+		elif fd is String:
+			fi = [fd]
+		return int(def.get("input_capacity", 20)) - int(input.get(item_id, 0)) if item_id in fi else 0
 	if def.has("decoy"):  # region T2: beacons accept only their fuel
 		var d: Dictionary = def["decoy"]
 		return int(def.get("input_capacity", 0)) - int(input.get(item_id, 0)) if str(d.get("fuel_item", "")) == item_id else 0

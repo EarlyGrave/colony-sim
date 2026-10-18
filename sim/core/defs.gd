@@ -76,6 +76,7 @@ var biomes: Dictionary = {}
 # endregion
 var research: Dictionary = {}  # region R2a
 var chips: Dictionary = {}  # region T4
+var fuels: Dictionary = {}  # region L3: data/fuels.json (fuel item -> burn/waste/spent fields)
 var roles: Dictionary = {}  # region C1
 
 static var _default: Defs = null
@@ -164,6 +165,10 @@ func load_from(dir: String) -> void:
 		for e in Tech.validate(research, self):  # circular prereqs / bad ids are rejected at load
 			push_error("research.json: " + e)
 	# endregion
+	# region L3
+	if FileAccess.file_exists(dir + "fuels.json"):
+		fuels = _load_json(dir + "fuels.json")
+	# endregion
 	# region T4
 	if FileAccess.file_exists(dir + "chips.json"):
 		chips = _load_json(dir + "chips.json")
@@ -237,6 +242,7 @@ func duplicate_defs() -> Defs:
 	d.biomes = biomes.duplicate(true)  # region A1b
 	d.research = research.duplicate(true)  # region R2a
 	d.chips = chips.duplicate(true)  # region T4
+	d.fuels = fuels.duplicate(true)  # region L3
 	d.roles = roles.duplicate(true)  # region C1
 	return d
 

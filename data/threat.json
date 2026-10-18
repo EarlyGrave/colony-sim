@@ -32,7 +32,9 @@
 		"carrying_essence": 1.5,
 		"unlit": 0.25,
 		"burst": 3.0,
-		"chip": 2.0
+		"chip": 2.0,
+		"powered_gen": 1.0,
+		"unfuelled": 0.25
 	},
 	"colonist_mod": {
 		"drafted": 1.5,
