@@ -145,6 +145,8 @@ func refresh(force := false) -> void:
 		var v := building_value(b)
 		if v <= 0.0:
 			continue
+		if _b2_ignores(b):  # region B2
+			continue
 		if b.def.get("sapper_only", false) and not b.def.has("threat"):
 			continue
 		v += _pollution(b.cell) * kp
@@ -592,3 +594,12 @@ func score_building(b: Building, e: Enemy) -> float:
 		if _kind[i] == 0 and _id[i] == b.id:
 			return score(i, e)
 	return 0.0
+
+
+# region B2
+## Creatures ignore mining outposts while the planet is clean (threat.json b2_clean_outpost).
+func _b2_ignores(b: Building) -> bool:
+	var c: Dictionary = cfg.get("b2_clean_outpost", {})
+	return bool(c.get("enabled", false)) and c["types"].has(b.def_id) \
+		and sim.contamination.fraction() <= float(c["max_pollution_frac"])
+# endregion

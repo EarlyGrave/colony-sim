@@ -97,7 +97,7 @@ func colony_wealth() -> float:
 
 ## Raid points: the colony's wealth and growth is what calls the creatures.
 func raid_points(index: int) -> float:
-	return _o3_mult() * _attract_mult() * sim.crises.mult("raid_points_mult") * (float(cfg["base_strength"]) \
+	return _o3_mult() * _b2_clean_mult() * _attract_mult() * sim.crises.mult("raid_points_mult") * (float(cfg["base_strength"]) \
 		+ float(cfg["per_wave"]) * (index - 1) \
 		+ float(cfg["per_wealth"]) * colony_wealth() \
 		+ float(cfg["per_refined"]) * sim.ledger.get_count("recipe:refined_essence") \
@@ -843,4 +843,14 @@ func _c3_list(full: bool) -> Array:
 			var tg: Dictionary = e.get_meta("tg")
 			out.append([e.id, tg["left"]] if full else {"id": e.id, "cells": tg["cells"], "frac": float(tg["left"]) / float(tg["total"])})
 	return out
+# endregion
+
+
+# region B2
+## Fewer creatures hunt a clean planet (threat.json b2_clean_outpost raid_mult); 1.0 when off.
+func _b2_clean_mult() -> float:
+	var c: Dictionary = sim.defs.threat.get("b2_clean_outpost", {})
+	if bool(c.get("enabled", false)) and sim.contamination.fraction() <= float(c["max_pollution_frac"]):
+		return float(c["raid_mult"])
+	return 1.0
 # endregion

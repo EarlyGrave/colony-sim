@@ -213,6 +213,10 @@ static func _f(v: Variant) -> String:
 ## QA play-styles (tools/qa_r3.gd). "automation": a new miner->smelter chain every day for days 2..6.
 ## "chip": automation plus slotting Warden Chips when the T4 chip system exists (stub until it merges).
 static func _t5_profile(sim: Simulation, profile: String, r: Dictionary) -> void:
+	if profile == "throttle" or profile == "mining":  # region B2: refine_cap bots (mining = cap at 0%, no refining)
+		sim.defs.rules["refine_cap"]["max_contamination_percent"] = 0 if profile == "mining" else 50
+		sim.set_rule("refine_cap", true)
+		return
 	if profile == "baseline":
 		return
 	if profile == "power":  # region L5: logistics-2 QA profile (automation chains + splitter line + poles + coal)

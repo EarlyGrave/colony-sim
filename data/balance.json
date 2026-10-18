@@ -51,6 +51,13 @@
 		"base_error": 0.15,
 		"error_growth": 0.5
 	},
+	"b2_pollution": {
+		"enabled": false,
+		"idle_decay_per_day": 0.25,
+		"decay_below_frac": 0.9,
+		"throttle_decay_mult": 8.0,
+		"clean_frac": 0.35
+	},
 	"field_perf": {
 		"slice_cells": 4096,
 		"zero_eps": 0.00001,
