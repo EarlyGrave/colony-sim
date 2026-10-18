@@ -49,14 +49,23 @@ func _ready() -> void:
 		r.queue.push_front("assembly")
 		r.progress["assembly"] = float(r.bench_ticks("assembly")) * 0.45
 		game.sim.queue_research("filters", true)
-	if panel.begins_with("exp_"):  # region R4e: demo campaign UI with a stub campaign
-		var stub: Object = (load("res://tests/test_expedition_ui.gd") as GDScript).new()
-		var c: Object = stub.call("_stub")
-		game.attach_campaign(c)
+	if panel.begins_with("exp_"):  # region R4e: the real campaign flow (research granted, party sent and arrived)
+		var c: Campaign = game.campaign
+		c.home_sim().research.done.append("expeditions")
+		var ids: Array = []
+		for col in c.home_sim().colonists.list:
+			if ids.size() < 2:
+				ids.append(col.id)
+		c.send_expedition("ash", ids, {"raw_food": 10, "essence_ore": 30})
+		for i in int(c.cfg["travel_ticks"]):
+			c.step()
 		if panel == "exp_map":
-			c.call("switch_map", 1)
+			c.switch_map(1)
 			game._r4e_sync_active()
 		else:
+			if panel == "exp_cargo":
+				c.switch_map(1)
+				game._r4e_sync_active()
 			game.hud.open_expedition("cargo" if panel == "exp_cargo" else "expedition")
 			var p: ExpeditionPanel = game.hud._side
 			if panel == "exp_crew":

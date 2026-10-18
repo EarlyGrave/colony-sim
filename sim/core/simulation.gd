@@ -119,8 +119,8 @@ func dispatch_party(ids_in: Variant, supplies_in: Variant) -> Dictionary:
 	var ids: Array = _arg_array(ids_in)
 	var supplies: Dictionary = _arg_dict(supplies_in)
 	var fail := {"ok": false, "crew": [], "supplies": {}}
-	if ids.is_empty():
-		return fail
+	if ids.is_empty() and supplies.is_empty():
+		return fail  # empty ids + supplies = sling crate: removes the stacks only
 	var seen := {}
 	var crew_c: Array[Colonist] = []
 	for id: Variant in ids:
@@ -150,6 +150,36 @@ func dispatch_party(ids_in: Variant, supplies_in: Variant) -> Dictionary:
 			c.carry_count = 0
 		colonists.list.erase(c)
 	return {"ok": true, "crew": crew, "supplies": supplies.duplicate()}
+
+
+func _spawn_from_snapshot(cell: Vector2i, snap: Dictionary) -> Colonist:
+	var c := colonists.spawn(cell)  # fixed rng draws per member
+	c.display_name = str(snap.get("name", c.display_name))
+	c.engineer = bool(snap.get("engineer", false))
+	for sk: String in snap.get("skills", {}):
+		c.skills.levels[sk] = int(snap["skills"][sk])
+	for sk: String in snap.get("passions", {}):
+		c.skills.passions[sk] = int(snap["passions"][sk])
+	c.skills.mark_joined()
+	if c.engineer:
+		c.combat.weapon = str(defs.weapons["combat"]["engineer_weapon"])
+	return c
+
+
+## Campaign command: a recalled party walks back in next to the HQ (snapshots as dispatch_party gave them).
+func receive_party(crew_in: Variant) -> int:
+	_record("receive_party", [_arg_text(crew_in)])  # save-load
+	var crew: Array = _arg_array(crew_in)
+	var center := map_center()
+	for snap: Variant in crew:
+		var at := center
+		for _try in 20:
+			var cand := center + Vector2i(rng.randi_range(-3, 3), rng.randi_range(-3, 3))
+			if cell_free_for_items(cand):
+				at = cand
+				break
+		_spawn_from_snapshot(at, snap as Dictionary)
+	return crew.size()
 
 
 ## Campaign command: spawns a crate of `items` within `radius` of the HQ (sim.rng picks the
@@ -299,16 +329,7 @@ func _place_crew_colony() -> void:
 	var crew: Array = opts["crew"]
 	for i in crew.size():
 		var snap: Dictionary = crew[i]
-		var c := colonists.spawn(center + spots[i % spots.size()])  # fixed rng draws per member
-		c.display_name = str(snap.get("name", c.display_name))
-		c.engineer = bool(snap.get("engineer", false))
-		for sk: String in snap.get("skills", {}):
-			c.skills.levels[sk] = int(snap["skills"][sk])
-		for sk: String in snap.get("passions", {}):
-			c.skills.passions[sk] = int(snap["passions"][sk])
-		c.skills.mark_joined()
-		if c.engineer:
-			c.combat.weapon = str(defs.weapons["combat"]["engineer_weapon"])
+		_spawn_from_snapshot(center + spots[i % spots.size()], snap)
 	var sz: Array = col_cfg["start_stockpile_size"]
 	var origin := center + Vector2i(3, -1)
 	for y in int(sz[1]):

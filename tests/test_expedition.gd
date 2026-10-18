@@ -1,7 +1,6 @@
 extends TestCase
-## W4: expedition send/arrive/loss. Tests needing W2's `dispatch_party` hook skip until it is merged.
+## W4: expedition send/arrive/loss. Runs against the real Campaign.
 
-const StubCampaign := preload("res://tests/stub_campaign.gd")
 var _camps: Array = []
 
 
@@ -13,7 +12,7 @@ func after_each() -> void:
 
 
 func _camp(seed_value := 5) -> Object:
-	var c: Object = StubCampaign.new(seed_value, func() -> Node: return make_bus(), peaceful_defs())
+	var c: Object = Campaign.new(seed_value, func() -> Node: return make_bus(), peaceful_defs())
 	c.start()
 	_camps.append(c)
 	return c
@@ -56,8 +55,6 @@ func test_send_refused_without_tech() -> void:
 func test_send_with_tech_and_arrival_at_travel_ticks() -> void:
 	var c := _camp()
 	var home: Simulation = c.active_sim()
-	if not home.has_method("dispatch_party"):
-		return  # W2 hook missing on this branch
 	home.research.done.append("expeditions")
 	var biome: String = Defs.get_default().biomes.keys()[0]
 	var alive_before := 0
@@ -118,10 +115,21 @@ func test_recall_sends_buffer_home() -> void:
 	c.step()
 	Expedition.ledger(c, 1)["buffer"] = {"essence_ore": 7}
 	assert_false(Expedition.recall(c, 0))
+	var crew_before: int = c.home_sim().colonists.list.size()
 	assert_true(Expedition.recall(c, 1))
 	assert_eq(c.maps.size(), 1)
 	for i in int(Expedition.cfg(c)["travel_ticks"]):
 		c.step()
 	var got := int(Expedition.ledger(c, 0)["inbox"].get("essence_ore", 0))
-	var on_map: bool = c.active_sim().has_method("receive_cargo")
-	assert_true(got == 7 or on_map)
+	assert_eq(got, 0)  # home is the active map: the crate was received for real
+	var cargo_cmds := 0
+	for cmd: Array in c.home_sim().command_log:
+		if cmd[1] == "receive_cargo" and str(cmd[2][0]).contains("7"):
+			cargo_cmds += 1
+	assert_eq(cargo_cmds, 1)
+	var parties := 0
+	for cmd: Array in c.home_sim().command_log:
+		if cmd[1] == "receive_party":
+			parties += 1
+	assert_eq(parties, 1)  # the party walked back in
+	assert_gt(float(c.home_sim().colonists.list.size()), float(crew_before) + 2.0)

@@ -70,7 +70,13 @@ static func config() -> Dictionary:
 	if not FileAccess.file_exists(CFG_PATH):
 		return {}
 	var v: Variant = JSON.parse_string(FileAccess.get_file_as_string(CFG_PATH))
-	return v if v is Dictionary else {}
+	var out: Dictionary = v if v is Dictionary else {}
+	# Sling numbers live on the building def (single source of truth, used by Sling.send).
+	var b: Dictionary = Defs.get_default().buildings.get("sling", {})
+	if not b.is_empty():
+		out["sling"] = {"capacity": int(b["capacity"]), "cooldown": int(b["cooldown"]),
+			"travel_ticks": int(b["travel"]), "max_in_flight": int(b["max_in_flight"])}
+	return out
 
 
 static func ticks_text(ticks: int, ticks_per_day: int) -> String:

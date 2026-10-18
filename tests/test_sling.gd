@@ -1,7 +1,6 @@
 extends TestCase
 ## W4: sling building and in-flight crates.
 
-const StubCampaign := preload("res://tests/stub_campaign.gd")
 var _camps: Array = []
 
 
@@ -13,18 +12,26 @@ func after_each() -> void:
 
 
 func _camp_with_outpost() -> Object:
-	var c: Object = StubCampaign.new(6, func() -> Node: return make_bus(), peaceful_defs())
+	var c: Object = Campaign.new(6, func() -> Node: return make_bus(), peaceful_defs())
 	c.start()
 	_camps.append(c)
 	c.in_flight.append({"kind": "party", "map_id": 1, "biome": "start", "crew": [{"name": "A"}],
-		"supplies": {}, "arrive": 1})
+		"supplies": {"essence_ore": 40}, "arrive": 1})
 	c.step()
 	return c
 
 
 func _place_sling(c: Object) -> void:
 	var sim: Simulation = Expedition.map_entry(c, 1)["sim"]
-	var spot := preload("res://tests/scenario.gd").find_spot(sim, "sling", sim.map_center() + Vector2i(5, 0), 0)
+	var near := sim.map_center() + Vector2i(-8, 5)
+	var spot := near
+	for r in range(0, 20):
+		for dx in range(-r, r + 1):
+			if sim.buildings.placement_error("sling", near + Vector2i(dx, r)) == "":
+				spot = near + Vector2i(dx, r)
+				break
+		if sim.buildings.placement_error("sling", spot) == "":
+			break
 	assert_true(sim.place_instant("sling", spot) != null)
 
 
@@ -69,12 +76,11 @@ func test_send_cooldown_and_in_flight_cap() -> void:
 	var c := _camp_with_outpost()
 	_place_sling(c)
 	var sim: Simulation = Expedition.map_entry(c, 1)["sim"]
-	if not sim.has_method("dispatch_party"):
-		return  # W2 hook missing on this branch
 	var cell := sim.map_center() + Vector2i(-6, 2)
 	sim.set_zone(cell, "stockpile")
+	var base: int = sim.items.count_stored("essence_ore")
 	sim.items.add_at(cell, "essence_ore", 5)
 	assert_true(Sling.send(c, 1, {"essence_ore": 2}))
 	assert_false(Sling.send(c, 1, {"essence_ore": 1}))  # cooling down
 	assert_eq(c.in_flight.size(), 1)
-	assert_eq(sim.items.count_stored("essence_ore"), 3)
+	assert_eq(sim.items.count_stored("essence_ore"), base + 3)

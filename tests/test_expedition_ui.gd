@@ -1,56 +1,27 @@
 extends TestCase
 ## Expedition UI: map chips, expedition dialog flow, cargo dialog, and the
-## GameController rebinding views when the active map changes. Uses a stub
-## Campaign that follows the plan's fixed API (the real one is built in parallel).
+## GameController rebinding views when the active map changes. Real Campaign.
 
 
-class StubCampaign:
-	extends RefCounted
-	var maps: Array = []
-	var active := 0
-	var in_flight: Array = []
-	var sent: Array = []
-	var slung: Array = []
-
-	func active_sim() -> Simulation:
-		return maps[active]["sim"]
-
-	func switch_map(id: int) -> bool:
-		if id < 0 or id >= maps.size():
-			return false
-		active = id
-		return true
-
-	func step() -> void:
-		active_sim().step()
-
-	func map_info(id: int) -> Dictionary:
-		return {"id": id, "biome": maps[id]["biome"], "kind": maps[id]["kind"], "alarm": id == 1}
-
-	func send_expedition(biome: String, ids: Array, supplies: Dictionary) -> bool:
-		sent.append([biome, ids, supplies])
-		return true
-
-	func sling_send(id: int, items: Dictionary) -> bool:
-		slung.append([id, items])
-		return true
+var _camps: Array = []
 
 
-func _stub() -> StubCampaign:
-	var c := StubCampaign.new()
-	c.maps = [
-		{"id": 0, "biome": "start", "kind": "home", "sim": _sized_sim(3, 250)},
-		{"id": 1, "biome": "ash", "kind": "outpost", "sim": _sized_sim(4, 96)},
-	]
-	c.in_flight = [{"from": 0, "to": 1, "items": {}, "arrive": 100}]
+func after_each() -> void:
+	for c in _camps:
+		c.dispose()
+	_camps.clear()
+	super.after_each()
+
+
+func _stub() -> Campaign:
+	var c := Campaign.new(3, func() -> Node: return make_bus(), peaceful_defs())
+	c.start()
+	_camps.append(c)
+	c.home_sim().research.done.append("expeditions")
+	c.add_outpost("ash", [{"name": "Rook"}], {"essence_ore": 40})
+	c.ledgers[1]["integrity"] = 50  # damaged: alarm badge
+	c.in_flight.append({"kind": "crate", "from": 1, "to": 0, "items": {}, "arrive": 100000})
 	return c
-
-
-func _sized_sim(seed_value: int, n: int) -> Simulation:
-	var sim := Simulation.new(seed_value, make_bus(), null, {"map_w": n, "map_h": n})
-	sim.start_new_game()
-	_sims.append(sim)
-	return sim
 
 
 func _buttons(n: Node, out: Array[Button]) -> void:
@@ -69,7 +40,7 @@ func _all_big(n: Node) -> bool:
 	return true
 
 
-func _panel(c: StubCampaign, mode := "expedition") -> ExpeditionPanel:
+func _panel(c: Campaign, mode := "expedition") -> ExpeditionPanel:
 	var p := ExpeditionPanel.new()
 	_owned_nodes.append(p)
 	p.setup(c, mode)
@@ -107,8 +78,13 @@ func test_expedition_flow_calls_send_once() -> void:
 	assert_true(_all_big(p.content))
 	assert_true(p.confirm())
 	assert_false(p.confirm(), "state reset after sending")
-	assert_eq(c.sent.size(), 1)
-	assert_eq(c.sent[0][1], [ids[0]])
+	var parties := 0
+	for f: Dictionary in c.in_flight:
+		if f["kind"] == "party":
+			parties += 1
+			assert_eq((f["crew"] as Array).size(), 1)
+	assert_eq(parties, 1)
+	assert_eq(c.log.back()[1], "send_expedition")
 
 
 func test_cannot_send_everyone() -> void:
@@ -120,22 +96,32 @@ func test_cannot_send_everyone() -> void:
 	assert_eq(p.crew.size(), p.alive_colonists().size() - 1)
 
 
+func _place_sling(sim: Simulation) -> void:
+	var near := sim.map_center() + Vector2i(-8, 5)
+	for r in range(0, 20):
+		for dx in range(-r, r + 1):
+			if sim.buildings.placement_error("sling", near + Vector2i(dx, r)) == "":
+				assert_true(sim.place_instant("sling", near + Vector2i(dx, r)) != null)
+				return
+
+
 func test_cargo_flow() -> void:
 	var c := _stub()
+	c.switch_map(1)
+	var out := c.active_sim()
+	_place_sling(out)
+	var cell := out.map_center() + Vector2i(-6, 2)
+	out.set_zone(cell, "stockpile")
+	out.items.add_at(cell, "essence_ore", 6)
 	var p := _panel(c, "cargo")
 	assert_true(_all_big(p.content))
 	assert_false(p.confirm_cargo(), "no target or items")
-	p.pick_target(1)
-	var item := ""
-	for id in p.supply_options():
-		item = id
-		break
-	if item == "":
-		return
-	p.adjust(item, 2)
+	assert_eq(p.cargo_targets(), [0] as Array[int])
+	p.pick_target(0)
+	p.adjust("essence_ore", 2)
 	assert_true(p.confirm_cargo())
-	assert_eq(c.slung.size(), 1)
-	assert_eq(c.slung[0][0], 1)
+	assert_eq(c.log.back()[1], "sling_send")
+	assert_eq(Sling.in_flight_from(c, 1), 2)  # the fake crate from _stub + the real one
 
 
 func test_game_switch_swaps_sim_and_world_size() -> void:
@@ -152,7 +138,7 @@ func test_game_switch_swaps_sim_and_world_size() -> void:
 	assert_true(game.switch_map(1))
 	assert_eq(game.sim, c.maps[1]["sim"])
 	var small: Vector2 = game.world.world_size()
-	assert_true(small.x < big.x, "96 map smaller than home")
+	assert_ne(small, big, "outpost map has its own size")
 	assert_eq(game.camera.world_size, small)
 	assert_true(game.hud.map_switcher != null and game.hud.map_switcher.visible)
 	game.switch_map(0)

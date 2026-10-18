@@ -164,10 +164,8 @@ func pick_target(id: int) -> void:
 
 func cargo_targets() -> Array[int]:
 	var out: Array[int] = []
-	for m: Dictionary in CampaignView.maps(campaign):
-		var id := int(m.get("id", 0))
-		if id != CampaignView.active_id(campaign):
-			out.append(id)
+	if CampaignView.active_id(campaign) != 0:  # slings only fire outpost -> home
+		out.append(0)
 	return out
 
 
