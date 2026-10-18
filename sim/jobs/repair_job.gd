@@ -30,7 +30,11 @@ func _tick_belt(c: Colonist, sim: Simulation) -> int:
 	_work += sim.jobs.work_tick(c, "repair")
 	if _work < int(sim.defs.balance["line_damage"]["repair_ticks"]):
 		return Status.RUNNING
-	return Status.DONE if sim.logistics.repair_belt(belt_cell) else Status.FAILED
+	if sim.logistics.repair_belt(belt_cell):
+		sim.colonists.rec(c)["belts_repaired"] += 1  # region F3
+		sim.colonists.record_changed(c)
+		return Status.DONE
+	return Status.FAILED
 # endregion
 
 
@@ -53,6 +57,8 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	# endregion
 	sim.buildings.repair(b)
+	sim.colonists.rec(c)["repairs"] += 1  # region F3
+	sim.colonists.record_changed(c)
 	return Status.DONE
 
 

@@ -19,6 +19,7 @@
 		"start_items": {"essence_ore": 30, "raw_food": 20},
 		"start_stockpile_size": [4, 4]
 	},
+	"flavor": {"nick_order": ["kills", "downs", "belts_repaired", "repairs", "refined", "ore_mined", "waves_survived"], "nick_kills": 5, "nick_downs": 2, "nick_belts_repaired": 3, "nick_repairs": 4, "nick_refined": 8, "nick_ore_mined": 120, "nick_waves_survived": 3, "bark_cooldown_s": 90, "bark_visible_s": 2.0, "bark_max": 2},
 	"colonist": {
 		"max_hp": 100,
 		"move_ticks": 3,

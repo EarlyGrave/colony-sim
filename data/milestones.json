@@ -2,12 +2,59 @@
 	"_comment": "Audit Deliveries: tiers 0 and 1 are open at start; tiers 2 and 3 need parts delivered at the warden terminal.",
 	"tiers": {
 		"2": {
-			"parts": {"plate": 40, "parts": 10},
-			"letter": {"title": "Audit passed: Tier 2", "text": "The wardens accept your delivery. Advanced machinery is cleared for use."}
+			"parts": {
+				"plate": 40,
+				"parts": 10
+			},
+			"letter": {
+				"title": "Audit passed: Tier 2",
+				"text": "The wardens accept your delivery. Advanced machinery is cleared for use."
+			}
 		},
 		"3": {
-			"parts": {"plate": 120, "parts": 40, "ingot_copper": 30},
-			"letter": {"title": "Audit passed: Tier 3", "text": "The wardens are impressed. High-throughput industry is cleared for use."}
+			"parts": {
+				"plate": 120,
+				"parts": 40,
+				"ingot_copper": 30
+			},
+			"letter": {
+				"title": "Audit passed: Tier 3",
+				"text": "The wardens are impressed. High-throughput industry is cleared for use."
+			}
+		}
+	},
+	"commendations": {
+		"participation_ribbon": {
+			"title": "Participation Ribbon",
+			"text": "Someone survived a raid. The wardens note that attendance is attendance.",
+			"stat": "waves_survived",
+			"min": 1
+		},
+		"clean_hands": {
+			"title": "Clean Hands",
+			"text": "Plenty of ore dug, nothing refined. The planet quietly approves.",
+			"stat": "ore_mined",
+			"min": 60,
+			"other": "refined",
+			"max_other": 0
+		},
+		"mass_disappointment": {
+			"title": "Mass Disappointment",
+			"text": "Three knock-downs so far. The warden sighs on your behalf.",
+			"stat": "downs",
+			"min": 3
+		},
+		"debt_enthusiast": {
+			"title": "Debt Enthusiast",
+			"text": "500 ore mined. Your debt is thrilled with the commitment.",
+			"stat": "ore_mined",
+			"min": 500
+		},
+		"toast_master": {
+			"title": "Toast Master",
+			"text": "Twenty creatures toasted. The colony raises a glass.",
+			"stat": "kills",
+			"min": 20
 		}
 	}
 }

@@ -518,7 +518,7 @@ func _choose_target(e: Enemy) -> void:
 			_sapper_target(e)
 
 
-func damage_enemy(e: Enemy, amount: float, cause := "generic") -> void:  # region F2: cause is cosmetic
+func damage_enemy(e: Enemy, amount: float, cause := "generic", by: Colonist = null) -> void:  # region F2 (cosmetic cause) + F3 (kill credit)
 	e.hp -= amount
 	if e.hp <= 0.0 and enemies.has(e):
 		enemies.erase(e)
@@ -529,6 +529,9 @@ func damage_enemy(e: Enemy, amount: float, cause := "generic") -> void:  # regio
 			_check_morale()
 		_hot.cause = cause  # region F2
 		_hot.kind = e.def_id  # region F2
+		if by != null:  # region F3
+			sim.colonists.add_kill(by, e.def_id)
+			sim.colonists.record_changed(by)
 		sim.bus.enemy_killed.emit(e.id)
 		_hot.cause = "generic"  # region F2
 

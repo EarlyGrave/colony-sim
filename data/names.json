@@ -1,5 +1,30 @@
 {
-	"names": ["Vera", "Thunder", "Fox", "Miron", "Wheezy", "Shade", "Whip", "Ginger", "Gramps", "Awl", "Alder", "Wick", "Patch", "Tooth", "Berry", "Thorn", "Moth", "Spider", "Rusty", "Ember", "Grim", "Heron", "Spinner", "Sore"],
+	"names": [
+		"Vera",
+		"Thunder",
+		"Fox",
+		"Miron",
+		"Wheezy",
+		"Shade",
+		"Whip",
+		"Ginger",
+		"Gramps",
+		"Awl",
+		"Alder",
+		"Wick",
+		"Patch",
+		"Tooth",
+		"Berry",
+		"Thorn",
+		"Moth",
+		"Spider",
+		"Rusty",
+		"Ember",
+		"Grim",
+		"Heron",
+		"Spinner",
+		"Sore"
+	],
 	"backstories": [
 		"Former miner, convicted over a mine collapse.",
 		"Mechanic from an orbital shipyard, caught smuggling.",
@@ -9,5 +34,118 @@
 		"Former guard who knew too much.",
 		"Agronomist from a sealed station, refused to sign the report.",
 		"Welder who burned down a warehouse while drunk."
-	]
+	],
+	"nicknames": {
+		"kills": [
+			"Butcher",
+			"Bugsquasher",
+			"Hatchet",
+			"Tally"
+		],
+		"ore_mined": [
+			"Pickaxe",
+			"Mole",
+			"Dusty",
+			"Digger"
+		],
+		"refined": [
+			"Smoke",
+			"Sludge",
+			"Cinder",
+			"Ladle"
+		],
+		"repairs": [
+			"Fixit",
+			"Duct Tape",
+			"Wrench",
+			"Patch"
+		],
+		"belts_repaired": [
+			"Beltway",
+			"Stitch",
+			"Splice",
+			"Rubberband"
+		],
+		"downs": [
+			"Pancake",
+			"Lucky",
+			"Dropsy",
+			"Nine Lives"
+		],
+		"waves_survived": [
+			"Veteran",
+			"Cockroach",
+			"Survivor",
+			"Unkillable"
+		]
+	},
+	"rapsheet": {
+		"crime": [
+			"Embezzled a vending machine",
+			"Sold the same moon twice",
+			"Unlicensed haircut on a guard",
+			"Counted cards against the warden",
+			"Arson, but only a little",
+			"Smuggled a live goat",
+			"Forged a parking permit for orbit",
+			"Impersonated a safety inspector",
+			"Stole 40 tonnes of fog",
+			"Mutinied over soup"
+		],
+		"sentence": [
+			"12 years, no appeal",
+			"Life plus the weekend",
+			"Until the ore runs out",
+			"7 years, 9 with attitude",
+			"Indefinite, pending paperwork",
+			"40 shifts, extendable",
+			"Until further notice",
+			"Life, served in installments"
+		],
+		"complaint": [
+			"The soup is the wrong colour",
+			"Too much dust, not enough rest",
+			"Nobody reads the safety signs",
+			"The crawlers keep staring",
+			"Boots are one size too honest",
+			"The sun is overrated",
+			"My bunk hums at night",
+			"Why is it always me?"
+		],
+		"last_words": [
+			"Tell them I mined it.",
+			"Not the belts again.",
+			"I regret nothing, mostly.",
+			"Is this on the record?",
+			"Somebody feed the turret.",
+			"It was a small acid cloud.",
+			"Warden owes me a shift.",
+			"Cover my bunk."
+		]
+	},
+	"barks": {
+		"working": [
+			"Another rock.",
+			"Digging.",
+			"Just one more."
+		],
+		"fleeing": [
+			"Run!",
+			"Not today!",
+			"Nope nope nope!"
+		],
+		"hungry": [
+			"Is it lunch yet?",
+			"My stomach filed a complaint."
+		],
+		"refining": [
+			"Smells like profit.",
+			"Do not lick the sludge."
+		],
+		"wave_won": [
+			"Take that!",
+			"Back to the nest.",
+			"We are still here."
+		]
+	}
 }

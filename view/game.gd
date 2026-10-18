@@ -26,6 +26,7 @@ var _accum := 0.0
 @onready var map_viewport: SubViewport = $MapViewport
 @onready var camera: CameraController = $Camera
 @onready var hud: Hud = $Hud
+var bark_layer: BarkLayer  # region F3
 
 
 func _ready() -> void:
@@ -217,6 +218,12 @@ func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	_belt_reset()  # region A2d
 	hud.bind(sim)
 	hud.bind_campaign(campaign)  # region R4e
+	# region F3
+	if bark_layer == null:
+		bark_layer = BarkLayer.new()
+		add_child(bark_layer)
+	bark_layer.bind(sim, EventBus, camera)
+	# endregion
 	camera.world_size = world.world_size()
 	camera.focus = WorldView.cell_to_world(sim.map_center())
 	camera.zoom_level = 1.0
