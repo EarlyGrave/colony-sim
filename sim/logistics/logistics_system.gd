@@ -18,6 +18,7 @@ func _init(p_sim: Simulation) -> void:
 
 
 func tick() -> void:
+	PortLink.tick(sim)  # region A2b
 	belts.step()
 
 
