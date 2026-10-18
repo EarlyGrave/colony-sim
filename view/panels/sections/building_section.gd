@@ -44,6 +44,20 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 		cb.pressed.connect(func() -> void: sim.remove_chip(cid) if has_chip else sim.install_chip(cid))
 		box.add_child(cb)
 	# endregion
+	# region R3X
+	if b.def_id == "mourning_bell":
+		var left := Decoy.burst_left(b)
+		var cool := Decoy.cooldown_left(b)
+		add_line(box, "Bell ringing: %d ticks" % left if left > 0 else ("Bell cooling down: %d ticks" % cool if cool > 0 else "Bell ready"))
+		var rb := Button.new()
+		rb.text = "Ring bell"
+		rb.custom_minimum_size = Vector2(64, 64)
+		rb.focus_mode = Control.FOCUS_NONE
+		rb.disabled = left > 0 or cool > 0 or b.broken
+		var bid := b.id
+		rb.pressed.connect(func() -> void: sim.trigger_bell(bid))
+		box.add_child(rb)
+	# endregion
 	if not b.recipe.is_empty():
 		add_line(box, "In: " + _fmt(sim, b.input))
 		add_line(box, "Out: " + _fmt(sim, b.output))

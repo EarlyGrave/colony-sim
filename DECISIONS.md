@@ -202,3 +202,9 @@ Campaign layer over several Simulations; home = map 0 (seed unchanged); only the
 steps for real, unattended outposts run an analytic per-day autopilot (yield, buffer cap, raid
 roll, "lost" state); outposts 96x96; biomes ash/crystal/swamp each yield a tier-2 element whose
 part is crafted only at home; sling cargo with travel time; save v3 (v2 rejected).
+
+## R3X integration (decided without owner, review)
+- Threat model v2 is ON by default (`data/threat.json` enabled). Belts are targets (`base.belt`, one candidate per 8x8 region, value x sqrt(belt count) capped at `belt_scale_cap`); decoys use `Decoy.threat_now`; a busy chip building has threat x `state_mod.chip`.
+- AI chip balance: a processor (smelter/assembler) without a chip runs at `unoperated_speed` 0.6 (colonist work adds steps on top); with a chip `processor_chip_speed` 1.0, waste x1.3, threat x2, upkeep and calibration unchanged. Benches keep chip_speed 0.8. Chips now matter for throughput, not only for freeing colonists.
+- Ecology `starved_max` raised 4 -> 6 so clean-map early waves still threaten an undefended colony (test_waves intent: no turrets = dead by wave 2-3).
+- Test hygiene: tests must not mutate `Defs.get_default()` (shared); test_ecology did, which shifted goldens when run after it.

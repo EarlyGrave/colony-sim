@@ -13,6 +13,11 @@ var _ref: Array = []
 var _val: Array[float] = []
 var _type: Array[String] = []
 var _cache_tick := -1000000
+# region R3X
+var _belt_tick := -1000000
+## Belt candidates per region: [region_key, cell, count], rebuilt every `belt_recompute_ticks`.
+var _belts: Array = []
+# endregion
 
 
 func _init(p_sim: Simulation) -> void:
@@ -31,6 +36,8 @@ func building_value(b: Building) -> float:
 		base = float(b.def.get("threat_priority", 0)) * float(cfg["per_priority"]) + float(cfg["base"]["default"])
 	if base <= 0.0:
 		return 0.0
+	if Decoy.is_decoy(b):  # region R3X: lit/unlit/burst handled by the decoy itself
+		return Decoy.threat_now(b)
 	var mods: Dictionary = cfg["state_mod"]
 	var own: Dictionary = b.def.get("threat_mods", {})
 	var v := base
@@ -44,6 +51,8 @@ func building_value(b: Building) -> float:
 		v *= _mod("firing", own, mods)
 	if b.output.has("refined_essence") or b.input.has("refined_essence"):
 		v *= _mod("carrying_essence", own, mods)
+	if sim.chips != null and sim.chips.threat_mult(b) > 1.0:  # region R3X: a chip works here
+		v *= _mod("chip", own, mods)
 	for f: String in b.threat_flags:  # insertion order is deterministic (set by sim code)
 		if b.threat_flags[f]:
 			v *= _mod(f, own, mods)
@@ -106,6 +115,13 @@ func refresh(force := false) -> void:
 		var rk := (b.cell.x / rs) * 100003 + (b.cell.y / rs)
 		if sums[rk] > cap:
 			_val[i] *= cap / sums[rk]
+	_refresh_belts()  # region R3X
+	for bc: Array in _belts:
+		_kind.append(2)
+		_id.append(int(bc[0]))
+		_ref.append(bc[1])
+		_val.append(float(cfg["base"].get("belt", 0.0)) * minf(sqrt(float(bc[2])), float(cfg.get("belt_scale_cap", 4.0))))
+		_type.append("belt")
 	for c in sim.colonists.list:
 		if not c.alive or c.hidden:
 			continue
@@ -116,9 +132,50 @@ func refresh(force := false) -> void:
 		_type.append("colonist")
 
 
+# region R3X
+## Belt tiles are targets too (base.belt): one candidate per region = first belt in scan order.
+func _refresh_belts() -> void:
+	var belts := sim.logistics.belts
+	if belts.belt_count == 0 or float(cfg["base"].get("belt", 0.0)) <= 0.0:
+		_belts.clear()
+		return
+	if sim.tick - _belt_tick < int(cfg.get("belt_recompute_ticks", 60)) and not _belts.is_empty():
+		return
+	_belt_tick = sim.tick
+	_belts.clear()
+	var rs := maxi(1, int(cfg["region_size"]))
+	var by_region: Dictionary = {}
+	var w := belts.width
+	var d := belts.dir
+	for i in d.size():
+		if d[i] == 255:
+			continue
+		var c := Vector2i(i % w, i / w)
+		var rk := (c.x / rs) * 100003 + (c.y / rs)
+		if by_region.has(rk):
+			by_region[rk][2] += 1
+		else:
+			by_region[rk] = [rk, c, 1]
+	var keys: Array = by_region.keys()
+	keys.sort()
+	for k in keys:
+		_belts.append(by_region[k])
+
+
+func _belt_ok(c: Vector2i, e: Enemy) -> bool:
+	return sim.logistics.belts.has_belt(c) and float(e.def.get("structure_dmg", 0.0)) > 0.0 \
+		and bool(sim.defs.balance["line_damage"]["enabled"])
+# endregion
+
+
 func score(i: int, e: Enemy) -> float:
 	var d: float
-	if _kind[i] == 0:
+	if _kind[i] == 2:  # region R3X
+		var bc: Vector2i = _ref[i]
+		if not _belt_ok(bc, e):
+			return -1.0
+		d = Vector2(bc).distance_to(Vector2(e.cell))
+	elif _kind[i] == 0:
 		var b: Building = _ref[i]
 		if b.destroyed:
 			return -1.0
@@ -147,7 +204,8 @@ func pick(e: Enemy) -> Dictionary:
 		var s := score(i, e)
 		if s <= 0.0:
 			continue
-		if _kind[i] == (0 if e.target_kind == Enemy.Target.BUILDING else 1) and _id[i] == e.target_id \
+		var ek := 0 if e.target_kind == Enemy.Target.BUILDING else (2 if e.target_kind == Enemy.Target.BELT else 1)
+		if _kind[i] == ek and _id[i] == e.target_id \
 				and e.target_kind != Enemy.Target.NONE:
 			cur = i
 			cur_s = s
@@ -161,6 +219,8 @@ func pick(e: Enemy) -> Dictionary:
 		var pull := float(pr["ranged"] if e.def.get("ranged", false) else pr["melee"])
 		if cur_s >= float(cfg["stick"]) * best_s or best_s <= pull * cur_s:
 			best = cur
+	if _kind[best] == 2:  # region R3X
+		return {"kind": "belt", "id": _id[best], "cell": _ref[best]}
 	return {"kind": "building" if _kind[best] == 0 else "colonist", "id": _id[best]}
 
 

@@ -40,3 +40,20 @@ func test_effect_cap() -> void:
 	for i in 200:
 		fx.spawn_spark(Vector2(1, 1))
 	assert_true(fx.active_count() <= Effects3D.MAX_EFFECTS)
+
+
+func test_nests_drawn_and_pulse_when_hungry() -> void:
+	var sim := make_sim(5, true, 40, 40, TestCase.peaceful_defs())
+	var tree := Engine.get_main_loop() as SceneTree
+	var host: Node = tree.current_scene if tree.current_scene != null else tree.root.get_child(tree.root.get_child_count() - 1)
+	var fx := Effects3D.new()
+	host.add_child(fx)
+	_owned_nodes.append(fx)
+	fx.bind(sim)
+	assert_eq(fx.nest_count(), sim.ecology.nests.size())
+	assert_gt(fx.nest_count(), 1)
+	assert_false(fx.nest_pulsing(0))
+	sim.ecology.nests[0]["bank"] = 10.0
+	assert_true(fx.nest_pulsing(0))
+	fx.tick(0.1)
+	assert_ne((fx._nests[0][0] as Node3D).scale, Vector3.ONE)

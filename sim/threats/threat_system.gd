@@ -369,6 +369,12 @@ func _tick_enemy(e: Enemy) -> void:
 	if e.target_kind == Enemy.Target.NONE:
 		return
 	var range_ := e.attack_range
+	if e.target_kind == Enemy.Target.BELT:  # region R3X: _attack_structure does the biting
+		if Vector2(e.target_cell).distance_to(Vector2(e.cell)) <= 1.0:
+			e.clear_path()
+		elif _approach_cell(e, e.target_cell) == GridMover.Move.FAILED:
+			e.retarget_at = sim.tick + 5
+		return
 	if e.target_kind == Enemy.Target.BUILDING:
 		var b := e.target_b  # region perf-threat
 		if b.distance_to(Vector2(e.cell)) <= range_:
@@ -407,6 +413,8 @@ func _target_valid(e: Enemy) -> bool:
 		Enemy.Target.COLONIST:
 			var c := e.target_c  # region perf-threat
 			return c != null and c.alive and not c.hidden
+		Enemy.Target.BELT:  # region R3X
+			return sim.logistics.belts.has_belt(e.target_cell) and sim.logistics.belts.hp_at(e.target_cell) > 0.0
 	return false
 
 
@@ -563,11 +571,15 @@ func _next_retarget(e: Enemy) -> int:
 
 ## Chase a colonist along a small bounded field around their current cell.
 func _approach_colonist(e: Enemy, c: Colonist) -> int:
+	return _approach_cell(e, c.cell)
+
+
+func _approach_cell(e: Enemy, cell: Vector2i) -> int:
 	var pf := sim.pathfinder
-	var key := FLOW_CELL + c.cell.y * sim.map.width + c.cell.x
+	var key := FLOW_CELL + cell.y * sim.map.width + cell.x
 	var f := pf.flow_cached(key)
 	if f == null:
-		var sources := pf.approach_cells(c.cell)
+		var sources := pf.approach_cells(cell)
 		if sources.is_empty():
 			return GridMover.Move.FAILED
 		f = pf.flow_to(key, sources, int(cfg.get("chase_flow_radius", 16)))
@@ -604,6 +616,11 @@ func _choose_target_v2(e: Enemy) -> void:
 	var t := pick_target(e)
 	e.target_kind = Enemy.Target.NONE
 	if t.is_empty():
+		return
+	if t["kind"] == "belt":  # region R3X
+		e.target_kind = Enemy.Target.BELT
+		e.target_id = int(t["id"])
+		e.target_cell = t["cell"]
 		return
 	if t["kind"] == "colonist":
 		var c: Colonist = null

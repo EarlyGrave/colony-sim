@@ -144,3 +144,50 @@ func _run_hash() -> int:
 	for i in 3000:
 		sim.step()
 	return hash(str(sim.threats.kills) + str(sim.threats.retarget_count) + str(sim.tick) + str(sim.ledger.state_hash() if sim.ledger.has_method("state_hash") else 0))
+
+
+func test_crawlers_prefer_lit_beacon_over_nearby_belt() -> void:
+	# R3X: 8 crawlers 15 cells from a lit ash beacon pick it over a belt 5 cells away.
+	var wins := 0
+	for seed_value in 10:
+		var sim := _sim(seed_value + 1)
+		var c := sim.map_center()
+		var beacon := sim.buildings.place("ash_beacon", c + Vector2i(15, 0), false)
+		assert_true(beacon != null, "beacon placed")
+		beacon.add_input("waste", 2)
+		sim.step()
+		for i in 6:
+			assert_true(sim.logistics.place_belt_cell(c + Vector2i(-5 + i, 0), 1))
+		sim.threats.model.refresh(true)
+		for i in 8:
+			var e := _enemy(sim, c + Vector2i(0, (i % 4) - 2))
+			var t := sim.threats.pick_target(e)
+			if t.get("kind", "") == "building" and int(t["id"]) == beacon.id:
+				wins += 1
+	assert_true(wins >= 72, "beacon chosen %d/80" % wins)
+
+
+func test_belts_are_targets_without_decoy() -> void:
+	var sim := _sim()
+	var c := sim.map_center()
+	for i in 6:
+		sim.logistics.place_belt_cell(c + Vector2i(i, 0), 1)
+	var e := _enemy(sim, c + Vector2i(0, 4))
+	var t := sim.threats.pick_target(e)
+	assert_eq(t.get("kind", ""), "belt")
+	sim.threats._choose_target(e)
+	assert_eq(e.target_kind, Enemy.Target.BELT)
+
+
+func test_belt_target_gets_walked_to_and_bitten() -> void:
+	var sim := _sim()
+	var c := sim.map_center()
+	for i in 6:
+		sim.logistics.place_belt_cell(c + Vector2i(i, 0), 1)
+	var e := _enemy(sim, c + Vector2i(3, 6))
+	sim.run_ticks(600)
+	var hurt := 0
+	for i in 6:
+		if sim.logistics.belts.is_damaged(c + Vector2i(i, 0)):
+			hurt += 1
+	assert_gt(hurt, 0, "crawler bit the belt it was drawn to")

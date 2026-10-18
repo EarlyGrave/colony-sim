@@ -4,6 +4,8 @@
 	"tech": "ai_chips",
 	"recipe": "make_ai_chip",
 	"chip_speed": 0.8,
+	"processor_chip_speed": 1.0,
+	"unoperated_speed": 0.6,
 	"chip_threat_mult": 2.0,
 	"chip_waste_mult": 1.3,
 	"upkeep_item": "refined_essence",

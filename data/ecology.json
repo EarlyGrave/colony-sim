@@ -11,7 +11,7 @@
 	"sample_radius": 4,
 	"bank_cap": 60.0,
 	"start_bank": 0.0,
-	"starved_max": 4,
+	"starved_max": 6,
 	"unit_cost": {"crawler": 1.0, "spitter": 1.5, "burrower": 1.5, "brute": 3.0},
 	"default_unit_cost": 1.5,
 	"rally_ticks": 1800,

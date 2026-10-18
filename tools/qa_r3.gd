@@ -26,7 +26,7 @@ func _init() -> void:
 			var cm: Dictionary = r["contam"]
 			print("%-11s %4d  %7d  %-13s %6d  %8d  %4d  %12s  %7s  %9.1f  %8s  %8s  %5d" % [
 				p, sv, r["end_day"], r["cause"], r["kills"], int(r.get("lost_bld", 0)), r["died"],
-				"n/a", "n/a", r["peak_pol"], _f(cm.get(10)), _f(cm.get(20)), r["waves"]])
+				"%.0f" % float(r.get("belt_hp_lost", 0.0)), str(r.get("repairs", 0)), r["peak_pol"], _f(cm.get(10)), _f(cm.get(20)), r["waves"]])
 			for c in bus.get_signal_list():
 				for conn in bus.get_signal_connection_list(c["name"]):
 					bus.disconnect(c["name"], conn["callable"])
