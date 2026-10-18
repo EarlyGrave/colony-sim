@@ -835,7 +835,7 @@ func _o5_setup() -> void:
 
 
 func _o5_pick(id: String) -> void:
-	if id == "belt":
+	if id == "belt" or id in ["miner", "smelter", "assembler"]:  # region B5
 		_on_auto_tool(id)
 		return
 	hud.select_tool(id)

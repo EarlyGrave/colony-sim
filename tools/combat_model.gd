@@ -85,6 +85,19 @@ static func lancer_vs_rifle(defs_: Defs, id: String, lvl := 3, d := 5.0) -> Arra
 	return [ttk(defs_, role_weapon(defs_, "lancer"), hp, lvl, d, volley_of(defs_)), ttk(defs_, "rifle", hp, lvl, d)]
 
 
+## B5: expected damage taken per enemy hit by a full squad vs the same number of unsquadded inmates.
+## Enemies pick targets weighted by threat_mult, damage is scaled by dmg_taken_mult. Returns the
+## relative change (-0.30 = 30 percent less damage, which is the death-rate proxy).
+static func squad_damage_delta(defs_: Defs) -> float:
+	var num := 0.0
+	var den := 0.0
+	for r: String in defs_.roles["order"]:
+		var d: Dictionary = defs_.roles["roles"][r]
+		num += float(d["threat_mult"]) * float(d["dmg_taken_mult"])
+		den += float(d["threat_mult"])
+	return num / den - 1.0
+
+
 func report() -> void:
 	var weapons: Array = defs.weapons["weapons"].keys()
 	weapons.sort()
@@ -112,6 +125,8 @@ func report() -> void:
 	print("Bulwark lasts %.2fx an unsquadded inmate (target >= 2.0): %s" % [1.0 / bm, "OK" if 1.0 / bm >= 2.0 else "FAIL"])
 	var lr := lancer_vs_rifle(defs, "brute", skill, dist)
 	print("Lancer TTK on brute %.1fs vs rifle inmate %.1fs = %.0f%% (target <= 60%%): %s" % [lr[0], lr[1], 100.0 * lr[0] / lr[1], "OK" if lr[0] <= 0.6 * lr[1] else "FAIL"])
+	var sd := squad_damage_delta(defs)
+	print("Squad damage taken vs unsquadded %+.0f%% (B5 target <= -30%%): %s" % [100.0 * sd, "OK" if sd <= -0.30 else "FAIL"])
 
 
 func _header(first: String) -> void:

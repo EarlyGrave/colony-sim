@@ -49,7 +49,7 @@ func test_second_finger_cancels() -> void:
 
 func test_slots_big_and_five() -> void:
 	var m := _menu()
-	assert_eq(RadialMenu.SLOTS.size(), 5)
+	assert_eq(RadialMenu.SLOTS.size(), 8)
 	assert_true(RadialMenu.SLOT_SIZE >= 64.0)
 	m.open_at(Vector2(600, 400))
 	for i in 5:

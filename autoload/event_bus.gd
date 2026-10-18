@@ -152,3 +152,7 @@ signal cargo_arrived(id: int, n: int)
 # region F2
 signal outpost_lost(id: int)
 # endregion
+
+# region B5
+signal wave_report(report: Dictionary)  # {wave, lost:[{name,by,why}], main_attack, colonist_deaths, kills}
+# endregion
