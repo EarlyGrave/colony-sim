@@ -110,6 +110,16 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
 - Not measured: real phone frame time (cloud has software GL only).
 - Queued next: automation batch (docs/automation_batch_plan.md), owner answers pending.
 
+## Session 4 — automation batch (plan docs/automation_batch_plan.md; A1a–d, F1, T1, A2a–e, V1, W1)
+- Infinite resource nodes (essence/copper/iron, purity 0.5/1/2 speed), belts (BeltGrid,
+  N/E/S/W, 2 cells/s), ports + storage_in/out, miner/smelter/assembler (waste = hand refinery),
+  drag-to-paint belts on touch, belts/machines in 3D with voxel models, save v2 (old saves
+  incompatible), all in-game text English, `?size=N` web URL param. Tests: 385 green.
+- Balance: one chain ~19.5 refined/day; 3 smelters contaminate 2.6x one. Bot 25 d x 5 seeds:
+  2 alive, 2 hq_destroyed (d17), 1 planet_dead (d22).
+- Known: automation strip floats above the toolbar with a gap; smelter glow/smoke not seen in
+  a screenshot yet; belt items move per tick (no interpolation).
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
