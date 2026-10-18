@@ -66,5 +66,16 @@
 				}
 			}
 		}
+	},
+	"b4_options": {
+		"siege": {
+			"tribute": {
+				"label": "Offer frontier ore",
+				"text": "Prism ore from the outposts calms the wardens: taint drops and raids are delayed.",
+				"cost": {"prism_ore": 3},
+				"contamination_delta": -6.0,
+				"delay_wave_days": 1.5
+			}
+		}
 	}
 }

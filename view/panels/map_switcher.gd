@@ -6,6 +6,7 @@ extends HFlowContainer
 signal map_chosen(id: int)
 signal expedition_pressed()
 signal cargo_pressed()
+signal recall_pressed(id: int)  # region B4
 
 const CHIP_MIN := Vector2(120, 64)
 
@@ -68,6 +69,15 @@ func refresh() -> void:
 	e.name = "expedition_btn"
 	e.toggle_mode = false
 	e.pressed.connect(func() -> void: expedition_pressed.emit())
+	for m: Dictionary in CampaignView.maps(campaign):  # region B4: recall unattended outposts
+		var rid := int(m.get("id", 0))
+		if str(m.get("kind", "")) == "outpost" and rid != active:
+			var rb := _chip("Recall " + CampaignView.label(campaign, rid), false)
+			rb.name = "recall_%d" % rid
+			rb.toggle_mode = false
+			rb.pressed.connect(func() -> void:
+				_sig = ""
+				recall_pressed.emit(rid))
 	var cg := _chip("Cargo", false)
 	cg.name = "cargo_btn"
 	cg.toggle_mode = false

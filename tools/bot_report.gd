@@ -31,7 +31,13 @@ func _init() -> void:
 
 
 static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -> Dictionary:
-	var sim := Simulation.new(seed_value, bus, null, StartOpts.preset_opts(Defs.get_default(), preset_id) if preset_id != "" else {})  # region B1
+	var b4 := "--b4" in OS.get_cmdline_user_args()  # region B4
+	var bdefs: Defs = null
+	var popts: Dictionary = StartOpts.preset_opts(Defs.get_default(), preset_id) if preset_id != "" else {}  # region B1
+	if b4:
+		bdefs = Defs.get_default().duplicate_defs()
+		bdefs.balance["b4_enabled"] = true
+	var sim := Simulation.new(seed_value, bus, bdefs, popts)
 	sim.start_new_game()
 	Scenario.standard_colony(sim, 3)
 	var center := sim.map_center()
@@ -43,6 +49,8 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -
 	var bench := sim.buildings.place("workbench", Scenario.find_spot(sim, "workbench", center + Vector2i(-4, -4), 0), false)
 	if bench != null:
 		sim.add_bill(bench.id, "essence_rounds", "until", 20)
+		if b4:  # region B4: stock plates for belt/machine repair
+			sim.add_bill(bench.id, "hand_plate", "until", 4)
 	var r := {
 		"seed": seed_value, "cause": "alive", "end_day": days, "waves": 0,
 		"contam": {}, "c_ok": 0, "c_fail": 0, "c_decl": 0, "debts_paid": 0, "riots": 0,

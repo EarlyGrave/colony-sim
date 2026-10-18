@@ -54,6 +54,8 @@ func add_bill(b: Building, recipe_id: String, mode: String, target: int) -> int:
 		return -1
 	if not b.def_id in sim.defs.recipes[recipe_id].get("benches", []) or not sim.research.recipe_unlocked(recipe_id):  # region R2a
 		return -1
+	if sim.defs.recipes[recipe_id].get("b4", false) and not bool(sim.defs.balance.get("b4_enabled", false)):  # region B4
+		return -1
 	if not mode in sim.defs.crafting["modes"] or target < 0:
 		return -1
 	if not bills.has(b.id):

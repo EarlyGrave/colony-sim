@@ -59,6 +59,8 @@ func _on_day(day: int) -> void:
 
 func _offer(day: int) -> void:
 	var tpls: Array = cfg["templates"]
+	if bool(sim.defs.balance.get("b4_enabled", false)) and cfg.has("b4_templates"):  # region B4
+		tpls = tpls + (cfg["b4_templates"] as Array)
 	var t: Dictionary = tpls[rng.randi_range(0, tpls.size() - 1)]
 	var ess: Array = t["essence"]
 	var parts: Array = t["parts"]
@@ -72,9 +74,15 @@ func _offer(day: int) -> void:
 		"reward": (rewards[rng.randi_range(0, rewards.size() - 1)] as Dictionary).duplicate(true),
 		"state": "offered",
 	}
+	if t.has("demand"):  # region B4
+		c["demand"] = (t["demand"] as Dictionary).duplicate()
 	next_id += 1
 	list.append(c)
 	sim.bus.contract_offered.emit(int(c["id"]))
+	if c.has("demand"):  # region B4
+		_say("contract_offered", "The wardens demand %d refined essence plus frontier ore (%s) within %d days. Accept the contract?" % [
+			int(c["essence"]), ", ".join((c["demand"] as Dictionary).keys().map(func(k: Variant) -> String: return "%d %s" % [int(c["demand"][k]), str(k)])), int(c["deadline_days"])])
+		return
 	_say("contract_offered", "The wardens demand %d refined essence%s within %d days. Accept the contract?" % [
 		int(c["essence"]), (" and %d parts" % int(c["parts"])) if int(c["parts"]) > 0 else "", int(c["deadline_days"])])
 
@@ -99,7 +107,18 @@ func decline(id: int) -> bool:
 func can_deliver(c: Dictionary) -> bool:
 	return c.get("state", "") == "active" \
 		and sim.items.count_stored("refined_essence") >= required_essence(c) \
-		and sim.items.count_stored("machine_parts") >= int(c["parts"])
+		and sim.items.count_stored("machine_parts") >= int(c["parts"]) \
+		and _has_demand(c)  # region B4
+
+
+# region B4
+func _has_demand(c: Dictionary) -> bool:
+	var d: Dictionary = c.get("demand", {})
+	for item: String in d:
+		if sim.items.count_stored(item) < int(d[item]):
+			return false
+	return true
+# endregion
 
 
 func deliver(id: int) -> bool:
@@ -111,6 +130,10 @@ func deliver(id: int) -> bool:
 		if int(pair[1]) > 0:
 			sim.items.consume_stored(str(pair[0]), int(pair[1]), near)
 			sim.ledger.record_consumed(str(pair[0]), int(pair[1]), "contract")
+	var dem: Dictionary = c.get("demand", {})  # region B4
+	for item: String in dem:
+		sim.items.consume_stored(item, int(dem[item]), near)
+		sim.ledger.record_consumed(item, int(dem[item]), "contract")
 	c["state"] = "fulfilled"
 	anger = clampf(anger + float(cfg["anger"]["on_fulfil"]), 0.0, float(cfg["anger"]["max"]))
 	_reward(c)
