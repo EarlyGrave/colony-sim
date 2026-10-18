@@ -15,6 +15,7 @@ func _ready() -> void:
 	var lesson := 0
 	var nudge := false  # --nudge: wait past the lesson's nudge so the highlight shows
 	var dialog := false  # --dialog: new-game dialog
+	var wavereport := false  # region B5
 	var radial := false  # --radial: radial menu open mid-screen
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
@@ -38,6 +39,8 @@ func _ready() -> void:
 			nudge = true
 		elif a == "--dialog":
 			dialog = true
+		elif a == "--wavereport":  # region B5
+			wavereport = true
 		elif a == "--radial":
 			radial = true
 		elif a.begins_with("--zoom="):
@@ -95,6 +98,16 @@ func _ready() -> void:
 		game.hud.toggle_panel(panel)
 	if dialog:
 		game._o3_open_dialog()
+	if wavereport:  # region B5: fake a finished wave so the report card shows
+		var bus: Node = game.sim.bus
+		bus.wave_started.emit(1, 5.0)
+		var bs: Array = game.sim.buildings.list
+		if not bs.is_empty():
+			game.hud._b5_card._by_building[bs[0].id] = "Brute"
+			bus.building_destroyed.emit(bs[0].id)
+		bus.enemy_killed.emit(1)
+		bus.wave_ended.emit(1)
+		game.hud._b5_card.refresh()
 	if radial:
 		game.radial.open_at(get_viewport().get_visible_rect().size * 0.5)
 	if nudge and tutorial:

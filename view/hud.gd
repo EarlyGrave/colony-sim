@@ -125,6 +125,7 @@ func _ready() -> void:
 	var top := PanelContainer.new()
 	_stack.add_child(top)
 	_t5_build_strip()  # region T5
+	_b5_build()  # region B5
 	var top_flow := HFlowContainer.new()
 	_top_flow = top_flow
 	top_flow.add_theme_constant_override("h_separation", 6)
@@ -492,6 +493,7 @@ func _exit_tree() -> void:
 
 func bind(p_sim: Simulation) -> void:
 	sim = p_sim
+	_b5_bind()  # region B5
 	invalidate()  # region W2c
 	_game_over.visible = false
 	_alarm_btn.set_pressed_no_signal(false)
@@ -703,6 +705,7 @@ func _refresh_texts() -> void:
 	_forecast.text += " · " + _threat_text()
 	_update_batch3()
 	_t5_update()  # region T5
+	_b5_update()  # region B5
 	_o2_update()  # region O2
 	_o4_update()  # region O4
 	_l4_update()  # region L4
@@ -1416,4 +1419,25 @@ func _l4_update() -> void:
 		return
 	_l4_chip.text = PowerReader.chip_text(net)
 	_l4_chip.add_theme_color_override("font_color", PowerReader.severity_color(PowerReader.severity(float(net["factor"]))))
+# endregion
+
+
+# region B5
+var _b5_card: WaveReportCard
+
+
+func _b5_build() -> void:
+	_b5_card = WaveReportCard.new()
+	_b5_card.focus_requested.connect(func(c: Vector2i) -> void: focus_cell_requested.emit(c))
+	_stack.add_child(_b5_card)
+
+
+func _b5_bind() -> void:
+	if _b5_card != null and sim != null:
+		_b5_card.bind(sim)
+
+
+func _b5_update() -> void:
+	if _b5_card != null:
+		_b5_card.tick(get_process_delta_time())
 # endregion

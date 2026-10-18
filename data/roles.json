@@ -19,7 +19,7 @@
 		"bulwark": {
 			"name": "Bulwark",
 			"weapon": "prison_shiv",
-			"dmg_taken_mult": 0.45,
+			"dmg_taken_mult": 0.4,
 			"threat_mult": 2.0,
 			"formation_offset": [
 				0,

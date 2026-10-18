@@ -18,6 +18,9 @@ const SLOTS: Array = [
 	["workbench", "Build"],
 	["belt", "Belt"],
 	["inspect", "Inspect"],
+	["miner", "Miner"],  # region B5: machines moved from the strip into the ring
+	["smelter", "Smelter"],
+	["assembler", "Assembler"],
 ]
 
 ## Optional region F5 hook: returns Array[Rect2] the ring must not overlap (belt strip).
