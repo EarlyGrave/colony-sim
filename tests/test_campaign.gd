@@ -24,6 +24,7 @@ func after_each() -> void:
 
 func _defs_with_biome(hazard: int) -> Defs:
 	var d := peaceful_defs()
+	d.items["test_ore"] = (d.items["essence_ore"] as Dictionary).duplicate(true)
 	d.resources["test_ore"] = {"item": "test_ore", "tier": 2, "base_rate": 10.0,
 		"purity_mult": {"impure": 0.5, "normal": 1.0, "pure": 2.0}}
 	d.biomes["test_biome"] = {"hazard": hazard, "yield_mult": 1.0, "resources": {"test_ore": 1}}
@@ -50,7 +51,7 @@ func test_home_matches_plain_simulation() -> void:
 func test_outpost_seed_formula() -> void:
 	assert_eq(Campaign.outpost_seed(7, 1), 7 * 1000003 + 1 * 7919)
 	var c := _camp(7)
-	var id := c.add_outpost("start", _crew(c.home_sim(), 2), {"food": 50})
+	var id := c.add_outpost("start", _crew(c.home_sim(), 2), {"raw_food": 50})
 	assert_eq(id, 1)
 	assert_eq(c.map_info(1)["seed"], 7 * 1000003 + 7919)
 	assert_eq(c.maps[1]["sim"].seed_value, 7 * 1000003 + 7919)
@@ -71,8 +72,8 @@ func test_switch_map_recorded() -> void:
 
 func _run(seed_value: int, ticks: int) -> int:
 	var c := _camp(seed_value)
-	c.add_outpost("start", _crew(c.home_sim(), 2), {"food": 40})
-	c.add_outpost("start", _crew(c.home_sim(), 3), {"food": 40})
+	c.add_outpost("start", _crew(c.home_sim(), 2), {"raw_food": 40})
+	c.add_outpost("start", _crew(c.home_sim(), 3), {"raw_food": 40})
 	for i in ticks:
 		if i == 500:
 			c.switch_map(1)
@@ -98,8 +99,9 @@ func test_outpost_raid_never_emits_on_home_bus() -> void:
 	for sig in ["alarm_changed", "expedition_loss", "map_switched", "cargo_arrived"]:
 		if home_bus.has_signal(sig):
 			home_bus.connect(sig, inc)
-	var id := c.add_outpost("test_biome", _crew(c.home_sim(), 2), {"food": 100000})
+	var id := c.add_outpost("test_biome", _crew(c.home_sim(), 2), {"raw_food": 20})
 	c.ledgers[id]["miners"] = 2
+	c.ledgers[id]["supplies"] = {"raw_food": 100000}
 	var plain := make_sim(9, true, 24, 24, d)
 	for i in 600 * 12:
 		c.step()
@@ -114,7 +116,8 @@ func test_outpost_raid_never_emits_on_home_bus() -> void:
 	var inc2 := func(_a = null) -> void: n2[0] += 1
 	if c2.home_sim().bus.has_signal("alarm_changed"):
 		c2.home_sim().bus.connect("alarm_changed", inc2)
-	c2.add_outpost("test_biome", _crew(c2.home_sim(), 2), {"food": 100000})
+	var id2 := c2.add_outpost("test_biome", _crew(c2.home_sim(), 2), {"raw_food": 20})
+	c2.ledgers[id2]["supplies"] = {"raw_food": 100000}
 	for i in 600 * 3:
 		c2.step()
 	assert_eq(n2[0], 0)
@@ -123,23 +126,22 @@ func test_outpost_raid_never_emits_on_home_bus() -> void:
 func test_switch_in_flushes_buffer_when_hook_exists() -> void:
 	var d := _defs_with_biome(0)
 	var c := _camp(4, d)
-	var id := c.add_outpost("test_biome", _crew(c.home_sim(), 5), {"food": 1000})
+	var id := c.add_outpost("test_biome", _crew(c.home_sim(), 5), {"raw_food": 20})
+	c.ledgers[id]["supplies"] = {"raw_food": 1000}
 	for i in 600 * 3:
 		c.step()
 	var made := Autopilot.buffer_total(c.ledgers[id])
 	assert_gt(float(made), 0.0)
 	c.switch_map(id)
-	if c.active_sim().has_method("receive_cargo"):
-		assert_eq(Autopilot.buffer_total(c.ledgers[id]), 0)
-	else:
-		assert_eq(Autopilot.buffer_total(c.ledgers[id]), made)
+	assert_eq(Autopilot.buffer_total(c.ledgers[id]), 0)
+	assert_gt(float(c.active_sim().items.count_world("test_ore")), 0.0)
 
 
 func test_three_map_step_cost() -> void:
 	var c1 := _camp(6)
 	var c3 := _camp(6)
-	c3.add_outpost("start", _crew(c3.home_sim(), 2), {"food": 40})
-	c3.add_outpost("start", _crew(c3.home_sim(), 2), {"food": 40})
+	c3.add_outpost("start", _crew(c3.home_sim(), 2), {"raw_food": 40})
+	c3.add_outpost("start", _crew(c3.home_sim(), 2), {"raw_food": 40})
 	var t0 := Time.get_ticks_usec()
 	for i in 600:
 		c1.step()

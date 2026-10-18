@@ -81,7 +81,8 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `pay_debt` | colonist_id: int, amount: int | bool | essence in storage, debt open (ledger sink "debt") |
 | `set_quota` | colonist_id: int, per_day: int | bool | colonist has debt; 0 = off |
 | `choose_payoff` | colonist_id: int, stay: bool | bool | debt fully paid, choice pending |
-| `dispatch_party` | ids: [int], supplies: {item: n} (logged as JSON text) | Dictionary {ok, crew[], supplies{}} | R4b: all ids alive and distinct, supplies in storage; atomic (failure = no change). Removes colonists, consumes supplies (ledger sink `expedition`); crew snapshots {name, engineer, skills, passions} |
+| `dispatch_party` | ids: [int], supplies: {item: n} (logged as JSON text) | Dictionary {ok, crew[], supplies{}} | R4b: all ids alive and distinct, supplies in storage; atomic (failure = no change). Removes colonists, consumes supplies (ledger sink `expedition`); crew snapshots {name, engineer, skills, passions}. Empty ids + non-empty supplies = sling crate (removes the stacks only) |
+| `receive_party` | crew: [snapshot] (logged as JSON text) | int (n spawned) | R4X: a recalled party walks back in near the HQ (cells via `sim.rng`, snapshots as `dispatch_party` gave them) |
 | `receive_cargo` | items: {item: n} (logged as JSON text), radius: int | int (lost count) | R4b: spawns a crate near HQ (cell via `sim.rng`), ledger source `cargo`; items without room are recorded as `lost` |
 | `set_patrol_route_text` | text: str ("x,y;x,y") | void | empty = automatic ring around the base |
 | `purify_cell` | c: cell | bool | spends refined essence, cleans the field around c |
@@ -115,7 +116,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `event_chains.json` | random_enabled, chance, steps[], complication, inspection_quota_default |
 | `events.json` | id -> {weight, min_day, harmful, max_per_game, requires, text, ...} |
 | `events_prison.json` | same schema as events.json, prison-themed |
-| `expedition.json` | campaign: travel_ticks, map_size, buffer_cap, rate_ticks, upkeep, collateral, raid_*, sling stats (read by Campaign/Autopilot) |
+| `expedition.json` | campaign: travel_ticks, map_size, buffer_cap, rate_ticks, upkeep, collateral, raid_*, flush_radius (read by Campaign/Autopilot; upkeep item = `raw_food`; sling numbers live on the `sling` building def) |
 | `health.json` | parts, kinds, pain_scale/weight, downed_consciousness, shelter_collapse |
 | `idle_work.json` | cleanup{}, patrol{}, training{} |
 | `items.json` | id -> {name, color, stack, value} |
@@ -163,6 +164,15 @@ each map `{id, biome, kind, seed, opts, sim_commands, sim_tick, crew_n, dead_cha
 `in_flight` entries: crate `{kind:"crate", from, to, items, arrive}`, party `{kind:"party", map_id, biome, crew, supplies, arrive}`,
 return `{kind:"return", from, crew, items, arrive}`. Arrival = send tick + `travel`/`travel_ticks`, exact. Collateral: each dead crew member
 (or whole crew of a lost outpost) adds `collateral` to `ledgers["campaign"].collateral_debt`, once. Tech `expeditions` (tier 2) gates `Expedition.send`.
+
+### 7c. Campaign (`sim/campaign/campaign.gd`, R4X integration)
+`Campaign.new(seed, bus_factory: Callable, defs = null, opts = {})`, then `start()` (home = map 0, `Simulation.new(seed, bus, defs, opts.home_opts)`, so it equals a plain sim);
+`SaveGame.campaign_from_dict` builds it without `start()` and overwrites `maps, tick, active, campaign_seed, log, in_flight, ledgers`. `bus_factory` is called home-first, once per map.
+Map ids are stable (a recalled outpost leaves a gap); use `entry(id)` / `Expedition.map_entry`, never list indices. `step()` = `tick += 1`, active sim `step()`, Autopilot day for unattended outposts
+(`tick % ticks_per_day == 0`), `Expedition.tick`, `Sling.tick`. Commands (logged to `log` only when they succeed): `send_expedition(biome, ids, supplies)`, `recall(id)`,
+`sling_send(0, items)` (fires from the ACTIVE outpost; its sling + stored items), `switch_map(id)`. Active-map arrivals go through sim commands (`receive_cargo`/`receive_party`); otherwise they wait in the
+target ledger (`inbox`, `returning_crew`) and `switch_map` flushes them. `state_hash()` canonicalises dictionaries (sorted keys), so it survives a JSON save round trip.
+Collateral debt is a counter (`ledgers["campaign"].collateral_debt`) because `sim/debt` has no add-debt API (it is per-colonist, drawn at join).
 
 ## 8. `state_hash` (`SaveGame.state_hash(sim)`)
 An `int` hash of observable state. Parts in order: `[tick, game_over_reason, alarm]`; each `items.stacks` entry `[cell, stack]` (insertion order);

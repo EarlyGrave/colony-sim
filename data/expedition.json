@@ -4,13 +4,12 @@
 	"map_size": 96,
 	"buffer_cap": 400,
 	"rate_ticks": 600,
-	"upkeep": {"food": 1},
+	"upkeep": {"raw_food": 1},
 	"upkeep_per_miner_per_day": true,
 	"collateral": 100,
 	"integrity_max": 100,
 	"raid_chance_per_hazard": 0.15,
 	"raid_damage_per_hazard": 12,
 	"flush_radius": 6,
-	"default_purity": "normal",
-	"sling": {"capacity": 20, "cooldown": 600, "travel_ticks": 300, "max_in_flight": 4}
+	"default_purity": "normal"
 }

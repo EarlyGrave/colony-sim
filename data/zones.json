@@ -4,6 +4,9 @@
 		"color": "#3f6fbf",
 		"accepts": [
 			"essence_ore",
+			"cinder_ore",
+			"prism_ore",
+			"bog_resin",
 			"refined_essence",
 			"machine_parts",
 			"raw_food",

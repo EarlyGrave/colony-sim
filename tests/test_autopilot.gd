@@ -14,7 +14,7 @@ func _ledger(cfg: Dictionary, miners: int) -> Dictionary:
 	var led := Autopilot.new_ledger("test_biome", 99, cfg, "pure_ore")
 	led["miners"] = miners
 	led["purity"] = "pure"
-	led["supplies"] = {"food": 100000}
+	led["supplies"] = {"raw_food": 100000}
 	return led
 
 
@@ -29,7 +29,7 @@ func test_ten_days_exact_formula() -> void:
 	for i in 10:
 		Autopilot.advance_day(led, d, cfg, tpd)
 	assert_eq(int(led["buffer"]["pure_ore"]), per_day * 10)
-	assert_eq(int(led["supplies"]["food"]), 100000 - 5 * 10)
+	assert_eq(int(led["supplies"]["raw_food"]), 100000 - 5 * 10)
 
 
 func test_buffer_never_exceeds_cap() -> void:
@@ -48,7 +48,7 @@ func test_unfed_outpost_produces_nothing() -> void:
 	var d := _defs()
 	var cfg := Campaign.load_cfg()
 	var led := _ledger(cfg, 5)
-	led["supplies"] = {"food": 4}
+	led["supplies"] = {"raw_food": 4}
 	Autopilot.advance_day(led, d, cfg, int(d.balance["ticks_per_day"]))
 	assert_eq(Autopilot.buffer_total(led), 0)
 

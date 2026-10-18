@@ -179,6 +179,8 @@ func set_speed(s: int) -> void:
 
 
 func _process(delta: float) -> void:
+	if auto_panel != null and hud != null:  # R4X: on narrow screens a side panel would be covered by the belt strip
+		auto_panel.visible = hud._side == null or not is_instance_valid(hud._side) or not auto_panel.get_global_rect().intersects(hud._side.get_global_rect())
 	if sim == null or speed == 0:
 		return
 	_accum += delta * Simulation.TICKS_PER_SECOND * speed
@@ -348,8 +350,8 @@ func load_game() -> void:
 		world.unbind()
 		world3d.unbind()
 		_r4e_dispose()  # region R4e
-	campaign = null  # region R4e
 	sim = res["sim"]
+	_r4e_wrap(sim)  # region R4e
 	world.bind(sim)
 	_bind_3d()
 	world.pending_corner = Vector2i(-1, -1)
@@ -437,8 +439,11 @@ func _setup_automation() -> void:
 	add_child(layer)
 	auto_panel = AutomationPanel.new()
 	# Docked as a strip above the main toolbar and the category popup (never over the map middle).
-	auto_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	# R4X: hugs its content (bottom-left) instead of spanning the full width, so it no longer
+	# paints a dark band over the side panel (expedition / research / letters).
+	auto_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	auto_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	auto_panel.grow_horizontal = Control.GROW_DIRECTION_END
 	auto_panel.offset_left = 88.0  # clear of the colonist portrait column
 	auto_panel.offset_bottom = -(hud._bottom_inset + 112.0)
 	layer.add_child(auto_panel)
@@ -568,6 +573,7 @@ func undo_belt() -> void:
 ## or the game is a plain single map. `sim` is always campaign.active_sim().
 var campaign: Object = null
 var _bus_count := 0
+var _r4e_buses: Array = []
 
 
 func _r4e_connect() -> void:
@@ -588,7 +594,26 @@ func _r4e_bus() -> Node:
 		return EventBus
 	var b: Node = load("res://autoload/event_bus.gd").new()
 	add_child(b)
+	_r4e_buses.append(b)
 	return b
+
+
+func _r4e_free_buses() -> void:
+	for b: Node in _r4e_buses:
+		if is_instance_valid(b):
+			b.queue_free()
+	_r4e_buses.clear()
+
+
+## Old single-map (v2) saves continue as the home map of a fresh campaign, so expeditions work there too.
+func _r4e_wrap(loaded: Simulation) -> void:
+	var scr := CampaignView.campaign_script()
+	if scr == null:
+		campaign = null
+		return
+	_bus_count = 1  # the loaded sim already runs on the EventBus autoload
+	campaign = scr.new(loaded.seed_value, Callable(self, "_r4e_bus"))
+	campaign.maps.append({"id": 0, "biome": "start", "sim": loaded, "kind": "home", "seed": loaded.seed_value, "opts": {}})
 
 
 func _r4e_make_campaign(seed_value: int, opts: Dictionary) -> bool:
@@ -596,7 +621,7 @@ func _r4e_make_campaign(seed_value: int, opts: Dictionary) -> bool:
 	if scr == null:
 		return false
 	_bus_count = 0
-	campaign = scr.new(seed_value, Callable(self, "_r4e_bus"), null, opts)
+	campaign = scr.new(seed_value, Callable(self, "_r4e_bus"), null, {"home_opts": opts})
 	if campaign.has_method("start"):
 		campaign.call("start")
 	sim = campaign.call("active_sim")
@@ -663,6 +688,7 @@ func _r4e_dispose() -> void:
 					s.dispose()
 			sim.dispose()
 		campaign = null
+		_r4e_free_buses()
 	else:
 		sim.dispose()
 
@@ -689,15 +715,25 @@ func _r4e_load_campaign(text: String) -> bool:
 	var d: Variant = JSON.parse_string(text)
 	if not (d is Dictionary) or not d.has("maps") or not _r4e_save_script().has_method("campaign_from_dict"):
 		return false
+	hud.show_message("Loading…", 60.0)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var old_buses := _r4e_buses
+	_r4e_buses = []
 	_bus_count = 0
 	var res: Variant = _r4e_save_script().call("campaign_from_dict", d, Callable(self, "_r4e_bus"))
 	var c: Object = res.get("campaign") if res is Dictionary else res
 	if c == null or (res is Dictionary and not res.get("ok", true)):
+		_r4e_free_buses()
+		_r4e_buses = old_buses
 		hud.show_message("Could not load the save.", 5.0)
 		return true
 	world.unbind()
 	world3d.unbind()
-	_r4e_dispose()
+	var new_buses := _r4e_buses
+	_r4e_buses = old_buses
+	_r4e_dispose()  # frees the old campaign's buses
+	_r4e_buses = new_buses
 	campaign = c
 	sim = c.call("active_sim")
 	_r4e_rebind()

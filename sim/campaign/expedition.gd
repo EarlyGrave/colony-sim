@@ -5,12 +5,12 @@ extends RefCounted
 ##   c.maps: Array[{id, biome, sim, kind}]   c.tick   c.active   c.campaign_seed
 ##   c.in_flight: Array (shared with sling crates, tagged by "kind")
 ##   c.ledgers: Dictionary (map id -> {inbox, buffer, lost, ...})
-##   c.defs: Defs      c.bus_factory: Callable -> bus
+##   c.defs: Defs      c.bus_factory: Callable -> bus; c.add_outpost(biome, crew, supplies, id)
 ## Campaign.send_expedition / recall call `Expedition.send` / `Expedition.recall` (after logging
 ## the campaign command) and Campaign.step calls `Expedition.tick(self)` after `tick += 1`.
 ## Numbers live in data/expedition.json (W3); FALLBACK only covers a missing key.
 
-const FALLBACK := {"travel_ticks": 600, "collateral": 50, "map_w": 96, "map_h": 96, "deliver_radius": 4}
+const FALLBACK := {"travel_ticks": 600, "collateral": 50, "map_size": 96, "deliver_radius": 4}
 const TECH := "expeditions"
 
 
@@ -119,7 +119,8 @@ static func recall(c: Object, map_id: int) -> bool:
 	if not bool(led.get("lost", false)):
 		for col in sim.colonists.list:
 			if col.alive:
-				crew.append({"name": col.display_name})
+				crew.append({"name": col.display_name, "engineer": col.engineer,
+					"skills": col.skills.levels.duplicate(), "passions": col.skills.passions.duplicate()})
 	c.in_flight.append({"kind": "return", "from": map_id, "crew": crew, "items": items,
 		"arrive": int(c.tick) + int(cfg(c)["travel_ticks"])})
 	c.maps.erase(m)
@@ -147,28 +148,20 @@ static func tick(c: Object) -> void:
 
 static func _arrive_party(c: Object, f: Dictionary) -> void:
 	var id := int(f["map_id"])
-	var conf := cfg(c)
-	var seed_k := int(c.campaign_seed) * 1000003 + id * 7919
-	var opts := {"map_w": int(conf["map_w"]), "map_h": int(conf["map_h"]), "biome": f["biome"],
-		"crew": f["crew"], "supplies": f["supplies"], "no_refining": true}
-	var sim := Simulation.new(seed_k, c.bus_factory.call(), c.defs, opts)
-	sim.start_new_game()
-	c.maps.append({"id": id, "biome": f["biome"], "sim": sim, "kind": "outpost", "seed": seed_k,
-		"opts": opts, "crew_n": (f["crew"] as Array).size(), "dead_charged": 0, "sling_ready": 0})
-	ledger(c, id)
+	c.add_outpost(str(f["biome"]), f["crew"], f["supplies"], id)
 	_bus_emit(home_sim(c), "expedition_arrived", [id])
 
 
 static func _arrive_return(c: Object, f: Dictionary) -> void:
 	var home := home_sim(c)
 	var items: Dictionary = f["items"]
-	if home != null and int(c.active) == 0 and home.has_method("receive_cargo") and not items.is_empty():
+	if home != null and int(c.active) == 0 and not items.is_empty():
 		home.receive_cargo(items, int(cfg(c)["deliver_radius"]))
 	else:
 		add_items(ledger(c, 0)["inbox"], items)
 	var crew: Array = f["crew"]
 	if not crew.is_empty():
-		if home != null and int(c.active) == 0 and home.has_method("receive_party"):
+		if home != null and int(c.active) == 0:
 			home.receive_party(crew)
 		else:
 			var l := ledger(c, 0)
@@ -200,6 +193,5 @@ static func _charge_losses(c: Object) -> void:
 		var cl := campaign_ledger(c)
 		cl["collateral_debt"] = int(cl["collateral_debt"]) + debt
 		var home := home_sim(c)
-		if home != null and home.has_method("charge_debt"):
-			home.charge_debt(debt)
+		# No sim-level debt API exists (sim/debt is per-colonist); the counter above is the record.
 		_bus_emit(home, "expedition_loss", [int(m["id"]), debt])
