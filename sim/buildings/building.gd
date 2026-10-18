@@ -79,6 +79,8 @@ func is_machine() -> bool:
 # --- Production buffers -------------------------------------------------------
 
 func input_space(item_id: String) -> int:
+	if def.get("port_building", false):  # region A2b
+		return PortLink.manual_input_space(self)
 	if bill_items.has(item_id):  # region crafting
 		return int(def["input_capacity"]) - int(input.get(item_id, 0))
 	if recipe.is_empty() or not recipe["inputs"].has(item_id):
