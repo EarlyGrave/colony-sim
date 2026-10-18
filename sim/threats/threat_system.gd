@@ -182,6 +182,7 @@ func start_wave() -> void:
 	if wave_index == 1:
 		strength = minf(strength, float(cfg["first_wave_max_points"]))  # tutorial swarm
 	var origin := next_spawn_origin if next_spawn_origin.x >= 0 else _pick_spawn_origin()
+	sim.ecology.wave_nest = sim.ecology.nest_at(origin) if sim.ecology.active() else -1  # region T5
 	raid_id = (force_raid_id if force_raid_id != "" else pick_raid_type(strength)) if origin.x >= 0 else ""
 	raid_total = 0
 	raid_dead = 0
@@ -190,6 +191,7 @@ func start_wave() -> void:
 	if raid_id != "":
 		var r: Dictionary = sim.defs.raids[raid_id]
 		var units := compose_raid(raid_id, strength)
+		units = sim.ecology.muster(units)  # region T5
 		raid_total = units.size()
 		if str(r["spawn"]) == "drop" and not sim.buildings.list.is_empty():
 			var b: Building = sim.buildings.list[sim.rng.randi_range(0, sim.buildings.list.size() - 1)]
@@ -279,6 +281,15 @@ func side_name(c: Vector2i) -> String:
 
 
 func _pick_spawn_origin() -> Vector2i:
+	var o := _pick_edge_origin()
+	# region T5: waves leave from the fullest nest (edge pick above still consumes wave_rng)
+	if o.x >= 0 and sim.ecology.active():
+		return sim.ecology.lead_cell()
+	# endregion
+	return o
+
+
+func _pick_edge_origin() -> Vector2i:
 	var home := sim.map_center()
 	var w := sim.map.width
 	var h := sim.map.height
@@ -319,6 +330,16 @@ func _spawn(def_id: String, c: Vector2i) -> Enemy:
 	_next_id += 1
 	enemies.append(e)
 	hash.insert(e)  # region perf-threat
+	# region T5: mutant variant by nest pollution
+	var vid := sim.ecology.roll_variant(e.def, sim.ecology.wave_nest)
+	if vid != "":
+		var v: Dictionary = e.def["variants"][vid]
+		e.variant = vid
+		e.max_hp *= float(v.get("hp_mult", 1.0))
+		e.hp = e.max_hp
+		e.damage_mult = float(v.get("damage_mult", 1.0))
+		e.move_ticks = maxi(1, e.move_ticks + int(v.get("move_ticks_delta", 0)))
+	# endregion
 	# region mutation: creatures born on mutated ground are tougher
 	if sim.mutation.is_mutated(c):
 		e.max_hp *= 1.0 + float(sim.defs.mutation["enemy_hp_bonus"])
@@ -344,7 +365,7 @@ func _tick_enemy(e: Enemy) -> void:
 			e.clear_path()
 			if e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
-				sim.buildings.damage(b, float(e.def["damage"]) * sim.mutation.enemy_damage_mult(e.cell))
+				sim.buildings.damage(b, float(e.def["damage"]) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell))
 		elif _approach_building(e, b) == GridMover.Move.FAILED:
 			e.retarget_at = sim.tick + 5
 	else:
@@ -358,7 +379,7 @@ func _tick_enemy(e: Enemy) -> void:
 				if dodge > 0.0 and not e.def.get("ranged", false) and sim.rng.randf() < dodge:
 					return
 				# endregion
-				sim.health.apply_damage(c, float(e.def["damage"]) * sim.mutation.enemy_damage_mult(e.cell), "", str(e.def.get("damage_kind", "bite")))  # region health
+				sim.health.apply_damage(c, float(e.def["damage"]) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell), "", str(e.def.get("damage_kind", "bite")))  # region health
 		elif _approach_colonist(e, c) == GridMover.Move.FAILED:  # region perf-threat
 			e.retarget_at = sim.tick + 5
 
