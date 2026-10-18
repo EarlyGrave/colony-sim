@@ -5,6 +5,7 @@ extends TestCase
 func _defs(on: bool) -> Defs:
 	var d := peaceful_defs()
 	d.balance["b3"] = {"enabled": on}
+	d.balance["e3_enabled"] = false
 	return d
 
 

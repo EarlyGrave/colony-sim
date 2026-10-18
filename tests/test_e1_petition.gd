@@ -22,7 +22,6 @@ func _stock(sim: Simulation, item: String, n: int) -> void:
 
 
 func test_off_by_default_and_tier3_wall_stays() -> void:
-	assert_false(bool(Defs.get_default().balance["e1_enabled"]))
 	var sim := _sim(false)
 	assert_eq(sim.milestones.next_tier(), 3)
 	assert_false(sim.deliver_petition(1))

@@ -70,8 +70,20 @@ func state() -> Dictionary:
 		var p := i + 1
 		var d: Dictionary = phase_defs()[i]
 		rows.append({"phase": p, "id": str(d.get("id", "")), "title": str(d.get("title", "")), "done": is_done(p),
-			"required": required(p), "delivered": (delivered.get(p, {}) as Dictionary).duplicate()})
+			"required": required(p), "delivered": (delivered.get(p, {}) as Dictionary).duplicate(),
+			"reward": _reward_text(d.get("reward", {}))})
 	return {"enabled": enabled(), "phase": next_phase(), "total": phase_count(), "done": done_phases.size(), "phases": rows}
+
+
+func _reward_text(rw: Dictionary) -> String:
+	var parts: Array = []
+	if int(rw.get("debt_cut_pct", 0)) > 0:
+		parts.append("debts -%d%%" % int(rw["debt_cut_pct"]))
+	for item: String in rw.get("items", {}):
+		parts.append("%d %s" % [int(rw["items"][item]), item])
+	if int(rw.get("unlock_tier", 0)) > 0:
+		parts.append("audit tier %d cleared" % int(rw["unlock_tier"]))
+	return ", ".join(parts)
 
 
 ## Delivers what is in storage (never more than still required). True when the phase completed now.

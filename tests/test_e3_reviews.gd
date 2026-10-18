@@ -21,7 +21,6 @@ func _pay(sim: Simulation, frac: float) -> void:
 
 
 func test_off_by_default_and_no_extra_reviews() -> void:
-	assert_false(bool(Defs.get_default().balance["e3_enabled"]))
 	var sim := _sim(false)
 	_pay(sim, 1.0)
 	sim.run_ticks(Simulation.TICKS_PER_SECOND * 6)
@@ -29,12 +28,12 @@ func test_off_by_default_and_no_extra_reviews() -> void:
 	assert_eq(sim.milestones.e3_rank_title(), "")
 
 
-func test_review_4_needs_debt_below_5_pct() -> void:
+func test_review_4_needs_debt_below_75_pct() -> void:
 	var sim := _sim(true)
-	_pay(sim, 0.9)
+	_pay(sim, 0.2)
 	sim.run_ticks(Simulation.TICKS_PER_SECOND * 6)
 	assert_eq(sim.milestones.reviews_done.size(), 3)
-	_pay(sim, 0.97)
+	_pay(sim, 0.3)
 	sim.run_ticks(Simulation.TICKS_PER_SECOND * 2)
 	assert_true(sim.milestones.reviews_done.has("e3_review_4"))
 	assert_eq(sim.milestones.e3_audit_bonus_days(), 1.0)

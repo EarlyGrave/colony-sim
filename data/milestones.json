@@ -91,7 +91,7 @@
 	],
 	"k2_reviews": [{"id": "review_outpost", "title": "Parole Review IV", "text": "An outpost has held. The wardens note the colony can survive off its own land.", "kind": "outpost_days", "value": 2, "reward": {"refined_essence": 30}}],
 	"e3_reviews": [
-		{"id": "e3_review_4", "title": "Parole Review IV: Ledger", "text": "The debt book is nearly clean. Audits will come a day later.", "kind": "debt_left_below_pct", "value": 5, "audit_bonus_days": 1, "rank": "Trusted Inmate", "reward": {"refined_essence": 30}},
-		{"id": "e3_review_5", "title": "Parole Review V: Range", "text": "Spare power and a clean sky. The wardens grant you rank and another quiet day.", "kind": "range_score", "value": 150, "audit_bonus_days": 1, "rank": "Chain Gang Foreman", "reward": {"refined_essence": 50}}
+		{"id": "e3_review_4", "title": "Parole Review IV: Ledger", "text": "A quarter of the debt book is cleared. Audits will come a day later.", "kind": "debt_left_below_pct", "value": 75, "audit_bonus_days": 1, "rank": "Trusted Inmate", "reward": {"refined_essence": 30}},
+		{"id": "e3_review_5", "title": "Parole Review V: Range", "text": "Spare power and a clean sky. The wardens grant you rank and another quiet day.", "kind": "range_score", "value": 50, "audit_bonus_days": 1, "rank": "Chain Gang Foreman", "reward": {"refined_essence": 50}}
 	]
 }

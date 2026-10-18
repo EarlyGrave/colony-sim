@@ -101,6 +101,17 @@ func _ready() -> void:
 				p.step = ExpeditionPanel.Step.CREW
 				p._render()
 	elif panel != "":
+		if panel == "petition" or panel == "dispatch":  # region EX: demo state (tier 2 audited, partial deliveries)
+			var ds: Simulation = game.sim
+			ds.milestones.done_tiers = [0, 1, 2]
+			ds.petition.delivered[1] = {"plate": 35, "parts": 8}
+			var zc := ds.map_center() + Vector2i(-8, 4)
+			for k in 8:
+				ds.set_zone(zc + Vector2i(k % 4, k / 4), "stockpile")
+			ds.ledger.record_produced("raw_food", 150, "demo")
+			for k in 3:
+				ds.items.drop(zc + Vector2i(k, 0), "raw_food", 50)
+			game.hud._process(0.6)
 		game.hud.toggle_panel(panel)
 	if dialog:
 		game._o3_open_dialog()

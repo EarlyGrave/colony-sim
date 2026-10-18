@@ -9,14 +9,15 @@ func _defs(on: bool) -> Defs:
 	return d
 
 
-func _stock(sim: Simulation, food: int, ess: int = 0) -> void:
+func _stock(sim: Simulation, food: int, ess: int = 0, ore: int = 0) -> void:
 	var base := sim.map_center() + Vector2i(-8, 4)
 	for k in 24:
 		sim.set_zone(base + Vector2i(k % 4, k / 4), "stockpile")
 	sim.ledger.record_produced("raw_food", food, "test")
 	sim.ledger.record_produced("refined_essence", ess, "test")
+	sim.ledger.record_produced("essence_ore", ore, "test")
 	var cell := 0
-	for pair: Array in [["raw_food", food], ["refined_essence", ess]]:
+	for pair: Array in [["raw_food", food], ["refined_essence", ess], ["essence_ore", ore]]:
 		var left: int = pair[1]
 		while left > 0:
 			var n := mini(left, 50)
@@ -35,7 +36,7 @@ func test_gated_off() -> void:
 func test_tier_order_and_wave_mult() -> void:
 	var sim := make_sim(1, true, 48, 48, _defs(true))
 	assert_false(sim.dispatch_sector(1, "calm"), "no stock")
-	_stock(sim, 500, 40)
+	_stock(sim, 500, 40, 80)
 	assert_false(sim.dispatch_sector(2, "calm"), "tier 2 before 1")
 	assert_true(sim.dispatch_sector(1, "calm"))
 	assert_near(sim.contracts.wave_mult(), 0.9, 0.0001)
@@ -49,7 +50,7 @@ func test_tier_order_and_wave_mult() -> void:
 
 func test_recruit_adds_colonist() -> void:
 	var sim := make_sim(2, true, 48, 48, _defs(true))
-	_stock(sim, 150)
+	_stock(sim, 250)
 	var n := sim.colonists.alive_count()
 	assert_true(sim.dispatch_sector(1, "recruit"))
 	assert_eq(sim.colonists.alive_count(), n + 1)
@@ -60,7 +61,7 @@ func test_deterministic() -> void:
 	var out: Array = []
 	for _k in 2:
 		var sim := make_sim(5, true, 48, 48, _defs(true))
-		_stock(sim, 150)
+		_stock(sim, 250)
 		sim.dispatch_sector(1, "recruit")
 		for i in 200:
 			sim.step()
