@@ -30,6 +30,14 @@ var ammo_empty_flagged := false
 ## Ingredients wanted by active bills (item -> true); refreshed by BillSystem.
 var bill_items: Dictionary = {}
 # endregion
+# region A2a
+## Station recipes of a processor machine (recipe ids, sorted); miner: node cell + fractional output.
+var station_recipes: Array[String] = []
+var station_defs: Dictionary = {}
+var node_cell := Vector2i(-1, -1)
+var mach_acc := 0.0
+var mach_items := 0
+# endregion
 
 
 func _init(p_id: int, p_def_id: String, p_def: Dictionary, p_cell: Vector2i, recipes: Dictionary) -> void:
@@ -43,6 +51,12 @@ func _init(p_id: int, p_def_id: String, p_def: Dictionary, p_cell: Vector2i, rec
 	if def.has("recipe"):
 		recipe_id = def["recipe"]
 		recipe = recipes[recipe_id]
+	if def.get("machine", "") == "processor":  # region A2a
+		for rid: String in recipes:
+			if def_id in recipes[rid].get("station", []):
+				station_recipes.append(rid)
+				station_defs[rid] = recipes[rid]
+		station_recipes.sort()
 
 
 func footprint() -> Array[Vector2i]:
@@ -73,7 +87,7 @@ func distance_to(p: Vector2) -> float:
 
 
 func is_machine() -> bool:
-	return def.has("recipe") or def.has("turret") or def.has("bills")
+	return def.has("recipe") or def.has("turret") or def.has("bills") or def.has("machine")
 
 
 # --- Production buffers -------------------------------------------------------
@@ -81,6 +95,11 @@ func is_machine() -> bool:
 func input_space(item_id: String) -> int:
 	if def.get("port_building", false):  # region A2b
 		return PortLink.manual_input_space(self)
+	if not station_recipes.is_empty():  # region A2a: processor takes inputs of any station recipe
+		for rid in station_recipes:
+			if station_defs[rid]["inputs"].has(item_id):
+				return int(def["input_capacity"]) - int(input.get(item_id, 0))
+		return 0
 	if bill_items.has(item_id):  # region crafting
 		return int(def["input_capacity"]) - int(input.get(item_id, 0))
 	if recipe.is_empty() or not recipe["inputs"].has(item_id):

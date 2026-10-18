@@ -41,9 +41,16 @@ func placement_error(def_id: String, c: Vector2i, check_cost := true) -> String:
 	if not sim.defs.buildings.has(def_id):
 		return "Unknown building"
 	var def: Dictionary = sim.defs.buildings[def_id]
+	var on_node := bool(def.get("on_node", false))  # region A2a
+	var has_node := false
 	for y in int(def["size"][1]):
 		for x in int(def["size"][0]):
 			var p := c + Vector2i(x, y)
+			if on_node and sim.map.is_node(p):
+				has_node = true
+				if occupancy.has(p) or bp_occupancy.has(p):
+					return "Spot occupied"
+				continue
 			if not sim.map.is_passable(p):
 				return "Terrain in the way"
 			if occupancy.has(p) or bp_occupancy.has(p):
@@ -52,6 +59,8 @@ func placement_error(def_id: String, c: Vector2i, check_cost := true) -> String:
 				return "Items in the way"
 			if sim.map.get_zone(p) != "":
 				return "Zone in the way"
+	if on_node and not has_node:  # region A2a
+		return "Needs a resource node"
 	if check_cost:
 		for item in def["cost"]:
 			if sim.items.count_stored(item) < int(def["cost"][item]):
@@ -72,6 +81,11 @@ func place(def_id: String, c: Vector2i, pay := true) -> Building:
 			sim.ledger.record_consumed(item, n, "construction")
 	var b := Building.new(_next_id, def_id, def, c, sim.defs.recipes)
 	_next_id += 1
+	if def.get("on_node", false):  # region A2a
+		for p in b.footprint():
+			if sim.map.is_node(p):
+				b.node_cell = p
+				break
 	list.append(b)
 	for p in b.footprint():
 		occupancy[p] = b.id
@@ -382,4 +396,60 @@ func _nearest_walkable(from: Vector2i) -> Vector2i:
 				if maxi(absi(x), absi(y)) == r and sim.pathfinder.is_walkable(from + Vector2i(x, y)):
 					return from + Vector2i(x, y)
 	return Vector2i(-1, -1)
+# endregion
+
+
+# region A2a
+## Once per tick (after logistics): miners extract, processors run recipes. No operator needed.
+func tick_machines() -> void:
+	for b in list:
+		match str(b.def.get("machine", "")):
+			"extractor":
+				_tick_extractor(b)
+			"processor":
+				_tick_processor(b)
+
+
+func _tick_extractor(b: Building) -> void:
+	if b.broken or b.destroyed or not sim.map.is_node(b.node_cell):
+		return
+	var res := sim.map.node_resource(b.node_cell)
+	var item := str(NodeData.resource(res).get("item", ""))
+	if item == "" or not sim.defs.items.has(item):
+		return
+	if b.output_total() >= int(b.def["output_capacity"]):
+		return  # full buffer: stall, nothing is lost
+	var purity: int = sim.map.node_purity[sim.map.idx(b.node_cell)]
+	b.mach_acc += NodeData.rate(res, purity) / 100.0
+	if b.mach_acc < 1.0:
+		return
+	var n := int(floor(b.mach_acc + 0.0001))
+	n = mini(n, int(b.def["output_capacity"]) - b.output_total())
+	b.mach_acc -= n
+	b.output[item] = int(b.output.get(item, 0)) + n
+	sim.ledger.record_produced(item, n, "mining")
+	b.mach_items += n
+	var per := int(b.def.get("batch_items", 10))
+	while b.mach_items >= per:
+		b.mach_items -= per
+		wear(b, float(b.def.get("wear_per_batch", 0.0)))
+
+
+func _tick_processor(b: Building) -> void:
+	if b.broken or b.destroyed:
+		return
+	if b.progress == 0:
+		b.recipe = {}
+		b.recipe_id = ""
+		for rid in b.station_recipes:
+			b.recipe = b.station_defs[rid]
+			b.recipe_id = rid
+			if b.can_run_recipe():
+				break
+			b.recipe = {}
+			b.recipe_id = ""
+		if b.recipe.is_empty():
+			return  # idle: no inputs / no room
+	if may_operate(b):
+		work(b, 1, null)
 # endregion
