@@ -138,5 +138,6 @@
 	"b4_enabled": true,
 	"k5_enabled": true,
 	"e1_enabled": true,
-	"e2_enabled": true
+	"e2_enabled": true,
+	"s5_shuttle_bot": {"target_days": 60, "min_launch_seeds": 1, "min_siege_win_rate": 0.5, "sustain_refine_cap_percent": 50}
 }

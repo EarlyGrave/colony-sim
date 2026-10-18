@@ -535,5 +535,13 @@
 			"HEY",
 			"DENIED"
 		]
+	},
+	"shuttle_ending": {
+		"text": [
+			"The gantry lights burn through the night.",
+			"You rise above the grey sky, debt unpaid but sentence ended.",
+			"Below, the planet keeps its poison and its teeth.",
+			"Somebody else will be sent to dig."
+		]
 	}
 }
