@@ -148,5 +148,167 @@
 		"build_work": 30,
 		"buildable": true,
 		"threat_priority": 0
+	},
+	"miner": {
+		"name": "Miner",
+		"size": [
+			2,
+			2
+		],
+		"color": "#8a7a5a",
+		"max_hp": 200,
+		"cost": {
+			"essence_ore": 25
+		},
+		"build_work": 100,
+		"buildable": false,
+		"threat_priority": 2,
+		"machine": "extractor",
+		"on_node": true,
+		"ports": [
+			{
+				"dx": 2,
+				"dy": 0,
+				"dir": "E",
+				"kind": "out"
+			}
+		],
+		"input_capacity": 0,
+		"output_capacity": 20,
+		"wear_per_batch": 6
+	},
+	"smelter": {
+		"name": "Smelter",
+		"size": [
+			2,
+			2
+		],
+		"color": "#b0602b",
+		"max_hp": 250,
+		"cost": {
+			"essence_ore": 30
+		},
+		"build_work": 100,
+		"buildable": false,
+		"threat_priority": 2,
+		"machine": "processor",
+		"station": "smelter",
+		"ports": [
+			{
+				"dx": -1,
+				"dy": 0,
+				"dir": "W",
+				"kind": "in"
+			},
+			{
+				"dx": 2,
+				"dy": 0,
+				"dir": "E",
+				"kind": "out"
+			}
+		],
+		"input_capacity": 20,
+		"output_capacity": 30,
+		"wear_per_batch": 12
+	},
+	"assembler": {
+		"name": "Assembler",
+		"size": [
+			2,
+			2
+		],
+		"color": "#4f7fa0",
+		"max_hp": 250,
+		"cost": {
+			"essence_ore": 30
+		},
+		"build_work": 100,
+		"buildable": false,
+		"threat_priority": 2,
+		"machine": "processor",
+		"station": "assembler",
+		"ports": [
+			{
+				"dx": -1,
+				"dy": 0,
+				"dir": "W",
+				"kind": "in"
+			},
+			{
+				"dx": 2,
+				"dy": 0,
+				"dir": "E",
+				"kind": "out"
+			}
+		],
+		"input_capacity": 20,
+		"output_capacity": 30,
+		"wear_per_batch": 8
+	},
+	"storage_in": {
+		"name": "Storage input",
+		"size": [
+			1,
+			1
+		],
+		"color": "#7a6a4a",
+		"max_hp": 100,
+		"cost": {
+			"essence_ore": 10
+		},
+		"build_work": 100,
+		"buildable": false,
+		"threat_priority": 2,
+		"port_building": true,
+		"ports": [
+			{
+				"dx": -1,
+				"dy": 0,
+				"dir": "W",
+				"kind": "in"
+			}
+		],
+		"buffer_capacity": 200
+	},
+	"storage_out": {
+		"name": "Storage output",
+		"size": [
+			1,
+			1
+		],
+		"color": "#6a7a4a",
+		"max_hp": 100,
+		"cost": {
+			"essence_ore": 10
+		},
+		"build_work": 100,
+		"buildable": false,
+		"threat_priority": 2,
+		"port_building": true,
+		"ports": [
+			{
+				"dx": 1,
+				"dy": 0,
+				"dir": "E",
+				"kind": "out"
+			}
+		],
+		"buffer_capacity": 200
+	},
+	"belt": {
+		"name": "Belt",
+		"size": [
+			1,
+			1
+		],
+		"color": "#555555",
+		"max_hp": 30,
+		"cost": {
+			"essence_ore": 1
+		},
+		"build_work": 10,
+		"buildable": false,
+		"threat_priority": 0,
+		"belt": true
 	}
 }

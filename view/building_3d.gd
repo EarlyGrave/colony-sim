@@ -9,7 +9,7 @@ const HEIGHTS := {
 	"door": 0.65, "stove": 0.45, "bed": 0.25,
 }
 ## Explicit flat fallbacks (drawn by WorldView on the ground layer).
-const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy"]
+const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "miner", "smelter", "assembler", "storage_in", "storage_out", "belt"]  # A1b: flat until A2c models
 const TOP_ART := {"hq": "capsule", "refinery": "refinery", "turret": "turret_base", "stove": "stove", "bed": "bed", "door": "door"}
 const DOOR_OPEN_HEIGHT := 0.08
 const DOOR_OPEN_RADIUS := 1.3

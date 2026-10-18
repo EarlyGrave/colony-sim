@@ -8,7 +8,11 @@
 			"refined_essence": 3,
 			"waste": 4
 		},
-		"work_ticks": 100
+		"work_ticks": 100,
+		"station": [
+			"refinery",
+			"smelter"
+		]
 	},
 	"machine_parts": {
 		"name": "Детали механизмов",
@@ -46,6 +50,61 @@
 		"work_ticks": 60,
 		"benches": [
 			"workbench"
+		]
+	},
+	"smelt_copper": {
+		"name": "Smelt copper",
+		"inputs": {
+			"copper_ore": 2
+		},
+		"outputs": {
+			"ingot_copper": 1,
+			"waste": 1
+		},
+		"work_ticks": 80,
+		"station": [
+			"smelter"
+		]
+	},
+	"smelt_iron": {
+		"name": "Smelt iron",
+		"inputs": {
+			"iron_ore": 2
+		},
+		"outputs": {
+			"ingot_iron": 1,
+			"waste": 1
+		},
+		"work_ticks": 80,
+		"station": [
+			"smelter"
+		]
+	},
+	"make_plate": {
+		"name": "Make plate",
+		"inputs": {
+			"ingot_iron": 2
+		},
+		"outputs": {
+			"plate": 1
+		},
+		"work_ticks": 60,
+		"station": [
+			"assembler"
+		]
+	},
+	"make_parts": {
+		"name": "Make components",
+		"inputs": {
+			"plate": 1,
+			"ingot_copper": 1
+		},
+		"outputs": {
+			"parts": 1
+		},
+		"work_ticks": 80,
+		"station": [
+			"assembler"
 		]
 	}
 }
