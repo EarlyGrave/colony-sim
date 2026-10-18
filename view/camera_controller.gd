@@ -174,3 +174,18 @@ func screen_to_world(screen_pos: Vector2) -> Vector2:
 ## Screen position of a 3D point given in cells (x, height, z).
 func cell_to_screen(p: Vector3) -> Vector2:
 	return unproject_position(p)
+
+
+## Bounding rect (in cells) of the ground visible on screen.
+func visible_cell_rect() -> Rect2:
+	var vs := get_viewport().get_visible_rect().size
+	var r := Rect2()
+	var first := true
+	for sp: Vector2 in [Vector2.ZERO, Vector2(vs.x, 0), vs, Vector2(0, vs.y)]:
+		var c := screen_to_world(sp) / WorldView.TILE
+		if first:
+			r = Rect2(c, Vector2.ZERO)
+			first = false
+		else:
+			r = r.expand(c)
+	return r

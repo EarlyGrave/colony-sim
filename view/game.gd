@@ -69,8 +69,9 @@ func _ready() -> void:
 ## Flat layers render at 16 px per cell into the map viewport, which the 3D
 ## ground plane and rock blocks sample.
 func _bind_3d() -> void:
-	map_viewport.size = Vector2i(world.world_size() * world.scale)
-	world3d.bind(sim, map_viewport.get_texture())
+	map_viewport.size = Vector2i(64, 64)  # host of the shared canvas only; chunk viewports render it
+	map_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	world3d.bind(sim, map_viewport.world_2d)
 
 
 func _apply_ui_scale() -> void:

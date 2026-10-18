@@ -21,8 +21,10 @@ var flat := false
 
 var _tex := {}
 var _tile_images := {}
-var _map_image: Image
-var _map_sprite := Sprite2D.new()
+var _chunk_images: Array[Image] = []  # per ground chunk (ChunkLayer.CHUNK cells)
+var _chunk_sprites: Array[Sprite2D] = []
+var _chunk_cols := 0
+var chunk_updates := 0  ## chunk textures re-uploaded (perf counter, see tests)
 var _time := 0.0
 var _turret_aim := {}  # building id -> angle
 var _enemy_last := {}  # enemy id -> [pos: Vector2, hp: float, flash_until: float]
@@ -48,19 +50,38 @@ func bind(p_sim: Simulation) -> void:
 	_turret_aim.clear()
 	_enemy_last.clear()
 	_particles.clear()
-	_map_image = Image.create(sim.map.width * ART, sim.map.height * ART, false, Image.FORMAT_RGBA8)
+	_build_chunks()
 	for y in sim.map.height:
 		for x in sim.map.width:
 			_paint_cell(Vector2i(x, y))
-	_map_sprite.texture = ImageTexture.create_from_image(_map_image)
-	_map_sprite.centered = false
-	_map_sprite.scale = Vector2(TILE / ART, TILE / ART)
-	_map_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_map_sprite.show_behind_parent = true
-	if _map_sprite.get_parent() == null:
-		add_child(_map_sprite)
+	for i in _chunk_images.size():
+		(_chunk_sprites[i].texture as ImageTexture).update(_chunk_images[i])
 	sim.bus.tile_changed.connect(_on_tile_changed)
 	sim.bus.enemy_killed.connect(_on_enemy_killed)
+
+
+func _build_chunks() -> void:
+	for sp in _chunk_sprites:
+		sp.queue_free()
+	_chunk_sprites.clear()
+	_chunk_images.clear()
+	var w := sim.map.width
+	var h := sim.map.height
+	_chunk_cols = ChunkLayer.chunk_count(w)
+	for cy in ChunkLayer.chunk_count(h):
+		for cx in _chunk_cols:
+			var r := ChunkLayer.chunk_cells(Vector2i(cx, cy), w, h)
+			var img := Image.create(r.size.x * ART, r.size.y * ART, false, Image.FORMAT_RGBA8)
+			var sp := Sprite2D.new()
+			sp.texture = ImageTexture.create_from_image(img)
+			sp.centered = false
+			sp.position = Vector2(r.position) * TILE
+			sp.scale = Vector2(TILE / ART, TILE / ART)
+			sp.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sp.show_behind_parent = true
+			add_child(sp)
+			_chunk_images.append(img)
+			_chunk_sprites.append(sp)
 
 
 func unbind() -> void:
@@ -90,7 +111,10 @@ func _on_tile_changed(c: Vector2i) -> void:
 	for d in [Vector2i.ZERO, Vector2i(0, -1), Vector2i(0, 1)]:
 		if sim.map.in_bounds(c + d):
 			_paint_cell(c + d)
-	(_map_sprite.texture as ImageTexture).update(_map_image)
+	for ch in ChunkLayer.chunks_for_change(c, sim.map.width, sim.map.height):
+		var i := ch.y * _chunk_cols + ch.x
+		(_chunk_sprites[i].texture as ImageTexture).update(_chunk_images[i])
+		chunk_updates += 1
 
 
 func _variant(c: Vector2i, n: int) -> int:
@@ -107,8 +131,10 @@ func _paint_cell(c: Vector2i) -> void:
 			kind = "ore"
 	var arr: Array = _tile_images[kind]
 	var src: Image = arr[_variant(c, arr.size())]
-	var dst := c * ART
-	_map_image.blit_rect(src, Rect2i(0, 0, ART, ART), dst)
+	var ch := ChunkLayer.chunk_of(c)
+	var img: Image = _chunk_images[ch.y * _chunk_cols + ch.x]
+	var dst := (c - ch * ChunkLayer.CHUNK) * ART
+	img.blit_rect(src, Rect2i(0, 0, ART, ART), dst)
 	var below := c + Vector2i(0, 1)
 	var above := c + Vector2i(0, -1)
 	if flat:
@@ -116,17 +142,17 @@ func _paint_cell(c: Vector2i) -> void:
 	if kind != "ground":
 		# Cliff face where the rock meets open ground below.
 		if m.in_bounds(below) and m.is_passable(below):
-			_shade(Rect2i(dst.x, dst.y + ART - 4, ART, 4), Color(0, 0, 0, 0.45))
-			_shade(Rect2i(dst.x, dst.y + ART - 1, ART, 1), Color(0, 0, 0, 0.3))
+			_shade(img, Rect2i(dst.x, dst.y + ART - 4, ART, 4), Color(0, 0, 0, 0.45))
+			_shade(img, Rect2i(dst.x, dst.y + ART - 1, ART, 1), Color(0, 0, 0, 0.3))
 	elif m.in_bounds(above) and not m.is_passable(above):
 		# Shadow cast by the rock above.
-		_shade(Rect2i(dst.x, dst.y, ART, 3), Color(0, 0, 0, 0.35))
+		_shade(img, Rect2i(dst.x, dst.y, ART, 3), Color(0, 0, 0, 0.35))
 
 
-func _shade(r: Rect2i, col: Color) -> void:
+func _shade(img: Image, r: Rect2i, col: Color) -> void:
 	for y in range(r.position.y, r.end.y):
 		for x in range(r.position.x, r.end.x):
-			_map_image.set_pixel(x, y, _map_image.get_pixel(x, y).blend(col))
+			img.set_pixel(x, y, img.get_pixel(x, y).blend(col))
 
 
 # --- Frame ----------------------------------------------------------------------

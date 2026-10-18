@@ -32,7 +32,8 @@ const BLOCK_SHADER := """
 shader_type spatial;
 render_mode unshaded;
 uniform sampler2D map_tex : filter_nearest, source_color;
-uniform vec2 map_size;
+uniform vec2 map_size;  // chunk size in cells
+uniform vec2 map_origin;  // chunk origin in cells
 varying vec3 wpos;
 varying vec3 wnormal;
 void vertex() {
@@ -41,7 +42,7 @@ void vertex() {
 }
 void fragment() {
 	vec2 xz = wpos.xz - wnormal.xz * 0.02;
-	vec3 c = texture(map_tex, xz / map_size).rgb;
+	vec3 c = texture(map_tex, clamp((xz - map_origin) / map_size, vec2(0.0), vec2(1.0))).rgb;
 	float shade = 1.0;
 	if (wnormal.y < 0.5) {
 		shade = wnormal.z > 0.5 ? 0.62 : 0.45;
@@ -55,12 +56,16 @@ var sim: Simulation
 var camera: CameraController
 var overlay: Node2D  ## screen-space bars and markers, drawn over the 3D scene
 
-var _ground := MeshInstance3D.new()
-var _blocks := MultiMeshInstance3D.new()
-var _ground_mat := ShaderMaterial.new()
-var _block_mat := ShaderMaterial.new()
-var _blocks_dirty := true
-var _wall_key := 0
+var chunks := ChunkLayer.new()  ## ground chunk viewports
+var _ground_shader: Shader
+var _block_shader: Shader
+var _chunk_nodes: Array[Node3D] = []  # per chunk: ground + blocks holder
+var _blocks: Array[MultiMeshInstance3D] = []  # per chunk
+var _blocks_dirty := {}  # chunk index -> true
+var _wall_keys := {}  # chunk index -> wall signature
+var block_rebuilds := 0  ## chunk block MultiMeshes rebuilt (perf counter)
+var view_rect := Rect2(-1e6, -1e6, 2e6, 2e6)  ## visible cells, refreshed per frame
+const CULL_MARGIN := 3.0  ## cells around the view where sprites stay alive
 var _units := {}  # "c<id>" / "e<id>" -> Sprite3D
 var _carry := {}  # colonist id -> Sprite3D
 var _facing := {}  # key -> [last_pos: Vector2, row: int, moving_until: float]
@@ -75,33 +80,20 @@ func _ready() -> void:
 	for n in ["colonist_sheet", "colonist_sick_sheet", "colonist_engineer_sheet", "colonist_engineer_sick_sheet",
 			"crawler", "brute", "spitter", "burrower", "item_ore", "item_refined", "item_waste", "item_raw_food", "item_meal"]:
 		_tex[n] = load(WorldView.SPR + n + ".png")
-	var gs := Shader.new()
-	gs.code = GROUND_SHADER
-	_ground_mat.shader = gs
-	var bs := Shader.new()
-	bs.code = BLOCK_SHADER
-	_block_mat.shader = bs
-	_ground.material_override = _ground_mat
-	_blocks.material_override = _block_mat
-	add_child(_ground)
-	add_child(_blocks)
+	_ground_shader = Shader.new()
+	_ground_shader.code = GROUND_SHADER
+	_block_shader = Shader.new()
+	_block_shader.code = BLOCK_SHADER
+	add_child(chunks)
 	_g1c_ready()  # region G1c
 	add_child(_buildings3d)  # region G1b
 
 
-func bind(p_sim: Simulation, map_tex: Texture2D) -> void:
+func bind(p_sim: Simulation, world_2d: World2D) -> void:
 	sim = p_sim
-	var size := Vector2(sim.map.width, sim.map.height)
-	var plane := PlaneMesh.new()
-	plane.size = size
-	_ground.mesh = plane
-	_ground.position = Vector3(size.x * 0.5, 0.0, size.y * 0.5)
-	_ground_mat.set_shader_parameter("map_tex", map_tex)
-	_block_mat.set_shader_parameter("map_tex", map_tex)
-	_block_mat.set_shader_parameter("map_size", size)
+	_build_chunks(world_2d)
 	_clear_units()
 	_buildings3d.clear()  # region G1b
-	_blocks_dirty = true
 	_g1d_bind()  # region G1d hook
 	sim.bus.tile_changed.connect(_on_tile_changed)
 	_g1c_bind()  # region G1c
@@ -119,8 +111,49 @@ func unbind() -> void:
 	sim = null
 
 
-func _on_tile_changed(_c: Vector2i) -> void:
-	_blocks_dirty = true
+func _on_tile_changed(c: Vector2i) -> void:
+	if sim.map.in_bounds(c):
+		_blocks_dirty[chunks.index_of(ChunkLayer.chunk_of(c))] = true
+
+
+func _build_chunks(world_2d: World2D) -> void:
+	for n in _chunk_nodes:
+		n.queue_free()
+	_chunk_nodes.clear()
+	_blocks.clear()
+	_blocks_dirty.clear()
+	_wall_keys.clear()
+	var w := sim.map.width
+	var h := sim.map.height
+	chunks.build(w, h, world_2d)
+	for cy in chunks.rows:
+		for cx in chunks.cols:
+			var ch := Vector2i(cx, cy)
+			var r := ChunkLayer.chunk_cells(ch, w, h)
+			var tex := chunks.texture_of(ch)
+			var gm := ShaderMaterial.new()
+			gm.shader = _ground_shader
+			gm.set_shader_parameter("map_tex", tex)
+			var bm := ShaderMaterial.new()
+			bm.shader = _block_shader
+			bm.set_shader_parameter("map_tex", tex)
+			bm.set_shader_parameter("map_size", Vector2(r.size))
+			bm.set_shader_parameter("map_origin", Vector2(r.position))
+			var holder := Node3D.new()
+			var ground := MeshInstance3D.new()
+			var plane := PlaneMesh.new()
+			plane.size = Vector2(r.size)
+			ground.mesh = plane
+			ground.position = Vector3(r.position.x + r.size.x * 0.5, 0.0, r.position.y + r.size.y * 0.5)
+			ground.material_override = gm
+			holder.add_child(ground)
+			var blocks := MultiMeshInstance3D.new()
+			blocks.material_override = bm
+			holder.add_child(blocks)
+			add_child(holder)
+			_chunk_nodes.append(holder)
+			_blocks.append(blocks)
+			_blocks_dirty[_blocks.size() - 1] = true
 
 
 func _clear_units() -> void:
@@ -133,17 +166,20 @@ func _clear_units() -> void:
 
 # --- Blocks -------------------------------------------------------------------
 
-func _rebuild_blocks() -> void:
+func _rebuild_chunk_blocks(idx: int) -> void:
+	var ch := Vector2i(idx % chunks.cols, idx / chunks.cols)
 	var cells: Array[Vector3] = []  # x, z, height
 	var m := sim.map
-	for y in m.height:
-		for x in m.width:
+	var r := ChunkLayer.chunk_cells(ch, m.width, m.height)
+	for y in range(r.position.y, r.end.y):
+		for x in range(r.position.x, r.end.x):
 			var t := m.get_tile(Vector2i(x, y))
 			if t == MapGrid.Tile.ROCK or t == MapGrid.Tile.DEPOSIT:
 				cells.append(Vector3(x, y, ROCK_HEIGHT))
 	for b: Building in sim.buildings.list:
-		if b.def_id == "wall":
+		if b.def_id == "wall" and ChunkLayer.chunk_of(b.cell) == ch:
 			cells.append(Vector3(b.cell.x, b.cell.y, WALL_HEIGHT))
+	block_cells_last = cells.size()
 	var box := BoxMesh.new()
 	box.size = Vector3.ONE
 	var mm := MultiMesh.new()
@@ -154,16 +190,31 @@ func _rebuild_blocks() -> void:
 		var c := cells[i]
 		var basis := Basis.from_scale(Vector3(1.0, c.z, 1.0))
 		mm.set_instance_transform(i, Transform3D(basis, Vector3(c.x + 0.5, c.z * 0.5, c.y + 0.5)))
-	_blocks.multimesh = mm
-	_blocks_dirty = false
+	_blocks[idx].multimesh = mm
+	_blocks_dirty.erase(idx)
+	block_rebuilds += 1
 
 
-func _walls_signature() -> int:
-	var h := 0
+var block_cells_last := 0
+
+
+## Per-chunk wall signatures; chunks whose walls changed get rebuilt.
+func _walls_signatures() -> Dictionary:
+	var sigs := {}
 	for b: Building in sim.buildings.list:
 		if b.def_id == "wall":
-			h = (h * 31 + b.id + 7) % 1000000007
-	return h
+			var i := chunks.index_of(ChunkLayer.chunk_of(b.cell))
+			sigs[i] = (int(sigs.get(i, 0)) * 31 + b.id + 7) % 1000000007
+	return sigs
+
+
+## All solid-block cells (rock, deposits, walls) of every chunk, for tests.
+func block_instance_total() -> int:
+	var n := 0
+	for mmi in _blocks:
+		if mmi.multimesh != null:
+			n += mmi.multimesh.instance_count
+	return n
 
 
 # --- Frame --------------------------------------------------------------------
@@ -172,12 +223,14 @@ func _process(delta: float) -> void:
 	_time += delta
 	if sim == null:
 		return
-	var key := _walls_signature()
-	if key != _wall_key:
-		_wall_key = key
-		_blocks_dirty = true
-	if _blocks_dirty:
-		_rebuild_blocks()
+	var sigs := _walls_signatures()
+	for i in chunks.viewports.size():
+		if int(sigs.get(i, 0)) != int(_wall_keys.get(i, 0)):
+			_blocks_dirty[i] = true
+	_wall_keys = sigs
+	for i: int in _blocks_dirty.keys():
+		_rebuild_chunk_blocks(i)
+	_update_view_rect()
 	_update_tint()
 	_g1c_update()  # region G1c
 	_buildings3d.sync(sim, _aim_of, _tint)  # region G1b
@@ -187,10 +240,16 @@ func _process(delta: float) -> void:
 		if not c.alive or c.hidden:
 			continue
 		seen[k] = true
+		if not _in_view(c.visual_pos() + Vector2(0.5, 0.5)):
+			_cull(k)
+			continue
 		_update_colonist(k, c)
 	for e: Enemy in sim.threats.enemies:
 		var k := "e%d" % e.id
 		seen[k] = true
+		if not _in_view(e.visual_pos() + Vector2(0.5, 0.5)):
+			_cull(k)
+			continue
 		_update_enemy(k, e)
 	for k: String in _units.keys():
 		if not seen.has(k):
@@ -202,6 +261,17 @@ func _process(delta: float) -> void:
 			_carry.erase(id)
 	if overlay:
 		overlay.queue_redraw()
+
+
+func _update_view_rect() -> void:
+	if camera != null and camera.is_inside_tree():
+		view_rect = camera.visible_cell_rect()
+	var margin := ChunkLayer.CHUNK * 0.25
+	chunks.set_active(ChunkLayer.chunks_in_rect(view_rect.grow(margin), sim.map.width, sim.map.height))
+
+
+func _in_view(p: Vector2) -> bool:
+	return ChunkLayer.cell_visible(p, view_rect, CULL_MARGIN)
 
 
 ## Night and contamination tint for the standing sprites (the ground gets it
@@ -216,9 +286,16 @@ func _update_tint() -> void:
 	_tint = t
 
 
+func _cull(k: String) -> void:
+	if _units.has(k):
+		(_units[k] as Sprite3D).visible = false
+
+
 func _sprite(k: String) -> Sprite3D:
 	if _units.has(k):
-		return _units[k]
+		var u: Sprite3D = _units[k]
+		u.visible = true
+		return u
 	var s := Sprite3D.new()
 	s.pixel_size = UNIT_PX
 	s.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -327,6 +404,8 @@ func _draw_overlay() -> void:
 		if not c.alive or c.hidden:
 			continue
 		var p := c.visual_pos() + Vector2(0.5, 0.5)
+		if not _in_view(p):
+			continue
 		if c.combat != null and c.combat.drafted:
 			var top := camera.cell_to_screen(Vector3(p.x, 1.55, p.y))
 			overlay.draw_colored_polygon(PackedVector2Array([top + Vector2(0, 10), top + Vector2(-7, -2), top + Vector2(7, -2)]), Color(0.95, 0.15, 0.15))
@@ -335,6 +414,8 @@ func _draw_overlay() -> void:
 	for e: Enemy in sim.threats.enemies:
 		if e.hp < e.max_hp:
 			var p := e.visual_pos() + Vector2(0.5, 0.5)
+			if not _in_view(p):
+				continue
 			_bar(camera.cell_to_screen(Vector3(p.x, 0.0, p.y + 0.35)), e.hp / e.max_hp, Color(0.95, 0.35, 0.3))
 
 
@@ -414,6 +495,8 @@ func _g1c_update() -> void:
 	var spots: Array[Vector3] = []  # x, z, size
 	for k: String in _units:
 		var s: Sprite3D = _units[k]
+		if not s.visible:
+			continue
 		spots.append(Vector3(s.position.x, s.position.z, 1.5 if s.pixel_size > UNIT_PX * 1.2 else 0.95))
 	var mm := _shadows.multimesh
 	if mm.instance_count != spots.size():
@@ -432,6 +515,8 @@ func _update_piles() -> void:
 	for c: Vector2i in sim.items.stacks:
 		if n >= MAX_PILES:
 			break
+		if not _in_view(Vector2(c) + Vector2(0.5, 0.5)):
+			continue
 		var st: Dictionary = sim.items.stacks[c]
 		var cnt := int(st["count"])
 		var s: Sprite3D
