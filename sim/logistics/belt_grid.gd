@@ -65,6 +65,12 @@ func _init(w: int, h: int, p_ticks_per_cell: int = 5) -> void:
 	_in_occ.resize(n)
 	hp = PackedFloat32Array()  # region T3
 	hp.resize(n)
+	kind = PackedByteArray()  # region L1
+	kind.resize(n)
+	ptr = PackedByteArray()
+	ptr.resize(n)
+	_pick = PackedInt32Array()
+	_pick.resize(n)
 
 
 func index(c: Vector2i, level: int = 0) -> int:
@@ -120,6 +126,8 @@ func remove_belt(c: Vector2i, level: int = 0) -> int:
 	dir[i] = 255
 	hp[i] = 0.0  # region T3
 	hp_damaged.erase(i)
+	if kind[i] != 0:  # region L1
+		_clear_node(i)
 	belt_count -= 1
 	version += 1
 	return it
@@ -194,11 +202,18 @@ func _resolve(i: int) -> bool:
 	_memo[i] = 1
 	var ok := false
 	if hp[i] >= stall_hp:  # region T3: damaged tile stalls
-		var t := _target(i)
-		if t >= 0 and _claim[t] == 0 and (item[t] < 0 or _resolve(t)):
-			if _claim[t] == 0:
-				_claim[t] = i + 1
+		if kind[i] >= 1 and kind[i] <= 3:  # region L1: splitter picks its output
+			var nt := _node_pick(i)
+			if nt >= 0:
+				_claim[nt] = i + 1
+				_pick[i] = nt
 				ok = true
+		else:
+			var t := _target(i)
+			if t >= 0 and _claim[t] == 0 and (item[t] < 0 or _resolve(t)):
+				if _claim[t] == 0 and (kind[t] != 4 or _merger_allows(t, i)):  # region L1
+					_claim[t] = i + 1
+					ok = true
 	_memo[i] = 2 if ok else 3
 	return ok
 
@@ -235,7 +250,7 @@ func step() -> void:
 	var targets := PackedInt32Array()
 	for i in movers:
 		carried.append(item[i])
-		targets.append(_target(i))
+		targets.append(_pick[i] if kind[i] >= 1 and kind[i] <= 3 else _target(i))  # region L1
 		item[i] = -1
 		progress[i] = 0
 	for i in ready:  # memo is written only for ready cells
@@ -249,6 +264,13 @@ func step() -> void:
 
 
 func state_hash() -> int:
+	var h := _plain_hash()
+	if node_count > 0:  # region L1: node state joins the hash only when nodes exist
+		h = _node_hash(h)
+	return h
+
+
+func _plain_hash() -> int:
 	var h := 17
 	for i in width * height:
 		if dir[i] != 255:
@@ -292,4 +314,191 @@ func repair_belt(c: Vector2i) -> void:
 		repairs_total += 1
 		hp_dirty[i] = true
 		hp_damaged.erase(i)
+# endregion
+
+
+# region L1
+## Belt node kinds (BeltGrid.kind, 0 = plain belt). 1x1 cells inside the belt grid.
+const K_BASIC := 1
+const K_SMART := 2
+const K_PRIORITY := 3
+const K_MERGER := 4
+const F_ANY := -1
+const F_OVERFLOW := -2
+
+var kind: PackedByteArray
+## Round-robin pointer per node cell (basic/smart: next slot 0..2; merger: next input 0..2).
+var ptr: PackedByteArray
+var node_count := 0
+## Smart filters: cell index -> PackedStringArray(3) ("any"|"overflow"|item id), slots 0=left 1=front 2=right.
+var filters: Dictionary = {}
+## Optional name -> item int resolver (LogisticsSystem sets it); default parses ints.
+var item_resolver := Callable()
+var _fcode: Dictionary = {}  # cell index -> PackedInt32Array(3) resolved codes
+var _pick: PackedInt32Array
+
+
+## Make `c` a node of `kind_` (1..4) flowing `d`; an existing belt keeps its item. Resets pointer/filters.
+func place_node(kind_: int, c: Vector2i, d: int) -> bool:
+	if kind_ < 1 or kind_ > 4 or not in_bounds(c) or d < 0 or d > 3:
+		return false
+	set_belt(c, d)
+	var i := index(c)
+	if kind[i] == 0:
+		node_count += 1
+	elif kind[i] != kind_:
+		filters.erase(i)
+		_fcode.erase(i)
+	kind[i] = kind_
+	ptr[i] = 0
+	version += 1
+	return true
+
+
+## Turn a node back into a plain belt (keeps item and direction).
+func remove_node(c: Vector2i) -> bool:
+	if not has_belt(c) or kind[index(c)] == 0:
+		return false
+	_clear_node(index(c))
+	version += 1
+	return true
+
+
+func _clear_node(i: int) -> void:
+	kind[i] = 0
+	ptr[i] = 0
+	node_count -= 1
+	filters.erase(i)
+	_fcode.erase(i)
+
+
+func node_kind(c: Vector2i) -> int:
+	return kind[index(c)] if has_belt(c) else 0
+
+
+func get_filter(c: Vector2i, slot: int) -> String:
+	var f = filters.get(index(c))
+	return f[slot] if f != null and slot >= 0 and slot < 3 else "any"
+
+
+## Smart nodes only. value: "any" | "overflow" | item id. False if invalid.
+func set_filter(c: Vector2i, slot: int, value: String) -> bool:
+	if not has_belt(c) or slot < 0 or slot > 2:
+		return false
+	var i := index(c)
+	if kind[i] != K_SMART:
+		return false
+	var code := F_ANY
+	if value == "overflow":
+		code = F_OVERFLOW
+	elif value != "any":
+		code = int(item_resolver.call(value)) if item_resolver.is_valid() else (value.to_int() if value.is_valid_int() else -1)
+		if code < 0:
+			return false
+	var f: PackedStringArray = filters.get(i, PackedStringArray(["any", "any", "any"]))
+	var fc: PackedInt32Array = _fcode.get(i, PackedInt32Array([F_ANY, F_ANY, F_ANY]))
+	if f[slot] == value:
+		return true
+	f[slot] = value
+	fc[slot] = code
+	filters[i] = f
+	_fcode[i] = fc
+	version += 1
+	return true
+
+
+## Output cell index for slot (0=left 1=front 2=right) of node i, or -1 if not a valid output.
+func _out_cell(i: int, slot: int) -> int:
+	var d := (dir[i] + 3 + slot) % 4
+	var x := i % width + DIRS[d].x
+	var y := i / width + DIRS[d].y
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return -1
+	var t := y * width + x
+	var td := dir[t]
+	if td == 255 or (td + 2) % 4 == d:
+		return -1
+	return t
+
+
+func _out_free(t: int) -> bool:
+	return _claim[t] == 0 and (item[t] < 0 or _resolve(t))
+
+
+## Chosen output cell for the ready item in splitter i, or -1 (blocked). Advances the pointer on success.
+func _node_pick(i: int) -> int:
+	var k := kind[i]
+	var outs := [-1, -1, -1]
+	for s in 3:
+		outs[s] = _out_cell(i, s)
+	if k == K_PRIORITY:
+		for s in [1, 0, 2]:
+			if outs[s] >= 0 and _out_free(outs[s]):
+				return outs[s]
+		return -1
+	var start := ptr[i]
+	if k == K_BASIC:
+		for n in 3:
+			var s := (start + n) % 3
+			if outs[s] >= 0 and _out_free(outs[s]):
+				ptr[i] = (s + 1) % 3
+				return outs[s]
+		return -1
+	# smart: explicit match, then any (round-robin), then overflow
+	var fc: PackedInt32Array = _fcode.get(i, PackedInt32Array([F_ANY, F_ANY, F_ANY]))
+	var it := item[i]
+	for s in [1, 0, 2]:
+		if outs[s] >= 0 and fc[s] == it and _out_free(outs[s]):
+			return outs[s]
+	for n in 3:
+		var s := (start + n) % 3
+		if outs[s] >= 0 and fc[s] == F_ANY and _out_free(outs[s]):
+			ptr[i] = (s + 1) % 3
+			return outs[s]
+	for s in [1, 0, 2]:
+		if outs[s] >= 0 and fc[s] == F_OVERFLOW and _out_free(outs[s]):
+			return outs[s]
+	return -1
+
+
+## Merger t accepts a mover from i only if i is next in rotation among ready inputs (back, left, right).
+func _merger_allows(t: int, i: int) -> bool:
+	var d := dir[t]
+	var winner := -1
+	var wslot := 0
+	var p := ptr[t]
+	for n in 3:
+		var s := (p + n) % 3
+		var od := d if s == 0 else ((d + 1) % 4 if s == 1 else (d + 3) % 4)  # side the input lies on
+		var x := t % width - DIRS[od].x
+		var y := t / width - DIRS[od].y
+		if x < 0 or y < 0 or x >= width or y >= height:
+			continue
+		var c := y * width + x
+		if dir[c] == 255 or item[c] < 0 or progress[c] < ticks_per_cell or hp[c] < stall_hp:
+			continue
+		var facing := dir[c] == od
+		if kind[c] >= 1 and kind[c] <= 3:
+			facing = false  # splitter: output not known yet, treated as non-contender
+		if facing:
+			winner = c
+			wslot = s
+			break
+	if winner < 0 or winner == i:
+		if winner == i:
+			ptr[t] = (wslot + 1) % 3
+		return true
+	return false
+
+
+func _node_hash(h: int) -> int:
+	for i in width * height:
+		if kind[i] != 0:
+			h = (h * 31 + i * 5 + kind[i]) & 0x7fffffff
+			h = (h * 31 + ptr[i]) & 0x7fffffff
+			var f = filters.get(i)
+			if f != null:
+				for s in 3:
+					h = (h * 31 + String(f[s]).hash()) & 0x7fffffff
+	return h
 # endregion

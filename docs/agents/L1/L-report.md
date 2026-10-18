@@ -1,0 +1,11 @@
+# L1 report: splitters + merger in BeltGrid
+- `sim/logistics/belt_grid.gd` `# region L1`: `kind`/`ptr`/`filters` arrays, `place_node`, `remove_node`, `set_filter`, `get_filter`, `node_kind`, `node_count`; nodes are belt cells so they stay in sparse stepping (`_occ`).
+- Kinds: 1 basic (round-robin, pointer advances on success), 2 smart (explicit match > any round-robin > overflow), 3 priority (front, left, right), 4 merger (round-robin among ready facing inputs back/left/right).
+- Outputs: left/front/right neighbours holding a belt not pointing back. Fixed ascending index order, no rng, no Dictionary-order dependence.
+- `state_hash` adds node state only if `node_count > 0`; bench hashes with no nodes equal W1b (1399289025 / 2101054657 / 2057843089).
+- `version` bumps on node place/remove and on real filter change.
+- Filter resolution: `BeltGrid.item_resolver` Callable (name -> int); default parses int strings. L2/LogisticsSystem should set `belts.item_resolver = item_id` (not done: logistics_system.gd untouched, no need yet).
+- Merger limitation: a splitter feeding a merger is not a rotation contender (first-come); plain belt/merger inputs are fair.
+- Perf: bench 8k belts + 200 mixed nodes: 0.15 to 0.81 ms/tick (items 500..2600); nodes-free jammed 4000-item case stays 1.1 ms (pre-existing). Test asserts <= 1.5 ms.
+- Tests: tests/test_splitters.gd (basic even/blocked, priority, smart filter/overflow, merger 2 and 3 inputs, lattice conservation + determinism at ticks 100/500/1999, hash-without-nodes, version, perf).
+- Docs: sim_contract.md "Belt nodes (L1)". Goldens untouched.
