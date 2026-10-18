@@ -158,6 +158,7 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 			else:
 				n = PerkHooks.scaled(operator, "waste_mult", float(n), 1.0 + sim.perks.mod(operator, "waste_mult"))
 				n = _research_waste(n)  # region R2a: finished techs add waste
+				n = sim.chips.scale_waste(b, n)  # region T4
 		elif b.recipe_id == "refine_essence":  # region crises
 			n = int(round(float(n) * sim.crises.mult("refine_output_mult")))
 		if n <= 0:
@@ -262,6 +263,7 @@ func _remove(b: Building) -> void:
 		buf.clear()
 	if sim.ammo != null:  # region ammo
 		sim.ammo.spill(b)
+	sim.chips.spill(b)  # region T4
 	if b.def.get("shelter", false):
 		for c in sim.colonists.list:
 			if c.alive and c.hidden and b.contains(c.cell):
@@ -486,6 +488,8 @@ func _tick_processor(b: Building) -> void:
 		b.recipe = {}
 		b.recipe_id = ""
 		for rid in b.station_recipes:
+			if not sim.chips.recipe_ok(rid):  # region T4: chip recipe is tech-gated
+				continue
 			b.recipe = b.station_defs[rid]
 			b.recipe_id = rid
 			if b.can_run_recipe():
@@ -495,5 +499,5 @@ func _tick_processor(b: Building) -> void:
 		if b.recipe.is_empty():
 			return  # idle: no inputs / no room
 	if may_operate(b):
-		work(b, 1, null)
+		work(b, sim.chips.steps(b), null)  # region T4: chip speed / stopped chip
 # endregion

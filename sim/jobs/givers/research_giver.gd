@@ -16,6 +16,8 @@ func find(c: Colonist) -> Job:
 	for b: Building in sim.buildings.list:
 		if not b.def.get("research_bench", false) or b.broken or b.destroyed:
 			continue
+		if sim.chips.has_chip(b):  # region T4: a chip bench needs no colonist
+			continue
 		var key := "res:%d" % b.id
 		if not sim.jobs._free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
 			continue

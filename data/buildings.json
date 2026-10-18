@@ -42,6 +42,7 @@
 		"buildable": true,
 		"research_bench": true,
 		"operator_slot": "colonist",
+		"chip_slots": 1,
 		"threat_priority": 3
 	},
 	"workbench": {
@@ -191,6 +192,7 @@
 	},
 	"smelter": {
 		"name": "Smelter",
+		"chip_slots": 1,
 		"size": [
 			2,
 			2
@@ -225,6 +227,7 @@
 	},
 	"assembler": {
 		"name": "Assembler",
+		"chip_slots": 1,
 		"size": [
 			2,
 			2

@@ -19,6 +19,8 @@ static func active(sim: Simulation) -> String:
 
 ## Bench-ticks added per tick by `op` (a Colonist for slot "colonist").
 static func speed(sim: Simulation, b: Building, op: Colonist) -> float:
+	if b != null and sim.chips.has_chip(b):  # region T4: chip operator {kind:"chip"}
+		return sim.chips.bench_speed(b)
 	if op == null or b == null or b.broken or b.destroyed:
 		return 0.0
 	var slot := str(b.def.get("operator_slot", "colonist"))

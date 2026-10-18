@@ -1,0 +1,14 @@
+{
+	"_comment": "AI chip operator (T4). Chips work only in buildings whose def has chip_slots > 0 (never miners).",
+	"item": "ai_chip",
+	"tech": "ai_chips",
+	"recipe": "make_ai_chip",
+	"chip_speed": 0.8,
+	"chip_threat_mult": 2.0,
+	"chip_waste_mult": 1.3,
+	"upkeep_item": "refined_essence",
+	"upkeep_per_day": 1,
+	"calibration_days": 3,
+	"calibrate_ticks": 60,
+	"calibrate_min_skill": 1
+}

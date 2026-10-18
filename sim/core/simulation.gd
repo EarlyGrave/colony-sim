@@ -77,6 +77,7 @@ var ammo: AmmoSystem  # region ammo
 # endregion
 
 var research: ResearchSystem  # region R2a
+var chips: ChipSystem  # region T4
 var opts: Dictionary = {}  # region meta: deterministic start options
 var run_summary: Dictionary = {}  # region meta
 var _connections: Array = []  # [signal, callable] pairs made on the bus
@@ -155,6 +156,7 @@ func _init_systems() -> void:
 	mutation = MutationSystem.new(self)  # region mutation
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
+	chips = ChipSystem.new(self)  # region T4
 
 
 func _place_starting_colony() -> void:
@@ -195,6 +197,7 @@ func step() -> void:
 	colonists.tick()
 	logistics.tick()  # region A1c
 	buildings.tick_machines()  # region A2a
+	chips.tick()  # region T4
 	perks.tick()  # region perks
 	health.tick()  # region health
 	debt.tick()  # region debt
@@ -567,6 +570,20 @@ func queue_research(tech_id: String, on: bool) -> bool:
 	return research.set_queued(tech_id, on)
 # endregion
 
+
+
+# region T4
+## Player command: slots one `ai_chip` from storage into a bench/smelter/assembler (never a miner).
+func install_chip(building_id: int) -> bool:
+	_record("install_chip", [building_id])  # save-load
+	return chips.install(building_id)
+
+
+## Player command: takes the chip out again (it drops on the building's cell).
+func remove_chip(building_id: int) -> bool:
+	_record("remove_chip", [building_id])  # save-load
+	return chips.remove(building_id)
+# endregion
 
 
 # region R2b

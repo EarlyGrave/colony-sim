@@ -30,7 +30,8 @@
 			"label": "Machinery",
 			"skill": "operating",
 			"givers": [
-				"operate"
+				"operate",
+				"calibrate"
 			]
 		},
 		"hauling": {
