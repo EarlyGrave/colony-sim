@@ -11,6 +11,7 @@ var meta: MetaState
 var select_count := 0  # times a card changed the stored preset (tests)
 var cards: Dictionary = {}  # preset id -> Button
 var start_button: Button
+var tutorial_button: Button  # region R5X
 var _on_save: Callable
 
 
@@ -18,6 +19,9 @@ func _init(p_meta: MetaState, on_save: Callable = Callable()) -> void:
 	meta = p_meta
 	_on_save = on_save
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bg := StyleBoxFlat.new()  # region R5X: opaque backdrop so the HUD does not show through
+	bg.bg_color = Color(0.07, 0.07, 0.09, 0.97)
+	add_theme_stylebox_override("panel", bg)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(scroll)
@@ -28,6 +32,33 @@ func _init(p_meta: MetaState, on_save: Callable = Callable()) -> void:
 	var title := Label.new()
 	title.text = "Choose your sentence"
 	box.add_child(title)
+	var top := HBoxContainer.new()  # region R5X: Start + tutorial toggle stay visible without scrolling
+	top.add_theme_constant_override("separation", 10)
+	box.add_child(top)
+	tutorial_button = Button.new()
+	tutorial_button.custom_minimum_size = BTN
+	tutorial_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tutorial_button.focus_mode = Control.FOCUS_NONE
+	tutorial_button.toggle_mode = true
+	tutorial_button.button_pressed = meta.tutorial
+	tutorial_button.toggled.connect(func(on: bool) -> void:
+		meta.tutorial = on
+		_refresh())
+	top.add_child(tutorial_button)
+	start_button = Button.new()
+	start_button.custom_minimum_size = BTN
+	start_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	start_button.focus_mode = Control.FOCUS_NONE
+	start_button.text = "Start"
+	start_button.pressed.connect(func() -> void:
+		meta.launched = true
+		if _on_save.is_valid():
+			_on_save.call(meta)
+		var o := meta.make_opts()
+		if meta.tutorial:
+			o["tutorial"] = true
+		start_requested.emit(o))
+	top.add_child(start_button)
 	var presets: Dictionary = meta.defs.presets["presets"]
 	for id: String in meta.defs.presets["order"]:
 		var b := Button.new()
@@ -38,12 +69,6 @@ func _init(p_meta: MetaState, on_save: Callable = Callable()) -> void:
 		b.pressed.connect(_select.bind(id))
 		box.add_child(b)
 		cards[id] = b
-	start_button = Button.new()
-	start_button.custom_minimum_size = BTN
-	start_button.focus_mode = Control.FOCUS_NONE
-	start_button.text = "Start"
-	start_button.pressed.connect(func() -> void: start_requested.emit(meta.make_opts()))
-	box.add_child(start_button)
 	_refresh()
 
 
@@ -63,5 +88,6 @@ func _select(id: String) -> void:
 
 
 func _refresh() -> void:
+	tutorial_button.text = "Warden's Orientation (tutorial): %s" % ("ON" if meta.tutorial else "OFF")  # region R5X
 	for id: String in cards:
 		cards[id].modulate = Color(1, 0.9, 0.5) if id == meta.preset else Color.WHITE

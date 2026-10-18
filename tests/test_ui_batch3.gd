@@ -94,16 +94,21 @@ func test_payoff_popup_calls_command() -> void:
 
 
 func test_hud_builds_with_crisis_and_contract() -> void:
+	var root := (Engine.get_main_loop() as SceneTree).root
+	var old_size := root.size
+	root.size = Vector2i(844, 390)  # headless default viewport is 64x64: the phone layout would hide the chip
 	var game := _game()
 	var sim := game.sim
 	_crisis_level(sim)
 	var c := {"id": 99, "template": "t", "name": "Test", "essence": 5, "parts": 0, "offered_day": 0, "expire_day": 9,
 		"deadline_day": 5, "deadline_days": 5, "reward": {"kind": "supplies"}, "state": "active"}
 	sim.contracts.list.append(c)
-	game.hud._process(0.3)
-	assert_true(game.hud._contract_btn.visible)
-	assert_true(game.hud._alerts._panel.visible)
-	assert_true(game.hud._tool_buttons.has("patrol") and game.hud._tool_buttons.has("training_dummy"))
+	for i in 3:
+		game.hud._process(0.3)
+	root.size = old_size
+	assert_true(game.hud._contract_btn.visible, "contract chip")
+	assert_true(game.hud._alerts._panel.visible, "crisis banner")
+	assert_true(game.hud._tool_buttons.has("patrol") and game.hud._tool_buttons.has("training_dummy"), "tools")
 
 
 func test_patrol_tool_sets_route() -> void:

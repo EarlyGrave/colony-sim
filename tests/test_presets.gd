@@ -82,3 +82,24 @@ func test_meta_preset_roundtrip() -> void:
 	n.load_dict(JSON.parse_string(JSON.stringify(m.to_dict())))
 	assert_eq(n.preset, "hard_time")
 	assert_eq(n.make_opts()["debt_mult"], 1.3)
+
+
+## R5X: Warden's Orientation toggle (default ON for a fresh profile, remembered in meta).
+func test_dialog_tutorial_toggle_and_first_launch() -> void:
+	var meta := MetaState.new()
+	assert_true(meta.tutorial and not meta.launched, "fresh profile: tutorial on, not launched")
+	var dlg := NewGameDialog.new(meta, func(_m: MetaState) -> void: pass)
+	var got: Array = []
+	dlg.start_requested.connect(func(o: Dictionary) -> void: got.append(o))
+	assert_true(dlg.tutorial_button.custom_minimum_size.y >= 64.0)
+	dlg.start_button.pressed.emit()
+	assert_eq(got[0].get("tutorial"), true)
+	assert_true(meta.launched)
+	dlg.tutorial_button.button_pressed = false
+	dlg.start_button.pressed.emit()
+	assert_false(got[1].has("tutorial"))
+	var m2 := MetaState.new()
+	m2.load_dict(meta.to_dict())
+	assert_false(m2.tutorial)
+	assert_true(m2.launched)
+	dlg.free()

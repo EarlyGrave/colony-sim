@@ -62,9 +62,12 @@ func _ready() -> void:
 	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
 		camera.focus = WorldView.cell_to_world(cell))
 	_r4e_connect()  # region R4e
+	hud.o2_cell_rect = _r5x_cell_rect  # region R5X
 	EventBus.game_over.connect(_on_game_over_meta)  # region meta
 	new_game(_initial_seed(), _web_size_opts(MetaStore.load_state().make_opts()))  # region meta
 	_setup_save_load()  # save-load
+	if not MetaStore.load_state().launched:  # region R5X: first ever launch shows the new-game dialog
+		_o3_open_dialog()
 
 
 ## Scales the whole 2D/UI by screen density so touch targets keep a physical
@@ -145,6 +148,34 @@ func _close_meta() -> void:
 	if _meta_layer != null:
 		_meta_layer.queue_free()
 		_meta_layer = null
+# endregion
+
+
+# region R5X
+var _r5x_zone_cell := Vector2i(-1, -1)
+
+
+## Screen rect of a tutorial "cell" target (only "stockpile": the first stockpile cell); empty if none.
+func _r5x_cell_rect(target_id: String) -> Rect2:
+	if sim == null or target_id != "stockpile":
+		return Rect2()
+	var m := sim.map
+	if _r5x_zone_cell.x < 0 or m.get_zone(_r5x_zone_cell) != "stockpile":
+		_r5x_zone_cell = Vector2i(-1, -1)
+		for i in m.zone_ids.size():
+			if m.zone_ids[i] == "stockpile":
+				_r5x_zone_cell = Vector2i(i % m.width, i / m.width)
+				break
+	if _r5x_zone_cell.x < 0:
+		return Rect2()
+	var c := _r5x_zone_cell
+	var a := camera.cell_to_screen(Vector3(c.x, 0, c.y))
+	var b := camera.cell_to_screen(Vector3(c.x + 1, 0, c.y + 1))
+	var d := camera.cell_to_screen(Vector3(c.x + 1, 0, c.y))
+	var e := camera.cell_to_screen(Vector3(c.x, 0, c.y + 1))
+	var lo := a.min(b).min(d).min(e)
+	var hi := a.max(b).max(d).max(e)
+	return Rect2(lo, hi - lo)
 # endregion
 
 
@@ -242,6 +273,7 @@ func _on_tool_selected(t: String) -> void:
 func _on_tapped(world_pos: Vector2) -> void:
 	if _o5_swallow_tap():  # region O5
 		return
+	hud.o2_ack_if("release")  # region R5X
 	var cell := WorldView.world_to_cell(world_pos)
 	if sim == null or not sim.map.in_bounds(cell):
 		return
@@ -337,6 +369,7 @@ func _select_colonist(id: int, center := true) -> void:
 	world3d.selected_colonist = id  # region G1c
 	for col in sim.colonists.list:
 		if col.id == id and col.alive:
+			hud.o2_ack_if("intake")  # region R5X
 			world.selected_cell = col.cell
 			if center:
 				camera.focus = col.visual_pos() * WorldView.TILE + Vector2(WorldView.TILE, WorldView.TILE) * 0.5

@@ -211,3 +211,12 @@ part is crafted only at home; sling cargo with travel time; save v3 (v2 rejected
 
 ## Combat control (owner, 2026-10-18)
 Both: squads ("Wardens of the Line") are the main way, and single-inmate drafting stays (control one inmate directly).
+
+## R5 Orientation tutorial (decided without owner, review)
+- Tutorial progress is sim-side (`sim.tutorial`, opts `tutorial:true`); its state joins `state_hash` only in tutorial mode, so goldens are unchanged. Skips and `tutorial_ack` are recorded commands.
+- Step 12 "release" completes by `tutorial_ack` (any tap). `forecast_revealed` fires at the first refine, long before step 9, so step 9 also accepts an ack (the view sends it when the forecast ticker is opened). Intake is acked when a colonist is selected.
+- First refine / research / workbench are latched: a step completes on entry if its fact already happened. Belt delivery is polled from port buffers. A player alarm is told apart from the wave's own via `sim.in_step`.
+- Scripted raid `tutorial_audit`: 2 crawlers, 1800 ticks, always counts as repelled at timeout, pod and inmates take 0 damage; normal waves are held until the audit step.
+- R5X: the tutorial pre-approves the tier-2 research audit (the real audit needs plates + parts, far beyond a first lesson); T0/T1 techs are free from the start, so "finish your first tech" needs a T2 tech.
+- R5X: new-game dialog has a "Warden's Orientation" toggle; fresh profile = ON and the dialog opens on first launch (`MetaState.launched`); existing profiles keep tutorial OFF.
+- R5X: the tutorial card sits in `Hud.tutorial_slot()` and is hidden while a side sheet leaves the slot under 420 px.

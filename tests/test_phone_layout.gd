@@ -168,7 +168,11 @@ func test_idle_and_popups_do_not_overlap() -> void:
 		game.hud._menu_popup.visible = true
 		_settle(game, size, sc)
 		_check_state(game, tag + " more menu")
-		game.hud._menu_popup.visible = false)
+		game.hud._menu_popup.visible = false
+		game.auto_panel._machine_row.visible = true  # R5X: expanded Machines row vs the map chips
+		_settle(game, size, sc)
+		_check_state(game, tag + " machines row")
+		game.auto_panel._machine_row.visible = false)
 
 
 func test_side_sheets_clear_of_column_and_toolbars() -> void:
