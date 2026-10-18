@@ -25,6 +25,7 @@ const PANELS: Array = [
 	# slot 6
 	["handbook", "?", "res://view/panels/handbook_panel.gd"],  # region O2
 	["forecast", "Wave", "res://view/panels/forecast_panel.gd"],  # region C5
+	["power", "Power", "res://view/panels/power_panel.gd"],  # region L4
 	["save", "Menu", "res://view/panels/save_panel.gd"],
 ]
 

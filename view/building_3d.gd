@@ -10,6 +10,7 @@ const HEIGHTS := {
 	"miner": 0.6, "smelter": 0.85, "assembler": 0.7, "storage_in": 0.35, "storage_out": 0.35,  # region A2c
 	"research_bench": 0.6,  # region R2c
 	"ash_beacon": 1.0, "penitent_wall": 1.0, "mourning_bell": 1.0,  # region T2
+	"power_pole": 1.5, "coal_generator": 1.6, "nitrogen_extractor": 1.3, "nitrogen_turbine": 1.4, "nuclear_reactor": 2.1, "solar_array": 0.6,  # region L4
 }
 ## Explicit flat fallbacks (drawn by WorldView on the ground layer).
 const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt", "warden_terminal", "sling"]  # belts: BeltLayer; warden_terminal: region R2b
@@ -373,11 +374,16 @@ static func is_working(b: Building) -> bool:
 	return false
 
 
-func _v1_update(_sim: Simulation, b: Building, d: Dictionary, tint: Color) -> void:
+func _v1_update(sim: Simulation, b: Building, d: Dictionary, tint: Color) -> void:
 	var mat: ShaderMaterial = d["mat"]
 	mat.set_shader_parameter("tint", tint)
 	mat.set_shader_parameter("damage", damage_tint(b))
 	var working := is_working(b)
+	var l4 := _l4_state(sim, b)  # region L4
+	if l4.has("burning"):
+		working = bool(l4["burning"])
+	if l4.has("tint"):
+		mat.set_shader_parameter("tint", Color(tint.r * l4["tint"].r, tint.g * l4["tint"].g, tint.b * l4["tint"].b))
 	var inst: Dictionary = d["inst"]
 	if inst.has("on"):
 		(inst["on"] as Node3D).visible = working
@@ -400,10 +406,35 @@ func _v1_update(_sim: Simulation, b: Building, d: Dictionary, tint: Color) -> vo
 			"swing":
 				if working:
 					n.rotation.y = sin(t * float(cfg["speed"])) * float(cfg["amp"])
+			"spin":  # region L4
+				if working:
+					n.rotation.x = t * float(cfg["speed"])
+			"blink":  # region L4: reactor warning lamp, only while overheating
+				n.visible = float(l4.get("overheat", 0.0)) > 0.6 and int(t * float(cfg["speed"])) % 2 == 0
 			"smoke":
 				n.visible = working
 				if working:
 					var f := fposmod(t * 0.5 + float(cfg["phase"]), 1.0)
 					n.position = piv + Vector3(f * 0.25, f * 0.9, f * 0.1)
 					n.scale = Vector3.ONE * (1.0 - f * 0.7)
+# endregion
+
+
+# region L4
+## Generator state from the power grid (view-only): burning / overheat, and the brownout tint of
+## consumers while the power overlay is on (yellow < 0.9, red < 0.5). Empty when there is no grid.
+func _l4_state(sim: Simulation, b: Building) -> Dictionary:
+	var out := {}
+	if PowerReader.GENERATORS.has(b.def_id):
+		var info := PowerReader.generator_info(sim, b.id)
+		if not info.is_empty():
+			out["burning"] = bool(info.get("burning", false)) and not b.broken
+			out["overheat"] = float(info.get("overheat", 0.0))
+	elif PowerReader.overlay_on and b.def.has("power_use"):
+		var sev := PowerReader.severity(PowerReader.factor_of(sim, b.id))
+		if sev == 1:
+			out["tint"] = Color(1.0, 0.85, 0.35)
+		elif sev == 2:
+			out["tint"] = Color(1.0, 0.35, 0.3)
+	return out
 # endregion

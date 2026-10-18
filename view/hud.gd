@@ -507,6 +507,7 @@ func bind(p_sim: Simulation) -> void:
 	_patrol_bar.visible = false
 	_o2_bind(p_sim)  # region O2
 	_c5_bind(p_sim)  # region C5
+	_l4_bind(p_sim)  # region L4
 	_f2_bind(p_sim)  # region F2
 
 
@@ -704,6 +705,7 @@ func _refresh_texts() -> void:
 	_t5_update()  # region T5
 	_o2_update()  # region O2
 	_o4_update()  # region O4
+	_l4_update()  # region L4
 	_c5_update()  # region C5
 	_letters_btn.text = "Letters (%d)" % _letters.unread if _letters.unread > 0 else "Letters"
 	_menu_btn.text = "More (%d)" % _letters.unread if _letters.unread > 0 else "More"
@@ -992,6 +994,7 @@ func _o4_build() -> void:
 	_reparent_to(_clock, _o4_res)
 	_clock.visible = true
 	_reparent_to(_stats, _o4_res)
+	_l4_build()  # region L4
 	_o4_ticker = Button.new()
 	_o4_ticker.focus_mode = Control.FOCUS_NONE
 	_o4_ticker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1369,4 +1372,40 @@ func _f2_layout(y0: float, limit: float, cluster_h: float, pop_open: bool) -> vo
 	pa_banner.visible = pa_banner.visible and w >= 160.0
 	_o4_anchor_tl(pa_banner, O4_LEFT + (right - O4_LEFT - w) * 0.5, y0 + F2_BANNER_DROP, w, 0.0)
 	pa_banner.grow_vertical = Control.GROW_DIRECTION_END
+# endregion
+
+
+# region L4
+## "PWR 80/120 (67%)" chip for the net with the lowest factor, third line of the O4 resource column.
+## Hidden until a pole exists. A Label (not a Button): the overlay toggle lives in the Power panel.
+var _l4_chip: Label
+
+
+func _l4_build() -> void:
+	_l4_chip = Label.new()
+	_l4_chip.visible = false
+	_l4_chip.clip_text = false
+	_l4_chip.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_l4_chip.add_theme_font_size_override("font_size", 15)
+	_o4_res.add_child(_l4_chip)
+
+
+func _l4_bind(p_sim: Simulation) -> void:
+	if p_sim.bus.has_signal("power_changed") and not p_sim.bus.is_connected("power_changed", _l4_on_power):
+		p_sim.bus.connect("power_changed", _l4_on_power)
+
+
+func _l4_on_power(_net: Variant = null) -> void:
+	_l4_update()
+
+
+func _l4_update() -> void:
+	if _l4_chip == null or sim == null:
+		return
+	var net := PowerReader.worst_net(sim)
+	_l4_chip.visible = not net.is_empty()
+	if net.is_empty():
+		return
+	_l4_chip.text = PowerReader.chip_text(net)
+	_l4_chip.add_theme_color_override("font_color", PowerReader.severity_color(PowerReader.severity(float(net["factor"]))))
 # endregion
