@@ -72,6 +72,14 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -
 		sim.step()
 		if sim.game_over_reason != "":
 			break
+		if profile == "power" and sim.tick % 20 == 0 and sim.power != null and sim.power.enabled:  # region LX: power columns
+			var w := sim.power.worst_net()
+			if not w.is_empty():
+				r["pw_samples"] = int(r.get("pw_samples", 0)) + 1
+				r["pw_sup"] = float(r.get("pw_sup", 0.0)) + float(w["supply"])
+				r["pw_dem"] = float(r.get("pw_dem", 0.0)) + float(w["demand"])
+				if float(w["factor"]) < 0.9:
+					r["pw_brown"] = int(r.get("pw_brown", 0)) + 1
 		for c in sim.colonists.list:
 			if c.alive and not c.hidden and not (c.health != null and c.health.downed):
 				r["total"] += 1
@@ -90,6 +98,8 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -
 			r["peak_anger"] = maxf(r["peak_anger"], sim.contracts.anger)
 			r["peak_pol"] = maxf(float(r.get("peak_pol", 0.0)), sim.contamination.fraction() * 100.0)  # region T5
 		if sim.tick == sim.ticks_per_day:  # automation by day 4: more miners on the nodes, then miner + smelter
+			if profile == "power":  # region LX: the splitter line gets the first pick of the ore nodes
+				QaBot.l2_step(sim, r)
 			Scenario.designate_nearest_deposits(sim, 16)
 			r["chain"] = not Scenario.build_chain(sim, true).is_empty()
 		if sim.tick % sim.ticks_per_day == 0:

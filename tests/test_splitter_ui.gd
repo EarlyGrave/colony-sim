@@ -37,7 +37,7 @@ func test_locked_kind_shows_tech_name() -> void:
 func test_sheet_three_taps_sets_filter() -> void:
 	var game := _make_game()
 	var sim := game.sim
-	if not (sim.logistics.has_method("place_node") and sim.logistics.has_method("set_filter")):
+	if not (sim.logistics.belts.has_method("place_node") and sim.logistics.belts.has_method("set_filter")):
 		return  # L1 not merged yet
 	sim.research.gating = false
 	var c := Vector2i(-1, -1)

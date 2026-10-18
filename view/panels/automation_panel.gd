@@ -96,6 +96,7 @@ static func path_last_dir(path: Array[Vector2i], fallback: int) -> int:
 
 # region L2
 ## Logic tool ids -> belt node kind (Simulation.NODE_DEFS index).
+const LOGIC_BTN := Vector2(90, 64)  ## five buttons must fit beside the HUD toolbar at 844 px
 const LOGIC: Array = [
 	["node_1", "Splitter", 1], ["node_2", "Smart", 2], ["node_3", "Priority", 3], ["node_4", "Merger", 4],
 ]
@@ -104,14 +105,18 @@ var _logic_btn: Button
 
 func _l2_build_row(box: VBoxContainer) -> void:
 	_logic_row = HBoxContainer.new()
-	_logic_row.add_theme_constant_override("separation", 6)
+	_logic_row.add_theme_constant_override("separation", 4)
 	_logic_row.visible = false
 	box.add_child(_logic_row)
 	for m: Array in LOGIC:
 		_add(_logic_row, str(m[0]), str(m[1]))
+		var lb: Button = _buttons[str(m[0])]
+		lb.custom_minimum_size = LOGIC_BTN
+		lb.add_theme_font_size_override("font_size", 15)
 	var ub := Button.new()
 	ub.text = "Undo"
-	ub.custom_minimum_size = BTN
+	ub.add_theme_font_size_override("font_size", 15)
+	ub.custom_minimum_size = LOGIC_BTN
 	ub.focus_mode = Control.FOCUS_NONE
 	ub.pressed.connect(func() -> void: undo_pressed.emit())
 	_logic_row.add_child(ub)

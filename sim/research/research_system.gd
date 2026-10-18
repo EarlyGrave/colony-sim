@@ -26,6 +26,8 @@ func _init(p_sim: Simulation) -> void:
 		var un: Dictionary = techs[id].get("unlocks", {})
 		for b: String in un.get("buildings", []):
 			_bld_owner[b] = id
+		for b: String in un.get("belt_nodes", []):  # region LX: splitters/mergers are gated like buildings
+			_bld_owner[b] = id
 		for r: String in un.get("recipes", []):
 			_rec_owner[r] = id
 		for r: String in un.get("rules", []):

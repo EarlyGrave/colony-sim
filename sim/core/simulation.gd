@@ -664,21 +664,19 @@ func place_belt_node(kind: int, c: Vector2i, dir: int) -> bool:
 		return false
 	if not research.building_unlocked(NODE_DEFS[kind]) or can_belt_cell_error(c) != "":
 		return false
-	if not logistics.has_method("place_node"):
-		return false
-	return bool(logistics.call("place_node", kind, c, dir))
+	return logistics.belts.place_node(kind, c, dir)
 
 
 ## Player command: output filter of a smart splitter. slot 0=left 1=front 2=right.
 func set_splitter_filter(c: Vector2i, slot: int, value: String) -> bool:
 	_record("set_splitter_filter", [c, slot, value])  # save-load
-	if slot < 0 or slot > 2 or not map.in_bounds(c) or not logistics.has_method("set_filter"):
+	if slot < 0 or slot > 2 or not map.in_bounds(c):
 		return false
 	if value != "any" and value != "overflow" and not defs.items.has(value):
 		return false
 	if get_belt_node_kind(c) != 2:
 		return false
-	return bool(logistics.call("set_filter", c, slot, value))
+	return logistics.belts.set_filter(c, slot, value)
 
 
 ## Node kind at `c` (0 = plain belt or none). Safe before L1 lands.

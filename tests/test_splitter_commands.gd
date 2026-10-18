@@ -4,7 +4,7 @@ extends TestCase
 
 
 func _l1(sim: Simulation) -> bool:
-	return sim.logistics.has_method("place_node") and sim.logistics.has_method("set_filter")
+	return sim.logistics.belts.has_method("place_node") and sim.logistics.belts.has_method("set_filter")
 
 
 func _free_row(sim: Simulation, n: int) -> Array:

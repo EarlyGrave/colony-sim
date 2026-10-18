@@ -20,6 +20,7 @@ func _init(p_sim: Simulation) -> void:
 	belts.max_hp = float(ld.get("belt_hp", 40))
 	belts.stall_hp = belts.max_hp * float(ld.get("stall_frac", 0.3))
 	# endregion
+	belts.item_resolver = item_id  # region LX: splitter filters name -> int code
 
 
 func tick() -> void:
