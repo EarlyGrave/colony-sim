@@ -261,6 +261,7 @@ func _ready() -> void:
 	again.pressed.connect(func() -> void: new_game_requested.emit())
 	_game_over.visible = false
 
+	_o2_build(root)  # region O2
 	root.move_child(_alerts, -1)
 	select_tool("inspect")
 	get_viewport().size_changed.connect(_check_layout)
@@ -504,6 +505,7 @@ func bind(p_sim: Simulation) -> void:
 	_forecast_bar.bind(p_sim)
 	_alerts.bind(p_sim)
 	_patrol_bar.visible = false
+	_o2_bind(p_sim)  # region O2
 
 
 func select_tool(id: String) -> void:
@@ -676,6 +678,7 @@ func _process(delta: float) -> void:
 	_forecast.text += " · " + _threat_text()
 	_update_batch3()
 	_t5_update()  # region T5
+	_o2_update()  # region O2
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
 	for rule_id: String in _rule_buttons:
 		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
@@ -824,4 +827,79 @@ func open_expedition(mode: String) -> void:
 	p.sent.connect(func(kind: String, ok: bool) -> void:
 		show_message(("Expedition sent." if kind == "expedition" else "Crate launched.") if ok else "Could not send.", 4.0))
 	_open_side(p, id)
+# endregion
+
+
+# region O2
+## Warden's Orientation: card + pulsing non-blocking highlight. Reads sim.tutorial only.
+var tutorial_card: TutorialCard
+var tutorial_highlight: TutorialHighlight
+var _o2_step := -2
+var _o2_start_tick := 0
+var _o2_density := "Full"
+
+
+func _o2_build(root: Control) -> void:
+	tutorial_card = TutorialCard.new()
+	tutorial_card.visible = false
+	tutorial_card.anchor_left = 0.0
+	tutorial_card.anchor_right = 1.0
+	root.add_child(tutorial_card)
+	tutorial_highlight = TutorialHighlight.new()
+	tutorial_highlight.visible = false
+	root.add_child(tutorial_highlight)
+
+
+func _o2_bind(p_sim: Simulation) -> void:
+	tutorial_card.bind(p_sim)
+	_o2_step = -2
+
+
+## Control that the lesson `target` points at, or null (cell targets belong to the map view).
+func o2_target_control(target: Dictionary) -> Control:
+	var id := str(target.get("id", ""))
+	var c: Control = null
+	match str(target.get("kind", "")):
+		"tool":
+			c = _tool_buttons.get(id)
+			if c != null and not c.is_visible_in_tree():
+				for cat: Array in CATS:
+					if (cat[2] as Array).has(id):
+						c = _cat_buttons.get(cat[0])
+		"panel":
+			c = _panel_buttons.get(id)
+			if c != null and not c.is_visible_in_tree():
+				c = _menu_btn
+	return c if c != null and c.is_visible_in_tree() else null
+
+
+func _o2_update() -> void:
+	if tutorial_card == null:
+		return
+	var step := TutorialCard.current_step(sim)
+	var lessons := TutorialCard.lessons(sim)
+	if step != _o2_step:
+		_o2_density = MetaStore.load_hint_density()
+		_o2_step = step
+		_o2_start_tick = sim.tick
+		tutorial_highlight.hide_highlight()
+	var on := step >= 0 and step < lessons.size() and _o2_density != "Off"
+	tutorial_card.visible = on
+	if not on:
+		tutorial_highlight.hide_highlight()
+		return
+	tutorial_card.refresh()
+	var sw := ((300 if _compact else SIDE_W) + 16) if _side != null else 8
+	tutorial_card.offset_left = 92.0 if _compact else 8.0
+	tutorial_card.offset_right = -float(sw)
+	tutorial_card.offset_top = _stack.size.y + 4
+	var d: Dictionary = lessons[step]
+	var nudge := int(d.get("nudge_ticks", 600)) * (2 if _o2_density == "New" else 1)
+	var target: Control = null
+	if d.get("target") is Dictionary:
+		target = o2_target_control(d["target"])
+	if target != null and sim.tick - _o2_start_tick >= nudge:
+		tutorial_highlight.show_over(target.get_global_rect())
+	else:
+		tutorial_highlight.hide_highlight()
 # endregion
