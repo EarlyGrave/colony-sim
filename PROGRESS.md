@@ -128,6 +128,21 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
   replays (regen: `godot --headless --path . -s tools/make_golden.gd -- --regen`). Tests: 421.
 - Fixed: duplicate "research" key in balance.json; crate drop order after save/load.
 
+## Session 4 — R3 "industry provokes the planet" (T1–T5, R3X) + R4 expeditions (W1–W5, R4X)
+- R3: threat model v2 ON (data/threat.json: falloff, pollution, sticky targets, regional cap;
+  belts targetable), Beacons of Penance (ash beacon / penitent wall / mourning bell, research
+  gated, "Ring bell" button), creatures bite belts/machines + repair job (plates), turret
+  target mode rule, AI chips (bench/smelter/assembler; unchipped processors 0.6 speed — review),
+  nests with pollution-fed hunger bank -> wave size, rally letter + HUD strip, mutant variants.
+  QA 25 d x 5 seeds days survived: baseline 112, automation 117, chip 125 (<= 1.3x).
+- R4: Campaign layer (home = map 0 seed unchanged + 96x96 outposts), analytic per-day autopilot
+  for unattended maps, biomes ash/crystal/swamp (cinder_ore/prism_ore/bog_resin), expeditions
+  (research gated, crew + supplies, debt collateral counter), sling cargo with travel time,
+  receive_party on recall, save v3 (v2 loads as home map), map switcher + expedition/cargo
+  dialogs. Tests: 511 green twice.
+- Known: no Recall button in UI; bots never stock plates so repairs = 0; v2 raids harsher
+  (seed 3 HQ lost d15).
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
