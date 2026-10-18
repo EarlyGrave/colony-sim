@@ -1,0 +1,11 @@
+# T1 r3 report - threat generation
+- data/threat.json (enabled=false default; flip to true to make v2 the game default), sim/threats/threat_model.gd (ThreatModel), hooks in threat_system.gd region T1, Building.threat_flags/threat_now (region T1), Defs.threat.
+- Score = (value + pollution*k_poll)/(1+(dist/d0)^2) * species_bias; sticky (stick 0.7, pull_ratio melee 1.3 / ranged 1.15); regional cap on summed building threat; candidates cached every recompute_ticks (10).
+- Building value = def.threat | base[def_id] | threat_priority*per_priority, times state mods (working/idle/broken/firing/carrying_essence + any true key in b.threat_flags; def.threat_mods overrides json state_mod per building).
+- API: ThreatSystem.pick_target(e)->{kind:"building"|"colonist",id} or {}; Building.threat_now(sim); b.threat_flags["unlit"|"burst"|"chip"]=bool (json state_mod has unlit 0.25, burst 3.0, chip 2.0); sim.threats.threat_v2; sim.threats.model.score_building(b,e).
+- Belts are not Buildings: not targetable via pick_target (T3 must hook belt targets; base.belt=1.0 reserved in json).
+- Walls with sapper_only are skipped unless def has explicit `threat` (T2 penitent_wall: set `threat`, no sapper_only).
+- Perf (300 enemies, 250 map, p95 tick): legacy 8.0 ms, v2 5.5 ms (noisy; baseline already above 5). tools/perf_threat.gd got --v2=1.
+- With v2 forced on: test_raids, test_qa_longrun pass. Full suite 429 green with default off.
+- Goldens regenerated: only the `threats` part hash changed (new fields model/threat_v2 are dumped), no behaviour change.
+- sim_contract.md row added for threat.json.

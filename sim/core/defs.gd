@@ -49,6 +49,9 @@ var debt: Dictionary = {}
 # region idle-work
 var idle_work: Dictionary = {}
 var mutation: Dictionary = {}  # region mutation
+# region T1
+var threat: Dictionary = {}
+# endregion
 # endregion
 # region raids
 var raids: Dictionary = {}
@@ -127,6 +130,7 @@ func load_from(dir: String) -> void:
 	# region idle-work
 	idle_work = _load_json(dir + "idle_work.json")
 	mutation = _load_json(dir + "mutation.json")  # region mutation
+	threat = _load_json(dir + "threat.json")  # region T1
 	# endregion
 	# region raids
 	raids = _load_json(dir + "raids.json")
@@ -203,6 +207,7 @@ func duplicate_defs() -> Defs:
 	# region idle-work
 	d.idle_work = idle_work.duplicate(true)
 	d.mutation = mutation.duplicate(true)  # region mutation
+	d.threat = threat.duplicate(true)  # region T1
 	# endregion
 	# region raids
 	d.raids = raids.duplicate(true)

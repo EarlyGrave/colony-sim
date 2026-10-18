@@ -38,6 +38,11 @@ var node_cell := Vector2i(-1, -1)
 var mach_acc := 0.0
 var mach_items := 0
 # endregion
+# region T1
+## Extra threat states set by other systems (e.g. "unlit", "burst", "chip"); keys looked up in
+## `def.threat_mods`, then `data/threat.json` state_mod. true = active.
+var threat_flags: Dictionary = {}
+# endregion
 
 
 func _init(p_id: int, p_def_id: String, p_def: Dictionary, p_cell: Vector2i, recipes: Dictionary) -> void:
@@ -178,3 +183,12 @@ func needs_repair(sim: Simulation) -> bool:
 	if broken or hp < max_hp:
 		return true
 	return is_machine() and condition < float(sim.defs.balance["repair"]["threshold"]) * 100.0
+
+
+# region T1
+## Current attention value (data/threat.json), without pollution or regional cap.
+func threat_now(sim: Simulation) -> float:
+	if sim.threats == null or sim.threats.model == null:
+		return float(def.get("threat", 0.0))
+	return sim.threats.model.building_value(self)
+# endregion
