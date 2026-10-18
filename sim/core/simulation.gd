@@ -85,6 +85,7 @@ var tutorial: TutorialSystem
 var in_step := false
 # endregion
 var chips: ChipSystem  # region R4b
+var abilities: Abilities  # region C2
 ## True for buildings whose recipes produce waste (refinery, smelter): refining class.
 func is_refining_building(def_id: String) -> bool:
 	var d: Dictionary = defs.buildings.get(def_id, {})
@@ -298,6 +299,7 @@ func _init_systems() -> void:
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	chips = ChipSystem.new(self)  # region T4
+	abilities = Abilities.new(self)  # region C2
 	if bool(opts.get("tutorial", false)):  # region O1
 		tutorial = TutorialSystem.new(self)
 
@@ -373,6 +375,7 @@ func step() -> void:
 	health.tick()  # region health
 	debt.tick()  # region debt
 	mood.tick()  # region mood
+	abilities.tick()  # region C2
 	threats.tick()
 	contamination.tick()
 	mutation.tick()  # region mutation
@@ -789,6 +792,14 @@ func queue_research(tech_id: String, on: bool) -> bool:
 	return research.set_queued(tech_id, on)
 # endregion
 
+
+
+# region C2
+## Squad role ability (taunt / volley / stabilise). Rejected on cooldown, missing essence, no user or no target.
+func use_ability(squad_id: int, ability_id: String) -> bool:
+	_record("use_ability", [squad_id, ability_id])  # save-load
+	return abilities.use(squad_id, ability_id)
+# endregion
 
 
 # region T4

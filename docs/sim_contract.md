@@ -75,6 +75,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `learn_perk` | colonist_id: int, perk_id: str | bool | colonist exists, perk point and prereqs, not yet learned |
 | `use_perk` | colonist_id: int, perk_id: str | bool | learned, off cooldown |
 | `respec_perks` | colonist_id: int | bool | pays `perks.respec_cost` |
+| `use_ability` | squad_id: int, ability_id: str | bool | C2: squad has a living member in the ability role, off cooldown, `essence_cost` refined_essence in storage (stabilise: a Down inmate in range and `health.stabilise`); pays essence, puffs contamination at the user, sets threat flag `burst` |
 | `accept_contract` | contract_id: int | bool | offer open |
 | `decline_contract` | contract_id: int | bool | offer open |
 | `deliver_contract` | contract_id: int | bool | accepted and goods in storage |
@@ -130,7 +131,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `models.json` | art model descriptors (view only, not read by sim) |
 | `mood.json` | base, check_ticks, thresholds, chances, thoughts |
 | `mutation.json` | update_ticks, cap, diffusion, decay, bloom/illness chances |
-| `threat.json` | enabled (threat_v2), d0, k_poll, stick, pull_ratio, region_size/cap_per_region, recompute_ticks, base/state_mod/colonist_mod/species_bias; def fields `threat`, `threat_mods`; API `ThreatSystem.pick_target(e)`, `Building.threat_now(sim)`, `Building.threat_flags` |
+| `threat.json` | enabled (threat_v2), d0, k_poll, stick, pull_ratio, region_size/cap_per_region, recompute_ticks, base/state_mod/colonist_mod/species_bias; def fields `threat`, `threat_mods`; API `ThreatSystem.pick_target(e)`, `Building.threat_now(sim)`, `Building.threat_flags`; C2 `sim.abilities.flags_of(colonist_id)` {flag: [until_tick, mult, radius]} (kept off `Colonist`: its property list feeds golden dumps) multiplies `ThreatModel.colonist_value` (radius > 0: fades beyond it) |
 | `names.json` | names[], backstories[] |
 | `needs.json` | start_food/rest, retry_ticks, food{}, rest{} |
 | `perks.json` | caps, respec_cost, perks id -> {skill, level, effect}, levels_per_point |
@@ -146,7 +147,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `skills.json` | max_level, xp_base, xp_step, xp_per_work_tick, speed_per_level, passion_xp |
 | `time.json` | start_hour, dawn/dusk hours, night_daylight |
 | `traits.json` | traits id -> {effects} |
-| `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...} |
+| `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...}, C2 `abilities` id -> {role, cooldown_ticks, essence_cost, contam_puff, noise_burst{mult,ticks}, taunt/volley/radius} |
 | `work.json` | default_priority, max_priority, types{} |
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
 | `zones.json` | id -> {name, color, accepts[], waste_emission_factor} |
@@ -183,7 +184,7 @@ Collateral debt is a counter (`ledgers["campaign"].collateral_debt`) because `si
 An `int` hash of observable state. Parts in order: `[tick, game_over_reason, alarm]`; each `items.stacks` entry `[cell, stack]` (insertion order);
 each colonist in `colonists.list` `[id, cell, hp, alive, carry_item, carry_count, carry_quality, learned_perks]`; each building in `buildings.list`
 `[id, def_id, cell, hp, condition, broken, input, output, output_q]` and again `[..., output, ammo, ammo_policy]`; `hash(mutation.field)`;
-`logistics.state_parts()` = `[belt_count, belts.state_hash()]`. Belt hp joins the hash only for tiles with hp != max (undamaged belts hash as before).
+`logistics.state_parts()` = `[belt_count, belts.state_hash()]`. Belt hp joins the hash only for tiles with hp != max (undamaged belts hash as before). `abilities.state_parts()` (cooldowns, threat flags, volley shots) is appended only after the first `use_ability`.
 
 ### Line damage (T3, `balance.json` `line_damage`)
 `BeltGrid.hp` dense PackedFloat32Array (max `belt_hp`); hp < `stall_frac` x max: tile stops moving items; hp 0 stays as a broken marker (belt kept) until repaired. Creatures bite adjacent belt tiles (`structure_dmg` in `enemies.json`, own `bite_cd`, hook `ThreatSystem._attack_structure`). Machines get `broken` below `machine_broken_frac` hp. `RepairJob` (building or `RepairJob.for_belt(cell)`, reservation `rep:belt:x,y`) pays `belt_repair_cost`/`machine_repair_cost` (building def `repair_cost` overrides) from stored items, only for structural damage; the giver offers it only if affordable.
