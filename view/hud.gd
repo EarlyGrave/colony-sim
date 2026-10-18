@@ -788,3 +788,40 @@ func _t5_update() -> void:
 		_t5_label.text = "Creatures massing in the %s - raid in %.1f h" % [
 			sim.threats.side_name(sim.ecology.lead_cell()), left * 24.0 / sim.ticks_per_day]
 # endregion
+
+
+# region R4e
+signal map_chosen(id: int)
+var map_switcher: MapSwitcher
+var _campaign: Object
+
+
+## Shows the map chips when the campaign has more than the home map (or
+## expeditions can be planned); pass null for a plain single-map game.
+func bind_campaign(c: Object) -> void:
+	_campaign = c
+	if c == null:
+		if map_switcher != null:
+			map_switcher.visible = false
+		return
+	if map_switcher == null:
+		map_switcher = MapSwitcher.new()
+		map_switcher.map_chosen.connect(func(id: int) -> void: map_chosen.emit(id))
+		map_switcher.expedition_pressed.connect(func() -> void: open_expedition("expedition"))
+		map_switcher.cargo_pressed.connect(func() -> void: open_expedition("cargo"))
+		_stack.add_child(map_switcher)
+	map_switcher.visible = true
+	map_switcher.bind(c)
+
+
+func open_expedition(mode: String) -> void:
+	var id := "exp_" + mode
+	if _side_id == id:
+		close_side()
+		return
+	var p := ExpeditionPanel.new()
+	p.setup(_campaign, mode)
+	p.sent.connect(func(kind: String, ok: bool) -> void:
+		show_message(("Expedition sent." if kind == "expedition" else "Crate launched.") if ok else "Could not send.", 4.0))
+	_open_side(p, id)
+# endregion
