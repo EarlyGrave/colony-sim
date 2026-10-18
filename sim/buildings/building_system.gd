@@ -219,6 +219,12 @@ func damage(b: Building, amount: float) -> void:
 	b.hp -= amount
 	if b.hp <= 0.0:
 		destroy(b)
+	# region T3: heavily damaged machines stop (existing broken flag)
+	elif b.is_machine() and not b.broken and b.hp < b.max_hp * float(sim.defs.balance["line_damage"]["machine_broken_frac"]):
+		b.broken = true
+		b.progress = 0
+		sim.bus.building_broken.emit(b.id)
+	# endregion
 
 
 ## Removes the building. Its stored items spill onto the ground.
@@ -500,4 +506,20 @@ func _tick_processor(b: Building) -> void:
 			return  # idle: no inputs / no room
 	if may_operate(b):
 		work(b, sim.chips.steps(b), null)  # region T4: chip speed / stopped chip
+# endregion
+
+# region T3
+## Repair material cost: building def `repair_cost` or the balance default.
+func repair_cost_of(b: Building) -> Dictionary:
+	return b.def.get("repair_cost", sim.defs.balance["line_damage"]["machine_repair_cost"])
+
+
+## All-or-nothing payment from stored items near `near`.
+func pay_repair(cost: Dictionary, near: Vector2i) -> bool:
+	for item: String in cost:
+		if sim.items.count_stored(item) < int(cost[item]):
+			return false
+	for item: String in cost:
+		sim.items.consume_stored(item, int(cost[item]), near)
+	return true
 # endregion

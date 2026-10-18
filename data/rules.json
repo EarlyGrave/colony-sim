@@ -12,6 +12,20 @@
 		"default": false,
 		"max_contamination_percent": 50
 	},
+	"repair_priority": {
+		"name": "Repair priority",
+		"short": "Repair\nfirst",
+		"default": "nearest",
+		"modes": ["nearest", "belts", "machines", "turrets"],
+		"hidden": true
+	},
+	"turret_target_mode": {
+		"name": "Turret target mode",
+		"short": "Turret\nmode",
+		"default": "nearest",
+		"modes": ["nearest", "threatening", "weakest"],
+		"hidden": true
+	},
 	"ore_reserve": {
 		"name": "Ore reserve: do not feed stockpile ore to the refinery below the threshold",
 		"short": "Ore\nreserve",

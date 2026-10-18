@@ -218,6 +218,8 @@ func _ready() -> void:
 	_tool_order.append(_alarm_btn)
 	var rules: Dictionary = Defs.get_default().rules
 	for rule_id: String in rules:
+		if rules[rule_id].get("hidden", false):  # region T3
+			continue
 		var rb := _button(tools_row, str(rules[rule_id]["short"]), BTN_MIN, "colonist_engineer")
 		rb.toggle_mode = true
 		rb.toggled.connect(func(on: bool) -> void: rule_toggled.emit(rule_id, on))
