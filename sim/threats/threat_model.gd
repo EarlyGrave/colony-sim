@@ -73,6 +73,9 @@ func colonist_value(c: Colonist) -> float:
 			v *= float(m["gear"])
 	if c.job != null:
 		v *= float(m["working"])
+	var cf := sim.abilities.flags_of(c.id)  # region C2: insertion order is set by Abilities
+	for f: String in cf:
+		v *= float(cf[f][1])
 	return v
 
 
@@ -170,6 +173,7 @@ func _belt_ok(c: Vector2i, e: Enemy) -> bool:
 
 func score(i: int, e: Enemy) -> float:
 	var d: float
+	var val := _val[i]
 	if _kind[i] == 2:  # region R3X
 		var bc: Vector2i = _ref[i]
 		if not _belt_ok(bc, e):
@@ -185,12 +189,17 @@ func score(i: int, e: Enemy) -> float:
 		if not c.alive or c.hidden:
 			return -1.0
 		d = Vector2(c.cell).distance_to(Vector2(e.cell))
+		var cf := sim.abilities.flags_of(c.id)  # region C2: radius-limited flags (taunt) fade beyond their radius
+		for f: String in cf:
+			var fl: Array = cf[f]
+			if float(fl[2]) > 0.0 and d > float(fl[2]):
+				val /= float(fl[1])
 	var r := d / float(cfg["d0"])
 	var bias := 1.0
 	var sb: Dictionary = cfg["species_bias"].get(e.def_id, {})
 	if sb.has(_type[i]):
 		bias = float(sb[_type[i]])
-	return _val[i] * bias / (1.0 + r * r)
+	return val * bias / (1.0 + r * r)
 
 
 ## Best target for `e` honouring stickiness. {} when nothing is worth attacking.

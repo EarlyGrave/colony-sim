@@ -112,6 +112,9 @@ signal escape_stopped(colonist_id: int)
 # region perks
 signal perk_learned(colonist_id: int, perk_id: String)
 signal perk_used(colonist_id: int, perk_id: String)
+# region C2
+signal ability_used(squad_id: int, ability_id: String, user_id: int)
+# endregion
 signal perk_point_available(colonist_id: int, skill_id: String, points: int)
 # endregion
 # region crises
