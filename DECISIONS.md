@@ -234,3 +234,8 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
   (no day-night yet); no batteries yet; chip upkeep +10 power. Owner request overrides earlier
   "no power / splitters later".
 - Power fuels (owner): generators burn conventional fuels (coal, nitrogen, uranium/nuclear...), not essence. Essence stays science currency.
+
+## Logistics 2 deviations (decided without owner, review)
+- splitting/electrification techs are tier 2 (T1 is free at start).
+- One solar covers 62.5% of a smelter (smelter power_use 40); revisit in balance pass.
+- Coal blobs: rolled once per ore blob, never within map.extra_min_distance=13 of start.

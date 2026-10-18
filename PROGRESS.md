@@ -223,3 +223,8 @@ HP); волны заканчиваются по таймеру и твари о�
 - Owner decisions: stress postponed; "склад" target stays = capsule.
 - Fresh cloud session: install Godot 4.7.2 + web templates per README, then
   `godot --headless --path . --import` before running tests.
+
+## Session 4 — Logistics 2 (splitters, mergers, power)
+- L1 belt nodes (basic/smart/priority splitter, merger), L2 commands + splitter UI, L3 power sim (nets, brownout, fuel, meltdown), L4 power view (wires, voxel models), L5 data (coal/nitrogen/uranium fuels, 6 buildings, vents/irradiated biomes, power_model), LX reconcile.
+- Coal on start map (extra_share 0.35), goldens regenerated on purpose. 682 tests green x2, web smoke PASS.
+- Open: splitter->merger rotation (first-come), power brownout balance (59% on one seed), solar 62.5% of a smelter.
