@@ -35,6 +35,7 @@
 	},
 	"research_bench": {
 		"name": "Research Bench",
+		"power_use": 20,
 		"size": [2, 1],
 		"color": "#4a7aa8",
 		"max_hp": 120,
@@ -163,6 +164,7 @@
 	},
 	"miner": {
 		"name": "Miner",
+		"power_use": 20,
 		"size": [
 			2,
 			2
@@ -192,6 +194,7 @@
 	},
 	"smelter": {
 		"name": "Smelter",
+		"power_use": 40,
 		"chip_slots": 1,
 		"size": [
 			2,
@@ -227,6 +230,7 @@
 	},
 	"assembler": {
 		"name": "Assembler",
+		"power_use": 50,
 		"chip_slots": 1,
 		"size": [
 			2,
@@ -397,5 +401,47 @@
 		"travel": 400,
 		"max_in_flight": 3,
 		"deliver_radius": 4
+	},
+	"power_pole": {
+		"name": "Power Pole", "size": [1, 1], "color": "#8a6a3a", "max_hp": 60,
+		"cost": {"essence_ore": 4}, "build_work": 40, "buildable": true, "threat_priority": 1,
+		"power_range": 6
+	},
+	"coal_generator": {
+		"name": "Coal Generator", "size": [2, 2], "color": "#4a4038", "max_hp": 220,
+		"cost": {"essence_ore": 25}, "build_work": 100, "buildable": true, "threat_priority": 2,
+		"threat": 15, "input_capacity": 20, "output_capacity": 0, "wear_per_batch": 0,
+		"ports": [{"dx": -1, "dy": 0, "dir": "W", "kind": "in"}],
+		"power_gen": 100,
+		"fuel": {"item": "coal", "burn_ticks": 200, "waste_per_burn": 2}
+	},
+	"nitrogen_extractor": {
+		"name": "Nitrogen Extractor", "size": [2, 2], "color": "#6fa8c0", "max_hp": 200,
+		"cost": {"essence_ore": 30}, "build_work": 100, "buildable": true, "threat_priority": 2,
+		"machine": "extractor", "on_node": true, "node_resources": ["nitrogen"],
+		"power_use": 20,
+		"ports": [{"dx": 2, "dy": 0, "dir": "E", "kind": "out"}],
+		"input_capacity": 0, "output_capacity": 20, "wear_per_batch": 6, "batch_items": 10
+	},
+	"nitrogen_turbine": {
+		"name": "Nitrogen Turbine", "size": [2, 2], "color": "#8fc0d8", "max_hp": 240,
+		"cost": {"essence_ore": 30, "refined_essence": 10}, "build_work": 140, "buildable": true, "threat_priority": 2,
+		"threat": 10, "input_capacity": 20, "output_capacity": 0, "wear_per_batch": 0,
+		"ports": [{"dx": -1, "dy": 0, "dir": "W", "kind": "in"}],
+		"power_gen": 240,
+		"fuel": {"item": "nitrogen", "burn_ticks": 300, "waste_per_burn": 1}
+	},
+	"nuclear_reactor": {
+		"name": "Nuclear Reactor", "size": [3, 3], "color": "#5a8f3a", "max_hp": 400,
+		"cost": {"essence_ore": 60, "refined_essence": 30}, "build_work": 240, "buildable": true, "threat_priority": 3,
+		"threat": 25, "input_capacity": 10, "output_capacity": 20, "wear_per_batch": 0,
+		"ports": [{"dx": -1, "dy": 1, "dir": "W", "kind": "in"}, {"dx": 3, "dy": 1, "dir": "E", "kind": "out"}],
+		"power_gen": 800,
+		"fuel": {"item": "uranium", "burn_ticks": 1200, "waste_per_burn": 1, "spent_item": "spent_fuel", "spent_per_burn": 1}
+	},
+	"solar_array": {
+		"name": "Solar Array", "size": [2, 2], "color": "#2a3f6a", "max_hp": 100,
+		"cost": {"essence_ore": 30, "refined_essence": 6}, "build_work": 100, "buildable": true, "threat_priority": 1,
+		"threat": 4, "power_gen": 25, "fuel": null
 	}
 }

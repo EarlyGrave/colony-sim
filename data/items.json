@@ -92,5 +92,9 @@
 	},
 	"cinder_ore": {"name": "Cinder Ore", "color": "#d9602a", "stack": 50, "value": 3.0},
 	"prism_ore": {"name": "Prism Ore", "color": "#6fd8ff", "stack": 50, "value": 3.0},
-	"bog_resin": {"name": "Bog Resin", "color": "#7a8f2a", "stack": 50, "value": 3.0}
+	"bog_resin": {"name": "Bog Resin", "color": "#7a8f2a", "stack": 50, "value": 3.0},
+	"coal": {"name": "Coal", "color": "#2b2b30", "stack": 50, "value": 1.0},
+	"nitrogen": {"name": "Nitrogen", "color": "#9fd8e8", "stack": 50, "value": 2.0},
+	"uranium": {"name": "Uranium", "color": "#8fe03a", "stack": 20, "value": 8.0},
+	"spent_fuel": {"name": "Spent Fuel", "color": "#4a6a1f", "stack": 20, "value": 0.0, "contaminates": true, "half_life_days": 30}
 }

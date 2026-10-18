@@ -18,5 +18,11 @@
 	"decoys_1": {"name": "Beacons of Penance", "tier": 2, "prereqs": ["fortification"], "cost": {"bench_ticks": 1500, "essence": 0}, "unlocks": {"buildings": ["ash_beacon", "penitent_wall"], "recipes": [], "rules": []}, "waste_mult": 1.0},
 	"decoys_2": {"name": "Mourning Bell", "tier": 3, "prereqs": ["decoys_1"], "cost": {"bench_ticks": 3000, "essence": 15}, "unlocks": {"buildings": ["mourning_bell"], "recipes": [], "rules": []}, "waste_mult": 1.0},
 
-	"expeditions": {"name": "Expeditions", "tier": 2, "prereqs": ["drilling"], "cost": {"bench_ticks": 3600, "essence": 25}, "unlocks": {"buildings": ["sling"], "recipes": [], "rules": ["expeditions"]}, "waste_mult": 1.0}
+	"expeditions": {"name": "Expeditions", "tier": 2, "prereqs": ["drilling"], "cost": {"bench_ticks": 3600, "essence": 25}, "unlocks": {"buildings": ["sling"], "recipes": [], "rules": ["expeditions"]}, "waste_mult": 1.0},
+
+	"splitting": {"name": "Splitting", "tier": 2, "prereqs": ["conveyance"], "cost": {"bench_ticks": 1500, "essence": 0}, "unlocks": {"buildings": [], "belt_nodes": ["splitter_basic", "merger"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"smart_logic": {"name": "Smart Logic", "tier": 2, "prereqs": ["splitting", "filters"], "cost": {"bench_ticks": 3000, "essence": 15}, "unlocks": {"buildings": [], "belt_nodes": ["splitter_smart", "splitter_priority"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"electrification": {"name": "Electrification", "tier": 2, "prereqs": ["smelting", "conveyance"], "cost": {"bench_ticks": 2400, "essence": 0}, "unlocks": {"buildings": ["power_pole", "coal_generator"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"clean_power": {"name": "Clean Power", "tier": 3, "prereqs": ["electrification", "advanced_recipes"], "cost": {"bench_ticks": 5000, "essence": 30}, "unlocks": {"buildings": ["solar_array", "nitrogen_extractor", "nitrogen_turbine"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"nuclear": {"name": "Nuclear Power", "tier": 3, "prereqs": ["clean_power", "high_throughput"], "cost": {"bench_ticks": 8000, "essence": 60}, "unlocks": {"buildings": ["nuclear_reactor"], "recipes": [], "rules": []}, "waste_mult": 1.0}
 }

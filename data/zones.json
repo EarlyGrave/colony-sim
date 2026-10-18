@@ -16,7 +16,10 @@
 			"ingot_iron",
 			"plate",
 			"parts",
-			"ai_chip"
+			"ai_chip",
+			"coal",
+			"nitrogen",
+			"uranium"
 		],
 		"waste_emission_factor": 1.0
 	},
@@ -24,7 +27,8 @@
 		"name": "Waste Dump",
 		"color": "#6f8f2f",
 		"accepts": [
-			"waste"
+			"waste",
+			"spent_fuel"
 		],
 		"waste_emission_factor": 0.5
 	},
