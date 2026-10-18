@@ -172,3 +172,8 @@ no vibration — letter + badge. Plan: docs/prompter_inbox.md §12.
 ## D24. Sub-streams of randomness allowed
 New systems may use their own RandomNumberGenerator seeded deterministically from the sim seed
 (e.g. contracts) so adding a system doesn't shift existing random streams. Still fully deterministic.
+
+## Automation batch: owner answers (2026-10-18)
+No power at start; purity 0.5/1/2 = speed only; base ores copper + iron + essence; nodes
+invulnerable; one belt tier (1 item/cell, ~2 cells/s); splitters later; manual hauling always;
+old saves marked incompatible (save version bump). Plan: docs/automation_batch_plan.md.

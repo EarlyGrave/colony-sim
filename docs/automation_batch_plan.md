@@ -75,3 +75,10 @@ Two waves, 4-5 parallel Sonnet workers each. Plans only; no code written yet. Fa
 6. Разделители/слияния — в первую волну или во вторую (я предлагаю A2 опционально)?
 7. Колонисты должны уметь возить в/из машин вручную всегда (да по умолчанию) — ограничить ли?
 8. Старые сохранения: просто пометить несовместимыми (рекомендую) или писать миграцию?
+
+## Owner answers (2026-10-18) — binding for workers
+1. No power for machines at start (generator later). 2. Purity 0.5x/1x/2x affects speed only.
+3. Base ores on the start map: copper_ore + iron_ore (+ essence_ore). 4. Nodes are invulnerable
+(no clogging by contamination/creatures). 5. One belt tier, 1 item per cell, ~2 cells/s.
+6. Splitters/mergers: later, NOT in A1/A2. 7. Manual hauling into/out of machines always available.
+8. Old saves: bump save version, mark incompatible (no migration).
