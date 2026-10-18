@@ -50,6 +50,9 @@ var command_log: Array = []  # [tick, name, args]
 var replaying := false
 # region crafting
 var crafting: BillSystem
+# region A1c
+var logistics: LogisticsSystem
+# endregion
 var storage: StorageSettings
 # region combat
 var combat: CombatSystem
@@ -132,6 +135,7 @@ func _init_systems() -> void:
 	# region crafting
 	storage = StorageSettings.new(self)
 	crafting = BillSystem.new(self)
+	logistics = LogisticsSystem.new(self)  # region A1c
 	# region combat
 	combat = CombatSystem.new(self)
 	# region needs
@@ -185,6 +189,7 @@ func step() -> void:
 	needs.tick()  # region needs
 	farming.tick()  # region needs
 	colonists.tick()
+	logistics.tick()  # region A1c
 	perks.tick()  # region perks
 	health.tick()  # region health
 	debt.tick()  # region debt
