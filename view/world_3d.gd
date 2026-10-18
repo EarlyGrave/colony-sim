@@ -97,12 +97,15 @@ func bind(p_sim: Simulation, map_tex: Texture2D) -> void:
 	_block_mat.set_shader_parameter("map_size", size)
 	_clear_units()
 	_blocks_dirty = true
+	_g1d_bind()  # region G1d hook
 	sim.bus.tile_changed.connect(_on_tile_changed)
 	if overlay and not overlay.draw.is_connected(_draw_overlay):
 		overlay.draw.connect(_draw_overlay)
 
 
 func unbind() -> void:
+	if _g1d_fx != null:
+		_g1d_fx.unbind()  # region G1d hook
 	if sim and sim.bus.tile_changed.is_connected(_on_tile_changed):
 		sim.bus.tile_changed.disconnect(_on_tile_changed)
 	_clear_units()
@@ -330,3 +333,15 @@ func _bar(center: Vector2, frac: float, col: Color) -> void:
 	var r := Rect2(center - Vector2(13, 0), Vector2(26, 4))
 	overlay.draw_rect(r.grow(1), Color(0, 0, 0, 0.7))
 	overlay.draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(frac, 0.0, 1.0), r.size.y)), col)
+
+
+# region G1d
+var _g1d_fx: Effects3D
+
+
+func _g1d_bind() -> void:
+	if _g1d_fx == null:
+		_g1d_fx = Effects3D.new()
+		add_child(_g1d_fx)
+	_g1d_fx.bind(sim)
+# endregion
