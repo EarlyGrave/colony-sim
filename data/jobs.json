@@ -3,6 +3,7 @@
 	"flee": 100,
 	"repair": 60,
 	"operate": 50,
+	"research": 45,
 	"haul": 40,
 	"mine": 30
 }
