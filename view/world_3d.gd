@@ -272,10 +272,14 @@ func _update_colonist(k: String, c: Colonist) -> void:
 
 func _update_enemy(k: String, e: Enemy) -> void:
 	var s := _sprite(k)
-	s.texture = _tex.get(e.def_id, _tex["crawler"])
 	var p := e.visual_pos() + Vector2(0.5, 0.5)
 	var f := _face(k, p)
-	s.flip_h = int(f[1]) == ROW_LEFT
+	if not _update_enemy_sheet(s, e, f):  # region G1a
+		s.texture = _tex.get(e.def_id, _tex["crawler"])
+		s.hframes = 1
+		s.vframes = 1
+		s.frame = 0
+		s.flip_h = int(f[1]) == ROW_LEFT
 	var big := 1.5 if e.def_id == "brute" else 1.0
 	s.pixel_size = UNIT_PX * big
 	var wobble := absf(sin(_time * 10.0 + e.id)) * 0.06
@@ -284,6 +288,22 @@ func _update_enemy(k: String, e: Enemy) -> void:
 	if e.leaving:
 		mod.a = 0.55
 	s.modulate = mod
+
+
+# region G1a
+func _update_enemy_sheet(s: Sprite3D, e: Enemy, f: Array) -> bool:
+	var tex := CreatureSheets.get_sheet(e.def_id)
+	if tex == null:
+		return false
+	s.texture = tex
+	s.hframes = CreatureSheets.COLS
+	s.vframes = CreatureSheets.ROWS
+	s.flip_h = false
+	var moving := _time < float(f[2])
+	var col := WALK_CYCLE[int(_time * 8.0 + e.id) % WALK_CYCLE.size()] if moving else 0
+	s.frame = CreatureSheets.frame_index(int(f[1]), col)
+	return true
+# endregion
 
 
 # --- Screen overlay -------------------------------------------------------------

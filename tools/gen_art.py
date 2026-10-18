@@ -629,11 +629,67 @@ def food_art():
 # endregion
 
 
+# region G1a
+# 4-direction creature walk sheets derived from the single front sprite (3x4, 16 px frames,
+# rows down/left/right/up like the colonist sheets).
+def _shift(img, dx, dy, y0, y1):
+    out = img.copy()
+    box = (0, y0, 16, y1)
+    out.paste((0, 0, 0, 0), box)
+    out.paste(img.crop(box), (dx, y0 + dy))
+    return out
+
+
+def creature_sheets():
+    from collections import Counter
+    for name in ["crawler", "brute", "spitter", "burrower"]:
+        front = Image.open(os.path.join(OUT, name + ".png")).convert("RGBA")
+        px = front.load()
+        cnt = Counter(px[x, y] for x in range(16) for y in range(16)
+                      if px[x, y][3] and px[x, y] != rgba(PAL["k"]) and px[x, y] != rgba(PAL["w"]))
+        body = cnt.most_common(1)[0][0]
+        back = front.copy()
+        bp = back.load()
+        for x in range(16):
+            for y in range(16):
+                if bp[x, y] in (rgba(PAL["w"]), rgba(PAL["y"])):
+                    bp[x, y] = body
+        # side: narrow the body and push the head (upper half) forward as a snout
+        side = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        side.paste(front.crop((3, 0, 13, 16)), (3, 0))
+        side.paste((0, 0, 0, 0), (0, 0, 16, 8))
+        side.paste(front.crop((3, 0, 13, 8)), (5, 0))
+        outline = rgba(PAL["k"])
+        sp = side.load()
+        for y in range(8):  # eye on the facing side only
+            for x in range(16):
+                if sp[x, y] == rgba(PAL["y"]):
+                    sp[x, y] = body
+        for y in range(16):  # legs/body tail taper on the rear edge
+            if y > 11:
+                for x in range(3, 6):
+                    sp[x, y] = (0, 0, 0, 0)
+        del outline
+        frames = {
+            0: [front, _shift(front, 0, -1, 12, 16), _shift(front, 0, 1, 12, 16)],
+            2: [side, _shift(side, 1, 0, 11, 16), _shift(side, -1, 0, 11, 16)],
+            3: [back, _shift(back, 0, 1, 12, 16), _shift(back, 0, -1, 12, 16)],
+        }
+        frames[1] = [f.transpose(Image.FLIP_LEFT_RIGHT) for f in frames[2]]
+        sheet = Image.new("RGBA", (48, 64), (0, 0, 0, 0))
+        for row, fl in frames.items():
+            for col, im in enumerate(fl):
+                sheet.paste(im, (col * 16, row * 16))
+        save(sheet, name + "_sheet")
+# endregion
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     colonists()
     colonist_sheets()
     creatures()
+    creature_sheets()  # region G1a
     turret()
     refinery()
     capsule()
