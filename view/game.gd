@@ -35,6 +35,7 @@ func _ready() -> void:
 	world3d.overlay = $Overlay
 	camera.tapped.connect(_on_tapped)
 	_setup_automation()  # region A2d
+	_o5_setup()  # region O5
 	hud.tool_selected.connect(_on_tool_selected)
 	hud.speed_selected.connect(set_speed)
 	hud.alarm_toggled.connect(func(on: bool) -> void: sim.set_alarm(on))
@@ -200,6 +201,10 @@ func set_speed(s: int) -> void:
 func _process(delta: float) -> void:
 	# region O4: the belt strip's visibility and position are owned by Hud._o4_layout
 	# endregion
+	if radial != null:  # region O5
+		radial.press_tick(delta)
+	if auto_panel != null and hud != null:  # R4X: on narrow screens a side panel would be covered by the belt strip
+		auto_panel.visible = hud._side == null or not is_instance_valid(hud._side) or not auto_panel.get_global_rect().intersects(hud._side.get_global_rect())
 	if sim == null or speed == 0:
 		return
 	_accum += delta * Simulation.TICKS_PER_SECOND * speed
@@ -235,6 +240,8 @@ func _on_tool_selected(t: String) -> void:
 
 
 func _on_tapped(world_pos: Vector2) -> void:
+	if _o5_swallow_tap():  # region O5
+		return
 	var cell := WorldView.world_to_cell(world_pos)
 	if sim == null or not sim.map.in_bounds(cell):
 		return
@@ -760,4 +767,74 @@ func _r4e_load_campaign(text: String) -> bool:
 	_update_continue()
 	hud.show_message("Game loaded.", 3.0)
 	return true
+# endregion
+
+
+# region O5
+var radial: RadialMenu
+var _o5_swallow := false
+
+
+func _o5_setup() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 30
+	add_child(layer)
+	radial = RadialMenu.new()
+	layer.add_child(radial)
+	radial.slot_picked.connect(_o5_pick)
+
+
+func _o5_pick(id: String) -> void:
+	if id == "belt":
+		_on_auto_tool(id)
+		return
+	hud.select_tool(id)
+	_on_tool_selected(id)
+
+
+func _o5_swallow_tap() -> bool:
+	var s := _o5_swallow
+	_o5_swallow = false
+	return s
+
+
+## Feeds one raw input event to the long-press tracker. Emulated mouse events
+## (touch duplicates) are ignored; a second finger or drift cancels.
+func o5_feed(event: InputEvent) -> void:
+	if radial == null:
+		return
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			if event.index == 0 and not _o5_over_ui():
+				radial.press_begin(event.position)
+			else:
+				radial.press_cancel()
+		elif event.index == 0:
+			_o5_swallow = radial.press_end(event.position)
+	elif event is InputEventScreenDrag:
+		if event.index != 0:
+			radial.press_cancel()
+		else:
+			radial.press_move(event.position)
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			return
+		if event.pressed:
+			if not _o5_over_ui():
+				radial.press_begin(event.position)
+		else:
+			_o5_swallow = radial.press_end(event.position)
+	elif event is InputEventMouseMotion:
+		if event.device != InputEvent.DEVICE_ID_EMULATION:
+			radial.press_move(event.position)
+
+
+func _o5_over_ui() -> bool:
+	return is_inside_tree() and get_viewport().gui_get_hovered_control() != null
+
+
+func _input(event: InputEvent) -> void:
+	o5_feed(event)
+	if radial != null and radial.is_open and (event is InputEventScreenTouch or event is InputEventScreenDrag or event is InputEventMouseButton or event is InputEventMouseMotion):
+		get_viewport().set_input_as_handled()
 # endregion
