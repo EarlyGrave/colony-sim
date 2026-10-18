@@ -65,3 +65,30 @@ func take_ready_item(c: Vector2i) -> String:
 
 func state_hash() -> int:
 	return (belts.state_hash() * 31 + belts.belt_count) & 0x7fffffff
+
+
+# Command-facing API used by Simulation (region A1d). Dirs: 0=N, 1=E, 2=S, 3=W.
+func place_path(cells: Array, dirs: Array) -> void:
+	for i in cells.size():
+		place_belt_cell(cells[i], int(dirs[i]))
+
+
+func remove_at(c: Vector2i) -> bool:
+	return remove_belt_cell(c)
+
+
+func set_dir(c: Vector2i, d: int) -> bool:
+	return has_belt(c) and place_belt_cell(c, d)
+
+
+func has_belt(c: Vector2i) -> bool:
+	return belt_dir(c) >= 0
+
+
+func dir_at(c: Vector2i) -> int:
+	return belt_dir(c)
+
+
+## Deterministic snapshot for SaveGame.state_hash.
+func state_parts() -> Array:
+	return [belts.belt_count, belts.state_hash()]

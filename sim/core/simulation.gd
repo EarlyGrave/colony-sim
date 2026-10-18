@@ -75,7 +75,6 @@ var ammo: AmmoSystem  # region ammo
 # endregion
 # endregion
 
-var logistics  # region A1d: LogisticsSystem (A1c); stub until merged
 var opts: Dictionary = {}  # region meta: deterministic start options
 var run_summary: Dictionary = {}  # region meta
 var _connections: Array = []  # [signal, callable] pairs made on the bus
@@ -152,7 +151,6 @@ func _init_systems() -> void:
 	debt = DebtSystem.new(self)  # region debt
 	idle_work = IdleWorkSystem.new(self)  # region idle-work
 	mutation = MutationSystem.new(self)  # region mutation
-	if logistics == null: logistics = LogisticsStub.new(self)  # region A1d (A1c: replace with LogisticsSystem)
 
 
 func _place_starting_colony() -> void:
@@ -304,7 +302,8 @@ func set_alarm(on: bool) -> void:
 
 
 # region A1d
-const BELT_DIRS: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1)]  # E,S,W,N
+## Same order as BeltGrid: 0=N, 1=E, 2=S, 3=W.
+const BELT_DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 
 
 func can_belt_cell_error(c: Vector2i) -> String:
