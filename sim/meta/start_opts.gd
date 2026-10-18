@@ -11,6 +11,9 @@ extends RefCounted
 static func apply(sim: Simulation, opts: Dictionary) -> void:
 	if opts.is_empty():
 		return
+	# region R4b: expedition opts. biome (String) is read by MapGenerator, crew/supplies by
+	# Simulation._place_crew_colony, no_refining by Simulation.can_place_building; nothing to do here.
+	# endregion
 	for r: Variant in opts.get("start_rules", []):
 		if sim.rules.has(str(r)):
 			sim.rules[str(r)] = true

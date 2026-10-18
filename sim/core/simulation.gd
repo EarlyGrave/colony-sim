@@ -78,7 +78,106 @@ var ammo: AmmoSystem  # region ammo
 # endregion
 
 var research: ResearchSystem  # region R2a
-var chips: ChipSystem  # region T4
+var chips: ChipSystem  # region R4b
+## True for buildings whose recipes produce waste (refinery, smelter): refining class.
+func is_refining_building(def_id: String) -> bool:
+	var d: Dictionary = defs.buildings.get(def_id, {})
+	var own: String = str(d.get("recipe", ""))
+	if own != "" and defs.recipes.has(own) and (defs.recipes[own]["outputs"] as Dictionary).has("waste"):
+		return true
+	for rid: String in defs.recipes:
+		var r: Dictionary = defs.recipes[rid]
+		if (r["outputs"] as Dictionary).has("waste") and (r.get("station", []) as Array).has(def_id):
+			return true
+	return false
+
+
+func _arg_text(v: Variant) -> String:
+	return v if v is String else JSON.stringify(v, "", true)
+
+
+func _arg_array(v: Variant) -> Array:
+	if v is String:
+		var r: Variant = JSON.parse_string(v)
+		return r if r is Array else []
+	return v if v is Array else []
+
+
+func _arg_dict(v: Variant) -> Dictionary:
+	if v is String:
+		var r: Variant = JSON.parse_string(v)
+		return r if r is Dictionary else {}
+	return v if v is Dictionary else {}
+
+
+## Player/campaign command: sends colonists and stored supplies away on an expedition.
+## Atomic: unknown/dead/duplicate ids or supplies not in storage change nothing.
+## Args are logged as JSON text (the save log holds scalars only). Returns {"ok": bool, "crew": [snapshot], "supplies": {item: n}}; snapshot =
+## {name, engineer, skills{id: level}, passions{id: int}}.
+func dispatch_party(ids_in: Variant, supplies_in: Variant) -> Dictionary:
+	_record("dispatch_party", [_arg_text(ids_in), _arg_text(supplies_in)])  # save-load
+	var ids: Array = _arg_array(ids_in)
+	var supplies: Dictionary = _arg_dict(supplies_in)
+	var fail := {"ok": false, "crew": [], "supplies": {}}
+	if ids.is_empty():
+		return fail
+	var seen := {}
+	var crew_c: Array[Colonist] = []
+	for id: Variant in ids:
+		var c := colonists.get_by_id(int(id))
+		if c == null or not c.alive or seen.has(int(id)):
+			return fail
+		seen[int(id)] = true
+		crew_c.append(c)
+	var keys: Array = supplies.keys()
+	keys.sort()
+	for k: String in keys:
+		if int(supplies[k]) < 0 or items.count_stored(k) < int(supplies[k]):
+			return fail
+	for k: String in keys:
+		var n := int(supplies[k])
+		if n > 0:
+			items.consume_stored(k, n, map_center())
+			ledger.record_consumed(k, n, "expedition")
+	var crew: Array = []
+	for c in crew_c:
+		crew.append({"name": c.display_name, "engineer": c.engineer,
+				"skills": c.skills.levels.duplicate(), "passions": c.skills.passions.duplicate()})
+		jobs.end_job(c, Job.Status.FAILED)
+		if c.carry_count > 0:
+			items.drop(c.cell, c.carry_item, c.carry_count, c.carry_quality)
+			c.carry_item = ""
+			c.carry_count = 0
+		colonists.list.erase(c)
+	return {"ok": true, "crew": crew, "supplies": supplies.duplicate()}
+
+
+## Campaign command: spawns a crate of `items` within `radius` of the HQ (sim.rng picks the
+## cell). Returns the number of items that were lost for lack of room.
+func receive_cargo(cargo_in: Variant, radius: int) -> int:
+	_record("receive_cargo", [_arg_text(cargo_in), radius])  # save-load
+	var cargo: Dictionary = _arg_dict(cargo_in)
+	var center := map_center()
+	var at := center
+	for _try in 20:
+		var cand := center + Vector2i(rng.randi_range(-radius, radius), rng.randi_range(-radius, radius))
+		if cell_free_for_items(cand):
+			at = cand
+			break
+	var lost := 0
+	var keys: Array = cargo.keys()
+	keys.sort()
+	for k: String in keys:
+		var n := int(cargo[k])
+		if n <= 0:
+			continue
+		ledger.record_produced(k, n, "cargo")
+		lost += items.drop(at, k, n)
+	return lost
+# endregion
+
+
+# region T4
 var opts: Dictionary = {}  # region meta: deterministic start options
 var run_summary: Dictionary = {}  # region meta
 var _connections: Array = []  # [signal, callable] pairs made on the bus
@@ -110,7 +209,10 @@ func start_new_game() -> void:
 	# endregion
 	MapGenerator.generate(map, rng, cfg)
 	_init_systems()
-	_place_starting_colony()
+	if opts.has("crew"):  # region R4b
+		_place_crew_colony()
+	else:
+		_place_starting_colony()
 	ecology.generate()  # region T5
 	StartOpts.apply(self, opts)  # region meta
 
@@ -185,6 +287,42 @@ func _place_starting_colony() -> void:
 		var n := int(start_items[item])
 		ledger.record_produced(item, n, "start")
 		items.drop(origin, item, n)
+
+
+# region R4b
+## Outpost start: HQ + stockpile; crew snapshots replace the random colonists, opts.supplies the start items.
+func _place_crew_colony() -> void:
+	var col_cfg: Dictionary = defs.balance["colony"]
+	var center := map_center()
+	buildings.place("hq", center - Vector2i(1, 1), false)
+	var spots: Array[Vector2i] = [Vector2i(-2, 1), Vector2i(1, 2), Vector2i(2, -1), Vector2i(-2, -2), Vector2i(0, 3)]
+	var crew: Array = opts["crew"]
+	for i in crew.size():
+		var snap: Dictionary = crew[i]
+		var c := colonists.spawn(center + spots[i % spots.size()])  # fixed rng draws per member
+		c.display_name = str(snap.get("name", c.display_name))
+		c.engineer = bool(snap.get("engineer", false))
+		for sk: String in snap.get("skills", {}):
+			c.skills.levels[sk] = int(snap["skills"][sk])
+		for sk: String in snap.get("passions", {}):
+			c.skills.passions[sk] = int(snap["passions"][sk])
+		c.skills.mark_joined()
+		if c.engineer:
+			c.combat.weapon = str(defs.weapons["combat"]["engineer_weapon"])
+	var sz: Array = col_cfg["start_stockpile_size"]
+	var origin := center + Vector2i(3, -1)
+	for y in int(sz[1]):
+		for x in int(sz[0]):
+			set_zone(origin + Vector2i(x, y), "stockpile")
+	var sup: Dictionary = opts.get("supplies", {})
+	var keys: Array = sup.keys()
+	keys.sort()
+	for item: String in keys:
+		var n := int(sup[item])
+		if n > 0:
+			ledger.record_produced(item, n, "start")
+			items.drop(origin, item, n)
+# endregion
 
 
 # --- Tick ---------------------------------------------------------------------
@@ -267,6 +405,8 @@ func set_zone(c: Vector2i, zone_id: String) -> bool:
 func can_place_building(def_id: String, c: Vector2i) -> String:
 	if not defs.buildings.has(def_id) or not defs.buildings[def_id].get("buildable", false):
 		return "Cannot build"
+	if bool(opts.get("no_refining", false)) and is_refining_building(def_id):  # region R4b
+		return "No refining here"
 	return buildings.placement_error(def_id, c, false)  # blueprints need no materials up front
 
 
