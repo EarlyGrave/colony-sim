@@ -16,5 +16,10 @@
 		"tremor_ticks": 60, "drop_scatter": 2,
 		"warning_text": "The ground shakes! Something is burrowing beneath the colony...",
 		"units": [{"enemy": "burrower", "weight": 1.0}]
+	},
+	"tutorial_audit": {
+		"name": "Warden's Audit", "min_points": 1000000.0, "weight": 0.0, "spawn": "edge", "retreat_fraction": 0.75,
+		"scripted": true, "fixed": ["crawler", "crawler"], "wave_ticks": 1800, "hq_immune": true, "colonist_harmless": true,
+		"units": [{"enemy": "crawler", "weight": 1.0}]
 	}
 }

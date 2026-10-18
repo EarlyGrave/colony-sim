@@ -116,6 +116,8 @@ static func state_hash(sim: Simulation) -> int:
 	parts.append(sim.logistics.state_parts())  # region A1d
 	parts.append(sim.research.state_parts())  # region R2a
 	parts.append(sim.milestones.state_parts())  # region R2b
+	if sim.tutorial != null:  # region O1: only in tutorial mode, so other hashes stay as they were
+		parts.append(sim.tutorial.state_parts())
 	return var_to_str(parts).hash()
 
 

@@ -78,6 +78,12 @@ var ammo: AmmoSystem  # region ammo
 # endregion
 
 var research: ResearchSystem  # region R2a
+# region O1
+## Warden's Orientation; null unless opts.tutorial is true.
+var tutorial: TutorialSystem
+## True while step() runs (lets the tutorial tell player alarm toggles from the wave's own).
+var in_step := false
+# endregion
 var chips: ChipSystem  # region R4b
 ## True for buildings whose recipes produce waste (refinery, smelter): refining class.
 func is_refining_building(def_id: String) -> bool:
@@ -292,6 +298,8 @@ func _init_systems() -> void:
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	chips = ChipSystem.new(self)  # region T4
+	if bool(opts.get("tutorial", false)):  # region O1
+		tutorial = TutorialSystem.new(self)
 
 
 func _place_starting_colony() -> void:
@@ -353,6 +361,7 @@ func step() -> void:
 	if game_over_reason != "":
 		return
 	tick += 1
+	in_step = true  # region O1
 	crafting.tick()  # region crafting
 	needs.tick()  # region needs
 	farming.tick()  # region needs
@@ -370,6 +379,9 @@ func step() -> void:
 	ecology.tick()  # region T5
 	crises.tick()  # region crises
 	storyteller.tick()
+	if tutorial != null:  # region O1
+		tutorial.tick()
+	in_step = false  # region O1
 	if colonists.alive_count() == 0 and not colonists.list.is_empty():
 		end_game("colonists_dead")
 	if tick % ticks_per_day == 0:
@@ -485,6 +497,27 @@ func trigger_bell(building_id: int) -> bool:
 
 func is_rule_on(rule_id: String) -> bool:
 	return bool(rules.get(rule_id, false))
+
+
+# region O1
+## Orientation commands (view-mirrored, recorded). No-ops unless opts.tutorial.
+func tutorial_ack() -> void:
+	_record("tutorial_ack", [])
+	if tutorial != null:
+		tutorial.ack()
+
+
+func tutorial_skip_step() -> void:
+	_record("tutorial_skip_step", [])
+	if tutorial != null:
+		tutorial.skip_step()
+
+
+func tutorial_skip_all() -> void:
+	_record("tutorial_skip_all", [])
+	if tutorial != null:
+		tutorial.skip_all()
+# endregion
 
 
 func set_alarm(on: bool) -> void:

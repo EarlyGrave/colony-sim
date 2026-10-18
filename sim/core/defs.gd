@@ -56,6 +56,7 @@ var ecology: Dictionary = {}  # region T5
 # endregion
 # region raids
 var raids: Dictionary = {}
+var tutorial: Dictionary = {}  # region O1
 # endregion
 # region contracts
 var contracts: Dictionary = {}
@@ -137,6 +138,7 @@ func load_from(dir: String) -> void:
 	# endregion
 	# region raids
 	raids = _load_json(dir + "raids.json")
+	tutorial = _load_json(dir + "tutorial.json")  # region O1
 	# endregion
 	# region contracts
 	contracts = _load_json(dir + "contracts.json")
@@ -216,6 +218,7 @@ func duplicate_defs() -> Defs:
 	# endregion
 	# region raids
 	d.raids = raids.duplicate(true)
+	d.tutorial = tutorial.duplicate(true)  # region O1
 	# endregion
 	# region contracts
 	d.contracts = contracts.duplicate(true)

@@ -1,0 +1,30 @@
+{
+	"_doc": "Warden's Orientation (R5 O1). steps[i] = {id,title,text,reason,target{kind,id},done{signal,...},nudge_ticks}. done.signal picks the evaluator in sim/tutorial/tutorial_system.gd; count/min_cells/where/or/latch are its parameters. Step ids audit/release are looked up by id.",
+	"settings": {"audit_step": "audit", "audit_delay_ticks": 120},
+	"steps": [
+		{"id": "intake", "title": "Form 1: Intake", "text": "Select an inmate by tapping their portrait.", "reason": "Inmate #1 will do your work. Paperwork says so.",
+			"target": {"kind": "panel", "id": "colonist_bar"}, "done": {"signal": "ack"}, "nudge_ticks": 600},
+		{"id": "dig", "title": "Form 7: Dig", "text": "Open Orders, pick Mine and mark 3 rock cells.", "reason": "Ore is the only currency the Warden respects.",
+			"target": {"kind": "tool", "id": "mine"}, "done": {"signal": "designation_changed", "count": 3}, "nudge_ticks": 600},
+		{"id": "storage", "title": "Form 8: Storage", "text": "Open Zones and paint a stockpile of at least 4 cells.", "reason": "Unstored ore is theft, or litter. Either is a violation.",
+			"target": {"kind": "tool", "id": "zone"}, "done": {"signal": "zone_changed", "count": 4}, "nudge_ticks": 600},
+		{"id": "haul", "title": "Form 9: Proof of Haul", "text": "Wait until 10 ore lies in storage.", "reason": "Refining needs stock. The Warden counts it twice.",
+			"target": {"kind": "cell", "id": "stockpile"}, "done": {"signal": "item_mined", "count": 10}, "nudge_ticks": 1200},
+		{"id": "tool", "title": "Form 11: Tools", "text": "Build a workbench or a refinery from the Build menu.", "reason": "Bare hands do not refine. Regulations are clear.",
+			"target": {"kind": "tool", "id": "build"}, "done": {"signal": "building_placed", "where": {"def_in": ["workbench", "refinery"]}, "latch": true}, "nudge_ticks": 900},
+		{"id": "dirty", "title": "Form 12: Dirty Hands", "text": "Refine one batch. Watch the contamination bar rise.", "reason": "Refining pays, and the planet remembers. That is the dilemma.",
+			"target": {"kind": "panel", "id": "contamination"}, "done": {"signal": "first_refine_done"}, "nudge_ticks": 1200},
+		{"id": "research", "title": "Form 14: Research", "text": "Open the research bench and finish your first tech.", "reason": "Better tools lower the bill. Slightly.",
+			"target": {"kind": "panel", "id": "research"}, "done": {"signal": "research_completed"}, "nudge_ticks": 1800},
+		{"id": "belt", "title": "Form 15: Conveyance", "text": "Lay 3 or more belt cells from a miner to a storage-in port.", "reason": "Inmates tire. Belts do not file complaints.",
+			"target": {"kind": "tool", "id": "belt"}, "done": {"signal": "belt", "min_cells": 3}, "nudge_ticks": 1800},
+		{"id": "forecast", "title": "Form 16: The Forecast", "text": "Open the contamination forecast.", "reason": "Waves follow waste. Read the numbers before they read you.",
+			"target": {"kind": "panel", "id": "forecast"}, "done": {"signal": "forecast_revealed"}, "nudge_ticks": 900},
+		{"id": "audit", "title": "Form 17: Warden's Audit", "text": "Creatures are coming. Raise the alarm or build a turret, then hold.", "reason": "An audit is scheduled. This one is gentle and cannot take the pod.",
+			"target": {"kind": "tool", "id": "alarm"}, "done": {"signal": "wave_repelled"}, "nudge_ticks": 600},
+		{"id": "decoy", "title": "Form 18: Decoy", "text": "Place a cheap decoy such as an Ash Beacon before the next wave.", "reason": "Creatures chase the loudest target. Make it a cheap one.",
+			"target": {"kind": "tool", "id": "build"}, "done": {"signal": "building_placed", "where": {"def_in": ["ash_beacon", "penitent_wall", "mourning_bell"]}, "or": "wave_incoming"}, "nudge_ticks": 1200},
+		{"id": "release", "title": "Form 99: Release", "text": "Orientation complete. Tap to join the general population.", "reason": "From here on, hints appear only when something goes wrong.",
+			"target": {"kind": "panel", "id": "tutorial_card"}, "done": {"signal": "ack"}, "nudge_ticks": 1200}
+	]
+}
