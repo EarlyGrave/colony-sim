@@ -728,10 +728,15 @@ def belt_art():
         d.polygon([(x, 4), (x + 3, 7), (x, 10), (x + 1, 10), (x + 4, 7), (x + 1, 4)], fill=rgba("#ffd23a"))
     save(img, "belt_tile")
     # port arrows (point +x): in = green, out = orange
-    for name, col in (("port_in", "#4fe08a"), ("port_out", "#ff9a30")):
-        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-        _arrow(ImageDraw.Draw(img), 0, 0, rgba(col), k)
-        save(img, name)
+    # IN = cyan arrow with a notched (chevron) tail; OUT = magenta solid arrow
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.polygon([(0, 4), (4, 8), (0, 12), (4, 12), (8, 8), (4, 4)], fill=rgba("#3cd8ff"), outline=k)
+    d.polygon([(7, 5), (10, 5), (10, 2), (15, 8), (10, 14), (10, 11), (7, 11), (4, 8)], fill=rgba("#3cd8ff"), outline=k)
+    save(img, "port_in")
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    _arrow(ImageDraw.Draw(img), 0, 0, rgba("#ff4fb4"), k)
+    save(img, "port_out")
 
 
 def _plate(d, size, base):
@@ -763,8 +768,8 @@ def machine_art():
     d.rectangle([10, 14, 17, 20], fill=rgba("#ffc04a"))
     d.rectangle([23, 4, 28, 11], fill=rgba("#555b66"), outline=k)
     d.rectangle([24, 5, 27, 7], fill=rgba("#7fbf3f"))
-    d.rectangle([0, 14, 2, 18], fill=rgba("#4fe08a"))
-    d.rectangle([29, 14, 31, 18], fill=rgba("#ff9a30"))
+    d.rectangle([0, 14, 2, 18], fill=rgba("#3cd8ff"))
+    d.rectangle([29, 14, 31, 18], fill=rgba("#ff4fb4"))
     save(img, "machine_smelter")
     # assembler 32x32: blue housing with a robot arm
     img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
@@ -774,8 +779,8 @@ def machine_art():
     d.ellipse([12, 12, 19, 19], fill=rgba("#b8c2cc"), outline=k)
     d.line([(15, 15), (24, 8)], fill=rgba("#e0b030"), width=2)
     d.rectangle([23, 6, 26, 9], fill=rgba("#ff4040"))
-    d.rectangle([0, 14, 2, 18], fill=rgba("#4fe08a"))
-    d.rectangle([29, 14, 31, 18], fill=rgba("#ff9a30"))
+    d.rectangle([0, 14, 2, 18], fill=rgba("#3cd8ff"))
+    d.rectangle([29, 14, 31, 18], fill=rgba("#ff4fb4"))
     save(img, "machine_assembler")
     # storage in / out 16x16: crates with a chute marker
     for name, base, col in (("machine_storage_in", "#6a5a3c", "#4fe08a"), ("machine_storage_out", "#4e6a3c", "#ff9a30")):

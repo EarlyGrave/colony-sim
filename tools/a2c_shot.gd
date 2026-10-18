@@ -54,6 +54,10 @@ func _run() -> void:
 	for i in 12:
 		sim.step()
 	game.camera.focus = WorldView.cell_to_world(o + Vector2i(10, 5))
+	var args := OS.get_cmdline_user_args()
+	if args.size() > 1:
+		game.camera.zoom_level = float(args[1])
+		game.camera.focus = WorldView.cell_to_world(o + Vector2i(10, 5) + Vector2i(int(args[2]), int(args[3])))
 	await _wait(30)
 	root.get_texture().get_image().save_png(OS.get_cmdline_user_args()[0])
 	var bl: BeltLayer = game.world3d._belt_layer
