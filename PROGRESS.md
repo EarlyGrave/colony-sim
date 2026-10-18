@@ -174,6 +174,13 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
 - W2e lazy chunks: static memory at 250 map 185 -> 69 MB; tools/web_smoke.py (Playwright, PASS).
 - Tests 601 green (sharded ~2 min), goldens byte-identical.
 
+## Session 4 — flavor pass (F1–F5, FX)
+- data/flavor.json (~330 English lines) + view/flavor_picker.gd (deterministic, view-only); kill/event
+  feed + Warden PA banner; inmate records (kills/ore/repairs/downs), nicknames, rap sheet, barks,
+  5 commendations; juice: tinted death bursts, taint-green splats, sludge drips, "AUDITED" label;
+  polish: outpost Recall button, dialog margins, radial avoids belt strip, docked automation strip.
+- Tests 632 green (sharded), goldens byte-identical, web smoke PASS.
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
