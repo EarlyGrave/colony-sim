@@ -11,8 +11,29 @@ var stacks: Dictionary = {}
 var zone_cells: Dictionary = {}
 
 
+# region W1d
+## Incremental per-item totals. Ground counts are always exact; stored counts are
+## rebuilt lazily after a zone / filter change (_stored_valid = false).
+var _ground: Dictionary = {}
+var _stored: Dictionary = {}
+var _stored_valid := false
+
+
 func _init(p_sim: Simulation) -> void:
 	sim = p_sim
+	sim.listen(sim.bus.zone_changed, _on_zone_dirty)
+	sim.listen(sim.bus.zone_settings_changed, _on_zone_dirty)
+
+
+func _on_zone_dirty(_c: Vector2i) -> void:
+	_stored_valid = false
+
+
+func _bump(c: Vector2i, item_id: String, delta: int) -> void:
+	_ground[item_id] = int(_ground.get(item_id, 0)) + delta
+	if _stored_valid and cell_accepts(c, item_id):
+		_stored[item_id] = int(_stored.get(item_id, 0)) + delta
+# endregion
 
 
 # --- Stacks -----------------------------------------------------------------
@@ -45,6 +66,7 @@ func add_at(c: Vector2i, item_id: String, n: int, q := "") -> int:
 	var k := mini(n, space_for(c, item_id, q))
 	if k <= 0:
 		return 0
+	_bump(c, item_id, k)  # region W1d
 	if stacks.has(c):
 		stacks[c]["count"] += k
 	else:
@@ -91,6 +113,7 @@ func take_at(c: Vector2i, n: int) -> int:
 	if not stacks.has(c):
 		return 0
 	var k := mini(n, int(stacks[c]["count"]))
+	_bump(c, stacks[c]["item"], -k)  # region W1d
 	stacks[c]["count"] -= k
 	if stacks[c]["count"] <= 0:
 		stacks.erase(c)
@@ -105,19 +128,20 @@ func is_stored(c: Vector2i) -> bool:
 
 
 func count_on_ground(item_id: String) -> int:
-	var s := 0
-	for c in stacks:
-		if stacks[c]["item"] == item_id:
-			s += int(stacks[c]["count"])
-	return s
+	return int(_ground.get(item_id, 0))  # region W1d
 
 
 func count_stored(item_id: String) -> int:
-	var s := 0
-	for c in stacks:
-		if stacks[c]["item"] == item_id and is_stored(c):
-			s += int(stacks[c]["count"])
-	return s
+	# region W1d
+	if not _stored_valid:
+		_stored.clear()
+		for c in stacks:
+			var it: String = stacks[c]["item"]
+			if is_stored(c):
+				_stored[it] = int(_stored.get(it, 0)) + int(stacks[c]["count"])
+		_stored_valid = true
+	return int(_stored.get(item_id, 0))
+	# endregion
 
 
 ## Every unit of `item_id` that exists: ground + carried + inside buildings.
