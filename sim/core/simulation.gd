@@ -91,7 +91,16 @@ func _init(p_seed: int, p_bus: Object, p_defs: Defs = null, p_opts: Dictionary =
 ## Generates the map and places the starting colony.
 func start_new_game() -> void:
 	var cfg: Dictionary = defs.balance["map"]
-	map = MapGrid.new(int(cfg["width"]), int(cfg["height"]), bus)
+	# region P1: start opts map_w/map_h override the balance size; cluster counts scale with area
+	var mw := int(opts.get("map_w", cfg["width"]))
+	var mh := int(opts.get("map_h", cfg["height"]))
+	if mw != int(cfg["width"]) or mh != int(cfg["height"]):
+		cfg = cfg.duplicate(true)
+		var k := float(mw * mh) / float(int(cfg["width"]) * int(cfg["height"]))
+		cfg["rock_clusters"] = maxi(1, roundi(float(cfg["rock_clusters"]) * k))
+		cfg["deposit_clusters"] = maxi(1, roundi(float(cfg["deposit_clusters"]) * k))
+	map = MapGrid.new(mw, mh, bus)
+	# endregion
 	MapGenerator.generate(map, rng, cfg)
 	_init_systems()
 	_place_starting_colony()
