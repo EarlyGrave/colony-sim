@@ -100,6 +100,16 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
 - Not yet: spitter projectiles (no sim event), refinery smoke in 3D, crowded-scene depth
   check, real-phone check (needs merge to main for Pages).
 
+## Session 4 — perf batch P (plan docs/perf_batch_plan.md, workers P1–P5b, merged)
+- map_w/map_h start opts, tools/perf_bench; sliced mutation field + texture overlay; flow
+  fields + spatial hash + staggered retarget for creatures; chunked ground/blocks + culling;
+  cached mine designation index. Tests: 341 green.
+- Bench 250x250, 600 ticks, desktop headless (ms/tick avg / p95): before 0 enemies 3.85 / 24.4,
+  300 enemies 3.04 / 24.6; after 0 enemies 0.23 / 0.36, 300 enemies 1.56 / 4.7
+  (threats 1.47 / 4.5). Web wasm expected ~2-3x slower: still under the 10 ms/tick 3x budget.
+- Not measured: real phone frame time (cloud has software GL only).
+- Queued next: automation batch (docs/automation_batch_plan.md), owner answers pending.
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
