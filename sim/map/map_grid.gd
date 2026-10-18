@@ -25,6 +25,15 @@ var zone_ids: PackedStringArray
 var deposit_lost := 0
 
 var _bus: Object
+# region A1a: infinite resource nodes (live on DEPOSIT tiles; res 0 = legacy finite deposit)
+## Resource byte per cell (NodeData.res_name), 0 = none.
+var node_res: PackedByteArray
+## Purity byte per cell (1 impure, 2 normal, 3 pure), 0 = none.
+var node_purity: PackedByteArray
+## Fractional yield carried per node between mining cycles.
+var node_carry: PackedFloat32Array
+var biome_id := "start"
+# endregion
 
 
 func _init(w: int, h: int, bus: Object = null) -> void:
@@ -37,6 +46,12 @@ func _init(w: int, h: int, bus: Object = null) -> void:
 	deposit_amount.fill(0)
 	mine_designated.resize(w * h)
 	mine_designated.fill(0)
+	node_res.resize(w * h)  # region A1a
+	node_res.fill(0)
+	node_purity.resize(w * h)
+	node_purity.fill(0)
+	node_carry.resize(w * h)
+	node_carry.fill(0.0)
 	zone_ids.resize(w * h)
 	zone_ids.fill("")
 
@@ -57,6 +72,10 @@ func set_tile(c: Vector2i, t: int, amount := 0) -> void:
 	var i := idx(c)
 	tiles[i] = t
 	deposit_amount[i] = amount if t == Tile.DEPOSIT else 0
+	if t != Tile.DEPOSIT or amount > 0:  # region A1a: a plain tile change drops any node
+		node_res[i] = 0
+		node_purity[i] = 0
+		node_carry[i] = 0.0
 	if t != Tile.DEPOSIT:
 		if mine_designated[i] != 0:
 			_mine_set.erase(i)
@@ -74,6 +93,38 @@ func is_deposit(c: Vector2i) -> bool:
 	return in_bounds(c) and tiles[idx(c)] == Tile.DEPOSIT
 
 
+# region A1a
+func is_node(c: Vector2i) -> bool:
+	return in_bounds(c) and node_res[idx(c)] != 0 and tiles[idx(c)] == Tile.DEPOSIT
+
+
+func node_resource(c: Vector2i) -> String:
+	return NodeData.res_name(node_res[idx(c)])
+
+
+func node_purity_id(c: Vector2i) -> String:
+	return NodeData.PURITY_IDS[node_purity[idx(c)]]
+
+
+func node_cells() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for i in node_res.size():
+		if node_res[i] != 0 and tiles[i] == Tile.DEPOSIT:
+			out.append(Vector2i(i % width, i / width))
+	return out
+
+
+## One hand-mining cycle: items = base * mult * purity_mult, fractions carried
+## on the node. Never depletes the node. Returns whole items produced.
+func mine_node(c: Vector2i, base_yield: float, mult := 1.0) -> int:
+	var i := idx(c)
+	var v := base_yield * mult * NodeData.purity_mult(NodeData.res_name(node_res[i]), node_purity[i]) + node_carry[i]
+	var n := int(floor(v + 0.0001))
+	node_carry[i] = v - n
+	return n
+
+
+# endregion
 func get_deposit_amount(c: Vector2i) -> int:
 	return deposit_amount[idx(c)]
 
@@ -92,6 +143,8 @@ func take_from_deposit(c: Vector2i, amount: int) -> int:
 	var i := idx(c)
 	if tiles[i] != Tile.DEPOSIT:
 		return 0
+	if node_res[i] != 0:  # region A1a: compat shim, nodes are infinite
+		return amount
 	var taken := mini(amount, deposit_amount[i])
 	deposit_amount[i] -= taken
 	if deposit_amount[i] <= 0:
@@ -156,5 +209,5 @@ func is_adjacent_to_passable(c: Vector2i) -> bool:
 ## Stable hash of terrain state, for determinism tests.
 func checksum() -> int:
 	var h := hash(tiles)
-	h = hash([h, hash(deposit_amount), width, height])
+	h = hash([h, hash(deposit_amount), width, height, hash(node_res), hash(node_purity)])  # region A1a
 	return h
