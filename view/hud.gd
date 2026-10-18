@@ -486,6 +486,8 @@ func _close_cat() -> void:
 
 func _exit_tree() -> void:
 	_letters.unbind()
+	if _f2_director != null:  # region F2
+		_f2_director.unbind()
 
 
 func bind(p_sim: Simulation) -> void:
@@ -505,6 +507,7 @@ func bind(p_sim: Simulation) -> void:
 	_patrol_bar.visible = false
 	_o2_bind(p_sim)  # region O2
 	_c5_bind(p_sim)  # region C5
+	_f2_bind(p_sim)  # region F2
 
 
 func select_tool(id: String) -> void:
@@ -664,6 +667,7 @@ func _process(delta: float) -> void:
 		_place_side()
 	elif o2_live:
 		_o2_update()  # region O2: the highlight follows its target every frame
+	_f2_advance(delta)  # region F2
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
 	for rule_id: String in _rule_buttons:
 		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
@@ -1251,6 +1255,7 @@ func _o4_layout() -> void:
 		_o4_anchor_br(cb, limit - vp.x, pop_bottom - 4.0)
 		var gs: Variant = g.get("sim")
 		cb.visible = quiet and SaveStore.has_save() and (gs == null or gs.tick < 50 or gs.game_over_reason != "")
+	_f2_layout(y0, limit, cs.y, pop_open)  # region F2
 
 
 func _o4_buttons(n: Node) -> Array[Button]:
@@ -1306,4 +1311,55 @@ func _c5_layout(right_edge: float, popup_open: bool) -> float:
 	squad_bar.offset_top = -8.0 - SquadBar.BTN_H
 	_root.move_child(squad_bar.radial, -1)
 	return SquadBar.BTN_H + 4.0
+# endregion
+
+
+# region F2
+## Kill feed (bottom-right, above the thumb cluster) and Warden PA banner (top, below the tutorial
+## slot, left of the feed column). Both ignore input and are hidden while empty.
+const F2_BANNER_DROP := 80.0  ## below the 76 px tutorial slot
+var feed_ticker: FeedTicker
+var pa_banner: PaBanner
+var _f2_director: FeedDirector
+
+
+func _f2_bind(p_sim: Simulation) -> void:
+	if feed_ticker == null:
+		feed_ticker = FeedTicker.new()
+		pa_banner = PaBanner.new()
+		_root.add_child(feed_ticker)
+		_root.add_child(pa_banner)
+		_f2_director = FeedDirector.new(feed_ticker, pa_banner)
+	_f2_director.bind(p_sim)
+
+
+func _f2_advance(delta: float) -> void:
+	if feed_ticker != null and feed_ticker.visible:
+		feed_ticker.advance(delta)
+	if pa_banner != null and pa_banner.visible:
+		pa_banner.advance(delta)
+
+
+func _f2_layout(y0: float, limit: float, cluster_h: float, pop_open: bool) -> void:
+	if feed_ticker == null:
+		return
+	var vp := get_viewport().get_visible_rect().size
+	var fw := FeedTicker.WIDTH
+	var bottom := -(8.0 + cluster_h + 6.0 + (96.0 if pop_open else 0.0))
+	feed_ticker.anchor_left = 1.0
+	feed_ticker.anchor_right = 1.0
+	feed_ticker.anchor_top = 1.0
+	feed_ticker.anchor_bottom = 1.0
+	feed_ticker.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	feed_ticker.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	feed_ticker.offset_right = limit - vp.x
+	feed_ticker.offset_left = limit - vp.x - fw
+	feed_ticker.offset_bottom = bottom
+	feed_ticker.offset_top = bottom
+	# banner: centred in the free band between the portrait column and the feed column
+	var right := limit - fw - 8.0
+	var w := minf(PaBanner.MAX_W, right - O4_LEFT)
+	pa_banner.visible = pa_banner.visible and w >= 160.0
+	_o4_anchor_tl(pa_banner, O4_LEFT + (right - O4_LEFT - w) * 0.5, y0 + F2_BANNER_DROP, w, 0.0)
+	pa_banner.grow_vertical = Control.GROW_DIRECTION_END
 # endregion

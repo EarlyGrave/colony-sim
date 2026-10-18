@@ -47,6 +47,8 @@ class Hot:
 	var retarget_n := 20  ## cfg retarget_ticks
 	var bite_ok := true  ## belts exist and line damage is on (per tick; _attack_structure re-checks)
 	var line_on := true  ## balance line_damage.enabled, per tick
+	var kind := ""  ## region F2: def id of that enemy
+	var cause := "generic"  ## region F2: what killed the enemy being announced (read by the view during enemy_killed only)
 var _hot := Hot.new()
 # endregion
 # region T1
@@ -516,7 +518,7 @@ func _choose_target(e: Enemy) -> void:
 			_sapper_target(e)
 
 
-func damage_enemy(e: Enemy, amount: float) -> void:
+func damage_enemy(e: Enemy, amount: float, cause := "generic") -> void:  # region F2: cause is cosmetic
 	e.hp -= amount
 	if e.hp <= 0.0 and enemies.has(e):
 		enemies.erase(e)
@@ -525,7 +527,21 @@ func damage_enemy(e: Enemy, amount: float) -> void:
 		if wave_active:
 			raid_dead += 1
 			_check_morale()
+		_hot.cause = cause  # region F2
+		_hot.kind = e.def_id  # region F2
 		sim.bus.enemy_killed.emit(e.id)
+		_hot.cause = "generic"  # region F2
+
+
+# region F2
+## Cause of the kill being announced (valid inside an enemy_killed handler, else "generic").
+func last_kill_cause() -> String:
+	return _hot.cause
+
+
+func last_kill_kind() -> String:
+	return _hot.kind
+# endregion
 
 
 # --- Turrets ------------------------------------------------------------------------
@@ -564,7 +580,7 @@ func _tick_turrets() -> void:
 			continue
 		b.turret_cooldown = int(t["cooldown_ticks"])
 		shots.append([from, target.visual_pos(), sim.tick])
-		damage_enemy(target, float(t["damage"]))
+		damage_enemy(target, float(t["damage"]), "turret")  # region F2
 		sim.buildings.wear(b, float(b.def.get("wear_per_shot", 0.0)))
 
 # region combat
