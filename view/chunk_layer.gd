@@ -15,6 +15,7 @@ var map_w := 0
 var map_h := 0
 var viewports: Array[SubViewport] = []  # index = cy * cols + cx
 var enabled: Array[bool] = []
+var sizes: Array[Vector2i] = []  # region W2e: full pixel size of each chunk viewport
 var update_calls := 0  ## chunk texture refreshes requested (perf counter)
 
 
@@ -80,7 +81,8 @@ func build(w: int, h: int, world_2d: World2D) -> void:
 			var r := chunk_cells(ch, w, h)
 			var vp := SubViewport.new()
 			vp.disable_3d = true
-			vp.size = r.size * PX
+			vp.size = Vector2i.ONE  # region W2e: render target is only allocated while active
+			sizes.append(r.size * PX)
 			vp.world_2d = world_2d
 			vp.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
 			vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
@@ -95,6 +97,7 @@ func clear() -> void:
 		vp.queue_free()
 	viewports.clear()
 	enabled.clear()
+	sizes.clear()
 	cols = 0
 	rows = 0
 
@@ -112,4 +115,7 @@ func set_active(chunks: Array[Vector2i]) -> void:
 		var on: bool = want.has(i)
 		if on != enabled[i]:
 			enabled[i] = on
+			# region W2e: inactive chunks release their render target (1x1), active ones get the full size back
+			viewports[i].size = sizes[i] if on else Vector2i.ONE
 			viewports[i].render_target_update_mode = SubViewport.UPDATE_ALWAYS if on else SubViewport.UPDATE_DISABLED
+			# endregion
