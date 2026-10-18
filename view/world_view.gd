@@ -446,21 +446,92 @@ func _draw_night() -> void:
 
 # region mutation
 ## Green wash by cell contamination; mutated cells go purple-green.
+## One map-sized ImageTexture, only rows the sim marked dirty are re-coloured.
+var _field_img: Image
+var _field_tex: ImageTexture
+var _field_bytes := PackedByteArray()  ## RGBA8, w*h*4
+var _field_cursor := 0
+var field_pixel_writes := 0  ## cells whose colour changed (perf counter)
+
+
+func _field_color(v: float, tainted: float, mutated: float) -> Color:
+	if v < tainted * 0.4:
+		return Color(0, 0, 0, 0)
+	if v >= mutated:
+		return Color(0.6, 0.25, 0.8, 0.32)
+	return Color(0.35, 0.8, 0.25, clampf(v / maxf(mutated, 0.01), 0.0, 1.0) * 0.28)
+
+
+## Brings the overlay image up to date with the field. Returns the texture.
+## Only rows the sim marked dirty are visited and only cells whose 8-bit colour
+## changed are rewritten; the image is then uploaded once.
+func update_field_texture() -> ImageTexture:
+	var mut := sim.mutation
+	var w := sim.map.width
+	var h := sim.map.height
+	var fresh := _field_img == null or _field_img.get_width() != w or _field_img.get_height() != h
+	if fresh:
+		_field_bytes.resize(w * h * 4)
+		_field_bytes.fill(0)
+	if fresh:
+		mut.dirty_rows.fill(1)
+		_field_cursor = 0
+	var budget := h if fresh else int(sim.defs.balance["field_perf"]["overlay_rows_per_frame"])
+	var lo: float = mut.tainted_threshold() * 0.4
+	var mutated: float = mut.mutated_threshold()
+	var inv := 0.28 * 255.0 / maxf(mutated, 0.01)
+	var writes := 0
+	var start := _field_cursor
+	for k in h:
+		if budget <= 0:
+			break
+		var y := (start + k) % h
+		if mut.dirty_rows[y] == 0:
+			continue
+		mut.dirty_rows[y] = 0
+		budget -= 1
+		_field_cursor = (y + 1) % h
+		var row := y * w
+		for x in w:
+			var v: float = mut.field[row + x]
+			var o := (row + x) * 4
+			var r := 0
+			var g := 0
+			var b := 0
+			var a := 0
+			if v >= mutated:
+				r = 153
+				g = 64
+				b = 204
+				a = 82
+			elif v >= lo:
+				r = 89
+				g = 204
+				b = 64
+				a = int(minf(v * inv, 71.4))
+			if _field_bytes[o + 3] == a and _field_bytes[o] == r:
+				continue
+			_field_bytes[o] = r
+			_field_bytes[o + 1] = g
+			_field_bytes[o + 2] = b
+			_field_bytes[o + 3] = a
+			writes += 1
+	field_pixel_writes += writes
+	if fresh:
+		_field_img = Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, _field_bytes)
+		_field_tex = ImageTexture.create_from_image(_field_img)
+	elif writes > 0:
+		_field_img.set_data(w, h, false, Image.FORMAT_RGBA8, _field_bytes)
+		_field_tex.update(_field_img)
+	return _field_tex
+
+
 func _draw_contamination_field() -> void:
 	if not show_field:
 		return
-	var mut := sim.mutation
-	var tainted: float = mut.tainted_threshold()
-	var mutated: float = mut.mutated_threshold()
-	for i in mut.field.size():
-		var v := mut.field[i]
-		if v < tainted * 0.4:
-			continue
-		var c := Vector2i(i % sim.map.width, i / sim.map.width)
-		var col := Color(0.35, 0.8, 0.25, clampf(v / maxf(mutated, 0.01), 0.0, 1.0) * 0.28)
-		if v >= mutated:
-			col = Color(0.6, 0.25, 0.8, 0.32)
-		draw_rect(Rect2(cell_to_world(c), Vector2(TILE, TILE)), col)
+	var tex := update_field_texture()
+	if tex != null:
+		draw_texture_rect(tex, Rect2(Vector2.ZERO, Vector2(sim.map.width, sim.map.height) * TILE), false)
 # endregion
 
 
