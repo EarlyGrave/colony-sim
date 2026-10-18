@@ -124,7 +124,13 @@ func b3_on() -> bool:
 func review_defs() -> Array:
 	var base: Array = sim.defs.milestones.get("reviews", [])
 	if k2_on():  # region K2
-		return k2_review_defs(base)  # region K2
+		base = k2_review_defs(base)  # region K2
+	if e3_on():  # region E3
+		var head: Array = []  # E3 reviews go before any outpost step so they are never blocked by it
+		var tail: Array = []
+		for r: Dictionary in base:
+			(tail if str(r.get("kind", "")) == "outpost_days" else head).append(r)
+		return head + e3_review_defs() + tail
 	return base
 
 
@@ -151,6 +157,10 @@ func review_progress(r: Dictionary) -> float:
 			return clampf(waves_repelled / v, 0.0, 1.0)
 		"outpost_days":  # region K2
 			return clampf(k2_outpost_days / v, 0.0, 1.0)  # region K2
+		"debt_left_below_pct":  # region E3
+			return e3_debt_progress(v)  # region E3
+		"range_score":  # region E3
+			return clampf(e3_range_score() / v, 0.0, 1.0)  # region E3
 	return 0.0
 
 
@@ -278,4 +288,68 @@ func k2_import(a: Array) -> void:
 	k2_outpost_days = int(a[0])
 	k2_decoys = int(a[1])
 	k2_outposts_held = int(a[2])
+# endregion
+
+
+# region E3: Chain Gang Review (Parole Reviews 4-5). Gated by balance "e3_enabled" (default false).
+var e3_seen_debt := false
+
+
+func e3_on() -> bool:
+	return bool(sim.defs.balance.get("e3_enabled", false))
+
+
+func e3_review_defs() -> Array:
+	return sim.defs.milestones.get("e3_reviews", [])
+
+
+## Progress toward "debt left below v %": 1.0 once remaining debt < v % (needs a non-empty debt book).
+func e3_debt_progress(v: float) -> float:
+	var total := 0
+	for c in sim.colonists.list:
+		var st: DebtState = sim.debt.state_of(c)
+		if st != null:
+			total += st.total
+	if total > 0:
+		e3_seen_debt = true
+	elif e3_seen_debt:
+		return 1.0  # everyone cleared and gone
+	else:
+		return 0.0
+	var left := 100.0 - debt_paid_pct()
+	if left < v:
+		return 1.0
+	return clampf((100.0 - left) / (100.0 - v), 0.0, 0.99)
+
+
+## Range score = total power surplus (all nets) x clean factor (1 at no pollution, 0 at clean_ref pollution fraction).
+func e3_range_score() -> float:
+	var cfg: Dictionary = sim.defs.balance.get("e3", {})
+	var surplus := 0.0
+	for n: Dictionary in sim.power.nets:
+		var info: Dictionary = sim.power.net_info(int(n["id"]))
+		surplus += maxf(0.0, float(info.get("supply", 0.0)) - float(info.get("demand", 0.0)))
+	var clean := clampf(1.0 - sim.contamination.fraction() / float(cfg.get("clean_ref", 0.5)), 0.0, 1.0)
+	return surplus * clean
+
+
+## Extra days between sentence audits earned by passed E3 reviews.
+func e3_audit_bonus_days() -> float:
+	if not e3_on():
+		return 0.0
+	var d := 0.0
+	for r: Dictionary in e3_review_defs():
+		if reviews_done.has(str(r["id"])):
+			d += float(r.get("audit_bonus_days", 0.0))
+	return d
+
+
+## Cosmetic rank title of the highest passed E3 review ("" if none).
+func e3_rank_title() -> String:
+	var t := ""
+	if e3_on():
+		for r: Dictionary in e3_review_defs():
+			if reviews_done.has(str(r["id"])):
+				t = str(r.get("rank", t))
+	return t
 # endregion
