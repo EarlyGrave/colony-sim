@@ -204,16 +204,13 @@ each colonist in `colonists.list` `[id, cell, hp, alive, carry_item, carry_count
 
 ### Line damage (T3, `balance.json` `line_damage`)
 `BeltGrid.hp` dense PackedFloat32Array (max `belt_hp`); hp < `stall_frac` x max: tile stops moving items; hp 0 stays as a broken marker (belt kept) until repaired. Creatures bite adjacent belt tiles (`structure_dmg` in `enemies.json`, own `bite_cd`, hook `ThreatSystem._attack_structure`). Machines get `broken` below `machine_broken_frac` hp. `RepairJob` (building or `RepairJob.for_belt(cell)`, reservation `rep:belt:x,y`) pays `belt_repair_cost`/`machine_repair_cost` (building def `repair_cost` overrides) from stored items, only for structural damage; the giver offers it only if affordable.
-(GD) Today it is `var_to_str(parts).hash()` (Godot text serialisation, 32-bit string hash): engine-specific, a port cannot match it bit for bit.
-Portable definition for cross-engine comparison: canonical JSON of the same parts (UTF-8, no whitespace, object keys sorted, ints as ints, floats as shortest
-round-trip decimal, cells as `[x,y]`) fed to a stable hash such as FNV-1a 64. Switching changes every golden (`tests/golden/`, R1b), so it is deferred.
+(GD) Today it is `var_to_str(parts).hash()` (Godot text serialisation, 32-bit string hash): engine-specific, a port cannot match it bit for bit. Portable definition for cross-engine comparison: canonical JSON of the same parts (UTF-8, no whitespace, sorted keys, shortest round-trip floats, cells as `[x,y]`) fed to a stable hash such as FNV-1a 64; switching changes every golden (`tests/golden/`, R1b), so it is deferred.
 Not covered by the hash today (known gaps): needs, mood, skills/xp, injuries, contamination levels, bills, contracts, debt, enemies, rng state.
 
 ## 9. Architecture constraints a port must keep
 `sim/` has no rendering, Node, scene tree or autoload lookups; the view only reads state, listens to the bus and issues commands through `Simulation` methods.
 Systems are modules (`core, map, colonists, jobs, items, buildings, contamination, threats, storyteller, ...`); systems read map/items, never the view.
-Reachability: grid A* plus connected components (O(1) reachable test); equal-cost tie-break by neighbour order N,E,S,W.
-Job reservations use string keys; flee overrides all jobs while the alarm is on.
+Reachability: grid A* plus connected components (O(1) reachable test); equal-cost tie-break by neighbour order N,E,S,W. Job reservations use string keys; flee overrides all jobs while the alarm is on.
 
 ## 10. AI chip operator (T4, `sim.chips`)
 A chip replaces the operator of a bench/smelter/assembler: bench adds `bench_rate * chip_speed` per tick without a colonist; a processor takes 4 of 5 work steps (accumulator, no rng).
@@ -232,15 +229,13 @@ pays `unit_cost` per further unit from the banks, dropping what it cannot afford
 ## 12. Squads (C1, `sim.squads`, `sim/squads/`)
 `SquadSystem` (list of `Squad`, ascending id) keeps `members`, `role_of`, `hold` anchor, `focus` enemy id. No rng. `tick()` runs after `threats.tick()`: when a focus target is gone, focus clears and members return to their slots.
 Role = `data/roles.json`; auto-suggest `suggest_roles(ids)`: score = skill level (`affinity_skill`) x `skill_weight` + trait `role_affinity` x `trait_weight`; distinct roles are filled first (best score, ties lower id).
-Commands are logged as text for arrays (`form_squad("[1,2]", "[]")`). Death removes a member (empty squad is deleted). Manual `order_*` on a member is allowed and wins until the next squad command.
-`state_hash` appends `squads.state_parts()` only while a squad exists (goldens unchanged). API for other workers: `get_squad(sid)`, `squad_of(colonist_id)`, `list`, `Squad.role_of[id]`.
+Commands are logged as text for arrays (`form_squad("[1,2]", "[]")`). Death removes a member (empty squad is deleted). Manual `order_*` on a member is allowed and wins until the next squad command. `state_hash` appends `squads.state_parts()` only while a squad exists (goldens unchanged). API for other workers: `get_squad(sid)`, `squad_of(colonist_id)`, `list`, `Squad.role_of[id]`.
 
 ## 11. Warden's Orientation (R5 O1, `sim.tutorial`, `sim/tutorial/tutorial_system.gd`)
 Exists only with `opts.tutorial == true` (else `sim.tutorial == null`, commands are recorded no-ops, hashes unchanged). No rng. Runs last in `step()` (after `storyteller.tick`, before the colonists-dead check); `sim.in_step` is true during `step()`.
 State: `step` (0..12, 12 = finished), `done[]`, `skipped`, `ticks_in_step`, `seen[]` cells, per-step flags, latched facts; appended to `state_hash` only in tutorial mode. Bus: `tutorial_step_changed(step)`, `tutorial_finished()`.
 Each step advances only on its `done.signal` (ack command, 3 mine designations, 4 zone cells, 10 stored ore after `item_mined`, workbench/refinery placed, `first_refine_done`, `research_completed`, >=3 belts + an item arriving in a port building, `forecast_revealed` or ack, `wave_repelled` with player alarm or a turret, decoy placed or `wave_incoming`, ack).
-Normal waves are held (`waves_held()`) until the audit step; entering it calls `threats.schedule_scripted(delay)`: raid `tutorial_audit` (2 crawlers, 1800-tick limit, always counts as repelled, pod takes 0 damage, inmates take 0 damage).
-View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`, `step_count()`.
+Normal waves are held (`waves_held()`) until the audit step; entering it calls `threats.schedule_scripted(delay)`: raid `tutorial_audit` (2 crawlers, 1800-tick limit, always counts as repelled, pod takes 0 damage, inmates take 0 damage). View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`, `step_count()`.
 
 ## 12. Health bands (C4)
 `HealthState.band(cfg)` / `sim.health.band(c)` derives `fit | wounded | down` from the existing model (down = `downed`; wounded = blood < `band.wounded_blood` or total damage >= `band.wounded_damage`). `sim.health.bleed_out_seconds(c)` = ceil(blood / bleed_rate / TICKS_PER_SECOND) while Down and bleeding, else -1. `sim.health.stabilise(c, medic)` tends all injuries at `band.stabilise_quality` (C2 Medic hook). Auto-rescue is the existing `RescueGiver` (any colonist with doctoring enabled carries a Down colonist to a free bed). No new RNG, no goldens change (derived reads only); data in `health.json` `band`.
