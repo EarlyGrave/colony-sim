@@ -439,6 +439,7 @@ func _apply_layout(compact: bool) -> void:
 		_reparent_to(b, _menu_box)
 		b.custom_minimum_size = Vector2(150, BAR_H)
 	_colonist_dock.visible = compact
+	_cat_popup.offset_left = 88.0 if compact else 0.0  # keep clear of the colonist portrait column
 	_menu_box.columns = 4 if compact else 2
 	if compact:
 		_top_flow.get_child(0).custom_minimum_size.x = 150

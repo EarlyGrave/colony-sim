@@ -26,6 +26,11 @@ static func act(sim: Simulation, n: int) -> int:
 	if n == 0 and sim.has_meta("qa_setup"):
 		Scen.standard_colony(sim, 0)
 		issued += 1
+	# By day 4 the bot has asked for 1 miner + belts + 1 smelter (colonists build them).
+	if sim.day() >= 2 and not sim.has_meta("qa_chain"):
+		sim.set_meta("qa_chain", true)
+		if not Scen.build_chain(sim, true).is_empty():
+			issued += 1
 	# Always answer whatever is waiting (events, crises, contracts, debts).
 	for p in sim.storyteller.pending.duplicate():
 		sim.answer_event(int(p.get("uid", 0)), n % 2 == 0)

@@ -427,9 +427,11 @@ func _setup_automation() -> void:
 	layer.layer = 20
 	add_child(layer)
 	auto_panel = AutomationPanel.new()
-	auto_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	auto_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	auto_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	# Docked as a strip above the main toolbar and the category popup (never over the map middle).
+	auto_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	auto_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	auto_panel.offset_left = 88.0  # clear of the colonist portrait column
+	auto_panel.offset_bottom = -(hud._bottom_inset + 112.0)
 	layer.add_child(auto_panel)
 	auto_panel.tool_picked.connect(_on_auto_tool)
 	auto_panel.undo_pressed.connect(undo_belt)

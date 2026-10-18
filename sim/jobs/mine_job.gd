@@ -37,7 +37,7 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		if not sim.defs.items.has(item):
 			item = String(cfg["item"])
 		got = sim.map.mine_node(target, float(cfg["yield"]), maxf(0.0, 1.0 + sim.perks.mod(c, "ore_yield")))
-		sim.map.set_mine_designated(target, false)
+		# Infinite node: the designation stays until the player removes it.
 	else:
 		got = _mine_legacy(c, sim, cfg)
 	if got > 0:

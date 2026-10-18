@@ -9,10 +9,12 @@ extends RefCounted
 ## certain the closer the planet is to the end.
 
 
-static func estimate(level: float, rate_per_day: float, cfg: Dictionary) -> Dictionary:
+## `machine_rate` (units/day) is what the running machines will add even if the
+## smoothed measurement has not caught up yet (a smelter just came online).
+static func estimate(level: float, rate_per_day: float, cfg: Dictionary, machine_rate := 0.0) -> Dictionary:
 	var max_level := float(cfg["max"])
 	var remaining := maxf(0.0, max_level - level)
-	var rate := maxf(rate_per_day, float(cfg["min_rate_per_day"]))
+	var rate := maxf(maxf(rate_per_day, machine_rate), float(cfg["min_rate_per_day"]))
 	var days := remaining / rate
 	var rel_err := float(cfg["base_error"]) + float(cfg["error_growth"]) * clampf(level / max_level, 0.0, 1.0)
 	return {"days": days, "error": days * rel_err}

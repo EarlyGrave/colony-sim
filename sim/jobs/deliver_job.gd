@@ -39,7 +39,10 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		c.carry_count += got
 		_picked = true
 		return Status.RUNNING
-	var mv := c.move_toward(bp.cell, sim)
+	var stand := sim.buildings.bp_stand(bp, c.cell)
+	if stand.x < 0:
+		return Status.FAILED
+	var mv := c.move_toward(stand, sim)
 	if mv == GridMover.Move.FAILED:
 		return Status.FAILED
 	if mv == GridMover.Move.MOVING:

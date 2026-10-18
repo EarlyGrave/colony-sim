@@ -64,6 +64,13 @@ func test_hand_mining_yields_node_resource() -> void:
 		if sim.map.is_adjacent_to_passable(c) and (best.x < 0 or c.distance_squared_to(center) < best.distance_squared_to(center)):
 			best = c
 	sim.designate_mine(best, true)
+	var cycles := [0]
+	sim.bus.item_mined.connect(func(c: Vector2i, _i: String, _n: int) -> void:
+		if c == best:
+			cycles[0] += 1)
 	sim.run_ticks(2000)
 	assert_true(sim.map.is_node(best), "node must survive mining")
-	assert_false(sim.map.is_mine_designated(best), "designation clears after a cycle")
+	assert_true(sim.map.is_mine_designated(best), "designation stays on an infinite node")
+	assert_true(cycles[0] >= 2, "node is mined repeatedly")
+	sim.designate_mine(best, false)
+	assert_false(sim.map.is_mine_designated(best))

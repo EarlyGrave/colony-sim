@@ -50,18 +50,18 @@
 				"harvest"
 			]
 		},
-		"mining": {
-			"label": "Mining",
-			"skill": "mining",
-			"givers": [
-				"mine"
-			]
-		},
 		"construction": {
 			"label": "Construction",
 			"skill": "construction",
 			"givers": [
 				"build"
+			]
+		},
+		"mining": {
+			"label": "Mining",
+			"skill": "mining",
+			"givers": [
+				"mine"
 			]
 		},
 		"crafting": {

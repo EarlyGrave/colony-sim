@@ -66,4 +66,17 @@ func fraction() -> float:
 
 
 func forecast() -> Dictionary:
-	return ForecastModel.estimate(level, rate_per_day, _cfg)
+	return ForecastModel.estimate(level, rate_per_day, _cfg, machine_rate_per_day())
+
+
+## Contamination per day of the processors that are mid-batch right now
+## (batches/day x per_batch). Idle or broken machines add nothing.
+func machine_rate_per_day() -> float:
+	var s := 0.0
+	for b in sim.buildings.list:
+		if b.broken or b.destroyed or b.progress <= 0 or str(b.def.get("machine", "")) != "processor":
+			continue
+		if not sim.buildings._is_refining(b):
+			continue
+		s += float(sim.ticks_per_day) / maxf(1.0, float(b.recipe.get("work_ticks", 100))) * float(_cfg["per_batch"])
+	return s
