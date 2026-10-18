@@ -23,12 +23,19 @@ mode — the main session does NOT implement features itself:
    `# region <agent>` blocks; `sim/` stays deterministic; all tests green;
    commit in the worktree, never push; report ≤ 30 lines in
    `docs/agents/<agent>/<batch>-report.md`.
-4. Budget: one wave per batch, Sonnet for subagents, the orchestrator does not
+4. **Mechanics scout** (subagent, Sonnet, read-only + one doc): call it when ideas run
+   out or before planning a new batch. It studies neighbour games (colony sims,
+   factory games, roguelikes, survival, strategy…), picks mechanics that fit our
+   pillars, REWORKS them so they are not direct copies (new twist tied to the prison
+   planet / essence / contamination), and writes `docs/scout/<topic>.md` (≤ 80 lines:
+   source inspiration, our version, why it fits, cost S/M/L). Its output goes to the
+   game designer and the prompter, never straight to workers.
+5. Budget: one wave per batch, Sonnet for subagents, the orchestrator does not
    re-read files the agents already read; short reports.
-5. **Merge to `main`** (owner rule 2026-10-18): when a whole batch is merged into the
+6. **Merge to `main`** (owner rule 2026-10-18): when a whole batch is merged into the
    dev branch and the full suite is green, fast-forward/merge it into `main` and push
    (Pages deploys from `main`). Never merge a half-done batch.
-6. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
+7. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
 
 ## Stack
 - Godot **4.7.2-stable**, GDScript only (no C#: we need the web build).

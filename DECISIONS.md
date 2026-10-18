@@ -177,3 +177,13 @@ New systems may use their own RandomNumberGenerator seeded deterministically fro
 No power at start; purity 0.5/1/2 = speed only; base ores copper + iron + essence; nodes
 invulnerable; one belt tier (1 item/cell, ~2 cells/s); splitters later; manual hauling always;
 old saves marked incompatible (save version bump). Plan: docs/automation_batch_plan.md.
+
+## Roadmap answers (2026-10-18)
+- R1 "sim contract" runs as one worker inside the next wave, not a separate batch.
+- Research cost: all three in different proportions — essence for big/science-advancing steps,
+  part sets as tier unlocks (Satisfactory-style milestones), always bench time; later automated
+  (AI chips work instead of colonists).
+- Creatures may damage belts and machines.
+- Expeditions = a real second playable map; factories for specific parts live on separate maps
+  that yield specific elements.
+- Target engine: undecided; engine comparison written for the owner (docs/engine_choice.md).
