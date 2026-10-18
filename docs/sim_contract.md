@@ -60,6 +60,8 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `set_zone_filter` | c: cell, item_id: str, allowed: bool | bool | applies to the whole connected zone group |
 | `set_zone_priority` | c: cell, priority: int | bool | 0 low, 1 normal, 2 high (`crafting.priorities`) |
 | `set_work_priority` | colonist_id: int, work_type: str, p: int | bool | colonist exists, type in `work.json`, 0 <= p <= `max_priority` |
+| `set_research` | tech_id: str | bool | tech exists, prereqs done, tier unlocked, affordable; moves it to the queue front, spends essence on first queue |
+| `queue_research` | tech_id: str, on: bool | bool | on: as set_research but appended; off: removes, exact essence refund if progress is 0 |
 | `set_drafted` | colonist_id: int, on: bool | bool | colonist exists and alive |
 | `order_move` | colonist_id: int, cell: cell | bool | colonist drafted, cell reachable |
 | `order_attack` | colonist_id: int, enemy_id: int | bool | drafted colonist, enemy alive |
@@ -121,6 +123,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]} |
 | `recipes.json` | id -> {name, inputs{}, outputs{}, work_ticks, station} |
+| `research.json` | techs id -> {name, tier, prereqs[], cost{essence}, bench_ticks, unlocks{buildings,recipes,rules}, waste_mult} |
 | `resources.json` | id -> {item, tier, biomes, base_rate, purity_mult} (infinite nodes) |
 | `rules.json` | id -> {name, default: bool, ...} player rules (`set_rule`) |
 | `skills.json` | max_level, xp_base, xp_step, xp_per_work_tick, speed_per_level, passion_xp |
@@ -131,7 +134,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
 | `zones.json` | id -> {name, color, accepts[], waste_emission_factor} |
 
-Research (pending R2a/R2b): `research.json` (techs: tier, prereqs, cost, unlocks) and `milestones.json` will be added as table rows above.
+Research: `milestones.json` (audit part sets per tier) is pending R2b.
 
 ## 7. Save format v2 (`SaveGame`)
 Saves are command-log replays, not state snapshots:
