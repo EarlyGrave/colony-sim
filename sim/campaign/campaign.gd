@@ -88,6 +88,8 @@ func step() -> void:
 				_autopilot_day(int(m["id"]))
 	Expedition.tick(self)
 	Sling.tick(self)
+	if tick % _ticks_per_day == 0:  # region K2
+		_k2_day()  # region K2
 
 
 func _autopilot_day(id: int) -> void:
@@ -200,3 +202,13 @@ func state_hash() -> int:
 func dispose() -> void:
 	for m: Dictionary in maps:
 		m["sim"].dispose()
+
+
+# region K2: outposts feed the home Parole Review and act as audit decoys.
+func _k2_day() -> void:
+	var held := 0
+	for m: Dictionary in maps:
+		if str(m["kind"]) == "outpost" and not bool(ledgers.get(int(m["id"]), {}).get("lost", false)):
+			held += 1
+	home_sim().milestones.k2_note_day(held)
+# endregion
