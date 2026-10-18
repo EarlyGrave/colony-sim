@@ -1243,6 +1243,13 @@ func _o4_layout() -> void:
 			tool_b = -8.0
 		_o4_place_corner(apc, O4_LEFT, tool_b)
 		apc.visible = quiet and not _patrol_bar.visible and c5h == 0.0
+		if apc.visible and not machines_open:  # region F5: dock the strip on the bottom edge, legend/toast stack above it
+			var ah := maxf(apc.get_combined_minimum_size().y, 64.0)
+			_o4_place_corner(apc, O4_LEFT, -8.0)
+			_o4_place_corner(_legend, O4_LEFT, -8.0 - ah - 4.0)
+			var tb := -(8.0 + ah + 4.0 + O4_LEGEND_H + 4.0)
+			_message.offset_bottom = tb
+			_message.offset_top = tb - O4_TOAST_H
 	# Save/Continue prompt: above the cluster, never under a menu.
 	var cont: Variant = g.get("_continue_btn") if g != null else null
 	if cont is Button:

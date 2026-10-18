@@ -201,6 +201,7 @@ func _render() -> void:
 		add_line(lock, Color(1.0, 0.6, 0.4))
 	match step:
 		Step.BIOME:
+			_f5_outposts()  # region F5
 			add_line("1/4  Choose a destination")
 			for id in biome_ids():
 				var b := _button(content, str(id).capitalize(), func() -> void: pick_biome(id))
@@ -294,3 +295,73 @@ func _button(parent: Control, text: String, cb: Callable) -> Button:
 	b.pressed.connect(cb)
 	parent.add_child(b)
 	return b
+
+
+# region F5
+var recall_pending := -1  ## outpost id awaiting the confirm tap
+var recall_calls := 0  ## Campaign.recall calls made by this panel (tests)
+
+
+## Outposts that can be pulled back (kind == "outpost").
+func outpost_ids() -> Array[int]:
+	var out: Array[int] = []
+	for m: Dictionary in CampaignView.maps(campaign):
+		if str(m.get("kind", "")) == "outpost":
+			out.append(int(m.get("id", -1)))
+	return out
+
+
+## "" when the outpost can be recalled, otherwise why not.
+func recall_block_reason(id: int) -> String:
+	if CampaignView.active_id(campaign) == id:
+		return "You are viewing it: switch to another map first."
+	return ""
+
+
+func ask_recall(id: int) -> void:
+	recall_pending = id
+	_render()
+
+
+func cancel_recall() -> void:
+	recall_pending = -1
+	_render()
+
+
+## Confirmed recall: exactly one Campaign.recall call; the crew and buffer travel home.
+func do_recall(id: int) -> bool:
+	recall_pending = -1
+	if campaign == null or not campaign.has_method("recall") or recall_block_reason(id) != "":
+		result = "Cannot recall: " + (recall_block_reason(id) if campaign != null else "no campaign")
+		_render()
+		return false
+	recall_calls += 1
+	var ok: bool = campaign.call("recall", id)
+	result = "Outpost recalled; the crew is on its way home." if ok else "Cannot recall this outpost."
+	_render()
+	return ok
+
+
+func _f5_outposts() -> void:
+	var ids := outpost_ids()
+	if ids.is_empty():
+		return
+	add_line("Outposts")
+	for id in ids:
+		var name_s := CampaignView.label(campaign, id)
+		if recall_pending == id:
+			add_line("Recall %s? The crew and stock travel home (%s)." % [name_s, CampaignView.ticks_text(travel_ticks(), sim.ticks_per_day)], Color(1.0, 0.8, 0.4))
+			var row := HBoxContainer.new()
+			content.add_child(row)
+			var yes := _button(row, "Recall", func() -> void: do_recall(id))
+			yes.name = "recall_yes_%d" % id
+			var no := _button(row, "Keep", cancel_recall)
+			no.name = "recall_no_%d" % id
+			continue
+		var b := _button(content, "Recall " + name_s, func() -> void: ask_recall(id))
+		b.name = "recall_%d" % id
+		var why := recall_block_reason(id)
+		if why != "":
+			b.disabled = true
+			add_line(why, Color(0.7, 0.7, 0.7))
+# endregion
