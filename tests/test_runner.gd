@@ -1,7 +1,9 @@
 extends Node
 ## Minimal headless test runner.
 ##
-## Usage: godot --headless --path . res://tests/run_tests.tscn [-- --filter=substr]
+## Usage: godot --headless --path . res://tests/run_tests.tscn [-- --filter=substr] [--shard=i/n]
+## --shard=i/n (1-based) runs one balanced slice of the suite (greedy by tests/shard_weights.json, ms per test);
+## tools/run_tests_sharded.sh starts all n shards in parallel.
 ## Finds res://tests/test_*.gd, runs every `test_*` method, exits with code 1
 ## on any failure.
 
@@ -36,11 +38,42 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--filter="):
 			filter = arg.trim_prefix("--filter=")
-	var code := run_all(filter)
+	var shard := Vector2i(1, 1)
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--shard="):
+			var p := arg.trim_prefix("--shard=").split("/")
+			shard = Vector2i(int(p[0]), int(p[1]))
+	var code := run_all(filter, shard)
 	get_tree().quit(code)
 
 
-func run_all(filter: String) -> int:
+## Greedy longest-first assignment of tests to shards; deterministic (same input, same slices).
+func _shard_set(names: Array[String], shard: Vector2i) -> Dictionary:
+	var weights: Dictionary = {}
+	var f := FileAccess.open("res://tests/shard_weights.json", FileAccess.READ)
+	if f != null:
+		weights = JSON.parse_string(f.get_as_text())
+	var order := names.duplicate()
+	order.sort_custom(func(a: String, b: String) -> bool:
+		var wa := int(weights.get(a, 300))
+		var wb := int(weights.get(b, 300))
+		return wa > wb if wa != wb else a < b)
+	var load_ms: Array[int] = []
+	load_ms.resize(shard.y)
+	load_ms.fill(0)
+	var mine: Dictionary = {}
+	for n in order:
+		var best := 0
+		for i in shard.y:
+			if load_ms[i] < load_ms[best]:
+				best = i
+		load_ms[best] += int(weights.get(n, 300))
+		if best == shard.x - 1:
+			mine[n] = true
+	return mine
+
+
+func run_all(filter: String, shard := Vector2i(1, 1)) -> int:
 	var files: Array[String] = []
 	var dir := DirAccess.open("res://tests")
 	for f in dir.get_files():
@@ -49,6 +82,15 @@ func run_all(filter: String) -> int:
 			files.append(name)
 	files.sort()
 
+	var all_names: Array[String] = []
+	if shard.y > 1:
+		for f in files:
+			var sc: GDScript = load("res://tests/" + f)
+			if sc != null and sc.can_instantiate():
+				for m in sc.get_script_method_list():
+					if str(m["name"]).begins_with("test_"):
+						all_names.append("%s::%s" % [f.get_basename(), m["name"]])
+	var mine := _shard_set(all_names, shard) if shard.y > 1 else {}
 	var passed := 0
 	var failed := 0
 	var started := Time.get_ticks_msec()
@@ -64,6 +106,8 @@ func run_all(filter: String) -> int:
 				continue
 			var full := "%s::%s" % [f.get_basename(), mname]
 			if filter != "" and not full.contains(filter):
+				continue
+			if shard.y > 1 and not mine.has(full):
 				continue
 			_catcher.take()
 			var t: TestCase = script.new()

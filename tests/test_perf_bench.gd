@@ -25,5 +25,5 @@ func test_bench_runs() -> void:
 		"res://tools/perf_bench.tscn", "--", "--ticks=20", "--size=96", "--enemies=20"], out, true)
 	assert_eq(code, 0, "bench exit code")
 	var text := "\n".join(PackedStringArray(out))
-	for k in ["buildings", "colonists", "threats", "contamination", "mutation", "storyteller", "jobs", "combat"]:
+	for k in ["logistics", "colonists", "threats", "contamination", "mutation", "storyteller", "jobs", "combat"]:
 		assert_true(text.contains(k), "missing line " + k)

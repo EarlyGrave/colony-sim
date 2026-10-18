@@ -87,3 +87,12 @@ func assert_lt(a: float, b: float, msg := "") -> void:
 func assert_near(a: float, b: float, eps: float, msg := "") -> void:
 	if absf(a - b) > eps:
 		fail("expected %s ≈ %s (±%s). %s" % [str(a), str(b), str(eps), msg])
+
+
+## Wall-clock asserts are skipped when PERF_SKIP is set, or PERF_SKIP_WALL (set by tools/run_tests_sharded.sh:
+## parallel shards distort timings). On by default for single runs.
+func perf_skip() -> bool:
+	if OS.get_environment("PERF_SKIP") != "" or OS.get_environment("PERF_SKIP_WALL") != "":
+		print("        (wall-clock assert skipped by env)")
+		return true
+	return false

@@ -1,12 +1,13 @@
 extends Node
 ## Perf bench.
 ## godot --headless --path . res://tools/perf_bench.tscn -- --size=250 --enemies=300 --ticks=600 --seed=1 --view=0
-## Prints per-system ms/tick (avg, p95). Mirrors Simulation.step() order to time each part.
+## Prints per-system ms/tick (avg, p95). Runs the real Simulation.step() with sim.profiling = true (per-system laps).
 ## jobs and combat run inside the colonists/threats ticks, so they are part of those lines.
 ## --view=1 (needs a display, e.g. xvfb-run) runs the real game scene at 3x speed instead and
 ## prints view ms/frame (process + draw) for `ticks` frames.
+## --colonists=12 --belts=8000 set the §3 perf-contract load.
 
-const SYSTEMS: Array[String] = ["buildings", "colonists", "threats", "contamination", "mutation", "storyteller"]
+const Scenario := preload("res://tools/perf_scenario.gd")
 
 
 func _ready() -> void:
@@ -25,43 +26,20 @@ func _ready() -> void:
 	var sim := Simulation.new(seed_value, bus, null, opts)
 	sim.start_new_game()
 	var gen_ms := (Time.get_ticks_usec() - t0) / 1000.0
-	var spawned := _spawn_enemies(sim, n_enemies)
-	print("bench size=%d enemies=%d/%d ticks=%d seed=%d gen=%.0fms" % [size, spawned, n_enemies, ticks, seed_value, gen_ms])
-	var samples: Dictionary = {}
-	for s in SYSTEMS + ["total"]:
-		samples[s] = []
-	for i in ticks:
-		var t := Time.get_ticks_usec()
-		var p := t
-		sim.tick += 1
-		sim.crafting.tick()
-		sim.needs.tick()
-		sim.farming.tick()
-		p = _lap(samples, "buildings", p)
-		sim.colonists.tick()
-		sim.perks.tick()
-		sim.health.tick()
-		sim.debt.tick()
-		sim.mood.tick()
-		p = _lap(samples, "colonists", p)
-		sim.threats.tick()
-		p = _lap(samples, "threats", p)
-		sim.contamination.tick()
-		p = _lap(samples, "contamination", p)
-		sim.mutation.tick()
-		p = _lap(samples, "mutation", p)
-		sim.crises.tick()
-		sim.storyteller.tick()
-		p = _lap(samples, "storyteller", p)
-		(samples["total"] as Array).append((p - t) / 1000.0)
-		bus.tick_advanced.emit(sim.tick)
-	for s in SYSTEMS + ["total"]:
-		print("%-14s avg %.3f ms  p95 %.3f ms" % [s, _avg(samples[s]), _p95(samples[s])])
-	print("%-14s (included in colonists)" % "jobs")
-	print("%-14s (included in colonists/threats)" % "combat")
-	print("alive enemies=%d colonists=%d" % [sim.threats.enemies.size(), sim.colonists.alive_count()])
-	sim.dispose()
-	bus.free()
+	Scenario.fill_colonists(sim, int(a.get("colonists", 12)))
+	var belts := Scenario.lay_belts(sim, int(a.get("belts", 0)))
+	var spawned := Scenario.spawn_enemies(sim, n_enemies)
+	print("bench belts=%d size=%d enemies=%d/%d ticks=%d seed=%d gen=%.0fms" % [belts, size, spawned, n_enemies, ticks, seed_value, gen_ms])
+	var samples := Scenario.measure(sim, ticks)
+	var keys: Array = samples.keys()
+	keys.sort()
+	for k in keys:
+		if k == "first_tick_ms" or k == "flow_builds":
+			continue
+		print("%-14s avg %.3f ms  p95 %.3f ms" % [k, _avg(samples[k]), _p95(samples[k])])
+	print("first-tick %.2f ms  flow_builds %d  colonists alive %d/%d" % [samples["first_tick_ms"], samples["flow_builds"],
+		sim.colonists.alive_count(), sim.colonists.list.size()])
+	print("jobs/combat run inside the colonists/threats lines")
 	get_tree().quit(0)
 
 
@@ -70,7 +48,7 @@ func _run_view(seed_value: int, opts: Dictionary, n_enemies: int, frames: int) -
 	add_child(game)
 	await get_tree().process_frame
 	game.new_game(seed_value, opts)
-	var spawned := _spawn_enemies(game.sim, n_enemies)
+	var spawned := Scenario.spawn_enemies(game.sim, n_enemies)
 	game.set_speed(3)
 	var s: Array = []
 	for i in frames:
@@ -86,30 +64,6 @@ func _lap(samples: Dictionary, key: String, prev: int) -> int:
 	var now := Time.get_ticks_usec()
 	(samples[key] as Array).append((now - prev) / 1000.0)
 	return now
-
-
-## Spawns creatures on random reachable ground (sim.rng only) and keeps the wave "active"
-## so they are neither culled nor joined by a new wave.
-func _spawn_enemies(sim: Simulation, n: int) -> int:
-	if n <= 0:
-		return 0
-	var ids: Array = sim.defs.enemies.keys()
-	ids.sort()
-	sim.threats.wave_active = true
-	sim.threats.wave_end_tick = 1 << 30
-	var center := sim.map_center()
-	var count := 0
-	var guard := n * 50
-	while count < n and guard > 0:
-		guard -= 1
-		var c := Vector2i(sim.rng.randi_range(0, sim.map.width - 1), sim.rng.randi_range(0, sim.map.height - 1))
-		var pick := sim.rng.randi_range(0, ids.size() - 1)
-		if Vector2(c - center).length() < 12.0 or not sim.map.is_passable(c) \
-				or not sim.pathfinder.reachable_terrain(c, center):
-			continue
-		sim.threats._spawn(str(ids[pick]), c)
-		count += 1
-	return count
 
 
 func _avg(a: Array) -> float:

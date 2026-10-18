@@ -49,7 +49,8 @@ func test_generation_time() -> void:
 		var t := Time.get_ticks_usec()
 		_gen(2 + i % 3, "ash")
 		best = minf(best, float(Time.get_ticks_usec() - t) / 1000.0)
-	assert_lt(best, 40.0, "96x96 gen too slow")
+	if not perf_skip():
+		assert_lt(best, 40.0, "96x96 gen too slow")
 
 
 func test_biome_fields_and_legacy_bytes() -> void:
