@@ -304,6 +304,22 @@ func place_blueprint(def_id: String, c: Vector2i) -> Blueprint:
 	return bp
 
 
+## Cell a worker walks to for a blueprint: its first walkable footprint cell,
+## else (miners cover solid node cells) the nearest reachable neighbour. (-1,-1) if none.
+func bp_stand(bp: Blueprint, from: Vector2i) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var best_d := INF
+	for p in bp.footprint():
+		var cand := p if sim.pathfinder.is_walkable(p) else sim.pathfinder.best_adjacent(from, p)
+		if cand.x < 0 or not sim.pathfinder.reachable(from, cand):
+			continue
+		var d := Vector2(cand - from).length()
+		if d < best_d:
+			best_d = d
+			best = cand
+	return best
+
+
 func get_blueprint(id: int) -> Blueprint:
 	for bp in blueprints:
 		if bp.id == id:

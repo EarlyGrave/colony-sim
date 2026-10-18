@@ -87,6 +87,9 @@ static func play(seed_value: int, days: int, bus: Node) -> Dictionary:
 			if d in [5, 10, 15, 20]:
 				r["contam"][d] = sim.contamination.fraction() * 100.0
 			r["peak_anger"] = maxf(r["peak_anger"], sim.contracts.anger)
+		if sim.tick == sim.ticks_per_day:  # automation by day 4: more miners on the nodes, then miner + smelter
+			Scenario.designate_nearest_deposits(sim, 16)
+			r["chain"] = not Scenario.build_chain(sim, true).is_empty()
 		if sim.tick % 20 == 0:
 			_act(sim, base_turrets, r)
 			for cell: Vector2i in sim.mutation._blooms.keys():
@@ -106,6 +109,8 @@ static func play(seed_value: int, days: int, bus: Node) -> Dictionary:
 	r["points"] = pts
 	r["colonists"] = sim.colonists.alive_count()
 	r["anger"] = sim.contracts.anger
+	r["refined"] = sim.buildings.refined_batches * int(sim.defs.recipes["refine_essence"]["outputs"]["refined_essence"])
+	r["smelter_ok"] = sim.buildings.count_of("smelter") > 0 and sim.buildings.count_of("miner") > 0
 	r["final_contam"] = sim.contamination.fraction() * 100.0
 	sim.dispose()
 	return r
@@ -171,9 +176,9 @@ static func _format(r: Dictionary, verbose: bool) -> String:
 	var sum := 0
 	for p: int in pts:
 		sum += p
-	var s := "seed %d: end day %d (%s) waves=%d colonists=%d(+%d died) contam%%@5/10/15/20=%s/%s/%s/%s final=%.0f contracts ok=%d fail=%d refused=%d anger=%.1f(peak %.1f) debts_paid=%d riots=%d escapes=%d caught=%d idle=%.0f%% perk_pts/col=%.1f crises=%s blooms=%d" % [
+	var s := "seed %d: end day %d (%s) waves=%d colonists=%d(+%d died) contam%%@5/10/15/20=%s/%s/%s/%s final=%.0f refined=%d chain=%s contracts ok=%d fail=%d refused=%d anger=%.1f(peak %.1f) debts_paid=%d riots=%d escapes=%d caught=%d idle=%.0f%% perk_pts/col=%.1f crises=%s blooms=%d" % [
 		r["seed"], r["end_day"], r["cause"], r["waves"], r["colonists"], r["died"],
-		_f(cm.get(5)), _f(cm.get(10)), _f(cm.get(15)), _f(cm.get(20)), r["final_contam"],
+		_f(cm.get(5)), _f(cm.get(10)), _f(cm.get(15)), _f(cm.get(20)), r["final_contam"], r["refined"], str(r["smelter_ok"]),
 		r["c_ok"], r["c_fail"], r["c_decl"], r["anger"], r["peak_anger"], r["debts_paid"],
 		r["riots"], r["escapes"], r["caught"], idle_pct, float(sum) / maxi(pts.size(), 1),
 		str(r["crises"]), r["blooms"]]

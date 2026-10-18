@@ -14,7 +14,10 @@ func tick(c: Colonist, sim: Simulation) -> int:
 	var bp := sim.buildings.get_blueprint(blueprint_id)
 	if bp == null or not bp.has_all_materials():
 		return Status.DONE
-	var m := c.move_toward(bp.cell, sim)
+	var stand := sim.buildings.bp_stand(bp, c.cell)
+	if stand.x < 0:
+		return Status.FAILED
+	var m := c.move_toward(stand, sim)
 	if m == GridMover.Move.FAILED:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:

@@ -8,6 +8,8 @@ func _ready() -> void:
 	var ticks := 600
 	var zoom := 1.0
 	var ui_scale := 0.0
+	var win := Vector2i.ZERO
+	var cat := ""
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="):
 			out = a.substr(6)
@@ -15,8 +17,16 @@ func _ready() -> void:
 			ticks = int(a.substr(8))
 		elif a.begins_with("--scale="):
 			ui_scale = float(a.substr(8))
+		elif a.begins_with("--w="):
+			win.x = int(a.substr(4))
+		elif a.begins_with("--h="):
+			win.y = int(a.substr(4))
+		elif a.begins_with("--cat="):
+			cat = a.substr(6)  # open a compact HUD category popup (zones/build/orders)
 		elif a.begins_with("--zoom="):
 			zoom = float(a.substr(7))
+	if win != Vector2i.ZERO:
+		get_window().size = win
 	var game := (load("res://view/game.tscn") as PackedScene).instantiate()
 	add_child(game)
 	await get_tree().process_frame
@@ -27,6 +37,8 @@ func _ready() -> void:
 	for c in game.sim.colonists.list:
 		c.hp = c.max_hp * 0.5  # show the overlay bars
 	game.camera.zoom_level = zoom
+	if cat != "":
+		game.hud._toggle_cat(cat)
 	for i in 20:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

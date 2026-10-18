@@ -14,7 +14,7 @@ func find(c: Colonist) -> Job:
 	var best_d := 1 << 30
 	for bp: Blueprint in sim.buildings.blueprints:
 		var key := "bp:%d" % bp.id
-		if not bp.has_all_materials() or not sim.jobs._free(c, key) or not sim.pathfinder.reachable(c.cell, bp.cell):
+		if not bp.has_all_materials() or not sim.jobs._free(c, key) or sim.buildings.bp_stand(bp, c.cell).x < 0:
 			continue
 		var d := c.cell.distance_squared_to(bp.cell)
 		if d < best_d:

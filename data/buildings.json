@@ -258,7 +258,7 @@
 			"essence_ore": 10
 		},
 		"build_work": 100,
-		"buildable": false,
+		"buildable": true,
 		"threat_priority": 2,
 		"port_building": true,
 		"ports": [
@@ -283,7 +283,7 @@
 			"essence_ore": 10
 		},
 		"build_work": 100,
-		"buildable": false,
+		"buildable": true,
 		"threat_priority": 2,
 		"port_building": true,
 		"ports": [

@@ -14,7 +14,7 @@ func find(c: Colonist) -> Job:
 	var best: Job = null
 	var best_d := 1 << 30
 	for bp: Blueprint in sim.buildings.blueprints:
-		if not sim.pathfinder.reachable(c.cell, bp.cell):
+		if sim.buildings.bp_stand(bp, c.cell).x < 0:
 			continue
 		for item: String in bp.def["cost"]:
 			var key := "bpmat:%d:%s" % [bp.id, item]
