@@ -195,3 +195,4 @@ old saves marked incompatible (save version bump). Plan: docs/automation_batch_p
 Creatures pick targets by threat (weighted by distance). Players may deliberately build
 fortified high-threat "decoy/tank" structures to pull and absorb damage. Planned with the
 "creatures damage machines" batch (R3).
+- AI chips: benches/stations only for now, not mines (decided without owner, review).
