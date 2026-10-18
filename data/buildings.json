@@ -33,6 +33,17 @@
 		"wear_per_batch": 12,
 		"threat_priority": 3
 	},
+	"research_bench": {
+		"name": "Research Bench",
+		"size": [2, 1],
+		"color": "#4a7aa8",
+		"max_hp": 120,
+		"cost": {"essence_ore": 25},
+		"buildable": true,
+		"research_bench": true,
+		"operator_slot": "colonist",
+		"threat_priority": 3
+	},
 	"workbench": {
 		"name": "Workbench",
 		"size": [

@@ -3,6 +3,13 @@
 	"default_priority": 3,
 	"max_priority": 4,
 	"types": {
+		"researching": {
+			"label": "Research",
+			"skill": "crafting",
+			"givers": [
+				"research"
+			]
+		},
 		"doctoring": {
 			"label": "Medical",
 			"skill": "medicine",

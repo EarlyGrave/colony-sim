@@ -1,5 +1,6 @@
 {
 	"ticks_per_day": 600,
+	"research": {"bench_rate": 1.0},
 	"automation": {"belt_ticks_per_cell": 5},
 	"map": {
 		"start_biome": "start",
