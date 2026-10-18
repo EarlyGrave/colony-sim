@@ -195,3 +195,5 @@ static func _charge_losses(c: Object) -> void:
 		var home := home_sim(c)
 		# No sim-level debt API exists (sim/debt is per-colonist); the counter above is the record.
 		_bus_emit(home, "expedition_loss", [int(m["id"]), debt])
+		if bool(ledger(c, int(m["id"])).get("lost", false)):  # region F2
+			_bus_emit(home, "outpost_lost", [int(m["id"])])  # region F2
