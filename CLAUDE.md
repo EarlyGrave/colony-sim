@@ -57,6 +57,7 @@ godot --headless --path . --import                       # build .godot cache (n
 godot --headless --path . res://tests/run_tests.tscn     # all tests
 godot --headless --path . res://tests/run_tests.tscn -- --filter=test_map   # subset
 godot --headless --path . --export-release "Web" build/web/index.html
+godot --headless --path . -s tools/make_golden.gd -- --regen   # regenerate tests/golden/*.json after an INTENDED sim/balance change (prints changed ticks)
 ```
 Godot binary for a fresh cloud session: see README "Local setup".
 
