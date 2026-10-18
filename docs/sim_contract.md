@@ -62,6 +62,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `set_work_priority` | colonist_id: int, work_type: str, p: int | bool | colonist exists, type in `work.json`, 0 <= p <= `max_priority` |
 | `set_research` | tech_id: str | bool | tech exists, prereqs done, tier unlocked, affordable; moves it to the queue front, spends essence on first queue |
 | `queue_research` | tech_id: str, on: bool | bool | on: as set_research but appended; off: removes, exact essence refund if progress is 0 |
+| `deliver_audit` | tier: int | bool | warden_terminal exists; consumes only still-required parts of that tier's set from storage; completes -> research.unlock_tier(tier) + warden letter once |
 | `set_drafted` | colonist_id: int, on: bool | bool | colonist exists and alive |
 | `order_move` | colonist_id: int, cell: cell | bool | colonist drafted, cell reachable |
 | `order_attack` | colonist_id: int, enemy_id: int | bool | drafted colonist, enemy alive |
@@ -113,6 +114,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `items.json` | id -> {name, color, stack, value} |
 | `jobs.json` | flee/repair/operate/haul/mine tuning |
 | `meta.json` | legacy, next_batch, scout_cells, unlocks (cross-run meta, enters the sim via `opts`) |
+| `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
 | `models.json` | art model descriptors (view only, not read by sim) |
 | `mood.json` | base, check_ticks, thresholds, chances, thoughts |
 | `mutation.json` | update_ticks, cap, diffusion, decay, bloom/illness chances |
@@ -134,7 +136,6 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
 | `zones.json` | id -> {name, color, accepts[], waste_emission_factor} |
 
-Research: `milestones.json` (audit part sets per tier) is pending R2b.
 
 ## 7. Save format v2 (`SaveGame`)
 Saves are command-log replays, not state snapshots:

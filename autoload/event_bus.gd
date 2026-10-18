@@ -91,6 +91,9 @@ signal colonist_tended(patient_id: int, doctor_id: int, injuries: int)
 signal patient_fed(patient_id: int, feeder_id: int)
 # endregion
 # region contracts
+# region R2b
+signal letter_received(title: String, text: String)
+# endregion
 signal contract_offered(contract_id: int)
 signal contract_fulfilled(contract_id: int)
 signal contract_failed(contract_id: int, reason: String)

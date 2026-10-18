@@ -1,0 +1,13 @@
+{
+	"_comment": "Audit Deliveries: tiers 0 and 1 are open at start; tiers 2 and 3 need parts delivered at the warden terminal.",
+	"tiers": {
+		"2": {
+			"parts": {"plate": 40, "parts": 10},
+			"letter": {"title": "Audit passed: Tier 2", "text": "The wardens accept your delivery. Advanced machinery is cleared for use."}
+		},
+		"3": {
+			"parts": {"plate": 120, "parts": 40, "ingot_copper": 30},
+			"letter": {"title": "Audit passed: Tier 3", "text": "The wardens are impressed. High-throughput industry is cleared for use."}
+		}
+	}
+}

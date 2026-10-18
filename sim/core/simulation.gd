@@ -67,6 +67,7 @@ var progression: ProgressionSystem
 # region idle-work
 var idle_work: IdleWorkSystem
 var mutation: MutationSystem  # region mutation
+var milestones: MilestoneSystem  # region R2b
 # endregion
 # region perks
 var perks: PerkSystem
@@ -153,6 +154,7 @@ func _init_systems() -> void:
 	idle_work = IdleWorkSystem.new(self)  # region idle-work
 	mutation = MutationSystem.new(self)  # region mutation
 	research = ResearchSystem.new(self)  # region R2a
+	milestones = MilestoneSystem.new(self)  # region R2b
 
 
 func _place_starting_colony() -> void:
@@ -563,4 +565,12 @@ func set_research(tech_id: String) -> bool:
 func queue_research(tech_id: String, on: bool) -> bool:
 	_record("queue_research", [tech_id, on])  # save-load
 	return research.set_queued(tech_id, on)
+# endregion
+
+
+
+# region R2b
+func deliver_audit(tier: int) -> bool:
+	_record("deliver_audit", [tier])  # save-load
+	return milestones.deliver(tier)
 # endregion

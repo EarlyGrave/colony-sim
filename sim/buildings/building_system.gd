@@ -61,6 +61,8 @@ func placement_error(def_id: String, c: Vector2i, check_cost := true) -> String:
 				return "Items in the way"
 			if sim.map.get_zone(p) != "":
 				return "Zone in the way"
+	if bool(def.get("unique", false)) and (count_of(def_id) > 0 or _blueprint_count(def_id) > 0):  # region R2b
+		return "Only one allowed"
 	if on_node and not has_node:  # region A2a
 		return "Needs a resource node"
 	if check_cost:
@@ -294,6 +296,16 @@ func count_item(item_id: String) -> int:
 	for bp in blueprints:  # region construction
 		s += int(bp.delivered.get(item_id, 0))
 	return s
+
+
+# region R2b
+func _blueprint_count(def_id: String) -> int:
+	var n := 0
+	for bp in blueprints:
+		if bp.def_id == def_id:
+			n += 1
+	return n
+# endregion
 
 
 func count_of(def_id: String) -> int:
