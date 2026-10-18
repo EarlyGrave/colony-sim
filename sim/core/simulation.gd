@@ -190,6 +190,7 @@ func step() -> void:
 	farming.tick()  # region needs
 	colonists.tick()
 	logistics.tick()  # region A1c
+	buildings.tick_machines()  # region A2a
 	perks.tick()  # region perks
 	health.tick()  # region health
 	debt.tick()  # region debt

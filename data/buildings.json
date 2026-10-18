@@ -161,7 +161,7 @@
 			"essence_ore": 25
 		},
 		"build_work": 100,
-		"buildable": false,
+		"buildable": true,
 		"threat_priority": 2,
 		"machine": "extractor",
 		"on_node": true,
@@ -175,7 +175,8 @@
 		],
 		"input_capacity": 0,
 		"output_capacity": 20,
-		"wear_per_batch": 6
+		"wear_per_batch": 6,
+		"batch_items": 10
 	},
 	"smelter": {
 		"name": "Smelter",
@@ -189,7 +190,7 @@
 			"essence_ore": 30
 		},
 		"build_work": 100,
-		"buildable": false,
+		"buildable": true,
 		"threat_priority": 2,
 		"machine": "processor",
 		"station": "smelter",
@@ -223,7 +224,7 @@
 			"essence_ore": 30
 		},
 		"build_work": 100,
-		"buildable": false,
+		"buildable": true,
 		"threat_priority": 2,
 		"machine": "processor",
 		"station": "assembler",
