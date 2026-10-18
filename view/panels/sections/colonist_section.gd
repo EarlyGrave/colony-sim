@@ -34,6 +34,15 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 		add_line(box, "On combat alert", Color(1.0, 0.8, 0.3))
 	if c.health != null and c.health.downed:
 		add_line(box, "Unconscious", Color(1.0, 0.4, 0.4))
+	# region C4
+	if c.health != null:
+		var bd := sim.health.band(c)
+		var secs := sim.health.bleed_out_seconds(c)
+		var txt := bd.capitalize()
+		if secs >= 0:
+			txt += " - bleeds out in %ds" % secs
+		add_line(box, txt, Color(1.0, 0.4, 0.4) if bd == "down" else (Color(1.0, 0.8, 0.3) if bd == "wounded" else Color(0.6, 0.9, 0.6)))
+	# endregion
 	if c.needs != null:
 		add_line(box, "Food %d%%" % roundi(c.needs.food * 100.0))
 		add_bar(box, c.needs.food, Color(0.9, 0.7, 0.2))

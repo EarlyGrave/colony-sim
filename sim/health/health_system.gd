@@ -113,6 +113,26 @@ func bed_occupied(building_id: int) -> bool:
 # endregion
 
 
+# region C4
+func band(c: Colonist) -> String:
+	return "fit" if c.health == null else c.health.band(cfg)
+
+
+## Seconds of life left while Down and bleeding, -1 otherwise.
+func bleed_out_seconds(c: Colonist) -> int:
+	if c.health == null or not c.health.downed:
+		return -1
+	var t := c.health.bleed_out_ticks()
+	return -1 if t < 0 else ceili(float(t) / float(Simulation.TICKS_PER_SECOND))
+
+
+## Medic hook: tends every untended injury at the configured stabilise quality.
+## Returns the number of injuries stabilised.
+func stabilise(c: Colonist, medic: Object = null) -> int:
+	return tend(c, medic, float(cfg["band"]["stabilise_quality"]) / maxf(0.01, tend_quality(medic)))
+# endregion
+
+
 # --- Queries ----------------------------------------------------------------------
 
 func is_downed(c: Colonist) -> bool:
