@@ -75,6 +75,7 @@ var ammo: AmmoSystem  # region ammo
 # endregion
 # endregion
 
+var research: ResearchSystem  # region R2a
 var opts: Dictionary = {}  # region meta: deterministic start options
 var run_summary: Dictionary = {}  # region meta
 var _connections: Array = []  # [signal, callable] pairs made on the bus
@@ -151,6 +152,7 @@ func _init_systems() -> void:
 	debt = DebtSystem.new(self)  # region debt
 	idle_work = IdleWorkSystem.new(self)  # region idle-work
 	mutation = MutationSystem.new(self)  # region mutation
+	research = ResearchSystem.new(self)  # region R2a
 
 
 func _place_starting_colony() -> void:
@@ -284,7 +286,7 @@ func deconstruct(c: Vector2i) -> bool:
 
 func set_rule(rule_id: String, on: bool) -> void:
 	_record("set_rule", [rule_id, on])  # save-load
-	if not rules.has(rule_id) or rules[rule_id] == on:
+	if not rules.has(rule_id) or rules[rule_id] == on or (on and not research.rule_unlocked(rule_id)):  # region R2a
 		return
 	rules[rule_id] = on
 	bus.rule_changed.emit(rule_id, on)
@@ -546,4 +548,19 @@ func set_patrol_route_text(text: String) -> void:
 func purify_cell(c: Vector2i) -> bool:
 	_record("purify_cell", [c])  # save-load
 	return mutation.purify(c)
+# endregion
+
+# region R2a
+## Makes `tech_id` the active research (front of the queue). Spends its essence
+## cost once. Returns false if unknown/done/locked/unaffordable.
+func set_research(tech_id: String) -> bool:
+	_record("set_research", [tech_id])  # save-load
+	return research.set_active(tech_id)
+
+
+## Appends (on) or removes (off) `tech_id` in the research queue. Removing a tech
+## with no progress refunds its essence. Returns false if nothing changed.
+func queue_research(tech_id: String, on: bool) -> bool:
+	_record("queue_research", [tech_id, on])  # save-load
+	return research.set_queued(tech_id, on)
 # endregion

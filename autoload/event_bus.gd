@@ -125,3 +125,6 @@ signal run_ended(summary: Dictionary)
 signal cell_mutated(cell: Vector2i)
 signal cell_purified(cell: Vector2i)
 # endregion
+# region R2a
+signal research_completed(tech_id: String)
+# endregion
