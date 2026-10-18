@@ -67,6 +67,8 @@ var _facing := {}  # key -> [last_pos: Vector2, row: int, moving_until: float]
 var _tex := {}
 var _time := 0.0
 var _tint := Color.WHITE
+var world_view: WorldView  # region G1b: source of turret aim
+var _buildings3d := Building3D.new()  # region G1b
 
 
 func _ready() -> void:
@@ -84,6 +86,7 @@ func _ready() -> void:
 	add_child(_ground)
 	add_child(_blocks)
 	_g1c_ready()  # region G1c
+	add_child(_buildings3d)  # region G1b
 
 
 func bind(p_sim: Simulation, map_tex: Texture2D) -> void:
@@ -97,6 +100,7 @@ func bind(p_sim: Simulation, map_tex: Texture2D) -> void:
 	_block_mat.set_shader_parameter("map_tex", map_tex)
 	_block_mat.set_shader_parameter("map_size", size)
 	_clear_units()
+	_buildings3d.clear()  # region G1b
 	_blocks_dirty = true
 	_g1d_bind()  # region G1d hook
 	sim.bus.tile_changed.connect(_on_tile_changed)
@@ -111,6 +115,7 @@ func unbind() -> void:
 	if sim and sim.bus.tile_changed.is_connected(_on_tile_changed):
 		sim.bus.tile_changed.disconnect(_on_tile_changed)
 	_clear_units()
+	_buildings3d.clear()  # region G1b
 	sim = null
 
 
@@ -175,6 +180,7 @@ func _process(delta: float) -> void:
 		_rebuild_blocks()
 	_update_tint()
 	_g1c_update()  # region G1c
+	_buildings3d.sync(sim, _aim_of, _tint)  # region G1b
 	var seen := {}
 	for c: Colonist in sim.colonists.list:
 		var k := "c%d" % c.id
@@ -448,4 +454,10 @@ func _update_piles() -> void:
 		n += 1
 	for i in range(n, _piles.size()):
 		_piles[i].visible = false
+# endregion
+
+
+# region G1b
+func _aim_of(id: int) -> float:
+	return world_view.turret_aim(id) if world_view else -PI / 2
 # endregion

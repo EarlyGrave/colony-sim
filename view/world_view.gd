@@ -223,7 +223,10 @@ func _draw_buildings() -> void:
 		var r := Rect2(cell_to_world(b.cell), Vector2(b.size) * TILE)
 		var mod := Color(0.55, 0.5, 0.5) if b.broken else Color.WHITE
 		var center := r.get_center()
-		match b.def_id:
+		var kind := "-" if flat and Building3D.is_3d(b.def_id) else b.def_id  # region G1b
+		match kind:
+			"-":
+				pass
 			"hq":
 				_sprite("capsule", center, r.size, false, mod)
 			"refinery":
@@ -476,4 +479,10 @@ func _draw_patrol() -> void:
 			if i > 0:
 				draw_line(cell_to_world(pts[i - 1]) + half, p, col, 2.0)
 			draw_circle(p, TILE * 0.3, col)
+# endregion
+
+
+# region G1b
+func turret_aim(id: int) -> float:
+	return _turret_aim.get(id, -PI / 2)
 # endregion
