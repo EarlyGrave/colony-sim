@@ -1,5 +1,5 @@
 extends TestCase
-## L4: power view. Voxel models, wire layer, HUD chip text, panel rows (sim.power is stubbed).
+## L4: power view. Voxel models, wire layer, HUD chip text, panel rows (real sim.power).
 
 const SCN := preload("res://tests/scenario.gd")
 const FOOT := {"power_pole": Vector2i(1, 1), "coal_generator": Vector2i(2, 2), "nitrogen_extractor": Vector2i(2, 2),
@@ -40,7 +40,7 @@ func test_chip_text_three_states() -> void:
 
 func test_no_grid_is_silent() -> void:
 	var sim := make_sim(5, true, 24, 24, peaceful_defs())
-	assert_true(PowerReader.grid(sim) == null)
+	assert_true(PowerReader.grid(sim) == null, "grid off before any pole")
 	assert_true(PowerReader.worst_net(sim).is_empty())
 	var layer := PowerLayer.new()
 	layer.bind(sim)
@@ -51,41 +51,37 @@ func test_no_grid_is_silent() -> void:
 
 func test_wires_one_multimesh_per_chunk_and_worst_net() -> void:
 	var sim := make_sim(5, true, 64, 64, peaceful_defs())
-	var base := PowerStub.build_base(sim, sim.map_center())
-	var stub: PowerStub = base["stub"]
+	PowerScene.build_base(sim, sim.map_center())
 	PowerReader.refresh(sim, true)
-	assert_eq(PowerReader.worst_net(sim)["id"], 2)
-	assert_eq(PowerReader.chip_text(PowerReader.worst_net(sim)), "PWR 25/90 (28%)")
+	assert_true(PowerReader.nets(sim).size() >= 1, "nets")
+	var w := PowerReader.worst_net(sim)
+	assert_false(w.is_empty())
+	assert_eq(PowerReader.chip_text(w), PowerReader.chip_text(sim.power.worst_net()))
 	var layer := PowerLayer.new()
 	layer.bind(sim)
 	layer.sync(Color.WHITE)
-	assert_eq(layer.wire_count, stub.wires.size())
+	assert_eq(layer.wire_count, sim.power.links.size() / 2)
+	assert_true(layer.wire_count > 0)
 	assert_true(layer.draw_calls() <= 4, "wire draw calls %d" % layer.draw_calls())
 	PowerReader.overlay_on = true
 	layer.sync(Color.WHITE)
-	assert_eq(layer.wire_count, stub.wires.size())
+	assert_eq(layer.wire_count, sim.power.links.size() / 2)
 	PowerReader.overlay_on = false
 	layer.free()
 
 
-func test_forty_poles_hundred_wires_two_draw_calls() -> void:
+func test_forty_poles_few_draw_calls() -> void:
 	var sim := make_sim(5, true, 64, 64, peaceful_defs())
-	PowerStub._def(sim, "power_pole", "Power Pole", Vector2i(1, 1), {"power_range": 6})
-	var stub := PowerStub.new()
-	var ids: Array[int] = []
 	var c := Vector2i(34, 34)
 	for i in 40:
-		var b := sim.buildings.place("power_pole", SCN.find_spot(sim, "power_pole", c + Vector2i(i % 20, (i / 20) * 4), 0), false)
-		ids.append(b.id if b != null else -1)
-	for i in 100:
-		stub.wires.append([ids[i % 40], ids[(i * 7 + 3) % 40]])
-	stub.nets = [{"id": 1, "supply": 10.0, "demand": 10.0, "factor": 1.0, "poles": ids, "generators": [], "consumers": []}]
-	sim.set_meta("power_stub", stub)
+		sim.buildings.place("power_pole", SCN.find_spot(sim, "power_pole", c + Vector2i(i % 20, (i / 20) * 4), 0), false)
+	sim.run_ticks(2)
 	PowerReader.refresh(sim, true)
 	var layer := PowerLayer.new()
 	layer.bind(sim)
 	layer.sync(Color.WHITE)
-	assert_eq(layer.wire_count, 100)
+	assert_eq(layer.wire_count, sim.power.links.size() / 2)
+	assert_true(layer.wire_count > 20)
 	assert_true(layer.draw_calls() <= 2, "draw calls %d" % layer.draw_calls())
 	layer.free()
 
@@ -94,14 +90,18 @@ func test_panel_rows() -> void:
 	var sim := make_sim(5, true, 64, 64, peaceful_defs())
 	PowerReader.refresh(sim, true)
 	assert_true(str(PowerPanel.rows(sim)[0]["text"]).begins_with("No power network"))
-	PowerStub.build_base(sim, sim.map_center())
+	var o: Array[int] = []
+	o.assign(PowerScene.build_base(sim, sim.map_center())["order"])
 	PowerReader.refresh(sim, true)
 	var text := ""
 	for r: Dictionary in PowerPanel.rows(sim):
 		text += str(r["text"]) + "\n"
-	assert_true(text.contains("Net 2   PWR 25/90 (28%)"), text)
-	assert_true(text.contains("fuel 14/20 coal"), text)
-	assert_true(text.contains("OVERHEAT 85%"), text)
+	assert_true(text.contains("Net 1   PWR"), text)
+	assert_true(text.contains("fuel "), text)
+	var info := PowerReader.generator_info(sim, o[0])
+	assert_eq(info["fuel_item"], "coal")
+	assert_true(float(info["waste_per_min"]) > 0.0)
+	assert_true(PowerReader.generator_info(sim, o[3]).has("overheat"))
 
 
 func _sort(n: Node) -> void:
@@ -121,7 +121,7 @@ func test_hud_chip_fits_strip_at_phone_sizes() -> void:
 	var hud := game.hud
 	hud._l4_update()
 	assert_false(hud._l4_chip.visible, "chip hidden before any pole")
-	PowerStub.build_base(game.sim, game.sim.map_center())
+	PowerScene.build_base(game.sim, game.sim.map_center())
 	PowerReader.refresh(game.sim, true)
 	var root := tree.root
 	var old_size := root.size
@@ -135,7 +135,7 @@ func test_hud_chip_fits_strip_at_phone_sizes() -> void:
 			_sort(hud)
 		var chip: Label = hud._l4_chip
 		var tag := str(s[0])
-		assert_true(chip.visible and chip.text == "PWR 25/90 (28%)", tag + " chip text " + chip.text)
+		assert_true(chip.visible and chip.text == PowerReader.chip_text(PowerReader.worst_net(game.sim)), tag + " chip text " + chip.text)
 		var strip: Rect2 = hud._o4_strip.get_global_rect()
 		assert_true(strip.encloses(chip.get_global_rect()), "%s chip %s inside strip %s" % [tag, chip.get_global_rect(), strip])
 		var vp := hud.get_viewport().get_visible_rect().size
