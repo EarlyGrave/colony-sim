@@ -58,6 +58,8 @@ godot --headless --path . res://tests/run_tests.tscn     # all tests
 godot --headless --path . res://tests/run_tests.tscn -- --filter=test_map   # subset
 tools/run_tests_sharded.sh 4                              # full suite as 4 parallel shards (~2 min; sets PERF_SKIP_WALL=1, run test_perf_budget single-process)
 godot --headless --path . --export-release "Web" build/web/index.html
+PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python3 tools/web_smoke.py   # web smoke: export+serve, 844x390 DPR3 touch, boot, console errors, toolbar taps, ?size=250, FPS/mem, screenshots (pip install playwright==1.56.0; NEVER `playwright install`)
+godot --headless --path . -s tools/mem_probe.gd -- --size=250   # static memory + VRAM estimate of the map view
 godot --headless --path . -s tools/make_golden.gd -- --regen   # regenerate tests/golden/*.json after an INTENDED sim/balance change (prints changed ticks)
 ```
 Godot binary for a fresh cloud session: see README "Local setup".

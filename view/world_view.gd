@@ -60,7 +60,8 @@ func bind(p_sim: Simulation) -> void:
 		for x in sim.map.width:
 			_paint_cell(Vector2i(x, y))
 	for i in _chunk_images.size():
-		(_chunk_sprites[i].texture as ImageTexture).update(_chunk_images[i])
+		if _chunk_images[i] != null:
+			(_chunk_sprites[i].texture as ImageTexture).update(_chunk_images[i])
 	sim.bus.tile_changed.connect(_on_tile_changed)
 	sim.bus.enemy_killed.connect(_on_enemy_killed)
 
@@ -70,15 +71,19 @@ func _build_chunks() -> void:
 		sp.queue_free()
 	_chunk_sprites.clear()
 	_chunk_images.clear()
+	_resident_seen.clear()
 	var w := sim.map.width
 	var h := sim.map.height
 	_chunk_cols = ChunkLayer.chunk_count(w)
 	for cy in ChunkLayer.chunk_count(h):
 		for cx in _chunk_cols:
 			var r := ChunkLayer.chunk_cells(Vector2i(cx, cy), w, h)
-			var img := Image.create(r.size.x * ART, r.size.y * ART, false, Image.FORMAT_RGBA8)
+			var img: Image = null if lazy_chunks else Image.create(r.size.x * ART, r.size.y * ART, false, Image.FORMAT_RGBA8)
 			var sp := Sprite2D.new()
-			sp.texture = ImageTexture.create_from_image(img)
+			if img != null:
+				sp.texture = ImageTexture.create_from_image(img)
+			else:
+				sp.visible = false
 			sp.centered = false
 			sp.position = Vector2(r.position) * TILE
 			sp.scale = Vector2(TILE / ART, TILE / ART)
@@ -87,6 +92,43 @@ func _build_chunks() -> void:
 			add_child(sp)
 			_chunk_images.append(img)
 			_chunk_sprites.append(sp)
+
+
+# region W2e: lazy ground chunks. With `lazy_chunks` only chunks near the camera hold a CPU image + GPU
+# texture (RGBA8, 512x512 px = 1 MB each); the rest are released after RESIDENT_GRACE seconds.
+var lazy_chunks := false
+const RESIDENT_GRACE := 8.0
+const PAINT_BUDGET := 2  ## chunks painted per call
+var _resident_seen := {}  # chunk index -> time last wanted
+
+
+func set_resident_chunks(want: Array[Vector2i]) -> void:
+	if sim == null:
+		return
+	var budget := PAINT_BUDGET
+	for ch in want:
+		var i := ch.y * _chunk_cols + ch.x
+		_resident_seen[i] = _time
+		if _chunk_images[i] == null and budget > 0:
+			_make_resident(ch, i)
+			budget -= 1
+	for i: int in _resident_seen.keys():
+		if _time - float(_resident_seen[i]) > RESIDENT_GRACE:
+			_resident_seen.erase(i)
+			_chunk_images[i] = null
+			_chunk_sprites[i].texture = null
+			_chunk_sprites[i].visible = false
+
+
+func _make_resident(ch: Vector2i, i: int) -> void:
+	var r := ChunkLayer.chunk_cells(ch, sim.map.width, sim.map.height)
+	_chunk_images[i] = Image.create(r.size.x * ART, r.size.y * ART, false, Image.FORMAT_RGBA8)
+	for y in range(r.position.y, r.end.y):
+		for x in range(r.position.x, r.end.x):
+			_paint_cell(Vector2i(x, y))
+	_chunk_sprites[i].texture = ImageTexture.create_from_image(_chunk_images[i])
+	_chunk_sprites[i].visible = true
+# endregion
 
 
 func unbind() -> void:
@@ -118,6 +160,8 @@ func _on_tile_changed(c: Vector2i) -> void:
 			_paint_cell(c + d)
 	for ch in ChunkLayer.chunks_for_change(c, sim.map.width, sim.map.height):
 		var i := ch.y * _chunk_cols + ch.x
+		if _chunk_images[i] == null:  # W2e: painted when it becomes resident
+			continue
 		(_chunk_sprites[i].texture as ImageTexture).update(_chunk_images[i])
 		chunk_updates += 1
 
@@ -138,6 +182,8 @@ func _paint_cell(c: Vector2i) -> void:
 	var src: Image = arr[_variant(c, arr.size())]
 	var ch := ChunkLayer.chunk_of(c)
 	var img: Image = _chunk_images[ch.y * _chunk_cols + ch.x]
+	if img == null:  # W2e: chunk not resident
+		return
 	var dst := (c - ch * ChunkLayer.CHUNK) * ART
 	img.blit_rect(src, Rect2i(0, 0, ART, ART), dst)
 	var below := c + Vector2i(0, 1)

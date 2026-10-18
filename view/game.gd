@@ -32,6 +32,7 @@ func _ready() -> void:
 	_apply_ui_scale()
 	world3d.camera = camera
 	world3d.world_view = world  # region G1b
+	world.lazy_chunks = true  # region W2e
 	world3d.overlay = $Overlay
 	camera.tapped.connect(_on_tapped)
 	_setup_automation()  # region A2d

@@ -276,7 +276,10 @@ func _update_view_rect() -> void:
 	if camera != null and camera.is_inside_tree():
 		view_rect = camera.visible_cell_rect()
 	var margin := ChunkLayer.CHUNK * 0.25
-	chunks.set_active(ChunkLayer.chunks_in_rect(view_rect.grow(margin), sim.map.width, sim.map.height))
+	var active := ChunkLayer.chunks_in_rect(view_rect.grow(margin), sim.map.width, sim.map.height)
+	chunks.set_active(active)
+	if world_view != null and world_view.lazy_chunks:  # region W2e
+		world_view.set_resident_chunks(active)
 
 
 func _in_view(p: Vector2) -> bool:
