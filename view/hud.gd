@@ -1151,10 +1151,10 @@ func _o4_layout() -> void:
 	_o4_slot.visible = (slot_r - x) >= O4_SLOT_MIN_W
 	# Bottom-left stack: legend, toast, belt strip / patrol bar.
 	var quiet := not pop_open and not side_open
-	var c5h := _c5_layout(lim2)  # region C5: squad bar takes the bottom row, the stack moves up
+	var c5h := _c5_layout(lim2, pop_open)  # region C5: squad bar takes the bottom row, the stack moves up
 	_o4_place_corner(_legend, O4_LEFT, -8.0 - c5h)
-	_legend.visible = _overlay_on and quiet and _legend.get_combined_minimum_size().x + O4_LEFT <= lim2
-	var toast_b := -(8.0 + c5h + O4_LEGEND_H + 4.0)
+	_legend.visible = c5h == 0.0 and _overlay_on and quiet and _legend.get_combined_minimum_size().x + O4_LEFT <= lim2
+	var toast_b := -(8.0 + c5h + (O4_LEGEND_H + 4.0 if c5h == 0.0 else 0.0))
 	_message.anchor_left = 0.0
 	_message.anchor_right = 0.0
 	_message.anchor_top = 1.0
@@ -1184,7 +1184,7 @@ func _o4_layout() -> void:
 			for b in _o4_buttons(apc):
 				b.custom_minimum_size = Vector2(88, 64)
 		_o4_place_corner(apc, O4_LEFT, tool_b)
-		apc.visible = quiet and not _patrol_bar.visible
+		apc.visible = quiet and not _patrol_bar.visible and c5h == 0.0
 	# Save/Continue prompt: above the cluster, never under a menu.
 	var cont: Variant = g.get("_continue_btn") if g != null else null
 	if cont is Button:
@@ -1232,7 +1232,9 @@ func _c5_update() -> void:
 
 
 ## Places the bar; returns the height the bottom-left stack must leave free (0 when hidden).
-func _c5_layout(right_edge: float) -> float:
+func _c5_layout(right_edge: float, popup_open: bool) -> float:
+	if squad_bar != null and popup_open:
+		squad_bar.visible = false  # category popups need the room; the bar returns when they close
 	if squad_bar == null or not squad_bar.visible:
 		return 0.0
 	var w := maxf(0.0, right_edge - O4_LEFT)

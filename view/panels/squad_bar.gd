@@ -180,6 +180,18 @@ func _on_ability(ability: String) -> void:
 
 # --- banners ------------------------------------------------------------------------------
 
+## The bar shows while squads exist, or when a fight is near (alarm / wave warning / wave) so the
+## first squad can be formed; otherwise the bottom row stays free for the toast and legend.
+func wanted() -> bool:
+	if not squad_list().is_empty():
+		return true
+	if api is Simulation:
+		var s := api as Simulation
+		var t := s.threats
+		return s.alarm or t.wave_active or (t.awakened and t.next_wave_tick >= 0 and t.next_wave_tick - s.tick < int(t.cfg["warning_ticks"]))
+	return false
+
+
 func _signature() -> String:
 	var parts: Array[String] = []
 	for s: Variant in squad_list():
@@ -189,8 +201,8 @@ func _signature() -> String:
 
 ## Rebuilds the banner row when the squad set changes and refreshes texts every call.
 func refresh() -> void:
-	visible = supports(api)
-	if not visible:
+	visible = supports(api) and wanted()
+	if not supports(api):
 		return
 	if selected >= 0 and squad_by_id(selected) == null:
 		selected = -1
