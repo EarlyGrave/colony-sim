@@ -208,3 +208,9 @@ part is crafted only at home; sling cargo with travel time; save v3 (v2 rejected
 - AI chip balance: a processor (smelter/assembler) without a chip runs at `unoperated_speed` 0.6 (colonist work adds steps on top); with a chip `processor_chip_speed` 1.0, waste x1.3, threat x2, upkeep and calibration unchanged. Benches keep chip_speed 0.8. Chips now matter for throughput, not only for freeing colonists.
 - Ecology `starved_max` raised 4 -> 6 so clean-map early waves still threaten an undefended colony (test_waves intent: no turrets = dead by wave 2-3).
 - Test hygiene: tests must not mutate `Defs.get_default()` (shared); test_ecology did, which shifted goldens when run after it.
+
+## Combat control: squads + single control both (OWNER DECISION, 2026-10-18)
+Squads (`sim/squads`, commands `form_squad`/`squad_hold`/`squad_focus`/`disband_squad`) are the main path; single-inmate
+drafting (`set_drafted`, `order_move`, `order_attack`) stays and works for inmates outside any squad. A manual `order_*`
+on a squad member overrides until the squad's next command. Other squad design choices (max 4, 3 roles, affinity
+= skill + trait, state_hash only while a squad exists) were decided without owner, review.

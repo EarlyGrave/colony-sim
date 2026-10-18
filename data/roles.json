@@ -1,0 +1,13 @@
+{
+	"_comment": "Squad roles (C1). formation_offset is relative to the hold anchor; extra members of one role are spread by slot_spread. dmg_taken_mult / threat_mult / ability are read by C2/C4.",
+	"max_size": 4,
+	"hold_search_radius": 3,
+	"slot_spread": [1, 0],
+	"affinity": {"skill_weight": 1.0, "trait_weight": 3.0},
+	"order": ["bulwark", "lancer", "medic"],
+	"roles": {
+		"bulwark": {"name": "Bulwark", "weapon": "prison_shiv", "dmg_taken_mult": 0.6, "threat_mult": 2.0, "formation_offset": [0, 0], "affinity_skill": "melee", "ability": "taunt"},
+		"lancer": {"name": "Lancer", "weapon": "rifle", "dmg_taken_mult": 1.0, "threat_mult": 1.0, "formation_offset": [0, 1], "affinity_skill": "shooting", "ability": "volley"},
+		"medic": {"name": "Medic", "weapon": "prison_shiv", "dmg_taken_mult": 1.0, "threat_mult": 0.7, "formation_offset": [0, 2], "affinity_skill": "medicine", "ability": "stabilise"}
+	}
+}
