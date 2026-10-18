@@ -187,7 +187,12 @@ func touches(c: Vector2i) -> bool:
 ## Best neighbour of `c` (strictly closer to the goal), or (-1, -1) when `c`
 ## is unreached, already at a goal, or boxed in.
 func next_step(c: Vector2i, walk: PackedByteArray) -> Vector2i:
-	var cur := dist_at(c)
+	return next_step_from(c, dist_at(c), walk)
+
+
+# region E5
+## next_step with the caller's already-known dist at `c`.
+func next_step_from(c: Vector2i, cur: int, walk: PackedByteArray) -> Vector2i:
 	if cur <= 0:
 		return Vector2i(-1, -1)
 	var best := Vector2i(-1, -1)
@@ -205,3 +210,4 @@ func next_step(c: Vector2i, walk: PackedByteArray) -> Vector2i:
 		best_d = d
 		best = Vector2i(nx, ny)
 	return best
+# endregion

@@ -191,10 +191,16 @@ func tick() -> void:
 	_tick_turrets()
 	_hot.line_on = bool(sim.defs.balance["line_damage"]["enabled"])  # region W2d
 	_hot.bite_ok = _hot.line_on and sim.logistics.belts.belt_count > 0
-	for e: Enemy in enemies.duplicate():
+	var ei := 0  # region E5: index walk instead of enemies.duplicate(); only _tick_leaving erases (same order)
+	while ei < enemies.size():
+		var e: Enemy = enemies[ei]
+		ei += 1
 		var before := e.cell  # region perf-threat
 		if e.leaving:
+			var n0 := enemies.size()
 			_tick_leaving(e)
+			if enemies.size() < n0:
+				ei -= 1
 		else:
 			_tick_enemy(e)
 		if e.cell != before and hash.has(e):  # region perf-threat

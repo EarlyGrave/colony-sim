@@ -70,7 +70,7 @@ func move_flow(field: FlowField, sim: Simulation) -> int:
 			return Move.ARRIVED
 		if not field.complete and dc < 0:
 			return Move.MOVING  # the search has not reached us yet
-		var n := field.next_step(cell, sim.pathfinder.walk_grid())
+		var n := field.next_step_from(cell, dc, sim.pathfinder.walk_grid())  # region E5
 		if n.x < 0:
 			return Move.FAILED
 		path.append(n)

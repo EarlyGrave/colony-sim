@@ -15,7 +15,7 @@
 			"crate": {}, "hint_density": "new"
 		},
 		"hard_time": {
-			"calm_after_hit_days": 0.4, "audit_interval_days": 5, "wave_interval_mult": 1.0,
+			"calm_after_hit_days": 0.4, "audit_interval_days": 4.2, "wave_interval_mult": 1.0,
 			"name": "Hard Time", "sentence": "Life. The planet wants you gone.",
 			"wave_strength_mult": 1.15, "waste_mult": 1.15, "starting_debt_mult": 1.3,
 			"crate": {}, "hint_density": "off"
