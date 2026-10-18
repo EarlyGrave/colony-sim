@@ -106,5 +106,19 @@
 		"station": [
 			"assembler"
 		]
+	},
+	"make_ai_chip": {
+		"name": "Make AI chip",
+		"inputs": {
+			"refined_essence": 4,
+			"parts": 2
+		},
+		"outputs": {
+			"ai_chip": 1
+		},
+		"work_ticks": 200,
+		"station": [
+			"assembler"
+		]
 	}
 }

@@ -59,6 +59,13 @@ func _init(p_id: int, p_def_id: String, p_def: Dictionary, p_cell: Vector2i, rec
 		station_recipes.sort()
 
 
+# region T4
+## AI chip slots of this building (data `chip_slots`; 0 for miners and everything else).
+func chip_slots() -> int:
+	return int(def.get("chip_slots", 0))
+# endregion
+
+
 func footprint() -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	for y in size.y:

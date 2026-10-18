@@ -30,6 +30,20 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 		var bid := b.id
 		pb.pressed.connect(func() -> void: sim.set_turret_ammo_policy(bid, "normal" if conserve else "conserve"))
 		box.add_child(pb)
+	# region T4
+	if b.chip_slots() > 0 and sim.chips != null:
+		var has_chip := sim.chips.has_chip(b)
+		var ok := sim.chips.working(b)
+		add_line(box, sim.chips.describe(b) if has_chip else "AI chip: none", Color.WHITE if ok or not has_chip else Color(1, 0.6, 0.3))
+		var cb := Button.new()
+		cb.text = "Remove AI chip" if has_chip else "Install AI chip"
+		cb.custom_minimum_size = Vector2(64, 64)
+		cb.focus_mode = Control.FOCUS_NONE
+		cb.disabled = not has_chip and not sim.chips.unlocked()
+		var cid := b.id
+		cb.pressed.connect(func() -> void: sim.remove_chip(cid) if has_chip else sim.install_chip(cid))
+		box.add_child(cb)
+	# endregion
 	if not b.recipe.is_empty():
 		add_line(box, "In: " + _fmt(sim, b.input))
 		add_line(box, "Out: " + _fmt(sim, b.output))

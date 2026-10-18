@@ -7,7 +7,7 @@ the data-file table below in sync with it. "(GD)" marks GDScript-specific behavi
 ## 1. Tick order (`Simulation.step()`)
 `if game_over_reason != "": return`, then `tick += 1`, then in this exact order:
 1. `crafting.tick` (bills)  2. `needs.tick`  3. `farming.tick`  4. `colonists.tick` (jobs, movement)
-5. *research slot (pending R2a): after colonists, before logistics*  6. `logistics.tick` (belts)  7. `buildings.tick_machines`
+5. *research slot (pending R2a): after colonists, before logistics*  6. `logistics.tick` (belts)  7. `buildings.tick_machines`  7b. `chips.tick` (T4)
 8. `perks.tick`  9. `health.tick`  10. `debt.tick`  11. `mood.tick`  12. `threats.tick`  13. `contamination.tick`
 14. `mutation.tick`  15. `crises.tick`  16. `storyteller.tick`
 Then: if no colonist is alive (list non-empty) `end_game("colonists_dead")`; if `tick % ticks_per_day == 0` emit `day_started`; emit `tick_advanced`.
@@ -62,6 +62,8 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `set_work_priority` | colonist_id: int, work_type: str, p: int | bool | colonist exists, type in `work.json`, 0 <= p <= `max_priority` |
 | `set_research` | tech_id: str | bool | tech exists, prereqs done, tier unlocked, affordable; moves it to the queue front, spends essence on first queue |
 | `queue_research` | tech_id: str, on: bool | bool | on: as set_research but appended; off: removes, exact essence refund if progress is 0 |
+| `install_chip` | building_id: int | bool | T4: building has `chip_slots` > 0 (bench/smelter/assembler, never a miner), no chip yet, not broken, tech `ai_chips` done (when gating), one `ai_chip` in storage (ledger sink `chip_install`) |
+| `remove_chip` | building_id: int | bool | T4: chip drops on the building cell (ledger source `chip_remove`) |
 | `deliver_audit` | tier: int | bool | warden_terminal exists; consumes only still-required parts of that tier's set from storage; completes -> research.unlock_tier(tier) + warden letter once |
 | `set_drafted` | colonist_id: int, on: bool | bool | colonist exists and alive |
 | `order_move` | colonist_id: int, cell: cell | bool | colonist drafted, cell reachable |
@@ -126,6 +128,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]} |
 | `recipes.json` | id -> {name, inputs{}, outputs{}, work_ticks, station} |
 | `research.json` | techs id -> {name, tier, prereqs[], cost{essence}, bench_ticks, unlocks{buildings,recipes,rules}, waste_mult} |
+| `chips.json` | T4: item, tech, recipe, chip_speed 0.8, chip_threat_mult 2.0, chip_waste_mult 1.3, upkeep_item/upkeep_per_day, calibration_days 3, calibrate_ticks, calibrate_min_skill (operating) |
 | `resources.json` | id -> {item, tier, biomes, base_rate, purity_mult} (infinite nodes) |
 | `rules.json` | id -> {name, default: bool, ...} player rules (`set_rule`) |
 | `skills.json` | max_level, xp_base, xp_step, xp_per_work_tick, speed_per_level, passion_xp |
@@ -162,3 +165,11 @@ Not covered by the hash today (known gaps): needs, mood, skills/xp, injuries, co
 Systems are modules (`core, map, colonists, jobs, items, buildings, contamination, threats, storyteller, ...`); systems read map/items, never the view.
 Reachability: grid A* plus connected components (O(1) reachable test); equal-cost tie-break by neighbour order N,E,S,W.
 Job reservations use string keys; flee overrides all jobs while the alarm is on.
+
+## 10. AI chip operator (T4, `sim.chips`)
+A chip replaces the operator of a bench/smelter/assembler: bench adds `bench_rate * chip_speed` per tick without a colonist; a processor takes 4 of 5 work steps (accumulator, no rng).
+Waste of a chip building is scaled by `chip_waste_mult` (fraction rolled on `sim.rng`, only with a chip, so chipless games are unchanged). Upkeep: `upkeep_per_day` refined essence
+at each day start (retried every tick while unpaid; unpaid = chip stops). Calibration is due `calibration_days` after install/last calibration; then the chip stops until a colonist
+with `operating` >= `calibrate_min_skill` runs `CalibrateJob` (`calibrate_ticks` ticks on site). A broken or destroyed building drops its chip.
+Read-only API for the threat system: `chips.threat_mult(building)` (`chip_threat_mult` while the chip is busy, else 1.0) and `chips.colony_threat_mult()` (max over busy chips).
+`ai_chip` is accepted by the stockpile zone; recipe `make_ai_chip` (assembler) needs tech `ai_chips`. Chip state is not in `state_hash`; it is rebuilt by command replay.

@@ -83,5 +83,11 @@
 		"color": "#d8d0a0",
 		"stack": 50,
 		"value": 12.0
+	},
+	"ai_chip": {
+		"name": "AI Chip",
+		"color": "#5fe0d0",
+		"stack": 10,
+		"value": 20.0
 	}
 }

@@ -12,7 +12,8 @@
 			"ingot_copper",
 			"ingot_iron",
 			"plate",
-			"parts"
+			"parts",
+			"ai_chip"
 		],
 		"waste_emission_factor": 1.0
 	},
