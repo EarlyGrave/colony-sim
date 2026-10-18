@@ -137,14 +137,16 @@ func calibrate(b: Building) -> void:
 
 # --- Hooks used by building / research code ----------------------------------------
 
-## Work steps a processor may take this tick (1 without a chip; 0.8 on average with one, 0 when stopped).
+## Work steps a processor may take this tick (`unoperated_speed` without a chip; `processor_chip_speed` with one, 0 when stopped).
 func steps(b: Building) -> int:
 	if not has_chip(b):
-		return 1
+		# R3X: an unoperated processor crawls (stateless, so saves stay exact); colonists add steps on top.
+		var u := float(cfg.get("unoperated_speed", 1.0))
+		return int(floor(float(sim.tick + 1) * u)) - int(floor(float(sim.tick) * u))
 	if not working(b):
 		return 0
 	var e: Dictionary = slots[b.id]
-	e["acc"] = float(e["acc"]) + float(cfg["chip_speed"])
+	e["acc"] = float(e["acc"]) + float(cfg.get("processor_chip_speed", cfg["chip_speed"]))
 	if float(e["acc"]) < 1.0 - 0.0001:
 		return 0
 	e["acc"] = float(e["acc"]) - 1.0

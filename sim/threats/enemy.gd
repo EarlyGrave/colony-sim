@@ -2,7 +2,7 @@ class_name Enemy
 extends GridMover
 ## A creature. Targets key buildings and colonists in the open.
 
-enum Target { NONE, BUILDING, COLONIST }
+enum Target { NONE, BUILDING, COLONIST, BELT }  # BELT (R3X): target_cell is a belt tile
 
 var id: int
 var def_id: String
@@ -12,6 +12,8 @@ var max_hp: float
 var spawn_cell: Vector2i
 var target_kind := Target.NONE
 var target_id := -1
+## Belt tile when target_kind == BELT (target_id = threat region key).
+var target_cell := Vector2i(-1, -1)  # region R3X
 var retarget_at := 0
 # region perf-threat
 var target_b: Building

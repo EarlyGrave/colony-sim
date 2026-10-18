@@ -23,12 +23,13 @@ func test_nests_deterministic_and_on_edge() -> void:
 
 
 func test_clean_map_only_starved_waves() -> void:
-	var sim := make_sim(3)
+	var defs := Defs.get_default().duplicate_defs()  # never mutate the shared default defs
+	defs.balance["threat"]["wave_duration_ticks"] = 200
+	var sim := make_sim(3, true, 24, 24, defs)
 	sim.threats.awaken()
 	var cap := int(sim.ecology.cfg["starved_max"])
 	var biggest := [0]
 	sim.bus.raid_started.connect(func(_id: String, _s: float, n: int) -> void: biggest[0] = maxi(biggest[0], n))
-	sim.threats.cfg["wave_duration_ticks"] = 200
 	sim.run_ticks(sim.ticks_per_day * 10)
 	assert_gt(sim.threats.wave_index, 1, "waves happened")
 	assert_true(biggest[0] <= cap, "clean map waves <= starved_max (%d > %d)" % [biggest[0], cap])

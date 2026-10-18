@@ -29,6 +29,9 @@ var stall_hp := 12.0
 var hp_dirty: Dictionary = {}
 ## Indices of damaged tiles (insertion ordered; for repair givers).
 var hp_damaged: Dictionary = {}
+## QA counters (not hashed): total hp bitten off belts, tiles repaired.
+var hp_lost_total := 0.0
+var repairs_total := 0
 # endregion
 
 var _memo: PackedByteArray
@@ -235,6 +238,7 @@ func damage_belt(c: Vector2i, amount: float) -> bool:
 	if not has_belt(c):
 		return false
 	var i := index(c)
+	hp_lost_total += minf(amount, hp[i])
 	hp[i] = maxf(0.0, hp[i] - amount)
 	hp_dirty[i] = true
 	hp_damaged[i] = true
@@ -245,6 +249,7 @@ func repair_belt(c: Vector2i) -> void:
 	if has_belt(c):
 		var i := index(c)
 		hp[i] = max_hp
+		repairs_total += 1
 		hp_dirty[i] = true
 		hp_damaged.erase(i)
 # endregion

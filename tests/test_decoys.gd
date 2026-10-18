@@ -102,3 +102,20 @@ func test_data_models_and_defs() -> void:
 	var d := Defs.get_default()
 	for id in ["ash_beacon", "penitent_wall", "mourning_bell"]:
 		assert_true(d.buildings.has(id) and d.buildings[id].has("threat") and d.buildings[id].has("repair_cost"))
+
+
+func test_inspector_ring_bell_button() -> void:
+	var sim := _sim()
+	var b := _place(sim, "mourning_bell")
+	var section := load("res://view/panels/sections/building_section.gd").new() as InspectorSection
+	var box := VBoxContainer.new()
+	_owned_nodes.append(box)
+	section.build(sim, {"building": b}, box)
+	var btn: Button = null
+	for ch in box.get_children():
+		if ch is Button and (ch as Button).text == "Ring bell":
+			btn = ch
+	assert_true(btn != null, "Ring bell button")
+	assert_true(btn.custom_minimum_size.y >= 64.0 and btn.custom_minimum_size.x >= 64.0)
+	btn.pressed.emit()
+	assert_gt(Decoy.burst_left(b), 0, "bell rung through the button")

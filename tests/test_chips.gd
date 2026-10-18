@@ -8,6 +8,7 @@ func _defs() -> Defs:
 	var d := peaceful_defs()
 	d.research[TECH]["cost"]["bench_ticks"] = 100000  # never finishes during a test
 	d.skills["xp_per_work_tick"] = 0.0
+	d.events.erase("lightning")  # machine breakdowns are not under test
 	return d
 
 
@@ -120,28 +121,36 @@ func test_waste_multiplier() -> void:
 	_stock(sim, "ai_chip", 1)
 	assert_true(sim.install_chip(s.id))
 	_stock(sim, "refined_essence", 10)
-	for i in 20:
+	for i in 15:
 		s.add_input("essence_ore", 10)
 		s0.add_input("essence_ore", 10)
-		sim.run_ticks(125)  # 100 work ticks at 0.8 speed
-		base.run_ticks(125)
+		sim.run_ticks(102)  # 100 work ticks at chip speed 1.0
+		base.run_ticks(170)  # unoperated runs at 0.6
 		s.output.clear()
 		s0.output.clear()
+		sim.buildings.repair(s)  # wear is not under test
+		base.buildings.repair(s0)
 	var w := float(sim.ledger.produced.get("waste", 0))
 	var w0 := float(base.ledger.produced.get("waste", 0))
 	assert_true(w0 > 0.0)
 	assert_near(w / w0, 1.3, 0.05, "waste x1.3 (%f / %f)" % [w, w0])
 
 
-func test_processor_speed_is_point_eight() -> void:
+func test_processor_speed_chip_beats_unoperated() -> void:
+	# decided without owner (R3X): unoperated processors run at 0.6, a chip restores 1.0
 	var sim := make_sim(7, false, 24, 24, _defs())
 	var s := sim.buildings.place("smelter", Vector2i(8, 8), false)
 	_stock(sim, "ai_chip", 1)
 	_stock(sim, "refined_essence", 5)
+	var plain := make_sim(7, false, 24, 24, _defs())
+	var p := plain.buildings.place("smelter", Vector2i(8, 8), false)
 	sim.install_chip(s.id)
-	s.add_input("copper_ore", 20)  # smelt_copper: 80 work ticks per batch
-	sim.run_ticks(1000)
-	assert_near(float(sim.buildings.refined_batches), 10.0, 1.0, "1000 ticks * 0.8 / 80")
+	s.add_input("copper_ore", 60)
+	p.add_input("copper_ore", 60)
+	sim.run_ticks(640)
+	plain.run_ticks(640)
+	assert_near(float(sim.buildings.refined_batches), 8.0, 1.0, "chip: 640 * 1.0 / 80")
+	assert_near(float(plain.buildings.refined_batches), 4.8, 1.0, "unoperated: 640 * 0.6 / 80")
 
 
 func test_upkeep_once_per_day_and_starvation() -> void:

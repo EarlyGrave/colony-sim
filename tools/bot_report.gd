@@ -100,6 +100,8 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -
 				blooms_seen[cell] = true
 	r["blooms"] = blooms_seen.size()
 	r["kills"] = sim.threats.kills  # region T5
+	r["belt_hp_lost"] = sim.logistics.belts.hp_lost_total  # region R3X
+	r["repairs"] = sim.logistics.belts.repairs_total
 	r["peak_pol"] = float(r.get("peak_pol", 0.0))  # region T5
 	r["waves"] = sim.threats.wave_index
 	r["end_day"] = sim.day()
@@ -218,8 +220,13 @@ static func _t5_profile(sim: Simulation, profile: String, r: Dictionary) -> void
 				break
 		if sim.place_building("smelter", Scenario.find_spot(sim, "smelter", center + Vector2i(-6 + d, -7), 0)) != null:
 			r["chains"] = int(r.get("chains", 0)) + 1
-	if profile == "chip" and sim.get("chips") != null and sim.chips.has_method("slot_chip"):
+	if profile == "chip" and sim.chips != null and d >= 3:  # R3X: real chips, granted free (tech + item)
+		if not sim.research.done.has("ai_chips"):
+			sim.research.done.append("ai_chips")
 		for b in sim.buildings.list:
-			if b.def_id in ["smelter", "research_bench", "assembler"]:
-				sim.chips.slot_chip(b.id)
+			if b.def_id in ["smelter", "assembler"] and not sim.chips.has_chip(b) and sim.chips.can_slot(b):
+				sim.ledger.record_produced("ai_chip", 1, "qa")
+				sim.items.drop(sim.map_center(), "ai_chip", 1)
+				if sim.install_chip(b.id):
+					r["chips"] = int(r.get("chips", 0)) + 1
 # endregion

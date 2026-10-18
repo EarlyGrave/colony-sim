@@ -31,6 +31,7 @@ func bind(p_sim: Simulation) -> void:
 	_last_shot_tick = -1
 	sim.bus.item_mined.connect(_on_item_mined)
 	sim.bus.enemy_killed.connect(_on_enemy_killed)
+	_build_nests()  # region R3X
 
 
 func unbind() -> void:
@@ -42,6 +43,7 @@ func unbind() -> void:
 	sim = null
 	clear()
 	_enemy_pos.clear()
+	_clear_nests()  # region R3X
 
 
 func clear() -> void:
@@ -60,6 +62,7 @@ func _process(delta: float) -> void:
 
 ## Advance effects by `delta` seconds and poll the sim for new shots.
 func tick(delta: float) -> void:
+	_tick_nests(delta)  # region R3X
 	if sim != null:
 		_poll_shots()
 		for e: Enemy in sim.threats.enemies:
@@ -145,3 +148,70 @@ func _spawn(pos: Vector3, col: Color, life: float, vel: Vector3, size: float) ->
 	_fx.append([n, 0.0, life, vel, size])
 	spawned += 1
 	return n
+
+
+# region R3X
+## Creature nests: a small voxel mound per ecology nest; pulses (scale + glow) while its
+## hunger bank holds at least one raid unit's worth. Cosmetic only.
+const NEST_PULSE_HZ := 1.6
+var _nests: Array = []  # [root: Node3D, nest index, mat: StandardMaterial3D]
+var _nest_t := 0.0
+
+
+func nest_count() -> int:
+	return _nests.size()
+
+
+## True when the nest at index `i` is drawn pulsing.
+func nest_pulsing(i: int) -> bool:
+	return sim != null and sim.ecology != null and i < sim.ecology.nests.size() \
+		and float(sim.ecology.nests[i]["bank"]) >= float(sim.ecology.cfg["default_unit_cost"])
+
+
+func _clear_nests() -> void:
+	for n: Array in _nests:
+		(n[0] as Node).queue_free()
+	_nests.clear()
+
+
+func _build_nests() -> void:
+	_clear_nests()
+	if sim == null or sim.ecology == null:
+		return
+	for i in sim.ecology.nests.size():
+		var c: Vector2i = sim.ecology.nests[i]["cell"]
+		var root := Node3D.new()
+		root.position = Vector3(float(c.x) + 0.5, 0.0, float(c.y) + 0.5)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.32, 0.2, 0.28)
+		mat.emission_enabled = true
+		mat.emission = Color(0.8, 0.15, 0.2)
+		mat.emission_energy_multiplier = 0.0
+		# voxel mound: 3x3 base, 2x2 middle, 1x1 top
+		for layer in [[1.6, 0.35, 0.18], [1.0, 0.3, 0.5], [0.5, 0.3, 0.8]]:
+			var box := MeshInstance3D.new()
+			var bm := BoxMesh.new()
+			bm.size = Vector3(layer[0], layer[1], layer[0])
+			box.mesh = bm
+			box.material_override = mat
+			box.position = Vector3(0, layer[2], 0)
+			root.add_child(box)
+		add_child(root)
+		_nests.append([root, i, mat])
+
+
+func _tick_nests(delta: float) -> void:
+	if _nests.is_empty():
+		return
+	_nest_t += delta
+	for n: Array in _nests:
+		var root: Node3D = n[0]
+		var mat: StandardMaterial3D = n[2]
+		if nest_pulsing(int(n[1])):
+			var k := 0.5 + 0.5 * sin(_nest_t * TAU * NEST_PULSE_HZ)
+			root.scale = Vector3.ONE * (1.0 + 0.12 * k)
+			mat.emission_energy_multiplier = 0.4 + 1.2 * k
+		else:
+			root.scale = Vector3.ONE
+			mat.emission_energy_multiplier = 0.0
+# endregion

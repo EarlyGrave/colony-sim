@@ -1,5 +1,5 @@
 {
-	"enabled": false,
+	"enabled": true,
 	"d0": 12.0,
 	"k_poll": 0.05,
 	"stick": 0.7,
@@ -8,6 +8,8 @@
 	"cap_per_region": 40.0,
 	"recompute_ticks": 10,
 	"per_priority": 1.5,
+	"belt_recompute_ticks": 60,
+	"belt_scale_cap": 4.0,
 	"base": {
 		"default": 0.0,
 		"colonist": 4.0,
