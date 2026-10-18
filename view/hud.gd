@@ -1048,10 +1048,11 @@ func _o4_layout() -> void:
 		_side.offset_bottom = -8.0
 	# Top-left chip row: map chips, then the contract chip; the tutorial slot takes the rest.
 	var x := O4_LEFT
+	var slot_r := vp.x - 8.0 - ((sw + 8.0) if side_open else 0.0)
 	if map_switcher != null and map_switcher.visible:
 		if map_switcher.get_parent() != _root:
 			_reparent_to(map_switcher, _root)
-		_o4_anchor_tl(map_switcher, O4_LEFT, y0, 400.0, 0.0)
+		_o4_anchor_tl(map_switcher, O4_LEFT, y0, minf(560.0, slot_r - O4_LEFT), 0.0)
 		var cw := 0.0
 		for ch in map_switcher.get_children():
 			if ch is Button:
@@ -1060,10 +1061,11 @@ func _o4_layout() -> void:
 					ch.custom_minimum_size.x = 96.0
 				cw = maxf(cw, ch.position.x + ch.size.x)
 		x = O4_LEFT + cw + 8.0
+	if _contract_btn.visible and x + _contract_btn.custom_minimum_size.x > slot_r:
+		_contract_btn.visible = false  # no room beside an open sheet; the Contracts entry in More still works
 	if _contract_btn.visible:
 		_o4_anchor_tl(_contract_btn, x, y0, _contract_btn.custom_minimum_size.x, 64.0)
 		x += _contract_btn.custom_minimum_size.x + 8.0
-	var slot_r := vp.x - 8.0 - ((sw + 8.0) if side_open else 0.0)
 	_o4_anchor_tl(_o4_slot, x, y0, maxf(0.0, slot_r - x), O4_SLOT_H)
 	_o4_slot.visible = (slot_r - x) >= O4_SLOT_MIN_W
 	# Bottom-left stack: legend, toast, belt strip / patrol bar.
