@@ -1,0 +1,27 @@
+{
+	"_comment": "Power fuels (owner override 2026-10-18). Essence is the science currency, never fuel. energy_per_unit = power_gen * burn_ticks / TICKS_PER_SECOND of the generator (checked by tests/test_logistics2_defs.gd). waste_per_unit feeds the refinery waste path (ledger source power_waste); threat is the running-generator threat value (x threat_idle_mult when out of fuel).",
+	"threat_idle_mult": 0.25,
+	"fuels": {
+		"coal": {
+			"tier": 1, "generator": "coal_generator", "tech": "electrification",
+			"energy_per_unit": 2000, "waste_per_unit": 2.0, "threat": 15,
+			"note": "dirtiest per energy; infinite coal nodes on the start biome"
+		},
+		"nitrogen": {
+			"tier": 2, "generator": "nitrogen_turbine", "source": "nitrogen_extractor", "tech": "clean_power",
+			"energy_per_unit": 7200, "waste_per_unit": 1.0, "threat": 10,
+			"note": "gas vents on outpost biome 'vents'; 3.6x the energy of coal for half the waste per unit"
+		},
+		"uranium": {
+			"tier": 3, "generator": "nuclear_reactor", "tech": "nuclear",
+			"energy_per_unit": 96000, "waste_per_unit": 1.0, "threat": 25,
+			"spent_item": "spent_fuel", "spent_per_burn": 1,
+			"note": "outpost biome 'irradiated' only; huge output, almost no smoke, spent fuel is long-lived waste that must go to a waste dump",
+			"meltdown": {
+				"hp_frac_below": 0.35, "chance_per_burn_overheat": 0.15, "overheat_if_spent_full": true,
+				"blast_radius": 5, "blast_damage": 300, "contamination": 40.0, "spent_hazard_per_item": 0.05
+			}
+		}
+	},
+	"solar": {"building": "solar_array", "tech": "clean_power", "waste": 0.0, "threat": 4}
+}

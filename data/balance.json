@@ -11,7 +11,8 @@
 		"deposit_cluster_size": [3, 8],
 		"deposit_amount": [30, 60],
 		"clear_radius": 6,
-		"min_deposit_distance": 7
+		"min_deposit_distance": 7,
+		"extra_share": 0.0
 	},
 	"colony": {
 		"colonists": 4,
@@ -93,6 +94,18 @@
 		"hash_bucket": 8,
 		"chase_flow_radius": 16,
 		"flow_cells_per_tick": 2000
+	},
+	"logistics2": {
+		"splitter_throughput_per_tick": 1,
+		"node_hold_ticks": 1
+	},
+	"power": {
+		"unpowered_factor": 0.5,
+		"min_factor": 0.2,
+		"chip_power_use": 10,
+		"pole_range": 6,
+		"changed_bucket": 0.05,
+		"waste_ledger_source": "power_waste"
 	},
 	"research": {
 		"bench_rate": 1.0,

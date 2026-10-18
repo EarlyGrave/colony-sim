@@ -28,12 +28,12 @@ func _spot(sim: Simulation, def_id: String) -> Vector2i:
 
 func test_data_valid_and_counts() -> void:
 	var d := Defs.get_default()
-	assert_eq(d.research.size(), 18)  # +ai_chips, +2 decoy techs, +expeditions
+	assert_eq(d.research.size(), 23)  # +ai_chips, +2 decoy techs, +expeditions, +5 L5 (splitting, smart_logic, electrification, clean_power, nuclear)
 	assert_eq(Tech.validate(d.research, d).size(), 0, str(Tech.validate(d.research, d)))
 	var per_tier := [0, 0, 0, 0]
 	for id: String in d.research:
 		per_tier[int(d.research[id]["tier"])] += 1
-	assert_eq(per_tier, [4, 4, 5, 5])
+	assert_eq(per_tier, [4, 4, 8, 7])
 
 
 func test_cycle_and_bad_ids_rejected() -> void:

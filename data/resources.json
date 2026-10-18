@@ -79,5 +79,48 @@
 			"pure": 2.0
 		},
 		"appended": true
+	},
+	"coal": {
+		"item": "coal",
+		"tier": 1,
+		"biomes": [
+			"start"
+		],
+		"base_rate": 10.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		},
+		"appended": 2
+	},
+	"nitrogen": {
+		"item": "nitrogen",
+		"tier": 2,
+		"gas": true,
+		"biomes": [
+			"vents"
+		],
+		"base_rate": 10.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		},
+		"appended": 2
+	},
+	"uranium": {
+		"item": "uranium",
+		"tier": 3,
+		"biomes": [
+			"irradiated"
+		],
+		"base_rate": 6.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		},
+		"appended": 2
 	}
 }

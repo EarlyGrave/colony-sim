@@ -13,7 +13,10 @@
 		"node_density": 1.0,
 		"hazard": 0,
 		"yield_mult": 1.0,
-		"refining_allowed": true
+		"refining_allowed": true,
+		"extra_resources": {
+			"coal": 1
+		}
 	},
 	"ash": {
 		"resources": {
@@ -55,6 +58,34 @@
 		"node_density": 1.0,
 		"hazard": 3,
 		"yield_mult": 1.0,
+		"refining_allowed": false
+	},
+	"vents": {
+		"resources": {
+			"nitrogen": 1
+		},
+		"purity_weights": {
+			"impure": 3,
+			"normal": 5,
+			"pure": 2
+		},
+		"node_density": 1.0,
+		"hazard": 2,
+		"yield_mult": 1.0,
+		"refining_allowed": false
+	},
+	"irradiated": {
+		"resources": {
+			"uranium": 1
+		},
+		"purity_weights": {
+			"impure": 5,
+			"normal": 4,
+			"pure": 1
+		},
+		"node_density": 1.0,
+		"hazard": 3,
+		"yield_mult": 0.8,
 		"refining_allowed": false
 	}
 }

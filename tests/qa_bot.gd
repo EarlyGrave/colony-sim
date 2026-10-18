@@ -151,3 +151,88 @@ static func _dump(o: Object) -> Array:
 			continue
 		out.append([p["name"], v])
 	return out
+
+
+# region L5
+## Logistics-2 QA profile (bot_report "power"). Deterministic, uses only recorded commands + data. Day 3: techs
+## splitting/electrification are granted free (like the chip profile), a 1-miner line is built with a splitter feeding
+## two smelters and a merger into storage_in (second line), then a pole line + coal generator; the generator is kept
+## fuelled by hand-feeding its input buffer (QA shortcut, belts to a coal miner come with the coal-node switch).
+## Hooks are probed with has_method / get(), so the profile is a no-op until the L1/L2/L3 commands exist.
+## Layout (t = miner cell): miner t, belt t+2..t+5, splitter t+4, smelters t+6 and t+(6,2), merger t+(9,0), store t+12.
+static func l2_step(sim: Simulation, r: Dictionary) -> void:
+	var d := sim.day()
+	if d < 3:
+		return
+	for t in ["splitting", "electrification"]:
+		if sim.research != null and not sim.research.done.has(t):
+			sim.research.done.append(t)
+	if not sim.has_meta("qa_l2_site"):
+		sim.set_meta("qa_l2_site", _l2_build(sim, r))
+	var site: Variant = sim.get_meta("qa_l2_site")
+	if site is Vector2i and sim.get("power") != null:
+		_l2_power(sim, site as Vector2i, r)
+		for b in sim.buildings.list:
+			if b.def_id == "coal_generator" and not b.broken and int(b.input.get("coal", 0)) < 10:
+				sim.ledger.record_produced("coal", 10, "qa")
+				b.input["coal"] = int(b.input.get("coal", 0)) + 10
+
+
+static func _l2_build(sim: Simulation, r: Dictionary) -> Variant:
+	if not sim.has_method("place_belt_node"):
+		return false
+	var center := sim.map_center()
+	var nodes: Array[Vector2i] = []
+	for c in sim.map.node_cells():
+		if sim.map.node_resource(c) == "essence_ore":
+			nodes.append(c)
+	nodes.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return a.distance_squared_to(center) < b.distance_squared_to(center) or (a.distance_squared_to(center) == b.distance_squared_to(center) and a < b))
+	for n in nodes:
+		for t: Vector2i in [n, n + Vector2i(-1, 0), n + Vector2i(0, -1), n + Vector2i(-1, -1)]:
+			var site: Variant = _l2_try(sim, t, r)
+			if site != null:
+				return site
+	return false
+
+
+static func _l2_try(sim: Simulation, t: Vector2i, r: Dictionary) -> Variant:
+	var path_a: Array = []
+	for x in range(2, 6):
+		path_a.append(t + Vector2i(x, 0))
+	var path_b: Array = [t + Vector2i(4, 1), t + Vector2i(4, 2), t + Vector2i(5, 2)]
+	var path_out_a: Array = [t + Vector2i(8, 0), t + Vector2i(9, 0), t + Vector2i(10, 0), t + Vector2i(11, 0)]
+	var path_out_b: Array = [t + Vector2i(8, 2), t + Vector2i(9, 2), t + Vector2i(9, 1)]
+	for c: Vector2i in path_a + path_b + path_out_a + path_out_b:
+		if sim.can_belt_cell_error(c) != "":
+			return null
+	if sim.buildings.placement_error("smelter", t + Vector2i(6, 0), false) != "" or sim.buildings.placement_error("smelter", t + Vector2i(6, 2), false) != "" \
+			or sim.buildings.placement_error("storage_in", t + Vector2i(12, 0), false) != "":
+		return null
+	if sim.buildings.placement_error("miner", t, false) != "" or sim.place_building("miner", t) == null:
+		return null
+	if sim.place_building("smelter", t + Vector2i(6, 0)) == null or sim.place_building("smelter", t + Vector2i(6, 2)) == null:
+		return null
+	sim.place_building("storage_in", t + Vector2i(12, 0))
+	sim.place_belt(path_a, 1)
+	sim.place_belt(path_b, 1)
+	sim.place_belt(path_out_a, 1)
+	sim.place_belt(path_out_b, 0)
+	var ok := bool(sim.call("place_belt_node", 1, t + Vector2i(4, 0), 1))  # splitter_basic feeds smelter A (front) and B (right)
+	ok = bool(sim.call("place_belt_node", 4, t + Vector2i(9, 0), 1)) and ok  # merger joins both smelter outputs
+	r["l2_nodes"] = int(r.get("l2_nodes", 0)) + (2 if ok else 0)
+	return t
+
+
+static func _l2_power(sim: Simulation, t: Vector2i, r: Dictionary) -> void:
+	if sim.has_meta("qa_l2_power"):
+		return
+	sim.set_meta("qa_l2_power", true)
+	var n := 0
+	for off: Vector2i in [Vector2i(2, -2), Vector2i(7, -2), Vector2i(7, 4), Vector2i(10, 4)]:
+		if sim.place_building("power_pole", t + off) != null:
+			n += 1
+	if sim.place_building("coal_generator", Scen.find_spot(sim, "coal_generator", t + Vector2i(1, -5), 0)) != null:
+		n += 1
+	r["l2_power"] = n
+# endregion

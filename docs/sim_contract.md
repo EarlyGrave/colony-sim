@@ -122,6 +122,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `ecology.json` | nests_min/max, absorb_rate, bank_cap, starved_max, unit_cost{}, rally_ticks, chip_pressure, variant_bands[] (T5) |
 | `enemies.json` | id -> {name, max_hp, move_ticks, damage, attack_cooldown_ticks, attack_range, threat_cost, variants{id->{hp_mult,damage_mult,move_ticks_delta}}} |
 | `event_chains.json` | random_enabled, chance, steps[], complication, inspection_quota_default |
+| `fuels.json` | L5 power fuels: threat_idle_mult, fuels{coal,nitrogen,uranium -> tier, generator, tech, energy_per_unit (= power_gen*burn_ticks/TPS), waste_per_unit, threat, spent_item/spent_per_burn, meltdown{}}, solar{}; buildings carry `power_use` (consumer), `power_gen` + `fuel{item,burn_ticks,waste_per_burn,spent_item?}` (generator, `fuel:null` = passive), `power_range` (pole); research `unlocks.belt_nodes`; `balance.json` keys `logistics2`, `power`, `map.extra_share` (biome `extra_resources` conversion, 0 = off); resources `appended: 2` = byte order after R4a |
 | `events.json` | id -> {weight, min_day, harmful, max_per_game, requires, text, ...} |
 | `events_prison.json` | same schema as events.json, prison-themed |
 | `fx.json` | view-only juice (bursts, splats, drips, AUDITED text); not read by sim |

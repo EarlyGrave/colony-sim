@@ -57,6 +57,7 @@ static func generate(map: MapGrid, rng: RandomNumberGenerator, cfg: Dictionary) 
 				map.node_purity[map.idx(c)] = 0
 
 	_open_enclosed_pockets(map, center)
+	_convert_extra_nodes(map, rng.seed, biome, cfg)  # region L5
 
 
 ## Compact blob of up to `size` cells grown from `start` (each step extends
@@ -127,4 +128,47 @@ static func _pick_purity(rng: RandomNumberGenerator, biome: Dictionary) -> int:
 		if r < 0:
 			return p
 	return 2
+# endregion
+
+
+# region L5
+## Extra resources of a biome (`extra_resources`, e.g. coal on the start biome): converts a share of the
+## non-first deposit cells that are not near the start. Uses its OWN generator seeded from the map seed and
+## never touches `rng`; only node_res changes (tiles identical), so existing map hashes stay identical.
+## Share comes from cfg `extra_share` (0 = off).
+static func _convert_extra_nodes(map: MapGrid, seed_value: int, biome: Dictionary, cfg: Dictionary) -> void:
+	var share := float(cfg.get("extra_share", 0.0))
+	var extra: Dictionary = biome.get("extra_resources", {})
+	if share <= 0.0 or extra.is_empty():
+		return
+	var ids: Array = extra.keys()
+	ids.sort()
+	var r2 := RandomNumberGenerator.new()
+	r2.seed = seed_value ^ 0x5C0A1
+	var center := Vector2i(map.width / 2, map.height / 2)
+	var min_d := float(int(cfg.get("min_deposit_distance", 7)) + 6)
+	var done := {}
+	for k in map.node_res.size():
+		if map.tiles[k] != MapGrid.Tile.DEPOSIT or map.node_res[k] == 0 or done.has(k):
+			continue
+		var c := Vector2i(k % map.width, k / map.width)
+		if Vector2(c - center).length() < min_d:
+			continue
+		if r2.randf() >= share:
+			continue
+		# convert the whole 4-connected blob of the same resource so coal comes as a cluster
+		var rid := int(map.node_res[k])
+		var coal := NodeData.res_index(String(ids[r2.randi_range(0, ids.size() - 1)]))
+		var stack: Array[int] = [k]
+		while not stack.is_empty():
+			var q: int = stack.pop_back()
+			if done.has(q) or map.tiles[q] != MapGrid.Tile.DEPOSIT or int(map.node_res[q]) != rid:
+				continue
+			done[q] = true
+			map.node_res[q] = coal
+			var qc := Vector2i(q % map.width, q / map.width)
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var n: Vector2i = qc + d
+				if map.in_bounds(n):
+					stack.append(map.idx(n))
 # endregion

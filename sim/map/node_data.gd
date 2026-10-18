@@ -23,11 +23,16 @@ static func _ensure() -> void:
 	ids.sort()
 	_res_ids.clear()
 	for k in ids:
-		if not bool(_res[k].get("appended", false)):
+		if int(_res[k].get("appended", 0)) == 0:
 			_res_ids.append(String(k))
 	# region R4a: expedition resources get bytes AFTER the legacy ones so existing map hashes stay identical
 	for k in ids:
-		if bool(_res[k].get("appended", false)):
+		if int(_res[k].get("appended", 0)) == 1:
+			_res_ids.append(String(k))
+	# endregion
+	# region L5: power-fuel resources ("appended": 2) come after the R4a ones, so those bytes never shift
+	for k in ids:
+		if int(_res[k].get("appended", 0)) >= 2:
 			_res_ids.append(String(k))
 	# endregion
 

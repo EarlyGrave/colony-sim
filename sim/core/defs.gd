@@ -77,6 +77,9 @@ var biomes: Dictionary = {}
 var research: Dictionary = {}  # region R2a
 var chips: Dictionary = {}  # region T4
 var roles: Dictionary = {}  # region C1
+# region L5
+var fuels: Dictionary = {}  # data/fuels.json (power fuels)
+# endregion
 
 static var _default: Defs = null
 
@@ -169,6 +172,10 @@ func load_from(dir: String) -> void:
 		chips = _load_json(dir + "chips.json")
 	# endregion
 	roles = _load_json(dir + "roles.json")  # region C1
+	# region L5
+	if FileAccess.file_exists(dir + "fuels.json"):
+		fuels = _load_json(dir + "fuels.json")
+	# endregion
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -238,6 +245,7 @@ func duplicate_defs() -> Defs:
 	d.research = research.duplicate(true)  # region R2a
 	d.chips = chips.duplicate(true)  # region T4
 	d.roles = roles.duplicate(true)  # region C1
+	d.fuels = fuels.duplicate(true)  # region L5
 	return d
 
 
@@ -293,6 +301,39 @@ func validate() -> Array[String]:
 				if not resources.has(res_id):
 					errs.append("biome %s: unknown resource %s" % [biome_id, res_id])
 	errs.append_array(Tech.validate(research, self))  # region R2a
+	# region L5: power / logistics-2 data
+	const NODE_KINDS := ["splitter_basic", "splitter_smart", "splitter_priority", "merger"]
+	for tid: String in research:
+		for nk: String in research[tid].get("unlocks", {}).get("belt_nodes", []):
+			if not nk in NODE_KINDS:
+				errs.append("tech %s: unknown belt node %s" % [tid, nk])
+	for bid: String in buildings:
+		var pb: Dictionary = buildings[bid]
+		if float(pb.get("power_use", 0.0)) < 0.0:
+			errs.append("building %s: negative power_use" % bid)
+		if pb.has("power_pole") or pb.has("power_range"):
+			if float(pb.get("power_range", 0.0)) < 3.0:
+				errs.append("pole %s: power_range < 3" % bid)
+		if pb.has("power_gen"):
+			if float(pb["power_gen"]) <= 0.0:
+				errs.append("generator %s: power_gen <= 0" % bid)
+			var fu: Variant = pb.get("fuel", null)
+			if fu != null:
+				if typeof(fu) != TYPE_DICTIONARY or not items.has(str(fu.get("item", ""))) or int(fu.get("burn_ticks", 0)) <= 0:
+					errs.append("generator %s: bad fuel" % bid)
+				elif not fuels.is_empty() and not fuels.get("fuels", {}).has(str(fu["item"])):
+					errs.append("generator %s: fuel %s missing in fuels.json" % [bid, fu["item"]])
+	for fid: String in fuels.get("fuels", {}):
+		var fd: Dictionary = fuels["fuels"][fid]
+		if not items.has(fid):
+			errs.append("fuel %s: unknown item" % fid)
+		if not buildings.has(str(fd.get("generator", ""))):
+			errs.append("fuel %s: unknown generator" % fid)
+		if not research.has(str(fd.get("tech", ""))):
+			errs.append("fuel %s: unknown tech" % fid)
+		if fd.has("spent_item") and not items.has(str(fd["spent_item"])):
+			errs.append("fuel %s: unknown spent_item" % fid)
+	# endregion
 	return errs
 # endregion
 

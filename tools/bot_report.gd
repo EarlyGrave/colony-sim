@@ -205,6 +205,8 @@ static func _f(v: Variant) -> String:
 static func _t5_profile(sim: Simulation, profile: String, r: Dictionary) -> void:
 	if profile == "baseline":
 		return
+	if profile == "power":  # region L5: logistics-2 QA profile (automation chains + splitter line + poles + coal)
+		QaBot.l2_step(sim, r)
 	var d := sim.day()
 	if d >= 2 and d <= 6:
 		var center := sim.map_center()
