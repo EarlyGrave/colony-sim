@@ -12,6 +12,16 @@ extends Camera3D
 ## swallow them first); raw touch events are used only to track pinches.
 
 signal tapped(world_pos: Vector2)
+# region A2d
+## While `capture_drag` is true a one-finger / left-mouse drag does not pan the
+## camera; it is reported as a stroke instead (pinch / wheel still work).
+signal stroke_began(world_pos: Vector2)
+signal stroke_moved(world_pos: Vector2)
+signal stroke_ended(world_pos: Vector2, cancelled: bool)
+var capture_drag := false
+var _stroke_src := ""  ## "" / "touch" / "mouse"
+var _stroke_last := Vector2.ZERO
+# endregion
 
 const TAP_SLOP := 14.0
 const MIN_ZOOM := 0.35
@@ -82,6 +92,9 @@ func _apply() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if capture_drag or _stroke_src != "":
+		if _capture_input(event):
+			return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			_touches[event.index] = event.position
@@ -189,3 +202,62 @@ func visible_cell_rect() -> Rect2:
 		else:
 			r = r.expand(c)
 	return r
+
+
+# region A2d
+## Returns true when the event was consumed by the stroke tool.
+func _capture_input(event: InputEvent) -> bool:
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_touches[event.index] = event.position
+			if _touches.size() >= 2:
+				_end_stroke(_stroke_last, true)
+				_moved = true
+				_begin_pinch()
+			elif capture_drag and _stroke_src == "":
+				_begin_stroke("touch", event.position)
+		else:
+			_touches.erase(event.index)
+			if _stroke_src == "touch" and _touches.is_empty():
+				_end_stroke(screen_to_world(event.position), false)
+		return true
+	if event is InputEventScreenDrag:
+		_touches[event.index] = event.position
+		if _touches.size() >= 2:
+			_update_pinch()
+		elif _stroke_src == "touch":
+			_stroke_last = screen_to_world(event.position)
+			stroke_moved.emit(_stroke_last)
+		return true
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			return true  # touch duplicate
+		if event.pressed:
+			if capture_drag and _stroke_src == "" and _touches.is_empty():
+				_begin_stroke("mouse", event.position)
+		elif _stroke_src == "mouse":
+			_end_stroke(screen_to_world(event.position), false)
+		return true
+	if event is InputEventMouseMotion:
+		if event.device == InputEvent.DEVICE_ID_EMULATION:
+			return true
+		if _stroke_src == "mouse":
+			_stroke_last = screen_to_world(event.position)
+			stroke_moved.emit(_stroke_last)
+			return true
+	return false
+
+
+func _begin_stroke(src: String, screen_pos: Vector2) -> void:
+	_stroke_src = src
+	_vel = Vector2.ZERO
+	_stroke_last = screen_to_world(screen_pos)
+	stroke_began.emit(_stroke_last)
+
+
+func _end_stroke(pos: Vector2, cancelled: bool) -> void:
+	if _stroke_src == "":
+		return
+	_stroke_src = ""
+	stroke_ended.emit(pos, cancelled)
+# endregion
