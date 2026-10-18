@@ -31,6 +31,7 @@ var _accum := 0.0
 func _ready() -> void:
 	_apply_ui_scale()
 	world3d.camera = camera
+	world3d.world_view = world  # region G1b
 	world3d.overlay = $Overlay
 	camera.tapped.connect(_on_tapped)
 	hud.tool_selected.connect(_on_tool_selected)

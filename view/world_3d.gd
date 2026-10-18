@@ -67,6 +67,8 @@ var _facing := {}  # key -> [last_pos: Vector2, row: int, moving_until: float]
 var _tex := {}
 var _time := 0.0
 var _tint := Color.WHITE
+var world_view: WorldView  # region G1b: source of turret aim
+var _buildings3d := Building3D.new()  # region G1b
 
 
 func _ready() -> void:
@@ -83,6 +85,7 @@ func _ready() -> void:
 	_blocks.material_override = _block_mat
 	add_child(_ground)
 	add_child(_blocks)
+	add_child(_buildings3d)  # region G1b
 
 
 func bind(p_sim: Simulation, map_tex: Texture2D) -> void:
@@ -96,6 +99,7 @@ func bind(p_sim: Simulation, map_tex: Texture2D) -> void:
 	_block_mat.set_shader_parameter("map_tex", map_tex)
 	_block_mat.set_shader_parameter("map_size", size)
 	_clear_units()
+	_buildings3d.clear()  # region G1b
 	_blocks_dirty = true
 	sim.bus.tile_changed.connect(_on_tile_changed)
 	if overlay and not overlay.draw.is_connected(_draw_overlay):
@@ -106,6 +110,7 @@ func unbind() -> void:
 	if sim and sim.bus.tile_changed.is_connected(_on_tile_changed):
 		sim.bus.tile_changed.disconnect(_on_tile_changed)
 	_clear_units()
+	_buildings3d.clear()  # region G1b
 	sim = null
 
 
@@ -169,6 +174,7 @@ func _process(delta: float) -> void:
 	if _blocks_dirty:
 		_rebuild_blocks()
 	_update_tint()
+	_buildings3d.sync(sim, _aim_of, _tint)  # region G1b
 	var seen := {}
 	for c: Colonist in sim.colonists.list:
 		var k := "c%d" % c.id
@@ -310,3 +316,9 @@ func _bar(center: Vector2, frac: float, col: Color) -> void:
 	var r := Rect2(center - Vector2(13, 0), Vector2(26, 4))
 	overlay.draw_rect(r.grow(1), Color(0, 0, 0, 0.7))
 	overlay.draw_rect(Rect2(r.position, Vector2(r.size.x * clampf(frac, 0.0, 1.0), r.size.y)), col)
+
+
+# region G1b
+func _aim_of(id: int) -> float:
+	return world_view.turret_aim(id) if world_view else -PI / 2
+# endregion
