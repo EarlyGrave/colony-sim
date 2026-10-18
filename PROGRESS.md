@@ -143,6 +143,19 @@ Next planned: perk system (docs/prompter_inbox.md §9; plan from prompter, owner
 - Known: no Recall button in UI; bots never stock plates so repairs = 0; v2 raids harsher
   (seed 3 HQ lost d15).
 
+## Session 4 — R5 onboarding & phone UX (O1–O5, R5X) + combat (C1–C5, CX)
+- R5: Warden's Orientation tutorial (12 steps, sim-side, skip step/all, capsule-safe scripted
+  raid), tutorial card in the HUD slot + pulsing highlight + "?" handbook, prison-sentence
+  presets (short_stay / standard_term / hard_time, 3 goldens), phone layout (72 px portraits,
+  top strip, bottom-right thumb cluster, overlap-scan test), long-press radial menu, new-game
+  dialog with tutorial toggle (ON on first launch). Tutorial bot: all 12 steps, 0 deaths, d11–12.
+- Combat: squads "Wardens of the Line" (Bulwark/Lancer/Medic, max 4; single-inmate control kept),
+  abilities taunt/volley/stabilise (essence + contamination + noise), telegraphed brute/spitter/
+  burrower attacks, Fit/Wounded/Down bands with bleed-out timer, squad bar + ability radial +
+  forecast panel + militia rally. tools/combat_model.gd TTK/survival tables. QA 25 d x 5 seeds:
+  squad total deaths -33%, per wave faced -53%, per repelled wave only -11% (target 30% not met).
+- Tests: 594 green twice.
+
 ## Next
 - State at end of session 2: branch `claude/colony-sim-godot-4jftsm` has E9–E11
   + graphics; merged into `main` by owner request on 2026-10-17 (session 3;
