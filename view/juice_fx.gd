@@ -239,6 +239,9 @@ func spawn_splat(p: Vector2) -> void:
 	_d[o + 7] = c.b
 
 
+var _bank: FlavorPicker = FlavorPicker.load_default()
+
+
 func trigger_audited(at: Vector3) -> void:
 	if not enabled or _labels.is_empty():
 		return
@@ -252,6 +255,7 @@ func trigger_audited(at: Vector3) -> void:
 			k = i
 	_label_age[k] = 0.0
 	_labels[k].position = at
+	_labels[k].text = _bank.pick(FlavorPicker.K_SPLAT_AUDITED, {"tick": events, "id": k})
 	_labels[k].modulate.a = 1.0
 	_labels[k].visible = true
 

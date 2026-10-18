@@ -1,8 +1,7 @@
 class_name BarkLayer
 extends Control
 ## F3: short speech bubbles above colonists. Per-colonist cooldown in game time,
-## at most `bark_max` bubbles visible. Text from FlavorPicker (F1) when present,
-## else data/names.json "barks".
+## at most `bark_max` bubbles visible. Text from FlavorPicker (barks.<state>).
 
 var sim: Simulation
 var camera: Camera3D
@@ -10,6 +9,7 @@ var last_bark: Dictionary = {}  ## colonist id -> tick
 var bubbles: Array[Label] = []
 var shown := 0  ## total barks shown (diagnostics / tests)
 var _timer := Timer.new()
+var _picker: FlavorPicker = FlavorPicker.load_default()
 
 
 func _init() -> void:
@@ -115,12 +115,7 @@ func _place(l: Label) -> void:
 
 
 func _line(state: String, c: Colonist) -> String:
-	var script: Script = null
-	if ResourceLoader.exists("res://view/flavor_picker.gd"):  # F1, optional
-		script = load("res://view/flavor_picker.gd")
-	if script != null and script.has_method("pick") and script.has_method("has_key") and script.call("has_key", "barks." + state):
-		var s := str(script.call("pick", "barks." + state, {"who": c.display_name}))
-		if s != "":
-			return s
-	var arr: Array = sim.defs.names.get("barks", {}).get(state, [])
-	return "" if arr.is_empty() else str(arr[ColonistRecord.mix(c.id, sim.tick / 900) % arr.size()])
+	var key := "barks." + state
+	if not _picker.has_key(key):
+		return "..."
+	return _picker.pick(key, {"who": c.display_name, "tick": sim.tick, "id": c.id})

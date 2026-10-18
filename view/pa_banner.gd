@@ -23,8 +23,7 @@ func _init() -> void:
 	add_theme_stylebox_override("panel", sb)
 	_label = Label.new()
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.custom_minimum_size.x = 100.0
 	_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL

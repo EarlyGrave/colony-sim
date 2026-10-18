@@ -6,6 +6,8 @@ extends RefCounted
 ## not load it, because a new script resource shifts instance ids that golden
 ## part dumps print for pending colonists.
 
+const NICK_BANK := {"belts_repaired": "haul", "repairs": "haul", "ore_mined": "haul", "refined": "refine"}
+
 
 static func total_kills(r: Dictionary) -> int:
 	var n := 0
@@ -34,20 +36,26 @@ static func mix(id: int, salt: int) -> int:
 
 
 ## Rap sheet lines seeded by colonist id (stable across reloads).
-static func rap_sheet(id: int, names: Dictionary) -> Dictionary:
+static func rap_sheet(id: int, names: Dictionary, bank: FlavorPicker = null) -> Dictionary:
 	var rs: Dictionary = names.get("rapsheet", {})
 	var out := {}
 	var salt := 1
 	for key: String in ["crime", "sentence", "complaint", "last_words"]:
 		var arr: Array = rs.get(key, [])
+		if bank != null and bank.has_key("rapsheet." + key):
+			arr = Array(bank.lines_of("rapsheet." + key))
 		out[key] = "" if arr.is_empty() else str(arr[mix(id, salt) % arr.size()])
 		salt += 1
 	return out
 
 
 ## Nickname text for a colonist, "" if not earned yet.
-static func nickname(c: Colonist, r: Dictionary, names: Dictionary) -> String:
+static func nickname(c: Colonist, r: Dictionary, names: Dictionary, bank: FlavorPicker = null) -> String:
 	if r["nick_stat"] == "":
 		return ""
 	var arr: Array = names.get("nicknames", {}).get(r["nick_stat"], [])
+	if bank != null:
+		var k := "nicknames." + str(NICK_BANK.get(r["nick_stat"], r["nick_stat"]))
+		if bank.has_key(k):
+			arr = Array(bank.lines_of(k))
 	return "" if arr.is_empty() else str(arr[mix(c.id, 9) % arr.size()])
