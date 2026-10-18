@@ -42,6 +42,35 @@ func move_toward(target: Vector2i, sim: Simulation) -> int:
 	return Move.MOVING
 
 
+# region perf-threat
+## Like move_toward, but follows a shared FlowField (no per-mover A*).
+func move_flow(field: FlowField, sim: Simulation) -> int:
+	if path.is_empty():
+		if field.dist_at(cell) == 0:
+			clear_path()
+			return Move.ARRIVED
+		if not field.complete and field.dist_at(cell) < 0:
+			return Move.MOVING  # the search has not reached us yet
+		var n := field.next_step(cell, sim.pathfinder.walk_grid())
+		if n.x < 0:
+			return Move.FAILED
+		path.append(n)
+	move_t += 1
+	move_t += _bonus_steps(sim)
+	if move_t < move_ticks:
+		return Move.MOVING
+	move_t = 0
+	var next: Vector2i = path[0]
+	path.clear()
+	if not sim.pathfinder.is_walkable(next):
+		return Move.MOVING  # the field is stale; the next tick picks a fresh step
+	cell = next
+	if field.dist_at(cell) == 0:
+		return Move.ARRIVED
+	return Move.MOVING
+# endregion
+
+
 ## Extra (or fewer) movement ticks gained this tick; 0 without bonuses.
 func _bonus_steps(sim: Simulation) -> int:
 	var g := move_gain(sim)

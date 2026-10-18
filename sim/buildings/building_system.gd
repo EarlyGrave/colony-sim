@@ -371,6 +371,7 @@ func _evict(b: Building) -> void:
 		var spot := _nearest_walkable(m.cell)
 		if spot.x >= 0:
 			m.cell = spot
+			if m is Enemy: sim.threats.hash.update(m)  # region perf-threat
 		m.clear_path()
 
 
