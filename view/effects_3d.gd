@@ -32,6 +32,7 @@ func bind(p_sim: Simulation) -> void:
 	sim.bus.item_mined.connect(_on_item_mined)
 	sim.bus.enemy_killed.connect(_on_enemy_killed)
 	_build_nests()  # region R3X
+	_f4_bind()  # region F4
 
 
 func unbind() -> void:
@@ -44,6 +45,7 @@ func unbind() -> void:
 	clear()
 	_enemy_pos.clear()
 	_clear_nests()  # region R3X
+	_f4_unbind()  # region F4
 
 
 func clear() -> void:
@@ -64,6 +66,7 @@ func _process(delta: float) -> void:
 ## Advance effects by `delta` seconds and poll the sim for new shots.
 func tick(delta: float) -> void:
 	_tick_nests(delta)  # region R3X
+	_f4_tick(delta)  # region F4
 	if sim != null:
 		_poll_shots()
 		_c3_sync()  # region C3
@@ -106,6 +109,7 @@ func _on_item_mined(cell: Vector2i, _item: String, _amount: int) -> void:
 func _on_enemy_killed(enemy_id: int) -> void:
 	var p: Vector2 = _enemy_pos.get(enemy_id, Vector2.ZERO) + Vector2(0.5, 0.5)
 	_enemy_pos.erase(enemy_id)
+	_f4_kill(enemy_id, p)  # region F4
 	for i in 4:
 		_spawn(Vector3(p.x + _rng.randf_range(-0.2, 0.2), 0.4, p.y + _rng.randf_range(-0.2, 0.2)),
 			Color(0.45, 0.5, 0.4), PUFF_LIFE, Vector3(_rng.randf_range(-0.4, 0.4), 0.6, _rng.randf_range(-0.4, 0.4)), 0.6)
@@ -286,4 +290,32 @@ func _c3_sync() -> void:
 	for i in range(ring_i, _c3_rings.size()):
 		_c3_rings[i].visible = false
 	_c3_shown = cell_i
+# endregion
+
+
+# region F4 visual juice (view/juice_fx.gd, data/fx.json)
+var juice: JuiceFx
+
+
+func _f4_bind() -> void:
+	if juice == null:
+		juice = JuiceFx.new()
+		add_child(juice)
+	juice.bind(sim)
+
+
+func _f4_unbind() -> void:
+	if juice != null:
+		juice.sim = null
+		juice.reset()
+
+
+func _f4_tick(delta: float) -> void:
+	if juice != null:
+		juice.tick(delta)
+
+
+func _f4_kill(enemy_id: int, p: Vector2) -> void:
+	if juice != null:
+		juice.on_kill(enemy_id, p)
 # endregion

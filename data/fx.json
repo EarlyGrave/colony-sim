@@ -1,0 +1,9 @@
+{
+	"enabled": true,
+	"burst": {"count_min": 8, "count_max": 12, "brute_mult": 2, "life": 0.4, "speed": 1.6, "size": 0.24, "max_particles": 64, "brute_shake_px": 2.0},
+	"splat": {"kinds": ["spitter", "crawler"], "pool": 40, "life": 20.0, "size": 0.7, "size_jitter": 0.3, "alpha": 0.7,
+		"ramp": [[0.0, "#7d7d7d"], [0.5, "#6e9a3c"], [1.0, "#7fe01c"]]},
+	"drip": {"buildings": ["refinery", "smelter"], "max_per_building": 3, "pool": 48, "fall_time": 0.55, "size": 0.16,
+		"interval_min": 0.35, "interval_max": 1.3, "waste_for_max": 8, "color": "#8fb02a", "scan_interval": 0.4},
+	"audited": {"text": "AUDITED", "max": 3, "life": 2.2, "rise": 1.2, "pixel_size": 0.012, "color": "#ffe27a"}
+}

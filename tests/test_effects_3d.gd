@@ -20,7 +20,7 @@ func test_mining_dust_spawn_and_free() -> void:
 	for i in 50:
 		fx.tick(0.1)  # 5 s
 	assert_eq(fx.active_count(), 0)
-	assert_eq(fx.get_child_count() - fx.get_children().filter(func(n: Node) -> bool: return n.is_queued_for_deletion()).size(), 0)
+	assert_eq(fx.get_child_count() - fx.get_children().filter(func(n: Node) -> bool: return n.is_queued_for_deletion()).size(), 1)  # the F4 JuiceFx node stays
 
 
 func test_kill_puff_and_tracer() -> void:
