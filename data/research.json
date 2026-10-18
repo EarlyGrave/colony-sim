@@ -1,0 +1,16 @@
+{
+	"hand_tools": {"name": "Hand Tools", "tier": 0, "prereqs": [], "cost": {"bench_ticks": 600, "essence": 0}, "unlocks": {"buildings": ["workbench"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"crude_refining": {"name": "Crude Refining", "tier": 0, "prereqs": [], "cost": {"bench_ticks": 600, "essence": 0}, "unlocks": {"buildings": ["refinery"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"fortification": {"name": "Fortification", "tier": 0, "prereqs": [], "cost": {"bench_ticks": 600, "essence": 0}, "unlocks": {"buildings": ["wall", "door"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"turret_defense": {"name": "Turret Defense", "tier": 0, "prereqs": [], "cost": {"bench_ticks": 900, "essence": 0}, "unlocks": {"buildings": ["turret"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"drilling": {"name": "Drilling", "tier": 1, "prereqs": ["hand_tools"], "cost": {"bench_ticks": 1200, "essence": 0}, "unlocks": {"buildings": ["miner"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"conveyance": {"name": "Conveyance", "tier": 1, "prereqs": ["hand_tools"], "cost": {"bench_ticks": 1200, "essence": 0}, "unlocks": {"buildings": ["belt"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"smelting": {"name": "Smelting", "tier": 1, "prereqs": ["crude_refining"], "cost": {"bench_ticks": 1500, "essence": 0}, "unlocks": {"buildings": ["smelter"], "recipes": ["smelt_copper", "smelt_iron"], "rules": []}, "waste_mult": 1.0},
+	"storage_ports": {"name": "Storage Ports", "tier": 1, "prereqs": ["conveyance"], "cost": {"bench_ticks": 1200, "essence": 0}, "unlocks": {"buildings": ["storage_in", "storage_out"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+	"assembly": {"name": "Assembly", "tier": 2, "prereqs": ["smelting", "storage_ports"], "cost": {"bench_ticks": 3000, "essence": 20}, "unlocks": {"buildings": ["assembler"], "recipes": ["make_plate", "make_parts"], "rules": []}, "waste_mult": 1.0},
+	"advanced_recipes": {"name": "Advanced Recipes", "tier": 2, "prereqs": ["smelting"], "cost": {"bench_ticks": 3000, "essence": 15}, "unlocks": {"buildings": [], "recipes": ["essence_rounds"], "rules": []}, "waste_mult": 1.0},
+	"filters": {"name": "Output Filters", "tier": 2, "prereqs": ["storage_ports"], "cost": {"bench_ticks": 2400, "essence": 10}, "unlocks": {"buildings": [], "recipes": [], "rules": ["refine_cap"]}, "waste_mult": 1.0},
+	"high_throughput": {"name": "High Throughput", "tier": 3, "prereqs": ["assembly"], "cost": {"bench_ticks": 6000, "essence": 40}, "unlocks": {"buildings": [], "recipes": [], "rules": []}, "waste_mult": 1.25},
+	"bulk_refining": {"name": "Bulk Refining", "tier": 3, "prereqs": ["advanced_recipes"], "cost": {"bench_ticks": 6000, "essence": 40}, "unlocks": {"buildings": [], "recipes": [], "rules": []}, "waste_mult": 1.5},
+	"mass_assembly": {"name": "Mass Assembly", "tier": 3, "prereqs": ["high_throughput", "filters"], "cost": {"bench_ticks": 9000, "essence": 60}, "unlocks": {"buildings": [], "recipes": [], "rules": []}, "waste_mult": 1.3}
+}

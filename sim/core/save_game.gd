@@ -111,6 +111,7 @@ static func state_hash(sim: Simulation) -> int:
 		parts.append([b.id, b.def_id, b.cell, b.hp, b.condition, b.broken, b.input, b.output, b.ammo, b.ammo_policy])  # region ammo
 	parts.append(hash(sim.mutation.field))  # region mutation
 	parts.append(sim.logistics.state_parts())  # region A1d
+	parts.append(sim.research.state_parts())  # region R2a
 	return var_to_str(parts).hash()
 
 

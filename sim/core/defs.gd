@@ -67,6 +67,7 @@ var plants: Dictionary = {}
 var resources: Dictionary = {}
 var biomes: Dictionary = {}
 # endregion
+var research: Dictionary = {}  # region R2a
 
 static var _default: Defs = null
 
@@ -143,6 +144,12 @@ func load_from(dir: String) -> void:
 	if FileAccess.file_exists(dir + "biomes.json"):
 		biomes = _load_json(dir + "biomes.json")
 	# endregion
+	# region R2a
+	if FileAccess.file_exists(dir + "research.json"):
+		research = _load_json(dir + "research.json")
+		for e in Tech.validate(research, self):  # circular prereqs / bad ids are rejected at load
+			push_error("research.json: " + e)
+	# endregion
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -204,6 +211,7 @@ func duplicate_defs() -> Defs:
 	# endregion
 	d.resources = resources.duplicate(true)  # region A1b
 	d.biomes = biomes.duplicate(true)  # region A1b
+	d.research = research.duplicate(true)  # region R2a
 	return d
 
 
@@ -258,6 +266,7 @@ func validate() -> Array[String]:
 			for res_id: String in bw:
 				if not resources.has(res_id):
 					errs.append("biome %s: unknown resource %s" % [biome_id, res_id])
+	errs.append_array(Tech.validate(research, self))  # region R2a
 	return errs
 # endregion
 

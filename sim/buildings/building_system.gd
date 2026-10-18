@@ -41,6 +41,8 @@ func placement_error(def_id: String, c: Vector2i, check_cost := true) -> String:
 	if not sim.defs.buildings.has(def_id):
 		return "Unknown building"
 	var def: Dictionary = sim.defs.buildings[def_id]
+	if not sim.research.building_unlocked(def_id):  # region R2a
+		return "locked: " + sim.research.building_tech(def_id)
 	var on_node := bool(def.get("on_node", false))  # region A2a
 	var has_node := false
 	for y in int(def["size"][1]):
