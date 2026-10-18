@@ -41,7 +41,7 @@ func _ready() -> void:
 	hud.rule_toggled.connect(func(id: String, on: bool) -> void:
 		sim.set_rule(id, on)
 		hud.show_message(("Rule enabled: " if on else "Rule disabled: ") + str(sim.defs.rules[id]["name"]), 4.0))
-	hud.new_game_requested.connect(func() -> void: new_game(_random_seed()))
+	hud.new_game_requested.connect(_o3_open_dialog)  # region O3
 	hud.colonist_card_pressed.connect(_select_colonist)
 	hud.overlay_toggled.connect(func(on: bool) -> void: world.show_field = on)  # region batch3 ui
 	hud.patrol_undo.connect(func() -> void:
@@ -144,6 +144,25 @@ func _close_meta() -> void:
 	if _meta_layer != null:
 		_meta_layer.queue_free()
 		_meta_layer = null
+# endregion
+
+
+# region O3
+var _o3_layer: CanvasLayer
+
+
+func _o3_open_dialog() -> void:
+	if _o3_layer != null:
+		return
+	_o3_layer = CanvasLayer.new()
+	_o3_layer.layer = 61
+	add_child(_o3_layer)
+	var dlg := NewGameDialog.new(MetaStore.load_state(), func(m: MetaState) -> void: MetaStore.save_state(m))
+	dlg.start_requested.connect(func(o: Dictionary) -> void:
+		_o3_layer.queue_free()
+		_o3_layer = null
+		new_game(_random_seed(), o))
+	_o3_layer.add_child(dlg)
 # endregion
 
 

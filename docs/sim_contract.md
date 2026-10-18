@@ -122,6 +122,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `items.json` | id -> {name, color, stack, value} |
 | `jobs.json` | flee/repair/operate/haul/mine tuning |
 | `meta.json` | legacy, next_batch, scout_cells, unlocks (cross-run meta, enters the sim via `opts`) |
+| `presets.json` | default, order, presets{id: name, sentence, wave_strength_mult, waste_mult, starting_debt_mult, crate, hint_density} (O3; become opts `wave_mult`, `waste_mult`, `debt_mult`, `crate`, `hint_density` via `StartOpts.preset_opts`; neutral values emit no key, so standard_term = `{}`) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
 | `models.json` | art model descriptors (view only, not read by sim) |
 | `mood.json` | base, check_ticks, thresholds, chances, thoughts |
@@ -155,7 +156,7 @@ Saves are command-log replays, not state snapshots:
 - Replay: new sim with `seed`/`opts`, `start_new_game()`, `replaying = true`; loop: apply every command with `cmd.tick <= sim.tick` in log order;
   stop when `sim.tick >= tick` or game over; else `step()`. Float args become ints; `opts` keys `scout`, `site`, `crate{}` are int-normalised. Then `replaying = false`.
 - `defs_hash`: hash of sorted-key JSON of every Dictionary property of `Defs` (GD `String.hash()`). Only equality with the same engine's defs matters; cross-engine saves are unsupported.
-- `opts`: `scout`, `site`, `crate` (item->count), `map_w`, `map_h`, meta unlock flags; consumed by `StartOpts.apply` and part of the replay input.
+- `opts`: `scout`, `site`, `crate` (item->count), `wave_mult` (raid points x), `waste_mult` (contamination x), `debt_mult` (starting debt x), `hint_density` (ignored by sim), `map_w`, `map_h`, meta unlock flags; consumed by `StartOpts.apply` and part of the replay input.
 
 ### 7b. Campaign save v3 (`SaveGame.campaign_to_dict`, R4 expeditions)
 Sim saves stay v2. A campaign save is `{version:3, campaign_seed, defs_hash, tick, active, log, maps, ledgers, in_flight}`;

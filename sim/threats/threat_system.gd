@@ -87,11 +87,18 @@ func colony_wealth() -> float:
 
 ## Raid points: the colony's wealth and growth is what calls the creatures.
 func raid_points(index: int) -> float:
-	return _attract_mult() * sim.crises.mult("raid_points_mult") * (float(cfg["base_strength"]) \
+	return _o3_mult() * _attract_mult() * sim.crises.mult("raid_points_mult") * (float(cfg["base_strength"]) \
 		+ float(cfg["per_wave"]) * (index - 1) \
 		+ float(cfg["per_wealth"]) * colony_wealth() \
 		+ float(cfg["per_refined"]) * sim.ledger.get_count("recipe:refined_essence") \
 		+ float(cfg["per_contamination"]) * sim.contamination.level)
+
+
+# region O3
+## Difficulty preset multiplier (start opt wave_mult); exactly 1.0 when absent.
+func _o3_mult() -> float:
+	return float(sim.opts.get("wave_mult", 1.0))
+# endregion
 
 
 ## Perk threat_attract: mean over living colonists, applied to the whole raid budget.

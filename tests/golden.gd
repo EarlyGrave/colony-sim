@@ -10,7 +10,8 @@ extends RefCounted
 const STEP := 100
 const TOTAL := 3000
 const Scen := preload("res://tests/scenario.gd")
-const NAMES: Array[String] = ["peaceful_mining", "raid_turrets", "automation_chain", "contamination_crisis", "save_load_midgame"]
+const NAMES: Array[String] = ["peaceful_mining", "raid_turrets", "automation_chain", "contamination_crisis", "save_load_midgame",
+		"preset_short_stay", "preset_standard_term", "preset_hard_time"]  # region O3
 
 ## name -> {seed, peaceful, opts, reload_at}. Keep crate keys alphabetical: JSON.stringify sorts them and crate drop order matters.
 const SPECS := {
@@ -19,6 +20,11 @@ const SPECS := {
 	"automation_chain": {"seed": 3, "peaceful": true, "opts": {"crate": {"essence_ore": 200}}, "reload_at": 0},
 	"contamination_crisis": {"seed": 4, "peaceful": false, "opts": {"contamination": 55.0, "crate": {"essence_ore": 120}}, "reload_at": 0},
 	"save_load_midgame": {"seed": 5, "peaceful": true, "opts": {"crate": {"essence_ore": 100, "refined_essence": 20}}, "reload_at": 1500},
+	# region O3: raid_turrets script under each preset (opts from StartOpts.preset_opts; crates keep alphabetical keys)
+	"preset_short_stay": {"seed": 2, "peaceful": false, "opts": {"wave_mult": 0.75, "waste_mult": 0.8, "debt_mult": 0.7, "crate": {"essence_ore": 40, "raw_food": 30}, "hint_density": "full"}, "reload_at": 0},
+	"preset_standard_term": {"seed": 2, "peaceful": false, "opts": {}, "reload_at": 0},
+	"preset_hard_time": {"seed": 2, "peaceful": false, "opts": {"wave_mult": 1.3, "waste_mult": 1.25, "debt_mult": 1.3, "hint_density": "off"}, "reload_at": 0},
+	# endregion
 }
 
 
@@ -182,7 +188,8 @@ static func write_golden(name: String, spec: Dictionary, res: Dictionary) -> voi
 # --- Scenario scripts (generation only): commands go through Simulation methods ---
 
 static func script_for(name: String) -> Callable:
-	return func(sim: Simulation, tick: int) -> void: _script(name, sim, tick)
+	var base := "raid_turrets" if name.begins_with("preset_") else name  # region O3
+	return func(sim: Simulation, tick: int) -> void: _script(base, sim, tick)
 
 
 static func _script(name: String, sim: Simulation, tick: int) -> void:

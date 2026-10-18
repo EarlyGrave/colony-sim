@@ -11,6 +11,7 @@ var best_days := 0
 var owned: Array = []  # unlock ids
 var crate := ""  # selected crate unlock id ("" = none)
 var last_run: Dictionary = {}  # summary of the previous run
+var preset := "standard_term"  # region O3: selected difficulty preset id
 
 
 func _init(p_defs: Defs = null) -> void:
@@ -74,6 +75,7 @@ func make_opts() -> Dictionary:
 		o["start_rules"] = rules
 	if crate != "" and owned.has(crate):
 		o["crate"] = (un[crate]["items"] as Dictionary).duplicate()
+	StartOpts.merge_preset(o, defs, preset)  # region O3
 	return o
 
 
@@ -88,7 +90,7 @@ func make_next_batch() -> Dictionary:
 
 func to_dict() -> Dictionary:
 	return {"version": 1, "balance": balance, "total": total_earned, "runs": runs,
-		"best_days": best_days, "owned": owned, "crate": crate, "last_run": last_run}
+		"best_days": best_days, "owned": owned, "crate": crate, "last_run": last_run, "preset": preset}
 
 
 func load_dict(d: Dictionary) -> void:
@@ -98,6 +100,7 @@ func load_dict(d: Dictionary) -> void:
 	best_days = int(d.get("best_days", 0))
 	owned = (d.get("owned", []) as Array).duplicate()
 	crate = str(d.get("crate", ""))
+	preset = str(d.get("preset", "standard_term"))  # region O3
 	last_run = (d.get("last_run", {}) as Dictionary).duplicate(true)
 	for k in ["seed", "days", "legacy", "site"]:
 		if last_run.has(k):
