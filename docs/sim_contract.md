@@ -81,6 +81,8 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `pay_debt` | colonist_id: int, amount: int | bool | essence in storage, debt open (ledger sink "debt") |
 | `set_quota` | colonist_id: int, per_day: int | bool | colonist has debt; 0 = off |
 | `choose_payoff` | colonist_id: int, stay: bool | bool | debt fully paid, choice pending |
+| `dispatch_party` | ids: [int], supplies: {item: n} (logged as JSON text) | Dictionary {ok, crew[], supplies{}} | R4b: all ids alive and distinct, supplies in storage; atomic (failure = no change). Removes colonists, consumes supplies (ledger sink `expedition`); crew snapshots {name, engineer, skills, passions} |
+| `receive_cargo` | items: {item: n} (logged as JSON text), radius: int | int (lost count) | R4b: spawns a crate near HQ (cell via `sim.rng`), ledger source `cargo`; items without room are recorded as `lost` |
 | `set_patrol_route_text` | text: str ("x,y;x,y") | void | empty = automatic ring around the base |
 | `purify_cell` | c: cell | bool | spends refined essence, cleans the field around c |
 
