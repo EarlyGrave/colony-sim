@@ -331,6 +331,9 @@ func _spawn(def_id: String, c: Vector2i) -> Enemy:
 
 func _tick_enemy(e: Enemy) -> void:
 	e.attack_cd = maxi(0, e.attack_cd - 1)
+	var biting := _attack_structure(e)  # region T3
+	if biting and e.target_kind == Enemy.Target.NONE:
+		return
 	if sim.tick >= e.retarget_at or not _target_valid(e):
 		_choose_target(e)
 		retarget_count += 1  # region perf-threat
@@ -442,12 +445,20 @@ func _tick_turrets() -> void:
 		var from: Vector2 = b.center()
 		var target: Enemy = null
 		var best_d := float(t["range"])
+		var range_max := best_d  # region T3
 		# region perf-threat: nearest in range; ties go to the newest (same as the old full scan)
+		var mode := sim.get_rule_mode("turret_target_mode")  # region T3
 		for e: Enemy in hash.query(from, best_d):
 			if e.leaving:
 				continue
 			var d := Vector2(e.cell).distance_to(from)
-			if d < best_d or (d == best_d and (target == null or e.id > target.id)):
+			if d > range_max:  # region T3
+				continue
+			if mode != "nearest" and mode != "":  # region T3
+				if target == null or _turret_prefers(mode, e, target, d, best_d):
+					best_d = d
+					target = e
+			elif d < best_d or (d == best_d and (target == null or e.id > target.id)):
 				best_d = d
 				target = e
 		# endregion
@@ -550,4 +561,48 @@ func _leave_step(e: Enemy) -> int:
 			return GridMover.Move.FAILED
 		f = pf.flow_to(key, sources)
 	return e.move_flow(f, sim)
+# endregion
+
+# region T3
+## Hook: a creature next to a belt tile bites it (`structure_dmg` in enemies.json, data/balance
+## line_damage.enabled). Own cooldown, so normal attacks are untouched. True if it bit this tick.
+## O(5) array reads per enemy; skipped entirely when there are no belts.
+func _attack_structure(e: Enemy) -> bool:
+	var belts := sim.logistics.belts
+	if belts.belt_count == 0 or int(e.get_meta("bite_cd", 0)) > sim.tick:  # meta: golden dumps list script properties
+		return false
+	var dmg := float(e.def.get("structure_dmg", 0.0))
+	if dmg <= 0.0 or not bool(sim.defs.balance["line_damage"]["enabled"]):
+		return false
+	for off: Vector2i in BeltGrid.BITE_OFFSETS:
+		var c := e.cell + off
+		if belts.has_belt(c) and belts.hp[belts.index(c)] > 0.0:
+			e.set_meta("bite_cd", sim.tick + int(e.def["attack_cooldown_ticks"]))
+			return sim.logistics.damage_belt(c, dmg * sim.mutation.enemy_damage_mult(e.cell))
+	return false
+
+
+## Turret preference for non-"nearest" modes; `d`/`cur_d` are distances of e / cur to the turret.
+func _turret_prefers(mode: String, e: Enemy, cur: Enemy, d: float, cur_d: float) -> bool:
+	if mode == "weakest":
+		return e.hp < cur.hp or (e.hp == cur.hp and e.id < cur.id)
+	# "threatening": the enemy closest to the most valuable building
+	var anchor := _threat_anchor()
+	var de := Vector2(e.cell).distance_squared_to(anchor)
+	var dc := Vector2(cur.cell).distance_squared_to(anchor)
+	return de < dc or (de == dc and e.id < cur.id)
+
+
+func _threat_anchor() -> Vector2:
+	var cached: Array = get_meta("t3_anchor", [-1, Vector2.ZERO])  # meta: keeps state dumps unchanged
+	if cached[0] != sim.tick:
+		var best: Building = null
+		for b: Building in sim.buildings.list:
+			if b.def.has("turret"):
+				continue
+			if best == null or int(b.def.get("threat_priority", 0)) > int(best.def.get("threat_priority", 0)):
+				best = b
+		cached = [sim.tick, best.center() if best != null else Vector2.ZERO]
+		set_meta("t3_anchor", cached)
+	return cached[1]
 # endregion

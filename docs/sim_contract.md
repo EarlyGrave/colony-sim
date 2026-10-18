@@ -49,7 +49,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `set_zone` | c: cell, zone_id: str | bool | `""` clears; else cell passable, unoccupied, zone in `zones.json` |
 | `place_building` | def_id: str, c: cell | Blueprint or null | def exists and `buildable`; `placement_error(def,c,false)` empty (research gate pending R2a) |
 | `deconstruct` | c: cell | bool | building at c removed, partial refund |
-| `set_rule` | rule_id: str, on: bool | void | rule in `rules.json`; emits `rule_changed` only on change |
+| `set_rule` | rule_id: str, on: bool \| mode: str | void | rule in `rules.json`; emits `rule_changed` only on change. Rules with `modes` (`turret_target_mode`: nearest/threatening/weakest, `repair_priority`: nearest/belts/machines/turrets) take a mode string, invalid ignored; read via `get_rule_mode(id)` |
 | `set_alarm` | on: bool | void | emits `alarm_changed` only on change |
 | `place_belt` | cells: [cell], last_dir: int | bool | atomic: non-empty, dir 0..3 (N,E,S,W), no repeats, each cell free (passable, no building or blueprint), consecutive cells 4-adjacent |
 | `remove_belt` | cells: [cell] | bool | true if any belt removed |
@@ -127,7 +127,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `recipes.json` | id -> {name, inputs{}, outputs{}, work_ticks, station} |
 | `research.json` | techs id -> {name, tier, prereqs[], cost{essence}, bench_ticks, unlocks{buildings,recipes,rules}, waste_mult} |
 | `resources.json` | id -> {item, tier, biomes, base_rate, purity_mult} (infinite nodes) |
-| `rules.json` | id -> {name, default: bool, ...} player rules (`set_rule`) |
+| `rules.json` | id -> {name, default: bool (or mode string when `modes` present), hidden?, ...} player rules (`set_rule`) |
 | `skills.json` | max_level, xp_base, xp_step, xp_per_work_tick, speed_per_level, passion_xp |
 | `time.json` | start_hour, dawn/dusk hours, night_daylight |
 | `traits.json` | traits id -> {effects} |
@@ -151,7 +151,10 @@ Saves are command-log replays, not state snapshots:
 An `int` hash of observable state. Parts in order: `[tick, game_over_reason, alarm]`; each `items.stacks` entry `[cell, stack]` (insertion order);
 each colonist in `colonists.list` `[id, cell, hp, alive, carry_item, carry_count, carry_quality, learned_perks]`; each building in `buildings.list`
 `[id, def_id, cell, hp, condition, broken, input, output, output_q]` and again `[..., output, ammo, ammo_policy]`; `hash(mutation.field)`;
-`logistics.state_parts()` = `[belt_count, belts.state_hash()]`.
+`logistics.state_parts()` = `[belt_count, belts.state_hash()]`. Belt hp joins the hash only for tiles with hp != max (undamaged belts hash as before).
+
+### Line damage (T3, `balance.json` `line_damage`)
+`BeltGrid.hp` dense PackedFloat32Array (max `belt_hp`); hp < `stall_frac` x max: tile stops moving items; hp 0 stays as a broken marker (belt kept) until repaired. Creatures bite adjacent belt tiles (`structure_dmg` in `enemies.json`, own `bite_cd`, hook `ThreatSystem._attack_structure`). Machines get `broken` below `machine_broken_frac` hp. `RepairJob` (building or `RepairJob.for_belt(cell)`, reservation `rep:belt:x,y`) pays `belt_repair_cost`/`machine_repair_cost` (building def `repair_cost` overrides) from stored items, only for structural damage; the giver offers it only if affordable.
 (GD) Today it is `var_to_str(parts).hash()` (Godot text serialisation, 32-bit string hash): engine-specific, a port cannot match it bit for bit.
 Portable definition for cross-engine comparison: canonical JSON of the same parts (UTF-8, no whitespace, object keys sorted, ints as ints, floats as shortest
 round-trip decimal, cells as `[x,y]`) fed to a stable hash such as FNV-1a 64. Switching changes every golden (`tests/golden/`, R1b), so it is deferred.

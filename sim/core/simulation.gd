@@ -90,7 +90,7 @@ func _init(p_seed: int, p_bus: Object, p_defs: Defs = null, p_opts: Dictionary =
 	defs = p_defs if p_defs != null else Defs.get_default()
 	ticks_per_day = int(defs.balance["ticks_per_day"])
 	for id: String in defs.rules:
-		rules[id] = bool(defs.rules[id]["default"])
+		rules[id] = defs.rules[id]["default"] if defs.rules[id].has("modes") else bool(defs.rules[id]["default"])  # region T3
 
 
 ## Generates the map and places the starting colony.
@@ -286,12 +286,25 @@ func deconstruct(c: Vector2i) -> bool:
 	return buildings.deconstruct(c)
 
 
-func set_rule(rule_id: String, on: bool) -> void:
+func set_rule(rule_id: String, on: Variant) -> void:
 	_record("set_rule", [rule_id, on])  # save-load
+	# region T3: mode rules (defs "modes") take a mode string, e.g. turret_target_mode
+	if defs.rules.get(rule_id, {}).has("modes"):
+		if str(on) in defs.rules[rule_id]["modes"] and rules.get(rule_id) != str(on):
+			rules[rule_id] = str(on)
+			bus.rule_changed.emit(rule_id, true)
+		return
+	on = bool(on)
+	# endregion
 	if not rules.has(rule_id) or rules[rule_id] == on or (on and not research.rule_unlocked(rule_id)):  # region R2a
 		return
 	rules[rule_id] = on
 	bus.rule_changed.emit(rule_id, on)
+
+
+## Current mode of a mode rule (region T3).
+func get_rule_mode(rule_id: String) -> String:
+	return str(rules.get(rule_id, ""))
 
 
 func is_rule_on(rule_id: String) -> bool:

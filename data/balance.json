@@ -59,6 +59,15 @@
 		"chance": 0.25,
 		"quiet_before_wave_ticks": 150
 	},
+	"line_damage": {
+		"enabled": true,
+		"belt_hp": 40,
+		"stall_frac": 0.3,
+		"machine_broken_frac": 0.25,
+		"repair_ticks": 40,
+		"belt_repair_cost": {"plate": 1},
+		"machine_repair_cost": {"plate": 2}
+	},
 	"threat": {
 		"enabled": true,
 		"awaken_mined_total": 60,

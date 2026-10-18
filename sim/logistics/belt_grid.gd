@@ -19,6 +19,18 @@ var destroyed := 0
 var belt_count := 0
 var item_count := 0
 
+# region T3
+const BITE_OFFSETS: Array[Vector2i] = [Vector2i(0, 0), Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+## Per-tile hit points (dense, 0 where no belt). Below `stall_hp` the tile stops moving.
+var hp: PackedFloat32Array
+var max_hp := 40.0
+var stall_hp := 12.0
+## Cells whose hp changed since the view last looked (cache only, not hashed).
+var hp_dirty: Dictionary = {}
+## Indices of damaged tiles (insertion ordered; for repair givers).
+var hp_damaged: Dictionary = {}
+# endregion
+
 var _memo: PackedByteArray
 var _claim: PackedInt32Array
 
@@ -40,6 +52,8 @@ func _init(w: int, h: int, p_ticks_per_cell: int = 5) -> void:
 	_memo.resize(n)
 	_claim = PackedInt32Array()
 	_claim.resize(n)
+	hp = PackedFloat32Array()  # region T3
+	hp.resize(n)
 
 
 func index(c: Vector2i, level: int = 0) -> int:
@@ -74,6 +88,7 @@ func set_belt(c: Vector2i, d: int, level: int = 0) -> bool:
 	var i := index(c, level)
 	if dir[i] == 255:
 		belt_count += 1
+		hp[i] = max_hp  # region T3
 	dir[i] = d
 	return true
 
@@ -90,6 +105,8 @@ func remove_belt(c: Vector2i, level: int = 0) -> int:
 	item[i] = -1
 	progress[i] = 0
 	dir[i] = 255
+	hp[i] = 0.0  # region T3
+	hp_damaged.erase(i)
 	belt_count -= 1
 	return it
 
@@ -153,7 +170,7 @@ func _resolve(i: int) -> bool:
 		return false
 	_memo[i] = 1
 	var ok := false
-	if item[i] >= 0 and progress[i] >= ticks_per_cell:
+	if item[i] >= 0 and progress[i] >= ticks_per_cell and hp[i] >= stall_hp:  # region T3: damaged tile stalls
 		var t := _target(i)
 		if t >= 0 and _claim[t] == 0 and (item[t] < 0 or _resolve(t)):
 			if _claim[t] == 0:
@@ -195,4 +212,39 @@ func state_hash() -> int:
 			h = (h * 31 + i * 7 + dir[i]) & 0x7fffffff
 			h = (h * 31 + item[i] + 1) & 0x7fffffff
 			h = (h * 31 + progress[i]) & 0x7fffffff
+			if hp[i] != max_hp:  # region T3: undamaged belts hash as before
+				h = (h * 31 + int(hp[i] * 100.0) + 1) & 0x7fffffff
 	return h
+
+
+# region T3
+func hp_at(c: Vector2i) -> float:
+	return hp[index(c)] if has_belt(c) else -1.0
+
+
+func is_stalled(c: Vector2i) -> bool:
+	return has_belt(c) and hp[index(c)] < stall_hp
+
+
+func is_damaged(c: Vector2i) -> bool:
+	return has_belt(c) and hp[index(c)] < max_hp
+
+
+## Bite a belt tile; true if it was a belt. The tile stays (hp floor 0) as a broken marker.
+func damage_belt(c: Vector2i, amount: float) -> bool:
+	if not has_belt(c):
+		return false
+	var i := index(c)
+	hp[i] = maxf(0.0, hp[i] - amount)
+	hp_dirty[i] = true
+	hp_damaged[i] = true
+	return true
+
+
+func repair_belt(c: Vector2i) -> void:
+	if has_belt(c):
+		var i := index(c)
+		hp[i] = max_hp
+		hp_dirty[i] = true
+		hp_damaged.erase(i)
+# endregion

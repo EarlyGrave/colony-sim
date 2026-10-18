@@ -15,6 +15,11 @@ func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	var cfg: Dictionary = sim.defs.balance.get("automation", {})
 	belts = BeltGrid.new(sim.map.width, sim.map.height, int(cfg.get("belt_ticks_per_cell", 5)))
+	# region T3
+	var ld: Dictionary = sim.defs.balance.get("line_damage", {})
+	belts.max_hp = float(ld.get("belt_hp", 40))
+	belts.stall_hp = belts.max_hp * float(ld.get("stall_frac", 0.3))
+	# endregion
 
 
 func tick() -> void:
@@ -93,3 +98,24 @@ func dir_at(c: Vector2i) -> int:
 ## Deterministic snapshot for SaveGame.state_hash.
 func state_parts() -> Array:
 	return [belts.belt_count, belts.state_hash()]
+
+# region T3
+## Belt tile bite (ThreatSystem._attack_structure). Emits nothing; stall is derived from hp.
+func damage_belt(c: Vector2i, amount: float) -> bool:
+	return belts.damage_belt(c, amount)
+
+
+## Pay the repair cost from stored items and restore the tile; false if unaffordable.
+func repair_belt(c: Vector2i) -> bool:
+	if not belts.is_damaged(c):
+		return false
+	var cost: Dictionary = sim.defs.balance["line_damage"]["belt_repair_cost"]
+	if not sim.buildings.pay_repair(cost, c):
+		return false
+	belts.repair_belt(c)
+	return true
+
+
+func belt_needs_repair(c: Vector2i) -> bool:
+	return belts.is_damaged(c)
+# endregion

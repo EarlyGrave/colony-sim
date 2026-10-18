@@ -16,7 +16,8 @@ uniform sampler2D tile : filter_nearest, repeat_enable, source_color;
 uniform float scroll = 0.0;
 uniform vec4 tint : source_color = vec4(1.0);
 varying float d;
-void vertex() { d = INSTANCE_CUSTOM.x; }
+varying float dmg;  // T3
+void vertex() { d = INSTANCE_CUSTOM.x; dmg = INSTANCE_CUSTOM.y; }
 void fragment() {
 	vec2 dv = vec2(0.0, -1.0);
 	if (d > 0.5 && d < 1.5) dv = vec2(1.0, 0.0);
@@ -25,7 +26,7 @@ void fragment() {
 	vec2 l = UV - vec2(0.5);
 	float a = dot(l, dv);
 	float b = dot(l, vec2(-dv.y, dv.x));
-	ALBEDO = texture(tile, vec2(a + 0.5 - scroll, b + 0.5)).rgb * tint.rgb;
+	ALBEDO = mix(texture(tile, vec2(a + 0.5 - scroll, b + 0.5)).rgb, vec3(0.8, 0.15, 0.1), dmg * 0.6) * tint.rgb;  // T3
 }
 """
 
@@ -173,6 +174,13 @@ func sync(delta: float, tint: Color, view_chunks: Array[Vector2i]) -> void:
 					_dirty[ci] = true
 					break
 		_last_dir = belts.dir.duplicate()
+	# region T3: damaged / repaired tiles re-tint their chunk
+	for i: int in belts.hp_dirty:
+		var cx := (i % belts.width) / ChunkLayer.CHUNK
+		var cy := (i / belts.width) / ChunkLayer.CHUNK
+		_dirty[cy * cols + cx] = true
+	belts.hp_dirty.clear()
+	# endregion
 	for ci: int in _dirty.keys():
 		_rebuild_belts(ci)
 	_dirty.clear()
@@ -200,7 +208,7 @@ func _rebuild_belts(ci: int) -> void:
 	for i in cells.size():
 		var c := cells[i]
 		mm.set_instance_transform(i, Transform3D(Basis(), Vector3(c.x + 0.5, BELT_Y, c.y + 0.5)))
-		mm.set_instance_custom_data(i, Color(float(belts.dir[c.y * belts.width + c.x]), 0, 0, 0))
+		mm.set_instance_custom_data(i, Color(float(belts.dir[c.y * belts.width + c.x]), 1.0 - belts.hp[c.y * belts.width + c.x] / belts.max_hp, 0, 0))  # T3
 
 
 func _update_items(ci: int) -> void:
