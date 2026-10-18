@@ -218,3 +218,6 @@ State: `step` (0..12, 12 = finished), `done[]`, `skipped`, `ticks_in_step`, `see
 Each step advances only on its `done.signal` (ack command, 3 mine designations, 4 zone cells, 10 stored ore after `item_mined`, workbench/refinery placed, `first_refine_done`, `research_completed`, >=3 belts + an item arriving in a port building, `forecast_revealed` or ack, `wave_repelled` with player alarm or a turret, decoy placed or `wave_incoming`, ack).
 Normal waves are held (`waves_held()`) until the audit step; entering it calls `threats.schedule_scripted(delay)`: raid `tutorial_audit` (2 crawlers, 1800-tick limit, always counts as repelled, pod takes 0 damage, inmates take 0 damage).
 View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`, `step_count()`.
+
+## C3 telegraphed attacks (`ThreatSystem` region C3)
+`data/enemies.json` `telegraph {windup_ticks, shape cell|line|area, radius|length, dmg_mult}` (brute area r1/20, spitter line 6/14, burrower cell/24, crawler none). When an enemy in range would strike, it stands still, locks the marked cells (`e` meta `tg`, no rng) and after `windup_ticks` hits every colonist/the target building still inside them; units that left are untouched. A killed enemy cancels its strike. `telegraphs()` (view) and `telegraph_state()` (appended to `state_hash` only while a wind-up is active).

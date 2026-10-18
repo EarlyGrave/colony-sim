@@ -118,6 +118,9 @@ static func state_hash(sim: Simulation) -> int:
 	parts.append(sim.milestones.state_parts())  # region R2b
 	if sim.tutorial != null:  # region O1: only in tutorial mode, so other hashes stay as they were
 		parts.append(sim.tutorial.state_parts())
+	var tgs: Array = sim.threats.telegraph_state()  # region C3: only while a wind-up is active
+	if not tgs.is_empty():
+		parts.append(tgs)
 	return var_to_str(parts).hash()
 
 

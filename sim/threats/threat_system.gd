@@ -392,6 +392,9 @@ func _spawn(def_id: String, c: Vector2i) -> Enemy:
 
 func _tick_enemy(e: Enemy) -> void:
 	e.attack_cd = maxi(0, e.attack_cd - 1)
+	if e.has_meta("tg"):  # region C3: winding up, stand still
+		_c3_wind(e)
+		return
 	var biting := _attack_structure(e)  # region T3
 	if biting and e.target_kind == Enemy.Target.NONE:
 		return
@@ -412,7 +415,9 @@ func _tick_enemy(e: Enemy) -> void:
 		var b := e.target_b  # region perf-threat
 		if b.distance_to(Vector2(e.cell)) <= range_:
 			e.clear_path()
-			if e.attack_cd == 0:
+			if e.attack_cd == 0 and _c3_begin(e, b.nearest_cell_to(e.cell)):  # region C3
+				pass
+			elif e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
 				if not (b.def.get("critical", false) and _scripted("hq_immune")):  # region O1
 					sim.buildings.damage(b, float(e.def["damage"]) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell))
@@ -422,7 +427,9 @@ func _tick_enemy(e: Enemy) -> void:
 		var c := e.target_c  # region perf-threat
 		if Vector2(c.cell).distance_to(Vector2(e.cell)) <= range_:
 			e.clear_path()
-			if e.attack_cd == 0:
+			if e.attack_cd == 0 and _c3_begin(e, c.cell):  # region C3
+				pass
+			elif e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
 				# region perks: dodge_chance avoids melee hits
 				var dodge := sim.perks.mod(c, "dodge_chance")
@@ -721,4 +728,78 @@ func _threat_anchor() -> Vector2:
 		cached = [sim.tick, best.center() if best != null else Vector2.ZERO]
 		set_meta("t3_anchor", cached)
 	return cached[1]
+# endregion
+
+
+# region C3 telegraphed attacks
+## Deterministic wind-up (no rng): the marked cells are fixed when the wind-up starts, the hit lands
+## on whatever stands in them when it ends. Data: enemies.json `telegraph {windup_ticks, shape, size}`.
+## State lives in enemy meta "tg" = {left, total, cells} so golden dumps / save stay unchanged.
+func _c3_begin(e: Enemy, at: Vector2i) -> bool:
+	var tg: Dictionary = e.def.get("telegraph", {})
+	if tg.is_empty():
+		return false
+	var cells: Array[Vector2i] = []
+	var size := int(tg.get("radius", 0))
+	match String(tg.get("shape", "cell")):
+		"line":
+			var d := at - e.cell
+			var n := maxi(absi(d.x), absi(d.y))
+			for i in range(1, maxi(int(tg.get("length", n)), n) + 1):
+				cells.append(e.cell + Vector2i(roundi(float(d.x * i) / maxi(n, 1)), roundi(float(d.y * i) / maxi(n, 1))))
+		"area":
+			for dx in range(-size, size + 1):
+				for dy in range(-size, size + 1):
+					cells.append(at + Vector2i(dx, dy))
+		_:
+			cells.append(at)
+	var total := maxi(1, int(tg.get("windup_ticks", 1)))
+	e.set_meta("tg", {"left": total, "total": total, "cells": cells, "mult": float(tg.get("dmg_mult", 1.0))})
+	e.clear_path()
+	return true
+
+
+func _c3_wind(e: Enemy) -> void:
+	var tg: Dictionary = e.get_meta("tg")
+	tg["left"] = int(tg["left"]) - 1
+	if int(tg["left"]) > 0:
+		return
+	e.remove_meta("tg")
+	e.attack_cd = int(e.def["attack_cooldown_ticks"])
+	var cells: Array[Vector2i] = tg["cells"]
+	var dmg := float(e.def["damage"]) * float(tg.get("mult", 1.0)) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell)
+	var b := e.target_b
+	if e.target_kind == Enemy.Target.BUILDING and b != null and not b.destroyed:
+		for c in b.footprint():
+			if cells.has(c):
+				if not (b.def.get("critical", false) and _scripted("hq_immune")):
+					sim.buildings.damage(b, dmg)
+				break
+	# every colonist still standing in a marked cell is hit once (area / line hit several)
+	for col in sim.colonists.list:
+		if not col.alive or not cells.has(col.cell) or _scripted("colonist_harmless"):
+			continue
+		var dodge := sim.perks.mod(col, "dodge_chance")
+		if dodge > 0.0 and not e.def.get("ranged", false) and sim.rng.randf() < dodge:
+			continue
+		sim.health.apply_damage(col, dmg, "", str(e.def.get("damage_kind", "bite")))
+
+
+## View: [{id, cells, frac}] for enemies winding up (frac 1 = just started, 0 = lands).
+func telegraphs() -> Array:
+	return _c3_list(false)
+
+
+## Stable state for hashing: only active wind-ups.
+func telegraph_state() -> Array:
+	return _c3_list(true)
+
+
+func _c3_list(full: bool) -> Array:
+	var out: Array = []
+	for e: Enemy in enemies:
+		if e.has_meta("tg"):
+			var tg: Dictionary = e.get_meta("tg")
+			out.append([e.id, tg["left"]] if full else {"id": e.id, "cells": tg["cells"], "frac": float(tg["left"]) / float(tg["total"])})
+	return out
 # endregion
