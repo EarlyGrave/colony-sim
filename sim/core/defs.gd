@@ -76,6 +76,7 @@ var biomes: Dictionary = {}
 # endregion
 var research: Dictionary = {}  # region R2a
 var chips: Dictionary = {}  # region T4
+var roles: Dictionary = {}  # region C1
 
 static var _default: Defs = null
 
@@ -167,6 +168,7 @@ func load_from(dir: String) -> void:
 	if FileAccess.file_exists(dir + "chips.json"):
 		chips = _load_json(dir + "chips.json")
 	# endregion
+	roles = _load_json(dir + "roles.json")  # region C1
 
 
 ## Deep copy, safe to modify (for test scenarios / difficulty presets).
@@ -235,6 +237,7 @@ func duplicate_defs() -> Defs:
 	d.biomes = biomes.duplicate(true)  # region A1b
 	d.research = research.duplicate(true)  # region R2a
 	d.chips = chips.duplicate(true)  # region T4
+	d.roles = roles.duplicate(true)  # region C1
 	return d
 
 

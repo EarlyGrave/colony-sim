@@ -85,6 +85,7 @@ var tutorial: TutorialSystem
 var in_step := false
 # endregion
 var chips: ChipSystem  # region R4b
+var squads: SquadSystem  # region C1
 ## True for buildings whose recipes produce waste (refinery, smelter): refining class.
 func is_refining_building(def_id: String) -> bool:
 	var d: Dictionary = defs.buildings.get(def_id, {})
@@ -298,6 +299,7 @@ func _init_systems() -> void:
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	chips = ChipSystem.new(self)  # region T4
+	squads = SquadSystem.new(self)  # region C1
 	if bool(opts.get("tutorial", false)):  # region O1
 		tutorial = TutorialSystem.new(self)
 
@@ -374,6 +376,7 @@ func step() -> void:
 	debt.tick()  # region debt
 	mood.tick()  # region mood
 	threats.tick()
+	squads.tick()  # region C1
 	contamination.tick()
 	mutation.tick()  # region mutation
 	ecology.tick()  # region T5
@@ -683,6 +686,30 @@ func order_move(colonist_id: int, cell: Vector2i) -> bool:
 func order_attack(colonist_id: int, enemy_id: int) -> bool:
 	_record("order_attack", [colonist_id, enemy_id])  # save-load
 	return combat.order_attack(colonists.get_by_id(colonist_id), enemy_id)
+# region C1
+## Squads (sim/squads). `ids_in` / `roles_in`: Array or JSON text (recorded as text). Empty roles = auto by affinity.
+## Returns the squad id, or -1 if rejected (unknown/dead/already squadded member, > max size, bad role).
+func form_squad(ids_in: Variant, roles_in: Variant = "[]") -> int:
+	_record("form_squad", [_arg_text(ids_in), _arg_text(roles_in)])  # save-load
+	return squads.form(_arg_array(ids_in), _arg_array(roles_in))
+
+
+func disband_squad(sid: int) -> bool:
+	_record("disband_squad", [sid])  # save-load
+	return squads.disband(sid)
+
+
+## Members walk to `cell` + their role offset (nearest free passable cell) and hold; clears focus.
+func squad_hold(sid: int, cell: Vector2i) -> bool:
+	_record("squad_hold", [sid, cell])  # save-load
+	return squads.hold(sid, cell)
+
+
+## All non-medic members attack enemy `enemy_id`.
+func squad_focus(sid: int, enemy_id: int) -> bool:
+	_record("squad_focus", [sid, enemy_id])  # save-load
+	return squads.focus(sid, enemy_id)
+# endregion
 # region crises
 func resolve_crisis(crisis_id: String, option_id: String) -> bool:
 	_record("resolve_crisis", [crisis_id, option_id])  # save-load
