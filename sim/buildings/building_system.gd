@@ -108,6 +108,11 @@ func place(def_id: String, c: Vector2i, pay := true) -> Building:
 ## Rule "refine_cap": true when no NEW batch may start (contamination at the
 ## player's limit). A batch already in progress is always finished.
 func refining_capped() -> bool:
+	# region B3: rule "auto_throttle_above" (same effect as refine_cap, own limit)
+	if sim.milestones.b3_on() and sim.is_rule_on("auto_throttle_above"):
+		if sim.contamination.fraction() * 100.0 >= float(sim.defs.rules["auto_throttle_above"]["max_contamination_percent"]):
+			return true
+	# endregion
 	if not sim.is_rule_on("refine_cap"):
 		return false
 	var limit := float(sim.defs.rules["refine_cap"]["max_contamination_percent"])

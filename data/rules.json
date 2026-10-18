@@ -16,14 +16,23 @@
 		"name": "Repair priority",
 		"short": "Repair\nfirst",
 		"default": "nearest",
-		"modes": ["nearest", "belts", "machines", "turrets"],
+		"modes": [
+			"nearest",
+			"belts",
+			"machines",
+			"turrets"
+		],
 		"hidden": true
 	},
 	"turret_target_mode": {
 		"name": "Turret target mode",
 		"short": "Turret\nmode",
 		"default": "nearest",
-		"modes": ["nearest", "threatening", "weakest"],
+		"modes": [
+			"nearest",
+			"threatening",
+			"weakest"
+		],
 		"hidden": true
 	},
 	"ore_reserve": {
@@ -43,5 +52,19 @@
 		"short": "Militia",
 		"default": true,
 		"hidden": true
+	},
+	"auto_throttle_above": {
+		"name": "Auto-throttle: stop refining above contamination X",
+		"short": "Auto\nthrottle",
+		"default": false,
+		"hidden": true,
+		"max_contamination_percent": 40
+	},
+	"evacuate_low_hq": {
+		"name": "Evacuate: on alarm, colonists shelter in HQ when it is badly hurt",
+		"short": "Evac\nHQ",
+		"default": false,
+		"hidden": true,
+		"hq_hp_fraction": 0.5
 	}
 }

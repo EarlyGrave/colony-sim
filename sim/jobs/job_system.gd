@@ -34,6 +34,13 @@ func tick_colonist(c: Colonist) -> void:
 		return
 	if sim.alarm and not c.hidden and (c.job == null or c.job.type != "flee") and not c.is_unreachable("flee", sim.tick):
 		var shelter := sim.buildings.find_shelter(c.cell) if sim.buildings else null
+		# region B3: rule "evacuate_low_hq": a hurt HQ becomes the shelter when no other exists
+		if shelter == null and sim.buildings and sim.milestones.b3_on() and sim.is_rule_on("evacuate_low_hq"):
+			for hb in sim.buildings.list:
+				if hb.def_id == "hq" and hb.hp < hb.max_hp * float(sim.defs.rules["evacuate_low_hq"]["hq_hp_fraction"]):
+					shelter = hb
+					break
+		# endregion
 		if shelter != null:
 			end_job(c, Job.Status.FAILED, false)
 			_start(c, FleeJob.new(shelter.id))
