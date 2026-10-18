@@ -86,6 +86,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `accept_contract` | contract_id: int | bool | offer open |
 | `decline_contract` | contract_id: int | bool | offer open |
 | `deliver_contract` | contract_id: int | bool | accepted and goods in storage |
+| `dispatch_sector` | tier: int, modifier_id: String | bool | E2 (e2_enabled): bundle in storage, tier in order; grants one permanent modifier |
 | `pay_debt` | colonist_id: int, amount: int | bool | essence in storage, debt open (ledger sink "debt") |
 | `set_quota` | colonist_id: int, per_day: int | bool | colonist has debt; 0 = off |
 | `choose_payoff` | colonist_id: int, stay: bool | bool | debt fully paid, choice pending |
@@ -245,6 +246,5 @@ Normal waves are held (`waves_held()`) until the audit step; entering it calls `
 
 ## F1 Flavor text bank (`view/flavor_picker.gd`, `data/flavor.json`)
 View-side only: no sim state, no `sim.rng`, not in `state_hash`/saves, goldens unaffected. `FlavorPicker.load_bank()` (alias `load_default()`), `pick(key, ctx)`, `pick_first([keys], ctx)`, `has_key`, `all_keys`, `K_*` key constants. Keys are dotted paths (`feed.<enemy>.<cause>`, `pa.<signal>`, `barks.<state>`...). ctx: `tick`, `id` (seed = hash([tick,key,id])), placeholders `who victim enemy n cause`. Ring of last 4 lines per key is picker state.
-
 ## L3 Power (`sim.power`, `sim/power/`, API in `docs/power_api.md`)
 Off (factor 1, no hash part) until a pole/generator exists; networks = union-find, rebuilt on `buildings.version`; factor = clamp(supply/demand, 0.2, 1); no pole in range = 0.5; fuel from `data/fuels.json`; deterministic, no rng.

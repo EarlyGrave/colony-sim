@@ -34,5 +34,18 @@
 				{"kind": "supplies", "items": {"machine_parts": 3, "meal": 6}},
 				{"kind": "xp", "amount": 50.0}
 			]}
-	]
+	],
+	"e2_dispatch": {
+		"_comment": "E2 Sector Dispatch: ship a bundle to the outer cell block, pick one permanent modifier per tier. Gate e2_enabled.",
+		"tiers": [
+			{"tier": 1, "name": "Cell Block Supply I", "bundle": {"raw_food": 100}},
+			{"tier": 2, "name": "Cell Block Supply II", "bundle": {"raw_food": 150, "refined_essence": 6}},
+			{"tier": 3, "name": "Cell Block Supply III", "bundle": {"raw_food": 200, "refined_essence": 15}}
+		],
+		"modifiers": [
+			{"id": "calm", "name": "Quiet Block: -10% wave strength", "kind": "wave_mult", "mult": 0.9},
+			{"id": "recruit", "name": "Transferred prisoner: +1 colonist", "kind": "colonist", "count": 1},
+			{"id": "smelting", "name": "Foundry blueprints: Smelting tech", "kind": "tech", "tech": "smelting"}
+		]
+	}
 }

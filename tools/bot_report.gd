@@ -38,6 +38,10 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline", k
 	if b4:
 		bdefs = Defs.get_default().duplicate_defs()
 		bdefs.balance["b4_enabled"] = true
+	if "--e2" in OS.get_cmdline_user_args():  # region E2
+		if bdefs == null:
+			bdefs = Defs.get_default().duplicate_defs()
+		bdefs.balance["e2_enabled"] = true
 	var k5 := "--k5" in OS.get_cmdline_user_args() or k5_mode or k5_arg  # region K5
 	var camp: Object = null  # region K5
 	var sim: Simulation = null
@@ -131,7 +135,17 @@ static func play(seed_value: int, days: int, bus: Node, profile := "baseline", k
 			Scenario.designate_nearest_deposits(sim, 16)
 			r["chain"] = not Scenario.build_chain(sim, true).is_empty()
 		if sim.tick % sim.ticks_per_day == 0:
-			_t5_profile(sim, profile, r)  # region T5
+			_t5_profile(sim, profile, r)
+			if bool(sim.defs.balance.get("e2_enabled", false)):  # region E2
+				var tier: int = sim.contracts.next_dispatch_tier()
+				for pick: String in ["calm", "recruit", "smelting"]:
+					if sim.dispatch_sector(tier, pick):
+						r["e2_tiers"] = int(r.get("e2_tiers", 0)) + 1
+						r["e2_day_%d" % tier] = sim.day()
+						break
+				r["e2_mult"] = sim.contracts.wave_mult()
+				if "--e2trace" in OS.get_cmdline_user_args():
+					print("  d%d ore %d food %d meal %d parts %d iron %d cu %d plate %d" % [sim.day(), sim.items.count_stored("essence_ore"), sim.items.count_stored("raw_food"), sim.items.count_stored("meal"), sim.items.count_stored("machine_parts"), sim.items.count_stored("ingot_iron"), sim.items.count_stored("ingot_copper"), sim.items.count_stored("plate")])  # region T5
 		if sim.tick % 20 == 0:
 			if camp != null:
 				_k5_expedition(camp, sim, r)  # region K5
@@ -233,6 +247,8 @@ static func _format(r: Dictionary, verbose: bool) -> String:
 		r["c_ok"], r["c_fail"], r["c_decl"], r["anger"], r["peak_anger"], r["debts_paid"],
 		r["riots"], r["escapes"], r["caught"], idle_pct, float(sum) / maxi(pts.size(), 1),
 		str(r["crises"]), r["blooms"]]
+	if r.has("e2_mult"):  # region E2
+		s += " e2_tiers=%d e2_days=%s/%s/%s wave_mult=%.2f waves=%d" % [int(r.get("e2_tiers", 0)), r.get("e2_day_1", "-"), r.get("e2_day_2", "-"), r.get("e2_day_3", "-"), float(r["e2_mult"]), int(r.get("waves", 0))]
 	if r.has("frontier_ok") or r.has("exp_sent"):  # region K5
 		s += " frontier_ok=%d exp_sent=%d" % [int(r.get("frontier_ok", 0)), int(r.get("exp_sent", 0))]
 	if verbose:

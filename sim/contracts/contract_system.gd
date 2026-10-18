@@ -12,6 +12,8 @@ var next_id := 1
 var anger := 0.0
 ## Multiplier applied to the next raid's points (sanction > 1, reward < 1); consumed by take_raid_mult().
 var next_raid_mult := 1.0
+## region E2: dispatch state lives in an Object (skipped by the golden state dump, so goldens stay identical).
+var e2 := RefCounted.new()
 
 
 func _init(p_sim: Simulation) -> void:
@@ -41,6 +43,8 @@ func open_contracts(state: String = "") -> Array[Dictionary]:
 func take_raid_mult() -> float:
 	var m := next_raid_mult
 	next_raid_mult = 1.0
+	if wave_mult() != 1.0:  # region E2
+		m *= wave_mult()
 	return m
 
 
@@ -217,4 +221,84 @@ func required_essence(c: Dictionary) -> int:
 			and sim.contamination.is_clean(float(cb["max_pollution_frac"])):
 		return maxi(1, int(ceil(n * (1.0 - float(cb["essence_discount"])))))
 	return n
+# endregion
+
+
+# region E2
+func wave_mult() -> float:
+	return float(e2.get_meta("mult", 1.0))
+
+
+func dispatched() -> Dictionary:
+	if not e2.has_meta("done"):
+		e2.set_meta("done", {})
+	return e2.get_meta("done")
+
+
+## Sector Dispatch (gate e2_enabled): tiers must be shipped in order; each grants one permanent modifier.
+func dispatch_state() -> Dictionary:
+	var out: Array = []
+	var d: Dictionary = cfg.get("e2_dispatch", {})
+	var nxt := next_dispatch_tier()
+	for t: Dictionary in d.get("tiers", []):
+		var n := int(t["tier"])
+		out.append({"tier": n, "name": t["name"], "bundle": t["bundle"], "done": dispatched().has(n),
+			"pick": dispatched().get(n, ""), "available": n == nxt and can_dispatch(n)})
+	return {"enabled": bool(sim.defs.balance.get("e2_enabled", false)), "tiers": out,
+		"modifiers": d.get("modifiers", []), "wave_mult": wave_mult()}
+
+
+func next_dispatch_tier() -> int:
+	var n := 1
+	while dispatched().has(n):
+		n += 1
+	return n
+
+
+func _e2_tier(tier: int) -> Dictionary:
+	for t: Dictionary in cfg.get("e2_dispatch", {}).get("tiers", []):
+		if int(t["tier"]) == tier:
+			return t
+	return {}
+
+
+func can_dispatch(tier: int) -> bool:
+	if not bool(sim.defs.balance.get("e2_enabled", false)) or tier != next_dispatch_tier():
+		return false
+	var t := _e2_tier(tier)
+	if t.is_empty():
+		return false
+	for item: String in t["bundle"]:
+		if sim.items.count_stored(item) < int(t["bundle"][item]):
+			return false
+	return true
+
+
+func dispatch(tier: int, modifier_id: String) -> bool:
+	if not can_dispatch(tier):
+		return false
+	var mod: Dictionary = {}
+	for m: Dictionary in cfg["e2_dispatch"]["modifiers"]:
+		if str(m["id"]) == modifier_id:
+			mod = m
+	if mod.is_empty() or dispatched().values().has(modifier_id):
+		return false
+	var t := _e2_tier(tier)
+	var near := sim.map_center()
+	for item: String in t["bundle"]:
+		sim.items.consume_stored(item, int(t["bundle"][item]), near)
+		sim.ledger.record_consumed(item, int(t["bundle"][item]), "dispatch")
+	dispatched()[tier] = modifier_id
+	match str(mod["kind"]):
+		"wave_mult":
+			e2.set_meta("mult", wave_mult() * float(mod["mult"]))
+		"colonist":
+			for _i in int(mod["count"]):
+				var c := sim.colonists.spawn(near)
+				sim.bus.colonist_joined.emit(c.id)
+		"tech":
+			if not sim.research.done.has(str(mod["tech"])):
+				sim.research.done.append(str(mod["tech"]))
+	_say("dispatch_done", "Bundle shipped to the outer cell block. %s" % str(mod["name"]))
+	return true
 # endregion

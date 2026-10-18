@@ -135,5 +135,6 @@
 	},
 	"b4_enabled": true,
 	"k5_enabled": true,
-	"e1_enabled": false
+	"e1_enabled": false,
+	"e2_enabled": false
 }

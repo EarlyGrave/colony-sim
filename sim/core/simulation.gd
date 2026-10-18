@@ -877,6 +877,15 @@ func decline_contract(contract_id: int) -> bool:
 func deliver_contract(contract_id: int) -> bool:
 	_record("deliver_contract", [contract_id])  # save-load
 	return contracts.deliver(contract_id)
+# region E2
+func dispatch_sector(tier: int, modifier_id: String) -> bool:
+	_record("dispatch_sector", [tier, modifier_id])  # save-load
+	return contracts.dispatch(tier, modifier_id)
+
+
+func get_sector_state() -> Dictionary:
+	return contracts.dispatch_state()
+# endregion
 # region debt
 ## Moves refined essence from storage into the prisoner's debt (ledger sink "debt").
 func pay_debt(colonist_id: int, amount: int) -> bool:
