@@ -60,7 +60,7 @@ func _ready() -> void:
 	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
 		camera.focus = WorldView.cell_to_world(cell))
 	EventBus.game_over.connect(_on_game_over_meta)  # region meta
-	new_game(_initial_seed(), MetaStore.load_state().make_opts())  # region meta
+	new_game(_initial_seed(), _web_size_opts(MetaStore.load_state().make_opts()))  # region meta
 	_setup_save_load()  # save-load
 
 
@@ -101,6 +101,19 @@ func _initial_seed() -> int:
 
 func _random_seed() -> int:
 	return int(Time.get_unix_time_from_system() * 1000.0) % 1000000
+
+
+# region W1
+## Web only: ?size=250 starts a square map of that size (QA / perf checks).
+func _web_size_opts(opts: Dictionary) -> Dictionary:
+	if OS.has_feature("web"):
+		var v: Variant = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('size')")
+		if v != null and str(v).is_valid_int():
+			var n := clampi(int(str(v)), 32, 512)
+			opts["map_w"] = n
+			opts["map_h"] = n
+	return opts
+# endregion
 
 
 # region meta
