@@ -399,7 +399,7 @@ func _build_compact_widgets(root: Control, group: ButtonGroup) -> void:
 
 func _check_layout() -> void:
 	var h := get_viewport().get_visible_rect().size.y
-	var want := h < COMPACT_H
+	var want := true  # O4: one phone-first layout on every screen size
 	if want != _compact or _cat_popup_row.get_parent() == null or _cat_row.get_parent() == null:
 		_apply_layout(want)
 
@@ -444,12 +444,9 @@ func _apply_layout(compact: bool) -> void:
 	_colonist_dock.visible = compact
 	_cat_popup.offset_left = 88.0 if compact else 0.0  # keep clear of the colonist portrait column
 	_menu_box.columns = 4 if compact else 2
-	if compact:
-		_top_flow.get_child(0).custom_minimum_size.x = 150
-		_reparent_to(_colonist_bar, _colonist_dock)
-	else:
-		_top_flow.get_child(0).custom_minimum_size.x = 430
-	_colonist_bar.set_compact(compact)
+	_reparent_to(_colonist_bar, _colonist_dock)  # O4: portrait column on every size
+	_colonist_bar.set_compact(true)
+	_o4_build()
 	_place_side()
 
 
@@ -599,7 +596,7 @@ func _open_side(p: GamePanel, id: String) -> void:
 	p.anchor_right = 1.0
 	p.anchor_top = 0.0
 	p.anchor_bottom = 1.0
-	var sw := 300 if _compact else SIDE_W
+	var sw := minf(SIDE_W, get_viewport().get_visible_rect().size.x * 0.45)  # O4: sheets <= 45% width
 	p.offset_left = -sw - 8
 	p.offset_right = -8
 	p.offset_bottom = -_bottom_inset
@@ -624,24 +621,7 @@ func close_side() -> void:
 
 
 func _place_side() -> void:
-	if _compact and _colonist_dock != null:
-		_colonist_dock.anchor_left = 0.0
-		_colonist_dock.anchor_right = 0.0
-		_colonist_dock.anchor_top = 0.0
-		_colonist_dock.anchor_bottom = 1.0
-		_colonist_dock.offset_left = 0
-		_colonist_dock.offset_right = 84
-		_colonist_dock.offset_top = _stack.size.y + 4
-		_colonist_dock.offset_bottom = -_bottom_inset
-	if _menu_popup != null:
-		_menu_popup.anchor_left = 1.0
-		_menu_popup.anchor_right = 1.0
-		_menu_popup.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		_menu_popup.offset_right = -8
-		_menu_popup.offset_top = _stack.size.y + 4
-	if _side != null:
-		_side.offset_top = _stack.size.y + 4
-		_side.offset_bottom = -_bottom_inset
+	_o4_layout()  # O4
 
 
 func _sync_panel_buttons() -> void:
@@ -676,6 +656,7 @@ func _process(delta: float) -> void:
 	_forecast.text += " · " + _threat_text()
 	_update_batch3()
 	_t5_update()  # region T5
+	_o4_update()  # region O4
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
 	for rule_id: String in _rule_buttons:
 		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
@@ -824,4 +805,317 @@ func open_expedition(mode: String) -> void:
 	p.sent.connect(func(kind: String, ok: bool) -> void:
 		show_message(("Expedition sent." if kind == "expedition" else "Crate launched.") if ok else "Could not send.", 4.0))
 	_open_side(p, id)
+# endregion
+
+
+# region O4
+## Phone-first layout (844x390 logical and up): 72 px portrait column on the left, a top strip
+## (resources | taint + threat ticker | speed), a bottom-right thumb cluster, side sheets <= 45%
+## width that start right of the column, and a reserved top slot for the tutorial card.
+const O4_COL_W := 72.0
+const O4_LEFT := 80.0  ## x where everything except the portrait column may start
+const O4_BTN := Vector2(80, 64)
+const O4_TOAST_H := 76.0
+const O4_LEGEND_H := 36.0
+const O4_SLOT_H := 76.0
+const O4_SLOT_MIN_W := 200.0
+
+var _o4_built := false
+var _o4_res: VBoxContainer
+var _o4_ticker: Button
+var _o4_cluster: GridContainer
+var _o4_slot: Control
+var _o4_strip: PanelContainer
+
+
+## Free area under the top strip for the tutorial card (a plain Control that never takes input).
+## Its rect is kept clear of the map chips, the contract chip and any open side sheet; it is hidden
+## when narrower than O4_SLOT_MIN_W. Put the card inside and let it fill the slot.
+func tutorial_slot() -> Control:
+	return _o4_slot
+
+
+func _o4_build() -> void:
+	if _o4_built:
+		return
+	_o4_built = true
+	_o4_strip = _top_flow.get_parent() as PanelContainer
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.06, 0.06, 0.08, 0.88)
+	st.content_margin_left = 8
+	st.content_margin_right = 8
+	st.content_margin_top = 3
+	st.content_margin_bottom = 3
+	_o4_strip.add_theme_stylebox_override("panel", st)
+	_o4_strip.remove_child(_top_flow)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	_o4_strip.add_child(row)
+	_o4_res = VBoxContainer.new()
+	_o4_res.add_theme_constant_override("separation", 0)
+	_o4_res.alignment = BoxContainer.ALIGNMENT_CENTER
+	_o4_res.custom_minimum_size.x = 250
+	row.add_child(_o4_res)
+	_reparent_to(_clock, _o4_res)
+	_clock.visible = true
+	_reparent_to(_stats, _o4_res)
+	_o4_ticker = Button.new()
+	_o4_ticker.focus_mode = Control.FOCUS_NONE
+	_o4_ticker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_o4_ticker.custom_minimum_size = Vector2(190, 64)
+	_o4_ticker.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	_o4_ticker.add_theme_stylebox_override("hover", StyleBoxEmpty.new())
+	_o4_ticker.pressed.connect(func() -> void: toggle_panel("letters"))
+	row.add_child(_o4_ticker)
+	var tv := VBoxContainer.new()
+	tv.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tv.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tv.alignment = BoxContainer.ALIGNMENT_CENTER
+	tv.add_theme_constant_override("separation", 1)
+	_o4_ticker.add_child(tv)
+	_reparent_to(_forecast, tv)
+	_reparent_to(_forecast_bar, tv)
+	_reparent_to(_threat, tv)
+	_threat.visible = true
+	for l: Label in [_clock, _stats, _forecast, _threat]:
+		l.clip_text = false
+		l.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+		l.add_theme_font_size_override("font_size", 16 if l == _clock else 15)
+	var sp := HBoxContainer.new()
+	sp.add_theme_constant_override("separation", 4)
+	row.add_child(sp)
+	for b in _speed_buttons:
+		_reparent_to(b, sp)
+		b.custom_minimum_size = Vector2(64, 64)
+	_top_flow.queue_free()
+	_reparent_to(_contract_btn, _root)
+	_contract_btn.custom_minimum_size = Vector2(170, 64)
+	_contract_btn.add_theme_font_size_override("font_size", 15)
+	_bottom.visible = false
+	_o4_cluster = GridContainer.new()
+	_o4_cluster.columns = 3
+	_o4_cluster.add_theme_constant_override("h_separation", 6)
+	_o4_cluster.add_theme_constant_override("v_separation", 6)
+	_o4_cluster.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_o4_cluster)
+	_alarm_btn.icon = null
+	for b: Button in [_tool_buttons["inspect"], _cat_buttons["zones"], _cat_buttons["build"], _cat_buttons["orders"], _alarm_btn, _menu_btn]:
+		_reparent_to(b, _o4_cluster)
+		b.custom_minimum_size = O4_BTN
+		b.add_theme_font_size_override("font_size", 16)
+	_menu_btn.visible = true
+	_o4_slot = Control.new()
+	_o4_slot.name = "TutorialSlot"
+	_o4_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_o4_slot)
+	_message.add_theme_font_size_override("font_size", 16)
+	_message.max_lines_visible = 3
+	_bottom_inset = 8.0
+	(_cat_popup.get_child(0) as ScrollContainer).horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER  # touch-drag, keeps the popup 88 px tall
+	var msc := ScrollContainer.new()  # More menu: one scrolling row, same height as the category popups
+	msc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	msc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	_menu_popup.add_child(msc)
+	_reparent_to(_menu_box, msc)
+	_menu_box.columns = 12
+	for b: Button in _menu_box.get_children():
+		b.custom_minimum_size = Vector2(96, 64)
+		b.add_theme_font_size_override("font_size", 16)
+	_root.move_child(_alerts, -1)
+	_root.move_child(_game_over, -1)
+
+
+func _o4_threat_short() -> String:
+	if sim.get("threats") == null or sim.threats == null:
+		return ""
+	var t: ThreatSystem = sim.threats
+	if t.wave_active:
+		return "WAVE %d: %d from the %s" % [t.wave_index, t.enemies.size(), t.side_name(t.next_spawn_origin)]
+	if not t.awakened:
+		return "Creatures asleep"
+	var ticks := t.next_wave_tick - sim.tick
+	var side := " from the %s" % t.side_name(t.next_spawn_origin) if ticks < int(t.cfg["warning_ticks"]) else ""
+	return "Wave in %.1f h%s" % [ticks * 24.0 / sim.ticks_per_day, side]
+
+
+func _o4_update() -> void:
+	if not _o4_built:
+		return
+	var it := sim.items
+	_clock.text = "%s %d · %02d:%02d" % ["Night" if sim.clock.is_night() else "Day", sim.day() + 1, sim.clock.hour_int(), int(fposmod(sim.clock.hour(), 1.0) * 60.0)]
+	_stats.text = "Ore %d  Ess %d  Waste %d  Crew %d" % [
+		it.count_stored("essence_ore"), it.count_stored("refined_essence"),
+		it.count_world("waste"), sim.colonists.alive_count()]
+	var cont := sim.contamination
+	if cont.revealed:
+		var f := cont.forecast()
+		_forecast.text = "Taint %.1f%% · end ~%.0f±%.0f d" % [cont.fraction() * 100.0, f["days"], f["error"]]
+	else:
+		_forecast.text = "Taint %.1f%% · forecast unknown" % (cont.fraction() * 100.0)
+	_threat.text = _o4_threat_short()
+	_threat.visible = true
+
+
+func _o4_place_corner(c: Control, left: float, bottom: float) -> void:
+	c.anchor_left = 0.0
+	c.anchor_right = 0.0
+	c.anchor_top = 1.0
+	c.anchor_bottom = 1.0
+	c.grow_horizontal = Control.GROW_DIRECTION_END
+	c.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	c.offset_left = left
+	c.offset_right = left
+	c.offset_bottom = bottom
+	c.offset_top = bottom
+
+
+func _o4_anchor_br(c: Control, right: float, bottom: float) -> void:
+	c.anchor_left = 1.0
+	c.anchor_right = 1.0
+	c.anchor_top = 1.0
+	c.anchor_bottom = 1.0
+	c.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	c.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	c.offset_right = right
+	c.offset_left = right
+	c.offset_bottom = bottom
+	c.offset_top = bottom
+
+
+func _o4_anchor_tl(c: Control, left: float, top: float, w: float, h: float) -> void:
+	c.anchor_left = 0.0
+	c.anchor_right = 0.0
+	c.anchor_top = 0.0
+	c.anchor_bottom = 0.0
+	c.offset_left = left
+	c.offset_right = left + w
+	c.offset_top = top
+	c.offset_bottom = top + h
+
+
+## Positions every floating HUD element. Runs every frame (cheap) so panels, popups and
+## window resizes always settle into the same non-overlapping arrangement.
+func _o4_layout() -> void:
+	if not _o4_built:
+		return
+	var vp := get_viewport().get_visible_rect().size
+	var y0 := maxf(_stack.get_combined_minimum_size().y, _stack.size.y) + 4.0
+	var side_open := _side != null and is_instance_valid(_side)
+	var sw := minf(SIDE_W, vp.x * 0.45)
+	var limit := vp.x - 8.0 - ((sw + 8.0) if side_open else 0.0)  # right edge free for the thumb cluster
+	var menu_open := _menu_popup.visible
+	var pop_open := _open_cat != "" or menu_open
+	# Thumb cluster: bottom-right, shifts left of an open sheet.
+	var cs := _o4_cluster.get_combined_minimum_size()
+	_o4_anchor_br(_o4_cluster, limit - vp.x, -8.0)
+	var pop_bottom := -(8.0 + cs.y + 8.0)
+	var lim2 := limit - cs.x - 8.0  # right edge of the bottom-left stack
+	# Popups above the cluster, right-aligned to it.
+	var pw := _cat_popup_row.get_combined_minimum_size().x + 28.0
+	_cat_popup.offset_left = maxf(O4_LEFT, limit - pw)
+	_cat_popup.offset_right = limit - vp.x
+	_cat_popup.offset_bottom = pop_bottom
+	for b in _cat_popup_row.get_children():
+		if b is Button and not b.has_meta("o4"):
+			b.set_meta("o4", true)
+			b.add_theme_constant_override("icon_max_width", 26)
+			b.add_theme_font_size_override("font_size", 16)
+		if b is Button:
+			b.custom_minimum_size = Vector2(96, 72)
+	var mw := _menu_box.get_combined_minimum_size().x + 28.0
+	_menu_popup.anchor_left = 0.0
+	_menu_popup.anchor_right = 1.0
+	_menu_popup.anchor_top = 1.0
+	_menu_popup.anchor_bottom = 1.0
+	_menu_popup.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_menu_popup.offset_left = maxf(O4_LEFT, limit - mw)
+	_menu_popup.offset_right = limit - vp.x
+	_menu_popup.offset_bottom = pop_bottom
+	# Portrait column.
+	_colonist_dock.anchor_left = 0.0
+	_colonist_dock.anchor_right = 0.0
+	_colonist_dock.anchor_top = 0.0
+	_colonist_dock.anchor_bottom = 1.0
+	_colonist_dock.offset_left = 0.0
+	_colonist_dock.offset_right = O4_COL_W
+	_colonist_dock.offset_top = y0
+	_colonist_dock.offset_bottom = -8.0
+	# Side sheet: top below the strip, right of the column.
+	if side_open:
+		_side.offset_left = -sw - 8.0
+		_side.offset_right = -8.0
+		_side.offset_top = y0
+		_side.offset_bottom = -8.0
+	# Top-left chip row: map chips, then the contract chip; the tutorial slot takes the rest.
+	var x := O4_LEFT
+	if map_switcher != null and map_switcher.visible:
+		if map_switcher.get_parent() != _root:
+			_reparent_to(map_switcher, _root)
+		_o4_anchor_tl(map_switcher, O4_LEFT, y0, 400.0, 0.0)
+		var cw := 0.0
+		for ch in map_switcher.get_children():
+			if ch is Button:
+				if not ch.has_theme_font_size_override("font_size"):
+					ch.add_theme_font_size_override("font_size", 16)
+					ch.custom_minimum_size.x = 96.0
+				cw = maxf(cw, ch.position.x + ch.size.x)
+		x = O4_LEFT + cw + 8.0
+	if _contract_btn.visible:
+		_o4_anchor_tl(_contract_btn, x, y0, _contract_btn.custom_minimum_size.x, 64.0)
+		x += _contract_btn.custom_minimum_size.x + 8.0
+	var slot_r := vp.x - 8.0 - ((sw + 8.0) if side_open else 0.0)
+	_o4_anchor_tl(_o4_slot, x, y0, maxf(0.0, slot_r - x), O4_SLOT_H)
+	_o4_slot.visible = (slot_r - x) >= O4_SLOT_MIN_W
+	# Bottom-left stack: legend, toast, belt strip / patrol bar.
+	var quiet := not pop_open and not side_open
+	_o4_place_corner(_legend, O4_LEFT, -8.0)
+	_legend.visible = _overlay_on and quiet and _legend.get_combined_minimum_size().x + O4_LEFT <= lim2
+	var toast_b := -(8.0 + O4_LEGEND_H + 4.0)
+	_message.anchor_left = 0.0
+	_message.anchor_right = 0.0
+	_message.anchor_top = 1.0
+	_message.anchor_bottom = 1.0
+	_message.offset_left = O4_LEFT
+	_message.offset_right = maxf(O4_LEFT + 120.0, lim2)
+	_message.offset_bottom = toast_b
+	_message.offset_top = toast_b - O4_TOAST_H
+	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var tool_b := toast_b - O4_TOAST_H - 4.0
+	_o4_place_corner(_patrol_bar, O4_LEFT, tool_b)
+	for ch in _patrol_bar.get_child(0).get_children():
+		if ch is Button:
+			ch.custom_minimum_size = Vector2(84, 64)
+		elif ch is Label:
+			ch.add_theme_font_size_override("font_size", 16)
+	_patrol_bar.visible = _patrol_bar.visible and not pop_open and not side_open
+	var g := get_parent()
+	var ap: Variant = g.get("auto_panel") if g != null else null
+	if ap is Control:
+		var apc := ap as Control
+		if not apc.has_meta("o4"):
+			apc.set_meta("o4", true)
+			var th := Theme.new()
+			th.default_font_size = 16
+			apc.theme = th
+			for b in _o4_buttons(apc):
+				b.custom_minimum_size = Vector2(88, 64)
+		_o4_place_corner(apc, O4_LEFT, tool_b)
+		apc.visible = quiet and not _patrol_bar.visible
+	# Save/Continue prompt: above the cluster, never under a menu.
+	var cont: Variant = g.get("_continue_btn") if g != null else null
+	if cont is Button:
+		var cb := cont as Button
+		cb.custom_minimum_size = Vector2(160, 64)
+		_o4_anchor_br(cb, limit - vp.x, pop_bottom - 4.0)
+		var gs: Variant = g.get("sim")
+		cb.visible = quiet and SaveStore.has_save() and (gs == null or gs.tick < 50 or gs.game_over_reason != "")
+
+
+func _o4_buttons(n: Node) -> Array[Button]:
+	var out: Array[Button] = []
+	for ch in n.get_children():
+		if ch is Button:
+			out.append(ch)
+		out.append_array(_o4_buttons(ch))
+	return out
 # endregion

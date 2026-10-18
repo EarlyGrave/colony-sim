@@ -30,7 +30,7 @@ func set_compact(on: bool) -> void:
 	_compact = on
 	_row.vertical = on
 	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED if on else ScrollContainer.SCROLL_MODE_AUTO
-	vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if on else ScrollContainer.SCROLL_MODE_DISABLED
+	vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER if on else ScrollContainer.SCROLL_MODE_DISABLED  # O4: touch-drag scroll, no scrollbar inside the 72 px column
 	custom_minimum_size = Vector2(72, 0) if on else Vector2(0, CARD.y + 4)
 	size_flags_vertical = Control.SIZE_EXPAND_FILL if on else Control.SIZE_FILL
 	_key = ""

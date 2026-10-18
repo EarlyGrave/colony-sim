@@ -179,8 +179,8 @@ func set_speed(s: int) -> void:
 
 
 func _process(delta: float) -> void:
-	if auto_panel != null and hud != null:  # R4X: on narrow screens a side panel would be covered by the belt strip
-		auto_panel.visible = hud._side == null or not is_instance_valid(hud._side) or not auto_panel.get_global_rect().intersects(hud._side.get_global_rect())
+	# region O4: the belt strip's visibility and position are owned by Hud._o4_layout
+	# endregion
 	if sim == null or speed == 0:
 		return
 	_accum += delta * Simulation.TICKS_PER_SECOND * speed
