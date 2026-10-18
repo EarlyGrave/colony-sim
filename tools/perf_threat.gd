@@ -19,6 +19,7 @@ func _init() -> void:
 	var bus: Node = load("res://autoload/event_bus.gd").new()
 	var sim := Simulation.new(7, bus, TestCase.peaceful_defs())
 	sim.start_empty(size, size)
+	sim.threats.threat_v2 = _arg("v2", 0) == 1
 	var c := sim.map_center()
 	for i in 6:
 		sim.buildings.place("bed", c + Vector2i(i * 2, 0), false)

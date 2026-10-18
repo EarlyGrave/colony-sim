@@ -42,12 +42,19 @@ var hash: SpatialHash
 ## Times an enemy re-evaluated its target (test / bench counter).
 var retarget_count := 0
 # endregion
+# region T1
+var model: ThreatModel
+## Attention-based targeting (data/threat.json "enabled"); false = legacy priority/distance scan.
+var threat_v2 := false
+# endregion
 
 
 func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	cfg = sim.defs.balance["threat"]
 	hash = SpatialHash.new(int(cfg.get("hash_bucket", 8)))  # region perf-threat
+	model = ThreatModel.new(sim)  # region T1
+	threat_v2 = bool(sim.defs.threat.get("enabled", false))  # region T1
 	wave_rng.seed = sim.seed_value ^ 0x57A7E
 	sim.listen(sim.bus.first_refine_done, awaken)
 	sim.listen(sim.bus.item_mined, _on_item_mined)
@@ -380,6 +387,9 @@ func _target_valid(e: Enemy) -> bool:
 
 
 func _choose_target(e: Enemy) -> void:
+	if threat_v2:  # region T1
+		_choose_target_v2(e)
+		return
 	var pos := Vector2(e.cell)
 	# 1) Colonists caught in the open nearby.
 	var best_d := float(cfg["colonist_aggro_range"])
@@ -550,4 +560,35 @@ func _leave_step(e: Enemy) -> int:
 			return GridMover.Move.FAILED
 		f = pf.flow_to(key, sources)
 	return e.move_flow(f, sim)
+# endregion
+
+# region T1
+## Best target by attention score (see ThreatModel.pick): {kind: "building"|"colonist", id: int} or {}.
+func pick_target(e: Enemy) -> Dictionary:
+	return model.pick(e)
+
+
+func _choose_target_v2(e: Enemy) -> void:
+	var t := pick_target(e)
+	e.target_kind = Enemy.Target.NONE
+	if t.is_empty():
+		return
+	if t["kind"] == "colonist":
+		var c: Colonist = null
+		for o in sim.colonists.list:
+			if o.id == int(t["id"]):
+				c = o
+		if c != null and sim.pathfinder.can_approach(e.cell, c.cell):
+			e.target_kind = Enemy.Target.COLONIST
+			e.target_id = c.id
+			e.target_c = c
+		return
+	var b := sim.buildings.get_by_id(int(t["id"]))
+	if b == null or b.destroyed:
+		return
+	e.target_kind = Enemy.Target.BUILDING
+	e.target_id = b.id
+	e.target_b = b
+	if not sim.pathfinder.can_approach(e.cell, b.nearest_cell_to(e.cell)):
+		_sapper_target(e)
 # endregion

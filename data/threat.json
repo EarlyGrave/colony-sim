@@ -1,0 +1,46 @@
+{
+	"enabled": false,
+	"d0": 12.0,
+	"k_poll": 0.05,
+	"stick": 0.7,
+	"pull_ratio": {"melee": 1.3, "ranged": 1.15},
+	"region_size": 8,
+	"cap_per_region": 40.0,
+	"recompute_ticks": 10,
+	"per_priority": 1.5,
+	"base": {
+		"default": 0.0,
+		"colonist": 4.0,
+		"belt": 1.0,
+		"hq": 6.0,
+		"refinery": 10.0,
+		"smelter": 8.0,
+		"assembler": 6.0,
+		"research_bench": 4.0,
+		"workbench": 3.0,
+		"miner": 3.0,
+		"turret": 5.0,
+		"bed": 1.0
+	},
+	"state_mod": {
+		"working": 1.5,
+		"idle": 1.0,
+		"broken": 0.3,
+		"firing": 2.0,
+		"carrying_essence": 1.5,
+		"unlit": 0.25,
+		"burst": 3.0,
+		"chip": 2.0
+	},
+	"colonist_mod": {
+		"drafted": 1.5,
+		"gear": 1.2,
+		"working": 1.25
+	},
+	"species_bias": {
+		"crawler": {"colonist": 1.2},
+		"brute": {"turret": 1.3},
+		"spitter": {"colonist": 1.1},
+		"burrower": {"miner": 1.5}
+	}
+}
