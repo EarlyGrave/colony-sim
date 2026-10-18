@@ -89,6 +89,7 @@ Shared test scenarios: `tests/scenario.gd`.
 
 ## Conventions
 - Code, comments, commit messages: English. Reports to the owner: Russian.
+- **All in-game text is English** (UI, letters, hints, names in `data/*.json`) — owner rule 2026-10-18.
 - Static typing everywhere it is cheap (`var x: int`, typed arrays).
 - Tabs for indentation (Godot default).
 - Tests: `tests/test_*.gd`, extend `TestCase`, methods `test_*`.
