@@ -29,7 +29,7 @@ func _init() -> void:
 	quit()
 
 
-static func play(seed_value: int, days: int, bus: Node) -> Dictionary:
+static func play(seed_value: int, days: int, bus: Node, profile := "baseline") -> Dictionary:
 	var sim := Simulation.new(seed_value, bus)
 	sim.start_new_game()
 	Scenario.standard_colony(sim, 3)
@@ -58,6 +58,7 @@ static func play(seed_value: int, days: int, bus: Node) -> Dictionary:
 	sim.bus.colonist_died.connect(func(_i: int) -> void: r["died"] += 1)
 	sim.bus.crisis_started.connect(func(id: String, _t: String) -> void: r["crises"].append("%s@d%d" % [id, sim.day()]))
 	var base_turrets := 3
+	sim.bus.building_destroyed.connect(func(_i: int) -> void: r["lost_bld"] = int(r.get("lost_bld", 0)) + 1)  # region T5
 	if "--trace" in OS.get_cmdline_user_args():
 		sim.bus.wave_started.connect(func(i: int, s: float) -> void:
 			print("  d%d wave %d str %.1f enemies %d turrets %d rounds %d refined %d" % [sim.day(), i, s, sim.threats.enemies.size(), sim.buildings.count_of("turret"), sim.items.count_stored("essence_rounds"), sim.items.count_stored("refined_essence")]))
@@ -87,14 +88,19 @@ static func play(seed_value: int, days: int, bus: Node) -> Dictionary:
 			if d in [5, 10, 15, 20]:
 				r["contam"][d] = sim.contamination.fraction() * 100.0
 			r["peak_anger"] = maxf(r["peak_anger"], sim.contracts.anger)
+			r["peak_pol"] = maxf(float(r.get("peak_pol", 0.0)), sim.contamination.fraction() * 100.0)  # region T5
 		if sim.tick == sim.ticks_per_day:  # automation by day 4: more miners on the nodes, then miner + smelter
 			Scenario.designate_nearest_deposits(sim, 16)
 			r["chain"] = not Scenario.build_chain(sim, true).is_empty()
+		if sim.tick % sim.ticks_per_day == 0:
+			_t5_profile(sim, profile, r)  # region T5
 		if sim.tick % 20 == 0:
 			_act(sim, base_turrets, r)
 			for cell: Vector2i in sim.mutation._blooms.keys():
 				blooms_seen[cell] = true
 	r["blooms"] = blooms_seen.size()
+	r["kills"] = sim.threats.kills  # region T5
+	r["peak_pol"] = float(r.get("peak_pol", 0.0))  # region T5
 	r["waves"] = sim.threats.wave_index
 	r["end_day"] = sim.day()
 	if sim.game_over_reason != "":
@@ -189,3 +195,31 @@ static func _format(r: Dictionary, verbose: bool) -> String:
 
 static func _f(v: Variant) -> String:
 	return "-" if v == null else "%.0f" % v
+
+
+# region T5
+## QA play-styles (tools/qa_r3.gd). "automation": a new miner->smelter chain every day for days 2..6.
+## "chip": automation plus slotting Warden Chips when the T4 chip system exists (stub until it merges).
+static func _t5_profile(sim: Simulation, profile: String, r: Dictionary) -> void:
+	if profile == "baseline":
+		return
+	var d := sim.day()
+	if d >= 2 and d <= 6:
+		var center := sim.map_center()
+		var nodes: Array[Vector2i] = []
+		for c in sim.map.node_cells():
+			if sim.map.node_resource(c) == "essence_ore":
+				nodes.append(c)
+		nodes.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+			return a.distance_squared_to(center) < b.distance_squared_to(center) or (a.distance_squared_to(center) == b.distance_squared_to(center) and a < b))
+		for n in nodes:
+			if sim.place_building("miner", n) != null:
+				r["chains"] = int(r.get("chains", 0)) + 1
+				break
+		if sim.place_building("smelter", Scenario.find_spot(sim, "smelter", center + Vector2i(-6 + d, -7), 0)) != null:
+			r["chains"] = int(r.get("chains", 0)) + 1
+	if profile == "chip" and sim.get("chips") != null and sim.chips.has_method("slot_chip"):
+		for b in sim.buildings.list:
+			if b.def_id in ["smelter", "research_bench", "assembler"]:
+				sim.chips.slot_chip(b.id)
+# endregion

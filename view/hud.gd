@@ -124,6 +124,7 @@ func _ready() -> void:
 	root.add_child(_stack)
 	var top := PanelContainer.new()
 	_stack.add_child(top)
+	_t5_build_strip()  # region T5
 	var top_flow := HFlowContainer.new()
 	_top_flow = top_flow
 	top_flow.add_theme_constant_override("h_separation", 6)
@@ -674,6 +675,7 @@ func _process(delta: float) -> void:
 	_threat.visible = false
 	_forecast.text += " · " + _threat_text()
 	_update_batch3()
+	_t5_update()  # region T5
 	_alarm_btn.set_pressed_no_signal(sim.alarm)
 	for rule_id: String in _rule_buttons:
 		_rule_buttons[rule_id].set_pressed_no_signal(sim.is_rule_on(rule_id))
@@ -751,3 +753,38 @@ func _make_theme() -> Theme:
 	bg.bg_color = Color(0.12, 0.12, 0.15)
 	th.set_stylebox("background", "ProgressBar", bg)
 	return th
+
+
+# region T5
+## Rally warning strip: shown from the rally letter until the wave starts.
+var _t5_strip: PanelContainer
+var _t5_label: Label
+var _t5_look: Button
+
+
+func _t5_build_strip() -> void:
+	_t5_strip = PanelContainer.new()
+	_t5_strip.visible = false
+	_t5_strip.modulate = Color(1.0, 0.7, 0.55)
+	var row := HBoxContainer.new()
+	_t5_strip.add_child(row)
+	_t5_label = _label(row)
+	_t5_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_t5_look = _button(row, "Look", Vector2(96, 64))
+	_t5_look.pressed.connect(func() -> void:
+		if sim != null and sim.ecology.active():
+			focus_cell_requested.emit(sim.ecology.lead_cell()))
+	_stack.add_child(_t5_strip)
+
+
+func _t5_update() -> void:
+	if _t5_strip == null:
+		return
+	var left := -1
+	if sim != null and sim.get("ecology") != null:
+		left = sim.ecology.rally_ticks_left()
+	_t5_strip.visible = left >= 0
+	if left >= 0:
+		_t5_label.text = "Creatures massing in the %s - raid in %.1f h" % [
+			sim.threats.side_name(sim.ecology.lead_cell()), left * 24.0 / sim.ticks_per_day]
+# endregion

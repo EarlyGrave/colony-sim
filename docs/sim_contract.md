@@ -9,7 +9,7 @@ the data-file table below in sync with it. "(GD)" marks GDScript-specific behavi
 1. `crafting.tick` (bills)  2. `needs.tick`  3. `farming.tick`  4. `colonists.tick` (jobs, movement)
 5. *research slot (pending R2a): after colonists, before logistics*  6. `logistics.tick` (belts)  7. `buildings.tick_machines`  7b. `chips.tick` (T4)
 8. `perks.tick`  9. `health.tick`  10. `debt.tick`  11. `mood.tick`  12. `threats.tick`  13. `contamination.tick`
-14. `mutation.tick`  15. `crises.tick`  16. `storyteller.tick`
+14. `mutation.tick`  14b. `ecology.tick` (T5: nest hunger banks, rally letter)  15. `crises.tick`  16. `storyteller.tick`
 Then: if no colonist is alive (list non-empty) `end_game("colonists_dead")`; if `tick % ticks_per_day == 0` emit `day_started`; emit `tick_advanced`.
 `TICKS_PER_SECOND = 10` at 1x; `ticks_per_day = balance.ticks_per_day`. Speed (pause/1x/2x/3x) is the view's job: it only changes how many `step()` calls happen.
 Commands run between steps: a command recorded at tick T was issued after step number T and before step T+1.
@@ -25,7 +25,7 @@ System construction order in `_init_systems()` fixes id allocation and listener 
   (short-circuit: `aimed or randf() < hit_chance`), `health` (part pick, `randf() < chance`), `building_system` (craft_save roll, cave-in damage),
   `mood` (break chance, machine pick), `break_job` (2 `randi_range` for target offset), `storyteller` events and crisis picks (chance roll first, then picks),
   `colonist_system` name pick. `StartOpts.apply` reseeds `rng.seed = seed*31 + site*104729` when `opts.site` is set.
-- Independent streams that never touch `sim.rng`: `debt` seed `seed*7919+13`; `idle_work` `seed ^ 0x1D1E`; `mutation` `seed ^ 0x3A7B`; storyteller chain stream `_prng` `seed ^ 0x9E3779`.
+- Independent streams that never touch `sim.rng`: `debt` seed `seed*7919+13`; `idle_work` `seed ^ 0x1D1E`; `mutation` `seed ^ 0x3A7B`; `ecology` `seed ^ 0xEC01` (nest placement at `start_new_game`, mutant-variant rolls); storyteller chain stream `_prng` `seed ^ 0x9E3779`.
 - Pick-from-list rolls index lists in deterministic order (id order or insertion order), never an unordered Dictionary walk.
 
 ## 3. Determinism and number rules
@@ -108,7 +108,8 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `crafting.json` | modes[], priorities[], default_priority, default_bill_target |
 | `crises.json` | settings{}, crises id -> {options...} |
 | `debt.json` | item, debt_min/max, due_days, despair_*, riot/escape tuning |
-| `enemies.json` | id -> {name, max_hp, move_ticks, damage, attack_cooldown_ticks, attack_range, threat_cost} |
+| `ecology.json` | nests_min/max, absorb_rate, bank_cap, starved_max, unit_cost{}, rally_ticks, chip_pressure, variant_bands[] (T5) |
+| `enemies.json` | id -> {name, max_hp, move_ticks, damage, attack_cooldown_ticks, attack_range, threat_cost, variants{id->{hp_mult,damage_mult,move_ticks_delta}}} |
 | `event_chains.json` | random_enabled, chance, steps[], complication, inspection_quota_default |
 | `events.json` | id -> {weight, min_day, harmful, max_per_game, requires, text, ...} |
 | `events_prison.json` | same schema as events.json, prison-themed |
@@ -178,3 +179,9 @@ at each day start (retried every tick while unpaid; unpaid = chip stops). Calibr
 with `operating` >= `calibrate_min_skill` runs `CalibrateJob` (`calibrate_ticks` ticks on site). A broken or destroyed building drops its chip.
 Read-only API for the threat system: `chips.threat_mult(building)` (`chip_threat_mult` while the chip is busy, else 1.0) and `chips.colony_threat_mult()` (max over busy chips).
 `ai_chip` is accepted by the stockpile zone; recipe `make_ai_chip` (assembler) needs tech `ai_chips`. Chip state is not in `state_hash`; it is rebuilt by command replay.
+
+## T5 ecology (summary)
+Nests (2-4, map edge, reachable) are placed from the ecology stream at `start_new_game`. Every `update_ticks` each nest banks
+`pollution_at(nest) * absorb_rate * dt * chip_pressure` (local mutation field + planet level), capped. A raid keeps `starved_max` units free and
+pays `unit_cost` per further unit from the banks, dropping what it cannot afford; waves leave from the fullest nest. `letter_received`
+"Creatures are massing" fires `rally_ticks` before the wave. Mutant variants roll per unit from the nest's pollution tier (hysteresis `revert_ratio`).

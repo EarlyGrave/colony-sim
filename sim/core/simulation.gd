@@ -67,6 +67,7 @@ var progression: ProgressionSystem
 # region idle-work
 var idle_work: IdleWorkSystem
 var mutation: MutationSystem  # region mutation
+var ecology: EcologySystem  # region T5
 var milestones: MilestoneSystem  # region R2b
 # endregion
 # region perks
@@ -110,6 +111,7 @@ func start_new_game() -> void:
 	MapGenerator.generate(map, rng, cfg)
 	_init_systems()
 	_place_starting_colony()
+	ecology.generate()  # region T5
 	StartOpts.apply(self, opts)  # region meta
 
 
@@ -154,6 +156,7 @@ func _init_systems() -> void:
 	debt = DebtSystem.new(self)  # region debt
 	idle_work = IdleWorkSystem.new(self)  # region idle-work
 	mutation = MutationSystem.new(self)  # region mutation
+	ecology = EcologySystem.new(self)  # region T5
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	chips = ChipSystem.new(self)  # region T4
@@ -205,6 +208,7 @@ func step() -> void:
 	threats.tick()
 	contamination.tick()
 	mutation.tick()  # region mutation
+	ecology.tick()  # region T5
 	crises.tick()  # region crises
 	storyteller.tick()
 	if colonists.alive_count() == 0 and not colonists.list.is_empty():

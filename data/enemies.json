@@ -1,6 +1,6 @@
 {
-	"crawler": {"name": "Crawler", "color": "#d94a3a", "max_hp": 30, "move_ticks": 4, "damage": 6, "attack_cooldown_ticks": 10, "attack_range": 1.5, "structure_dmg": 8, "threat_cost": 1.0},
-	"brute": {"name": "Brute", "color": "#8b1e1e", "max_hp": 110, "move_ticks": 6, "damage": 20, "attack_cooldown_ticks": 14, "attack_range": 1.5, "structure_dmg": 8, "threat_cost": 3.5},
-	"spitter": {"name": "Spitter", "color": "#8fcf3a", "max_hp": 24, "move_ticks": 5, "damage": 5, "damage_kind": "burn", "ranged": true, "attack_cooldown_ticks": 16, "attack_range": 5.5, "structure_dmg": 0, "threat_cost": 2.0},
-	"burrower": {"name": "Burrower", "color": "#9a7b4f", "max_hp": 45, "move_ticks": 4, "damage": 9, "attack_cooldown_ticks": 11, "attack_range": 1.5, "structure_dmg": 8, "threat_cost": 1.8}
+	"crawler": {"name": "Crawler", "color": "#d94a3a", "max_hp": 30, "move_ticks": 4, "damage": 6, "attack_cooldown_ticks": 10, "attack_range": 1.5, "structure_dmg": 8, "threat_cost": 1.0, "variants": {"mutant": {"hp_mult": 1.5, "damage_mult": 1.2, "move_ticks_delta": 0}}},
+	"brute": {"name": "Brute", "color": "#8b1e1e", "max_hp": 110, "move_ticks": 6, "damage": 20, "attack_cooldown_ticks": 14, "attack_range": 1.5, "structure_dmg": 8, "threat_cost": 3.5, "variants": {"mutant": {"hp_mult": 1.35, "damage_mult": 1.2, "move_ticks_delta": 0}}},
+	"spitter": {"name": "Spitter", "color": "#8fcf3a", "max_hp": 24, "move_ticks": 5, "damage": 5, "damage_kind": "burn", "ranged": true, "attack_cooldown_ticks": 16, "attack_range": 5.5, "structure_dmg": 0, "threat_cost": 2.0, "variants": {"mutant": {"hp_mult": 1.4, "damage_mult": 1.25, "move_ticks_delta": 0}}},
+	"burrower": {"name": "Burrower", "color": "#9a7b4f", "max_hp": 45, "move_ticks": 4, "damage": 9, "attack_cooldown_ticks": 11, "attack_range": 1.5, "structure_dmg": 8, "threat_cost": 1.8, "variants": {"mutant": {"hp_mult": 1.4, "damage_mult": 1.2, "move_ticks_delta": 0}}}
 }

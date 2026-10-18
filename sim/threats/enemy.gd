@@ -19,6 +19,9 @@ var target_c: Colonist
 var attack_range := 1.5
 # endregion
 var attack_cd := 0
+## Mutant variant id ("" = plain), rolled from nest pollution (T5).
+var variant := ""  # region T5
+var damage_mult := 1.0  # region T5
 ## After the wave ends survivors walk back to the edge and vanish.
 var leaving := false
 
