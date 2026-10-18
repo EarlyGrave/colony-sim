@@ -152,6 +152,7 @@ func _ready() -> void:
 	_contract_btn.add_theme_font_size_override("font_size", 16)
 	_contract_btn.pressed.connect(func() -> void: toggle_panel("contracts"))
 	_contract_btn.visible = false
+	_k3_build(speed_row)  # region K3
 	for i in 4:
 		var b := _button(speed_row, "||" if i == 0 else "%dx" % i, Vector2(56, 64))
 		b.toggle_mode = true
@@ -710,6 +711,7 @@ func _refresh_texts() -> void:
 	_o4_update()  # region O4
 	_l4_update()  # region L4
 	_c5_update()  # region C5
+	_k3_update()  # region K3
 	_letters_btn.text = "Letters (%d)" % _letters.unread if _letters.unread > 0 else "Letters"
 	_menu_btn.text = "More (%d)" % _letters.unread if _letters.unread > 0 else "More"
 # endregion
@@ -1211,6 +1213,7 @@ func _o4_layout() -> void:
 	if _contract_btn.visible:
 		_o4_anchor_tl(_contract_btn, x, y0, _contract_btn.custom_minimum_size.x, 64.0)
 		x += _contract_btn.custom_minimum_size.x + 8.0
+	x = _k3_layout(x, y0, slot_r)  # region K3
 	_o4_anchor_tl(_o4_slot, x, y0, maxf(0.0, slot_r - x), O4_SLOT_H)
 	_o4_slot.visible = (slot_r - x) >= O4_SLOT_MIN_W
 	# Bottom-left stack: legend, toast, belt strip / patrol bar.
@@ -1452,4 +1455,52 @@ func _b5_bind() -> void:
 func _b5_update() -> void:
 	if _b5_card != null:
 		_b5_card.tick(get_process_delta_time())
+# endregion
+
+
+# region K3
+## "Next audit in Nd" chip (reads K1's days_to_audit() when present). Tap opens the Reviews sheet.
+var _k3_btn: Button
+
+
+static func k3_chip_text(days: int) -> String:
+	if days <= 0:
+		return "Audit\ntoday"
+	return "Next audit\nin %dd" % days
+
+
+func _k3_days() -> int:
+	if sim == null or sim.get("threats") == null or not sim.threats.has_method("days_to_audit"):
+		return -1
+	return int(ceil(float(sim.threats.days_to_audit())))
+
+
+func _k3_build(parent: Control) -> void:
+	_k3_btn = _button(parent, "Next audit", Vector2(140, 64))
+	_k3_btn.add_theme_font_size_override("font_size", 15)
+	_k3_btn.pressed.connect(func() -> void: toggle_panel("reviews"))
+	_k3_btn.visible = false
+
+
+func _k3_update() -> void:
+	if _k3_btn == null:
+		return
+	var d := _k3_days()
+	_k3_btn.visible = d >= 0
+	if d >= 0:
+		_k3_btn.text = k3_chip_text(d)
+		_k3_btn.modulate = Color(1.0, 0.6, 0.5) if d <= 1 else Color.WHITE
+
+
+func _k3_layout(x: float, y0: float, slot_r: float) -> float:
+	if _k3_btn == null or not _k3_btn.visible:
+		return x
+	if _k3_btn.get_parent() != _root:
+		_reparent_to(_k3_btn, _root)
+		_k3_btn.custom_minimum_size = Vector2(140, 64)
+	if x + 140.0 > slot_r:
+		_k3_btn.visible = false
+		return x
+	_o4_anchor_tl(_k3_btn, x, y0, 140.0, 64.0)
+	return x + 148.0
 # endregion
