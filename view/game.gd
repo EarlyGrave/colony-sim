@@ -207,7 +207,7 @@ func _process(delta: float) -> void:
 		auto_panel.visible = hud._side == null or not is_instance_valid(hud._side) or not auto_panel.get_global_rect().intersects(hud._side.get_global_rect())
 	if sim == null or speed == 0:
 		return
-	_accum += delta * Simulation.TICKS_PER_SECOND * speed
+	_accum += delta * Simulation.TICKS_PER_SECOND * speed * _c5_time_scale()  # region C5
 	var n := mini(int(_accum), MAX_TICKS_PER_FRAME)
 	_accum -= int(_accum)
 	for i in n:
@@ -244,6 +244,8 @@ func _on_tapped(world_pos: Vector2) -> void:
 		return
 	var cell := WorldView.world_to_cell(world_pos)
 	if sim == null or not sim.map.in_bounds(cell):
+		return
+	if _squad_tap(world_pos, cell):  # region C5
 		return
 	# region combat
 	if _combat_tap(world_pos, cell):
@@ -837,4 +839,36 @@ func _input(event: InputEvent) -> void:
 	o5_feed(event)
 	if radial != null and radial.is_open and (event is InputEventScreenTouch or event is InputEventScreenDrag or event is InputEventMouseButton or event is InputEventMouseMotion):
 		get_viewport().set_input_as_handled()
+# endregion
+
+
+# region C5
+const C5_SLOW := 0.3  ## time scale while the ability radial is open
+
+
+func _c5_time_scale() -> float:
+	var bar: SquadBar = hud.squad_bar if hud != null else null
+	return C5_SLOW if bar != null and bar.radial != null and bar.radial.is_open else 1.0
+
+
+## With a squad banner selected: tap a creature = squad_focus, tap open ground = squad_hold.
+## Exactly one command per tap. Single-inmate drafting (_combat_tap) is untouched.
+func _squad_tap(world_pos: Vector2, cell: Vector2i) -> bool:
+	var bar: SquadBar = hud.squad_bar if hud != null else null
+	if tool != "inspect" or bar == null or not bar.visible or bar.selected < 0 or bar.api == null:
+		return false
+	var sid := bar.selected
+	var half := Vector2(WorldView.TILE, WorldView.TILE) * 0.5
+	for e in sim.threats.enemies_in_range(Vector2(cell), 2.0):
+		if (e.visual_pos() * WorldView.TILE + half).distance_to(world_pos) < WorldView.TILE * 0.9:
+			if bar.api.has_method("squad_focus"):
+				bar.api.squad_focus(sid, e.id)
+				hud.show_message("Focus fire!", 2.0)
+			return true
+	if not sim.map.is_passable(cell):
+		return true
+	if bar.api.has_method("squad_hold"):
+		bar.api.squad_hold(sid, cell)
+		hud.show_message("Squad, hold here.", 2.0)
+	return true
 # endregion

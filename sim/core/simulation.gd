@@ -81,6 +81,10 @@ var research: ResearchSystem  # region R2a
 # region O1
 ## Warden's Orientation; null unless opts.tutorial is true.
 var tutorial: TutorialSystem
+# region C5
+## Alarm militia (idle inmates rally to squad banners); no-op without squads.
+var militia: Militia
+# endregion
 ## True while step() runs (lets the tutorial tell player alarm toggles from the wave's own).
 var in_step := false
 # endregion
@@ -300,6 +304,7 @@ func _init_systems() -> void:
 	chips = ChipSystem.new(self)  # region T4
 	if bool(opts.get("tutorial", false)):  # region O1
 		tutorial = TutorialSystem.new(self)
+	militia = Militia.new(self)  # region C5
 
 
 func _place_starting_colony() -> void:
@@ -381,6 +386,7 @@ func step() -> void:
 	storyteller.tick()
 	if tutorial != null:  # region O1
 		tutorial.tick()
+	militia.tick()  # region C5
 	in_step = false  # region O1
 	if colonists.alive_count() == 0 and not colonists.list.is_empty():
 		end_game("colonists_dead")

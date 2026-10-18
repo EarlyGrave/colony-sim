@@ -1,0 +1,9 @@
+{
+	"militia": {
+		"_comment": "C5: unassigned healthy inmates rally to the nearest squad banner while the alarm is on, fight with their own weapon (shiv), flee at weapons.combat.flee_hp_fraction. Merge note: C1 adds roles/max_size beside this key.",
+		"max_members": 6,
+		"min_hp_fraction": 0.7,
+		"tick_period": 10,
+		"rally_offsets": [[0, 1], [1, 0], [-1, 0], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]
+	}
+}
