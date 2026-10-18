@@ -1,5 +1,83 @@
 {
-	"essence_ore": {"item": "essence_ore", "tier": 0, "biomes": ["start"], "base_rate": 10.0, "purity_mult": {"impure": 0.5, "normal": 1.0, "pure": 2.0}},
-	"copper_ore": {"item": "copper_ore", "tier": 1, "biomes": ["start"], "base_rate": 10.0, "purity_mult": {"impure": 0.5, "normal": 1.0, "pure": 2.0}},
-	"iron_ore": {"item": "iron_ore", "tier": 1, "biomes": ["start"], "base_rate": 10.0, "purity_mult": {"impure": 0.5, "normal": 1.0, "pure": 2.0}}
+	"essence_ore": {
+		"item": "essence_ore",
+		"tier": 0,
+		"biomes": [
+			"start"
+		],
+		"base_rate": 10.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		}
+	},
+	"copper_ore": {
+		"item": "copper_ore",
+		"tier": 1,
+		"biomes": [
+			"start"
+		],
+		"base_rate": 10.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		}
+	},
+	"iron_ore": {
+		"item": "iron_ore",
+		"tier": 1,
+		"biomes": [
+			"start"
+		],
+		"base_rate": 10.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		}
+	},
+	"cinder_ore": {
+		"item": "cinder_ore",
+		"tier": 2,
+		"biomes": [
+			"ash"
+		],
+		"base_rate": 10.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		},
+		"appended": true
+	},
+	"prism_ore": {
+		"item": "prism_ore",
+		"tier": 2,
+		"biomes": [
+			"crystal"
+		],
+		"base_rate": 10.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		},
+		"appended": true
+	},
+	"bog_resin": {
+		"item": "bog_resin",
+		"tier": 2,
+		"biomes": [
+			"swamp"
+		],
+		"base_rate": 10.0,
+		"purity_mult": {
+			"impure": 0.5,
+			"normal": 1.0,
+			"pure": 2.0
+		},
+		"appended": true
+	}
 }
