@@ -24,6 +24,7 @@ func after_each() -> void:
 
 func _defs_with_biome(hazard: int) -> Defs:
 	var d := peaceful_defs()
+	d.balance["k2_enabled"] = false  # the home-vs-plain hash parity below predates the K2 outpost row
 	d.items["test_ore"] = (d.items["essence_ore"] as Dictionary).duplicate(true)
 	d.resources["test_ore"] = {"item": "test_ore", "tier": 2, "base_rate": 10.0,
 		"purity_mult": {"impure": 0.5, "normal": 1.0, "pure": 2.0}}

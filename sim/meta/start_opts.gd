@@ -62,6 +62,8 @@ static func preset_opts(defs: Defs, id: String) -> Dictionary:
 		var v := float(p.get(pair[0], 1.0))
 		if v != 1.0:
 			o[pair[1]] = v
+	if id != "":  # region K2: milestones read the preset id for review demands
+		o["preset_id"] = id
 	if p.has("audit_interval_days"):  # region K1
 		o["audit_days"] = float(p["audit_interval_days"])
 		o["calm_mult"] = float(p.get("calm_after_hit_days", 1.0))

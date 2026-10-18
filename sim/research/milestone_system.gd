@@ -182,7 +182,7 @@ func tick_reviews() -> void:
 
 
 # region K2: preset-scaled Parole Review + outposts. Gated by balance "k2_enabled" (default false).
-var k2_preset := "standard_term"  # set by whoever starts the run (meta preset id)
+var k2_preset := ""  # explicit override; empty = sim.opts "preset_id" (set from the meta preset at run start)
 var k2_outpost_days := 0  # days an outpost has been held (campaign calls k2_note_day)
 var k2_decoys := 0  # unspent audit decoys (one per newly held outpost period)
 var k2_outposts_held := 0
@@ -194,7 +194,32 @@ func k2_on() -> bool:
 
 func k2_row() -> Dictionary:
 	var t: Dictionary = sim.defs.balance.get("k2", {}).get("presets", {})
-	return t.get(k2_preset, t.get("standard_term", {}))
+	return t.get(k2_preset_id(), t.get("standard_term", {}))
+
+
+func k2_preset_id() -> String:
+	return k2_preset if k2_preset != "" else str(sim.opts.get("preset_id", "standard_term"))
+
+
+## One line for the current outpost step ("" when this preset has none).
+func outpost_step_text() -> String:
+	if not k2_on() or not bool(k2_row().get("outpost_step", false)):
+		return ""
+	var need := int(sim.defs.balance.get("k2", {}).get("outpost_days", 2))
+	return "Outpost step: hold an outpost %d d (%d/%d)" % [need, mini(k2_outpost_days, need), need]
+
+
+## Per-preset demand summary for the Reviews sheet ("" when k2 is off).
+func k2_demand_text() -> String:
+	if not k2_on():
+		return ""
+	var parts: Array[String] = []
+	for r: Dictionary in k2_review_defs(sim.defs.milestones.get("reviews", [])):
+		if str(r.get("kind", "")) == "waves_repelled":
+			parts.append("%d waves repelled" % int(r["value"]))
+		elif str(r.get("kind", "")) == "debt_paid_pct":
+			parts.append("%d%% debt" % int(r["value"]))
+	return "Demands: " + ", ".join(parts)
 
 
 ## Reviews with per-preset demands applied; adds the outpost step where the preset asks for it.
@@ -239,4 +264,14 @@ func k2_consume_decoy() -> bool:
 ## Essence stockpiled at an outpost is exempt from a hoard/essence clock (flag only; clock stays off).
 func k2_essence_exempt() -> bool:
 	return k2_on() and k2_outposts_held > 0
+
+
+func k2_export() -> Array:
+	return [k2_outpost_days, k2_decoys, k2_outposts_held]
+
+
+func k2_import(a: Array) -> void:
+	k2_outpost_days = int(a[0])
+	k2_decoys = int(a[1])
+	k2_outposts_held = int(a[2])
 # endregion

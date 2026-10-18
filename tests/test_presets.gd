@@ -14,7 +14,7 @@ func _sim_with(id: String, seed_value := 2, defs_override: Defs = null) -> Simul
 func test_standard_has_only_pacing_opts() -> void:  # region K1: standard now carries pacing keys
 	var o := StartOpts.preset_opts(Defs.get_default(), "standard_term")
 	for k: String in o:
-		assert_true(k in ["audit_days", "calm_mult", "wave_interval_mult"], k)
+		assert_true(k in ["audit_days", "calm_mult", "wave_interval_mult", "preset_id"], k)
 
 
 func test_raid_points_ladder() -> void:

@@ -6,7 +6,8 @@ const BotReport := preload("res://tools/bot_report.gd")
 
 func test_flag_off_keeps_old_solar() -> void:
 	var d := peaceful_defs()
-	assert_false(bool(d.balance.get("k5_enabled", false)))
+	assert_true(bool(d.balance["k5_enabled"]))  # default on
+	d.balance["k5_enabled"] = false
 	assert_eq(PowerModel.gen_of(d, "solar_array"), 25.0)
 	var sim := make_sim(1, true, 48, 48, d)
 	var b := sim.buildings.place("solar_array", Vector2i(10, 10), false)

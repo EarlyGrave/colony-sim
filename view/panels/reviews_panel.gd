@@ -29,10 +29,14 @@ func refresh() -> void:
 ## Extra read-only lines: audit countdown and (when K2 provides it) the outpost step.
 func k3_lines() -> Array:
 	var out: Array = []
-	if sim != null and sim.get("threats") != null and sim.threats.has_method("days_to_audit"):
+	if sim == null:
+		return out
+	if sim.threats.days_to_audit() >= 0.0:
 		out.append("Next audit in %d d" % int(ceil(float(sim.threats.days_to_audit()))))
-	if sim != null and sim.milestones != null and sim.milestones.has_method("outpost_step_text"):
-		out.append(str(sim.milestones.outpost_step_text()))
+	if sim.milestones.k2_demand_text() != "":
+		out.append(sim.milestones.k2_demand_text())
+	if sim.milestones.outpost_step_text() != "":
+		out.append(sim.milestones.outpost_step_text())
 	return out
 # endregion
 	for l in k3_lines():  # region K3

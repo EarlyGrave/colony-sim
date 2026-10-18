@@ -181,7 +181,7 @@ static func campaign_to_dict(c: Object) -> Dictionary:
 		ledgers[str(k)] = c.ledgers[k]
 	return {"version": CAMPAIGN_VERSION, "campaign_seed": c.campaign_seed, "defs_hash": defs_hash(c.defs),
 		"tick": c.tick, "active": c.active, "log": c.log, "maps": maps, "ledgers": ledgers,
-		"in_flight": c.in_flight}
+		"in_flight": c.in_flight, "k2": c.home_sim().milestones.k2_export()}  # region K2
 
 
 static func campaign_to_json(c: Object) -> String:
@@ -225,6 +225,8 @@ static func campaign_from_dict(data: Dictionary, bus_factory: Callable, p_defs: 
 	c.log = _intify(data["log"])
 	c.in_flight = _intify(data["in_flight"])
 	c.ledgers = ledgers
+	if data.has("k2") and not maps.is_empty():  # region K2: outpost-day counters are not replayable from commands
+		(maps[0]["sim"] as Simulation).milestones.k2_import(_intify(data["k2"]))
 	return {"ok": true, "error": "", "campaign": c}
 
 

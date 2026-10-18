@@ -308,9 +308,11 @@ func end_wave() -> void:
 		e.clear_path()
 	var k1_keep := next_wave_tick if _k1_audit_now_wave else -1  # region K1: an audit does not reset the pollution timer
 	_k1_audit_now_wave = false
-	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * _k1_interval_mult * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
+	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * _k1_interval_mult * _k1_pollution_mult() * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
 	if k1_keep >= 0:  # region K1
 		next_wave_tick = maxi(k1_keep, sim.tick + 1)
+	else:
+		_k1_base_tick = sim.tick
 	_schedule_origin()
 	sim.set_alarm(_alarm_before_wave)
 	_k1_wave_over()  # region K1
@@ -331,6 +333,7 @@ var _k1_audit_now_wave := false
 var _k1_audit_points := 0.0
 var _k1_calm_until := 0
 var _k1_hit := false
+var _k1_base_tick := -1  # end of the last pollution wave; the pollution countdown is re-scaled from it
 
 
 func _k1_init() -> void:
@@ -354,13 +357,30 @@ func days_to_audit() -> float:
 	return -1.0 if _k1_audit_at < 0 else maxf(0.0, float(_k1_audit_at - sim.tick) / float(sim.ticks_per_day))
 
 
+## Pollution drives the pollution-wave cadence: a clean planet stretches the interval, a dirty one shrinks it
+## (balance.json pacing.pollution_interval). 1.0 when pacing is off.
+func _k1_pollution_mult() -> float:
+	if _k1_audit_at < 0:
+		return 1.0
+	var pi: Dictionary = sim.defs.balance.get("pacing", {}).get("pollution_interval", {})
+	if pi.is_empty():
+		return 1.0
+	var t := clampf((sim.contamination.fraction() - float(pi["lo"])) / (float(pi["hi"]) - float(pi["lo"])), 0.0, 1.0)
+	return lerpf(float(pi["clean_mult"]), float(pi["dirty_mult"]), t)
+
+
 func _k1_tick(held: bool) -> void:
 	if _k1_audit_at < 0 or not bool(cfg.get("enabled", true)):
 		return
+	if _k1_base_tick >= 0 and awakened and not wave_active and not held and sim.tick % 30 == 0:
+		var iv := int(float(cfg["wave_interval_days"]) * _k1_interval_mult * _k1_pollution_mult() * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
+		next_wave_tick = maxi(_k1_base_tick + iv, sim.tick + 1)
 	if sim.tick >= _k1_audit_at and not wave_active and not held and not _k1_audit_now:
 		var pc: Dictionary = sim.defs.balance.get("pacing", {})
 		_k1_audit_points = float(pc.get("floor_pts_per_day", 0.7)) * _k1_audit_days * _o3_mult()
 		_k1_audit_at = sim.tick + int(_k1_audit_days * sim.ticks_per_day)
+		if sim.milestones.k2_consume_decoy():  # region K2: an outpost absorbs this audit
+			return
 		_k1_audit_now = true
 		start_wave()
 		_k1_audit_now = false

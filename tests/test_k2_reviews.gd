@@ -17,8 +17,8 @@ func _vals(sim: Simulation) -> Array:
 	return out
 
 
-func test_flag_default_off_and_parity() -> void:
-	assert_false(bool(Defs.get_default().balance["k2_enabled"]))
+func test_flag_default_on_and_parity() -> void:
+	assert_true(bool(Defs.get_default().balance["k2_enabled"]))
 	var a := _sim(false, "hard_time")
 	assert_eq(a.milestones.review_defs().size(), 3)
 	assert_eq(a.milestones.review_defs()[1]["value"], 2.0)
@@ -55,3 +55,30 @@ func test_decoy_absorbs_one_audit() -> void:
 	assert_true(m.k2_essence_exempt())
 	assert_true(m.k2_consume_decoy())
 	assert_false(m.k2_consume_decoy())
+
+
+func _preset_sim(id: String, threats: bool) -> Simulation:
+	var d := peaceful_defs() if not threats else Defs.get_default().duplicate_defs()
+	var sim := Simulation.new(3, make_bus(), d, StartOpts.preset_opts(d, id))
+	sim.start_empty(24, 24)
+	_sims.append(sim)
+	return sim
+
+
+func test_preset_id_wired_from_opts_and_texts() -> void:
+	var sim := _preset_sim("hard_time", false)
+	assert_eq(sim.milestones.k2_preset_id(), "hard_time")
+	assert_true(sim.milestones.outpost_step_text().begins_with("Outpost step"))
+	assert_true(sim.milestones.k2_demand_text().contains("3 waves"))
+
+
+func test_decoy_skips_home_audit() -> void:
+	var sim := _preset_sim("standard_term", true)
+	sim.milestones.k2_note_day(1)
+	sim.tick = sim.threats.next_audit_tick()
+	sim.threats._k1_tick(false)
+	assert_eq(sim.threats.wave_index, 0)
+	assert_eq(sim.milestones.k2_decoys, 0)
+	sim.tick = sim.threats.next_audit_tick()
+	sim.threats._k1_tick(false)
+	assert_eq(sim.threats.wave_index, 1)

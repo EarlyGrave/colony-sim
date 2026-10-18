@@ -10,6 +10,7 @@ func _ready() -> void:
 	var ui_scale := 0.0
 	var win := Vector2i.ZERO
 	var cat := ""
+	var preset := ""  # KX: --preset=standard_term shows the audit chip
 	var panel := ""
 	var tutorial := false  # R5X: --tutorial[=N] starts Warden's Orientation (N = lessons skipped first)
 	var lesson := 0
@@ -28,6 +29,8 @@ func _ready() -> void:
 			win.x = int(a.substr(4))
 		elif a.begins_with("--h="):
 			win.y = int(a.substr(4))
+		elif a.begins_with("--preset="):
+			preset = a.get_slice("=", 1)
 		elif a.begins_with("--cat="):
 			cat = a.substr(6)  # open a compact HUD category popup (zones/build/orders)
 		elif a.begins_with("--panel="):
@@ -52,7 +55,10 @@ func _ready() -> void:
 	await get_tree().process_frame
 	if ui_scale > 0.0:
 		get_tree().root.content_scale_factor = ui_scale
-	game.new_game(42, {"tutorial": true} if tutorial else {})
+	var nopts: Dictionary = {"tutorial": true} if tutorial else {}
+	if preset != "":
+		StartOpts.merge_preset(nopts, Defs.get_default(), preset)
+	game.new_game(42, nopts)
 	game.sim.run_ticks(ticks)
 	for i in lesson:
 		game.sim.tutorial_skip_step()
@@ -112,6 +118,8 @@ func _ready() -> void:
 		game.radial.open_at(get_viewport().get_visible_rect().size * 0.5)
 	if nudge and tutorial:
 		game.hud._process(0.1)
+	if preset != "":
+		game.hud._process(0.6)  # KX: force the HUD refresh so the audit chip shows
 	for i in 20:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

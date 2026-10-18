@@ -1035,6 +1035,8 @@ func _o4_build() -> void:
 		b.custom_minimum_size = Vector2(64, 64)
 	_top_flow.queue_free()
 	_reparent_to(_contract_btn, _root)
+	_reparent_to(_k3_btn, _root)  # region K3: it lived in the freed speed row
+	_k3_btn.custom_minimum_size = Vector2(140, 64)
 	_contract_btn.custom_minimum_size = Vector2(170, 64)
 	_contract_btn.add_theme_font_size_override("font_size", 15)
 	_bottom.visible = false
@@ -1470,7 +1472,7 @@ static func k3_chip_text(days: int) -> String:
 
 
 func _k3_days() -> int:
-	if sim == null or sim.get("threats") == null or not sim.threats.has_method("days_to_audit"):
+	if sim == null:
 		return -1
 	return int(ceil(float(sim.threats.days_to_audit())))
 
@@ -1482,11 +1484,20 @@ func _k3_build(parent: Control) -> void:
 	_k3_btn.visible = false
 
 
+var _k3_want := false
+
+
 func _k3_update() -> void:
 	if _k3_btn == null:
 		return
 	var d := _k3_days()
-	_k3_btn.visible = d >= 0
+	var want := d >= 0
+	if want != _k3_want:  # the chip appears/disappears with the preset: re-run the top-left layout once
+		_k3_want = want
+		_k3_btn.visible = want
+		_o4_layout()
+	elif not want:
+		_k3_btn.visible = false
 	if d >= 0:
 		_k3_btn.text = k3_chip_text(d)
 		_k3_btn.modulate = Color(1.0, 0.6, 0.5) if d <= 1 else Color.WHITE
