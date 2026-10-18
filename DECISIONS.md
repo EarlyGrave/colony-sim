@@ -188,3 +188,10 @@ old saves marked incompatible (save version bump). Plan: docs/automation_batch_p
   that yield specific elements.
 - Target engine: undecided; engine comparison written for the owner (docs/engine_choice.md).
 - Tutorial/onboarding (R5) comes AFTER expeditions (R4).
+
+## Attention / threat generation (owner, 2026-10-18)
+"Attention meter" = threat generation (aggro, MMO-style): every machine AND colonist has a
+`threat` value (data-driven; machines by type/working state, colonists by activity/gear).
+Creatures pick targets by threat (weighted by distance). Players may deliberately build
+fortified high-threat "decoy/tank" structures to pull and absorb damage. Planned with the
+"creatures damage machines" batch (R3).
