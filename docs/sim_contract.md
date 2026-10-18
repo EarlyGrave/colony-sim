@@ -156,6 +156,14 @@ Saves are command-log replays, not state snapshots:
 - `defs_hash`: hash of sorted-key JSON of every Dictionary property of `Defs` (GD `String.hash()`). Only equality with the same engine's defs matters; cross-engine saves are unsupported.
 - `opts`: `scout`, `site`, `crate` (item->count), `map_w`, `map_h`, meta unlock flags; consumed by `StartOpts.apply` and part of the replay input.
 
+### 7b. Campaign save v3 (`SaveGame.campaign_to_dict`, R4 expeditions)
+Sim saves stay v2. A campaign save is `{version:3, campaign_seed, defs_hash, tick, active, log, maps, ledgers, in_flight}`;
+each map `{id, biome, kind, seed, opts, sim_commands, sim_tick, crew_n, dead_charged, sling_ready}` is replayed standalone to `sim_tick`
+(the v2 replay), ledgers/in_flight/log are restored verbatim as plain data (whole floats back to int). A v2 file loads with error `"version"`.
+`in_flight` entries: crate `{kind:"crate", from, to, items, arrive}`, party `{kind:"party", map_id, biome, crew, supplies, arrive}`,
+return `{kind:"return", from, crew, items, arrive}`. Arrival = send tick + `travel`/`travel_ticks`, exact. Collateral: each dead crew member
+(or whole crew of a lost outpost) adds `collateral` to `ledgers["campaign"].collateral_debt`, once. Tech `expeditions` (tier 2) gates `Expedition.send`.
+
 ## 8. `state_hash` (`SaveGame.state_hash(sim)`)
 An `int` hash of observable state. Parts in order: `[tick, game_over_reason, alarm]`; each `items.stacks` entry `[cell, stack]` (insertion order);
 each colonist in `colonists.list` `[id, cell, hp, alive, carry_item, carry_count, carry_quality, learned_perks]`; each building in `buildings.list`

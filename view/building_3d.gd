@@ -12,7 +12,7 @@ const HEIGHTS := {
 	"ash_beacon": 1.0, "penitent_wall": 1.0, "mourning_bell": 1.0,  # region T2
 }
 ## Explicit flat fallbacks (drawn by WorldView on the ground layer).
-const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt", "warden_terminal"]  # belts: BeltLayer; warden_terminal: region R2b
+const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt", "warden_terminal", "sling"]  # belts: BeltLayer; warden_terminal: region R2b
 const TOP_ART := {"hq": "capsule", "refinery": "refinery", "turret": "turret_base", "stove": "stove", "bed": "bed", "door": "door",
 	"miner": "machine_miner", "smelter": "machine_smelter", "assembler": "machine_assembler",
 	"storage_in": "machine_storage_in", "storage_out": "machine_storage_out"}  # region A2c

@@ -31,5 +31,11 @@
 		"short": "Ore\nreserve",
 		"default": false,
 		"amount": 20
+	},
+	"expeditions": {
+		"name": "Expeditions enabled",
+		"short": "Expedi-\ntions",
+		"default": false,
+		"hidden": true
 	}
 }

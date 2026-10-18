@@ -16,5 +16,7 @@
 
 	"ai_chips": {"name": "AI Chips", "tier": 3, "prereqs": ["assembly"], "cost": {"bench_ticks": 7000, "essence": 50}, "unlocks": {"buildings": [], "recipes": ["make_ai_chip"], "rules": []}, "waste_mult": 1.0},
 	"decoys_1": {"name": "Beacons of Penance", "tier": 2, "prereqs": ["fortification"], "cost": {"bench_ticks": 1500, "essence": 0}, "unlocks": {"buildings": ["ash_beacon", "penitent_wall"], "recipes": [], "rules": []}, "waste_mult": 1.0},
-	"decoys_2": {"name": "Mourning Bell", "tier": 3, "prereqs": ["decoys_1"], "cost": {"bench_ticks": 3000, "essence": 15}, "unlocks": {"buildings": ["mourning_bell"], "recipes": [], "rules": []}, "waste_mult": 1.0}
+	"decoys_2": {"name": "Mourning Bell", "tier": 3, "prereqs": ["decoys_1"], "cost": {"bench_ticks": 3000, "essence": 15}, "unlocks": {"buildings": ["mourning_bell"], "recipes": [], "rules": []}, "waste_mult": 1.0},
+
+	"expeditions": {"name": "Expeditions", "tier": 2, "prereqs": ["drilling"], "cost": {"bench_ticks": 3600, "essence": 25}, "unlocks": {"buildings": ["sling"], "recipes": [], "rules": ["expeditions"]}, "waste_mult": 1.0}
 }
