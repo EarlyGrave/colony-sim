@@ -1,0 +1,10 @@
+# L2 report (splitter commands + touch UI)
+- Sim (simulation.gd `# region L2`): `place_belt_node(kind,c,dir)`, `set_splitter_filter(c,slot,value)` recorded first line; queries `get_belt_node_kind(c)`, `get_splitter_filter(c,slot)`. sim_contract rows added. save_game.gd needs no change (args already int/Vector2i/str replay).
+- L1 calls (all behind has_method / `belts.get("kind")` guards, return false/0 until L1 lands):
+  `logistics.place_node(kind:int, cell:Vector2i, dir:int) -> bool`, `logistics.set_filter(cell, slot:int, value:String) -> bool`,
+  `logistics.belts.kind: PackedByteArray` (dense, 0 plain), `logistics.belts.filters: Dictionary[int idx -> PackedStringArray(3)]`, `logistics.belts.version` bumps on node/filter change.
+  Tech gate: `research.building_unlocked("splitter_basic|splitter_smart|splitter_priority|merger")` (L5 defs).
+- UI: automation panel "Logic" toggle -> row Splitter/Smart/Priority/Merger (+Undo moved here: six buttons did not fit beside the HUD toolbar at 844). Locked -> disabled, label shows tech name. Logic tool tap places at last belt dir; Inspect tap on a node -> `SplitterPanel` bottom sheet (view/panels/splitter_panel.gd): Left/Front/Right buttons laid out horizontally (not stacked, 390 px height), each opens an item picker (Any, Overflow, all items; 88x64 buttons). Basic/priority/merger: read-only info. HUD hides strip/legend/toast while the sheet is open (hud.gd `region L2`).
+- belt_layer: node glyph (disc/diamond/wedge/square) + white filter dots drawn in the existing belt shader via INSTANCE_CUSTOM.zw, so still 1 draw call per chunk; chunks re-dirtied only on `belts.version` change.
+- Tests: test_splitter_commands (replay-hash positive path skips until L1), test_splitter_ui, phone-layout L2 test (logic row, sheet, picker at 3 sizes). Sharded suite twice: 638 passed, 0 failed. Goldens untouched.
+- Unverifiable until L1: real node glyphs, replay positive path. Screenshot tool: tools/l2_shot.tscn (uses `force_kind` to show the smart sheet pre-L1).

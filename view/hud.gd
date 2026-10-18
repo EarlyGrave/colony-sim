@@ -1241,6 +1241,8 @@ func _o4_layout() -> void:
 				b.custom_minimum_size = Vector2(88, 64)
 		var mrow: Variant = apc.get("_machine_row")
 		var machines_open: bool = mrow is Control and (mrow as Control).visible
+		var lrow: Variant = apc.get("_logic_row")  # region L2: the Logic row is as tall as the Machines row
+		machines_open = machines_open or (lrow is Control and (lrow as Control).visible)
 		if machines_open and quiet:  # R5X: the tall Machines row drops into the toast/legend band, clear of the chips
 			_legend.visible = false
 			_message.visible = false
@@ -1254,6 +1256,12 @@ func _o4_layout() -> void:
 			var tb := -(8.0 + ah + 4.0 + O4_LEGEND_H + 4.0)
 			_message.offset_bottom = tb
 			_message.offset_top = tb - O4_TOAST_H
+	var l2sheet: Variant = g.get("splitter_panel") if g != null else null  # region L2: the node sheet replaces the strip
+	if l2sheet is Control and (l2sheet as Control).visible:
+		_legend.visible = false
+		_message.visible = false
+		if ap is Control:
+			(ap as Control).visible = false
 	# Save/Continue prompt: above the cluster, never under a menu.
 	var cont: Variant = g.get("_continue_btn") if g != null else null
 	if cont is Button:

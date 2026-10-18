@@ -238,3 +238,24 @@ func test_column_strip_and_map_budget() -> void:
 		var slot := hud.tutorial_slot()
 		assert_true(slot != null and slot.get_global_rect().position.y >= strip_bottom, tag + " tutorial slot below the strip")
 		assert_true(slot.visible and slot.size.x >= 200.0, tag + " tutorial slot usable"))
+
+
+# region L2
+func test_logic_row_and_splitter_sheet_do_not_overlap() -> void:
+	var game := _make_game()
+	game.sim.run_ticks(60)
+	_each_size(func(size: Vector2i, sc: float) -> void:
+		var tag := "%dx%d@%.2f" % [size.x, size.y, sc]
+		game.auto_panel._logic_btn.button_pressed = true
+		_settle(game, size, sc)
+		_check_state(game, tag + " logic row")
+		game.auto_panel._logic_btn.button_pressed = false
+		var c := Vector2i(5, 5)
+		game.splitter_panel.open(game.sim, c, 8.0)
+		_settle(game, size, sc)
+		_check_state(game, tag + " node sheet")
+		game.splitter_panel._open_picker(1)
+		_settle(game, size, sc)
+		_check_state(game, tag + " item picker")
+		game.splitter_panel.close())
+# endregion

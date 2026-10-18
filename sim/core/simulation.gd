@@ -647,6 +647,52 @@ func set_belt_dir(c: Vector2i, dir: int) -> bool:
 # endregion
 
 
+# region L2
+## Belt node kinds (frozen schema): 1 splitter_basic, 2 splitter_smart, 3 splitter_priority, 4 merger.
+const NODE_DEFS: Array[String] = ["", "splitter_basic", "splitter_smart", "splitter_priority", "merger"]
+
+
+## Player command: places a belt node (tech-gated by kind) on a free cell or over a plain belt.
+func place_belt_node(kind: int, c: Vector2i, dir: int) -> bool:
+	_record("place_belt_node", [kind, c, dir])  # save-load
+	if kind < 1 or kind >= NODE_DEFS.size() or dir < 0 or dir > 3 or not map.in_bounds(c):
+		return false
+	if not research.building_unlocked(NODE_DEFS[kind]) or can_belt_cell_error(c) != "":
+		return false
+	if not logistics.has_method("place_node"):
+		return false
+	return bool(logistics.call("place_node", kind, c, dir))
+
+
+## Player command: output filter of a smart splitter. slot 0=left 1=front 2=right.
+func set_splitter_filter(c: Vector2i, slot: int, value: String) -> bool:
+	_record("set_splitter_filter", [c, slot, value])  # save-load
+	if slot < 0 or slot > 2 or not map.in_bounds(c) or not logistics.has_method("set_filter"):
+		return false
+	if value != "any" and value != "overflow" and not defs.items.has(value):
+		return false
+	if get_belt_node_kind(c) != 2:
+		return false
+	return bool(logistics.call("set_filter", c, slot, value))
+
+
+## Node kind at `c` (0 = plain belt or none). Safe before L1 lands.
+func get_belt_node_kind(c: Vector2i) -> int:
+	var k: Variant = logistics.belts.get("kind")
+	if k == null or not logistics.belts.in_bounds(c):
+		return 0
+	return int((k as PackedByteArray)[logistics.belts.index(c)])
+
+
+## Filter value of a smart output ("any" if unset).
+func get_splitter_filter(c: Vector2i, slot: int) -> String:
+	var f: Variant = logistics.belts.get("filters")
+	if f is Dictionary and (f as Dictionary).has(logistics.belts.index(c)):
+		return str((f as Dictionary)[logistics.belts.index(c)][slot])
+	return "any"
+# endregion
+
+
 # region save-load
 func _record(cmd: String, args: Array) -> void:
 	if not replaying:
