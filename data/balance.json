@@ -12,7 +12,8 @@
 		"deposit_amount": [30, 60],
 		"clear_radius": 6,
 		"min_deposit_distance": 7,
-		"extra_share": 0.35
+		"extra_share": 0.35,
+		"extra_min_distance": 13
 	},
 	"colony": {
 		"colonists": 4,
