@@ -206,6 +206,8 @@ const PILE_OFFSETS: Array[Vector2] = [Vector2(0, 3), Vector2(-6, -3), Vector2(6,
 
 
 func _draw_items() -> void:
+	if flat:
+		return  # standing piles come from WorldView3D
 	for c: Vector2i in sim.items.stacks:
 		var st: Dictionary = sim.items.stacks[c]
 		var n := int(st["count"])
@@ -273,8 +275,7 @@ func _draw_colonists() -> void:
 		var flip := moving and c.path[0].x < c.cell.x
 		draw_set_transform(Vector2.ZERO)
 		if flat:
-			_ellipse_shadow(p + Vector2(0, TILE * 0.05))
-			continue
+			continue  # blob shadows come from WorldView3D
 		_ellipse_shadow(p + Vector2(0, TILE * 0.4))
 		var name := "colonist"
 		if c.engineer:
@@ -305,8 +306,7 @@ func _draw_enemies() -> void:
 		var scale := 1.5 if e.def_id == "brute" else 1.0
 		var wobble := sin(_time * 10.0 + e.id) * 1.5
 		if flat:
-			_ellipse_shadow(p + Vector2(0, TILE * 0.05))
-			continue
+			continue  # blob shadows come from WorldView3D
 		_ellipse_shadow(p + Vector2(0, TILE * 0.4 * scale))
 		var mod := Color(1, 1, 1, 0.55) if e.leaving else Color.WHITE
 		_sprite(e.def_id, p + Vector2(0, wobble), Vector2(TILE, TILE) * scale, flip, mod)
