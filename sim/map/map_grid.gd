@@ -16,6 +16,9 @@ var height: int
 var tiles: PackedByteArray
 var deposit_amount: PackedInt32Array
 var mine_designated: PackedByteArray
+var _mine_set: Dictionary = {}
+var _mine_sorted := PackedInt32Array()
+var _mine_dirty := false
 ## Zone id per cell ("" = none).
 var zone_ids: PackedStringArray
 ## Ore destroyed without being mined (cave-ins), for deposit accounting.
@@ -55,6 +58,9 @@ func set_tile(c: Vector2i, t: int, amount := 0) -> void:
 	tiles[i] = t
 	deposit_amount[i] = amount if t == Tile.DEPOSIT else 0
 	if t != Tile.DEPOSIT:
+		if mine_designated[i] != 0:
+			_mine_set.erase(i)
+			_mine_dirty = true
 		mine_designated[i] = 0
 	if _bus:
 		_bus.tile_changed.emit(c)
@@ -100,6 +106,16 @@ func total_deposit_amount() -> int:
 	return s
 
 
+## Designated cell indices in ascending order (cached; rebuilt only after a change).
+func mine_indices() -> PackedInt32Array:
+	if _mine_dirty:
+		var keys: Array = _mine_set.keys()
+		keys.sort()
+		_mine_sorted = PackedInt32Array(keys)
+		_mine_dirty = false
+	return _mine_sorted
+
+
 func is_mine_designated(c: Vector2i) -> bool:
 	return mine_designated[idx(c)] != 0
 
@@ -107,7 +123,14 @@ func is_mine_designated(c: Vector2i) -> bool:
 func set_mine_designated(c: Vector2i, on: bool) -> void:
 	if not is_deposit(c):
 		return
-	mine_designated[idx(c)] = 1 if on else 0
+	var i := idx(c)
+	if (mine_designated[i] != 0) != on:
+		if on:
+			_mine_set[i] = true
+		else:
+			_mine_set.erase(i)
+		_mine_dirty = true
+	mine_designated[i] = 1 if on else 0
 	if _bus:
 		_bus.designation_changed.emit(c)
 
