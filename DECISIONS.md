@@ -228,3 +228,8 @@ Both: squads ("Wardens of the Line") are the main way, and single-inmate draftin
 
 ## Logistics 2 (owner, 2026-10-18)
 Do belt splitters and mergers like Satisfactory with three separate splitter kinds: basic (round-robin), smart (per-output filter), priority/overflow; plus mergers. Add electricity now (was "later").
+- Logistics 2 design (decided without owner, review): splitters/mergers are 1x1 belt nodes with
+  3 outputs (L/F/R); power via poles (union-find networks), brownout = clamp(supply/demand, 0.2, 1),
+  consumers without a pole run at 0.5; essence burner 100 power / threat 15 / waste, solar 25 clean
+  (no day-night yet); no batteries yet; chip upkeep +10 power. Owner request overrides earlier
+  "no power / splitters later".
