@@ -333,25 +333,32 @@ func _diffuse() -> void:
 	var h := sim.map.height
 	var k := float(_cfg["diffusion"])
 	var decay := 1.0 - float(_cfg["decay_per_update"])
+	var f := field
+	var sc := _scratch
 	for y in h:
+		var interior_row := y > 0 and y < h - 1
 		for x in w:
 			var i := y * w + x
-			var v := field[i]
+			var v := f[i]
 			var sum := 0.0
 			var cnt := 0
-			if x > 0:
-				sum += field[i - 1]
-				cnt += 1
-			if x < w - 1:
-				sum += field[i + 1]
-				cnt += 1
-			if y > 0:
-				sum += field[i - w]
-				cnt += 1
-			if y < h - 1:
-				sum += field[i + w]
-				cnt += 1
-			_scratch[i] = (v + k * (sum / cnt - v)) * decay
+			if interior_row and x > 0 and x < w - 1:
+				sum = f[i - 1] + f[i + 1] + f[i - w] + f[i + w]  # same order as below
+				cnt = 4
+			else:
+				if x > 0:
+					sum += f[i - 1]
+					cnt += 1
+				if x < w - 1:
+					sum += f[i + 1]
+					cnt += 1
+				if y > 0:
+					sum += f[i - w]
+					cnt += 1
+				if y < h - 1:
+					sum += f[i + w]
+					cnt += 1
+			sc[i] = (v + k * (sum / cnt - v)) * decay
 	var tmp := field
 	field = _scratch
 	_scratch = tmp
@@ -374,14 +381,18 @@ func _normalize() -> void:
 func _detect_mutations() -> void:
 	var th := mutated_threshold()
 	var w := sim.map.width
+	var any_mutated := not _mutated.is_empty()
 	for i in field.size():
-		var c := Vector2i(i % w, i / w)
 		if field[i] >= th:
+			var c := Vector2i(i % w, i / w)
 			if not _mutated.has(c):
 				_mutated[c] = true
+				any_mutated = true
 				sim.bus.cell_mutated.emit(c)
-		elif _mutated.has(c):
-			_mutated.erase(c)
+		elif any_mutated:
+			var c := Vector2i(i % w, i / w)
+			if _mutated.erase(c):
+				any_mutated = not _mutated.is_empty()
 
 
 func _grow_blooms() -> void:

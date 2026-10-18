@@ -7,6 +7,7 @@ var map: MapGrid
 var astar := AStarGrid2D.new()
 var _component := PackedInt32Array()
 var _components_dirty := true
+var _terrain_dirty := true
 # region perf-threat
 ## Bumped whenever a cell's walkability changes; invalidates flow fields.
 var version := 0
@@ -16,6 +17,9 @@ var flow_builds := 0
 var _walk := PackedByteArray()
 var _flows: Dictionary = {}
 var _flows_version := -1
+## Cells whose walkability changed since the cache was last swept (partial invalidation).
+var _dirty_cells: Array[Vector2i] = []
+var _use_clock := 0
 var _pending: Array[FlowField] = []
 const MAX_CACHED_FLOWS := 48
 # endregion
@@ -47,18 +51,22 @@ func rebuild() -> void:
 			astar.set_point_solid(c, not ok)
 			_walk[y * map.width + x] = 1 if ok else 0  # region perf-threat
 	_components_dirty = true
+	_terrain_dirty = true
 	version += 1  # region perf-threat
+	_dirty_cells.clear()
 
 
 func refresh_cell(c: Vector2i) -> void:
 	var ok := is_walkable(c)
 	astar.set_point_solid(c, not ok)
 	_components_dirty = true
+	_terrain_dirty = true
 	# region perf-threat
 	var i := c.y * map.width + c.x
 	if map.in_bounds(c) and _walk[i] != (1 if ok else 0):
 		_walk[i] = 1 if ok else 0
 		version += 1
+		_dirty_cells.append(c)
 	# endregion
 
 
@@ -82,7 +90,7 @@ func set_blocked(c: Vector2i, on: bool) -> void:
 func reachable_terrain(a: Vector2i, b: Vector2i) -> bool:
 	if not map.is_passable(a) or not map.is_passable(b):
 		return false
-	_ensure_components()
+	_ensure_terrain_components()
 	return _terrain_component[map.idx(a)] == _terrain_component[map.idx(b)]
 
 
@@ -141,48 +149,59 @@ func _ensure_components() -> void:
 	if not _components_dirty:
 		return
 	_components_dirty = false
-	_label(_component, true)
-	_label(_terrain_component, false)
+	_label(_component, _walk)
 
 
-func _label(comp: PackedInt32Array, with_blocks: bool) -> void:
+## Terrain-only labels are needed rarely (spawn decisions), so they are built on demand.
+func _ensure_terrain_components() -> void:
+	_ensure_components()
+	if not _terrain_dirty:
+		return
+	_terrain_dirty = false
+	var ok := PackedByteArray()
+	ok.resize(map.width * map.height)
+	for i in ok.size():
+		ok[i] = 1 if map.tiles[i] == MapGrid.Tile.GROUND else 0
+	_label(_terrain_component, ok)
+
+
+## Connected components of the 4-neighbourhood over the cells with ok[i] != 0 (flat-index flood fill).
+func _label(comp: PackedInt32Array, ok: PackedByteArray) -> void:
 	var w := map.width
 	var h := map.height
 	comp.resize(w * h)
 	comp.fill(-1)
-	# region perf-threat: flat-index flood fill (no Vector2i / Dictionary per cell)
 	var next_id := 0
 	var queue := PackedInt32Array()
+	queue.resize(w * h)
 	for i in comp.size():
-		if comp[i] != -1 or not _label_ok(i, with_blocks):
+		if comp[i] != -1 or ok[i] == 0:
 			continue
-		queue.clear()
-		queue.append(i)
-		comp[i] = next_id
 		var head := 0
-		while head < queue.size():
+		var tail := 1
+		queue[0] = i
+		comp[i] = next_id
+		while head < tail:
 			var c := queue[head]
 			head += 1
 			var x := c % w
-			var y := c / w
-			if x + 1 < w and comp[c + 1] == -1 and _label_ok(c + 1, with_blocks):
+			if x + 1 < w and comp[c + 1] == -1 and ok[c + 1] != 0:
 				comp[c + 1] = next_id
-				queue.append(c + 1)
-			if x > 0 and comp[c - 1] == -1 and _label_ok(c - 1, with_blocks):
+				queue[tail] = c + 1
+				tail += 1
+			if x > 0 and comp[c - 1] == -1 and ok[c - 1] != 0:
 				comp[c - 1] = next_id
-				queue.append(c - 1)
-			if y + 1 < h and comp[c + w] == -1 and _label_ok(c + w, with_blocks):
+				queue[tail] = c - 1
+				tail += 1
+			if c + w < comp.size() and comp[c + w] == -1 and ok[c + w] != 0:
 				comp[c + w] = next_id
-				queue.append(c + w)
-			if y > 0 and comp[c - w] == -1 and _label_ok(c - w, with_blocks):
+				queue[tail] = c + w
+				tail += 1
+			if c >= w and comp[c - w] == -1 and ok[c - w] != 0:
 				comp[c - w] = next_id
-				queue.append(c - w)
+				queue[tail] = c - w
+				tail += 1
 		next_id += 1
-	# endregion
-
-
-func _label_ok(i: int, with_blocks: bool) -> bool:
-	return _walk[i] != 0 if with_blocks else map.tiles[i] == MapGrid.Tile.GROUND
 
 
 # region perf-threat
@@ -194,10 +213,46 @@ func walk_grid() -> PackedByteArray:
 ## Cached field under `key`, or null (also when the map changed since it was built).
 func flow_cached(key: int) -> FlowField:
 	if _flows_version != version:
-		_flows.clear()
-		_pending.clear()
-		_flows_version = version
-	return _flows.get(key)
+		_sweep_flows()
+	var f: FlowField = _flows.get(key)
+	if f != null:
+		_use_clock += 1
+		f.last_use = _use_clock
+	return f
+
+
+## Drops only the fields whose window contains a changed cell (all of them after `rebuild`).
+func _sweep_flows() -> void:
+	_flows_version = version
+	if _flows.is_empty():
+		_dirty_cells.clear()
+		return
+	var all := _dirty_cells.is_empty() or _dirty_cells.size() > 64
+	for key in _flows.keys():
+		var f: FlowField = _flows[key]
+		var hit := all
+		if not hit:
+			for c in _dirty_cells:
+				if f.touches(c):
+					hit = true
+					break
+		if hit:
+			_flows.erase(key)
+			_pending.erase(f)
+	_dirty_cells.clear()
+
+
+func _evict_lru() -> void:
+	var worst := -1
+	var best_use := 1 << 60
+	for key in _flows:
+		var u: int = (_flows[key] as FlowField).last_use
+		if u < best_use:
+			best_use = u
+			worst = key
+	var f: FlowField = _flows[worst]
+	_flows.erase(worst)
+	_pending.erase(f)
 
 
 ## New field to `sources` stored under `key`. `max_dist` >= 0 bounds it and builds it at once;
@@ -207,9 +262,10 @@ func flow_to(key: int, sources: Array[Vector2i], max_dist := -1) -> FlowField:
 	if f != null:
 		return f
 	if _flows.size() >= MAX_CACHED_FLOWS:
-		_flows.clear()
-		_pending.clear()
+		_evict_lru()
 	f = FlowField.new()
+	_use_clock += 1
+	f.last_use = _use_clock
 	f.build(_walk, map.width, map.height, sources, max_dist, -1 if max_dist >= 0 else 0)
 	_flows[key] = f
 	if not f.complete:
