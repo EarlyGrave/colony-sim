@@ -150,4 +150,5 @@ func test_three_map_step_cost() -> void:
 		c3.step()
 	var t2 := Time.get_ticks_usec()
 	var extra_ms := (float(t2 - t1) - float(t1 - t0)) / 600.0 / 1000.0
-	assert_true(extra_ms <= 0.15, "3-map extra cost %.3f ms/tick" % extra_ms)
+	if not perf_skip():
+		assert_true(extra_ms <= 0.15, "3-map extra cost %.3f ms/tick" % extra_ms)

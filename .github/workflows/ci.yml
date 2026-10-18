@@ -53,7 +53,10 @@ jobs:
         run: ~/godot/godot --headless --path . --import
 
       - name: Run tests
-        run: ~/godot/godot --headless --path . res://tests/run_tests.tscn
+        run: GODOT=$HOME/godot/godot tools/run_tests_sharded.sh 4
+
+      - name: Perf budget (single process)
+        run: ~/godot/godot --headless --path . res://tests/run_tests.tscn -- --filter=test_perf_budget
 
       - name: Export web
         run: |

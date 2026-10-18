@@ -1,0 +1,15 @@
+{
+	"noise_margin": 1.5,
+	"_doc": "docs/optimization_strategy.md section 3. Values are the contract; the test fails above value * noise_margin. 'waived' lists budgets not yet met (owner wave); remove an entry when its wave lands.",
+	"systems": {
+		"threats": {"avg": 2.0, "p95": 5.0},
+		"logistics": {"avg": 0.5, "p95": 1.0},
+		"colonists": {"avg": 0.5, "p95": 1.5},
+		"contamination": {"avg": 0.5, "p95": 2.0},
+		"mutation": {"avg": 0.5, "p95": 2.0},
+		"total": {"avg": 4.0, "p95": 10.0}
+	},
+	"first_tick_ms": 20.0,
+	"flow_builds_per_600": 60,
+	"waived": {}
+}

@@ -366,33 +366,88 @@ func _place_crew_colony() -> void:
 # --- Tick ---------------------------------------------------------------------
 
 ## Advances the simulation by one fixed tick.
+## Perf profiling (tools/perf_bench.gd, tests/test_perf_budget.gd). Off by default: one bool check per system.
+## `profile` maps system name -> accumulated microseconds; the caller resets it.
+var profiling: bool = false
+var profile: Dictionary = {}
+var _lap_t: int = 0
+
+
+func _lap(key: String) -> void:
+	var now := Time.get_ticks_usec()
+	profile[key] = int(profile.get(key, 0)) + now - _lap_t
+	_lap_t = now
+
+
 func step() -> void:
 	if game_over_reason != "":
 		return
 	tick += 1
+	if profiling:
+		_lap_t = Time.get_ticks_usec()
 	in_step = true  # region O1
 	crafting.tick()  # region crafting
+	if profiling:
+		_lap("crafting")
 	needs.tick()  # region needs
+	if profiling:
+		_lap("needs")
 	farming.tick()  # region needs
+	if profiling:
+		_lap("farming")
 	colonists.tick()
+	if profiling:
+		_lap("colonists")
 	logistics.tick()  # region A1c
+	if profiling:
+		_lap("logistics")
 	buildings.tick_machines()  # region A2a
+	if profiling:
+		_lap("machines")
 	chips.tick()  # region T4
+	if profiling:
+		_lap("chips")
 	perks.tick()  # region perks
+	if profiling:
+		_lap("perks")
 	health.tick()  # region health
+	if profiling:
+		_lap("health")
 	debt.tick()  # region debt
+	if profiling:
+		_lap("debt")
 	mood.tick()  # region mood
+	if profiling:
+		_lap("mood")
 	abilities.tick()  # region C2
+	if profiling:
+		_lap("abilities")
 	threats.tick()
+	if profiling:
+		_lap("threats")
 	squads.tick()  # region C1
+	if profiling:
+		_lap("squads")
 	contamination.tick()
+	if profiling:
+		_lap("contamination")
 	mutation.tick()  # region mutation
+	if profiling:
+		_lap("mutation")
 	ecology.tick()  # region T5
+	if profiling:
+		_lap("ecology")
 	crises.tick()  # region crises
+	if profiling:
+		_lap("crises")
 	storyteller.tick()
+	if profiling:
+		_lap("storyteller")
 	if tutorial != null:  # region O1
 		tutorial.tick()
 	militia.tick()  # region C5
+	if profiling:
+		_lap("militia")
 	in_step = false  # region O1
 	if colonists.alive_count() == 0 and not colonists.list.is_empty():
 		end_game("colonists_dead")

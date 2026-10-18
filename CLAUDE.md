@@ -56,6 +56,7 @@ mode — the main session does NOT implement features itself:
 godot --headless --path . --import                       # build .godot cache (needed once / after adding class_name)
 godot --headless --path . res://tests/run_tests.tscn     # all tests
 godot --headless --path . res://tests/run_tests.tscn -- --filter=test_map   # subset
+tools/run_tests_sharded.sh 4                              # full suite as 4 parallel shards (~2 min; sets PERF_SKIP_WALL=1, run test_perf_budget single-process)
 godot --headless --path . --export-release "Web" build/web/index.html
 godot --headless --path . -s tools/make_golden.gd -- --regen   # regenerate tests/golden/*.json after an INTENDED sim/balance change (prints changed ticks)
 ```
