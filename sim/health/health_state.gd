@@ -54,3 +54,23 @@ func total_damage() -> float:
 
 func is_untouched() -> bool:
 	return injuries.is_empty() and blood >= 1.0
+
+
+# region C4
+## Derived band: "fit", "wounded" or "down". Parts and injuries stay the truth.
+func band(cfg: Dictionary) -> String:
+	if downed:
+		return "down"
+	var b: Dictionary = cfg["band"]
+	if blood < float(b["wounded_blood"]) or total_damage() >= float(b["wounded_damage"]):
+		return "wounded"
+	return "fit"
+
+
+## Ticks until blood reaches zero at the current bleed rate, -1 if not bleeding.
+func bleed_out_ticks() -> int:
+	var r := bleed_rate()
+	if r <= 0.0:
+		return -1
+	return ceili(blood / r)
+# endregion

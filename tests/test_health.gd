@@ -96,3 +96,21 @@ func _run(seed_value: int) -> String:
 
 func test_deterministic() -> void:
 	assert_eq(_run(5), _run(5))
+
+
+# region C4
+func test_band_and_stabilise() -> void:
+	var sim := _colony()
+	var c: Colonist = sim.colonists.list[0]
+	assert_eq(sim.health.band(c), "fit")
+	sim.health.apply_damage(c, 10.0, "arms", "cut")
+	assert_eq(sim.health.band(c), "wounded")
+	assert_eq(sim.health.bleed_out_seconds(c), -1)
+	sim.health.apply_damage(c, 60.0, "legs", "bullet")
+	sim.step()
+	assert_eq(sim.health.band(c), "down")
+	assert_gt(sim.health.bleed_out_seconds(c), 0)
+	assert_gt(sim.health.stabilise(c), 0)
+	assert_eq(c.health.bleed_rate(), 0.0)
+	assert_eq(sim.health.bleed_out_seconds(c), -1)
+# endregion

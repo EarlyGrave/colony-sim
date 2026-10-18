@@ -89,6 +89,12 @@
 	"downed_consciousness": 0.3,
 	"downed_moving": 0.05,
 	"blood_ok": 0.6,
+	"band": {
+		"_comment": "C4 derived band: Wounded when blood < wounded_blood or total damage >= wounded_damage.",
+		"wounded_blood": 0.95,
+		"wounded_damage": 5.0,
+		"stabilise_quality": 0.6
+	},
 	"blood_unconscious": 0.25,
 	"blood_regen_per_tick": 5e-05,
 	"untended_heal_mult": 0.5,
