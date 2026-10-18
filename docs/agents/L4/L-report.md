@@ -1,0 +1,10 @@
+# L4 report: power view + HUD
+- Models (data/models.json, own keys): power_pole 1x1, coal_generator 2x2 (smokestack + smoke + fire glow while burning), nitrogen_extractor 2x2 (pumping piston), nitrogen_turbine 2x2 (spinning rotors), nuclear_reactor 3x3 (cooling tower steam, core glow, blinking lamp when overheat > 0.6), solar_array 2x2. All <= 17 parts. Footprints assumed (reactor 3x3, others 2x2); L5 data must match.
+- view/building_3d.gd region L4: HEIGHTS entries, generator burning/overheat state, new anims `spin`, `blink`, consumer brownout tint (overlay on: yellow < 0.9, red < 0.5).
+- view/power_layer.gd: wires as one MultiMesh per 32x32 chunk (40 poles + 100 wires = 1 draw call), rebuilt only on power version / overlay change (+1 s colour refresh in overlay); per-net badge "supply/demand xFactor".
+- view/power_reader.gd: guarded read adapter (works with no sim.power). Calls expected from L3 `sim.power`: `version`, `networks()` -> [{id,supply,demand,factor,poles[],generators[],consumers[]}] (building ids), `links()` -> [[id_a,id_b]], `generator_info(id)` -> {burning,fuel,fuel_cap,fuel_item,supply,overheat?,waste_per_min?}; optional bus signal `power_changed`. Stub: tests/power_stub.gd via `sim.set_meta("power_stub", stub)` (also injects defs + builds a demo base).
+- HUD region L4: chip "PWR 25/90 (28%)" as 3rd line of the O4 resource column (net with lowest factor, coloured ok/yellow/red, hidden before any pole). It is a Label, so no overlap and no small buttons.
+- view/panels/power_panel.gd (registered "Power" in More menu): overlay toggle (64 px), nets, generators with fuel, overheat, waste/min.
+- Tests: tests/test_power_view.gd (7, incl. chip fit at 844x390, 2532x1170@2.55, 1280x720). Phone-layout green; sharded suite twice: 638 passed, 0 failed; goldens untouched.
+- Screenshots: scratchpad l4_phone_{models,overlay,panel}.png (844x390 @2.55), l4_desk_{models,overlay,panel}.png (1280x720); tool tools/l4_shot.tscn.
+- Not done: view_bench numbers for overlay cost (not measured); view cost is cached reads + one MultiMesh rebuild on change. Tapping a pole/generator to open the panel is not wired (panel via More menu).

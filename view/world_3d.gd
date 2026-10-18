@@ -72,6 +72,7 @@ var _tint := Color.WHITE
 var world_view: WorldView  # region G1b: source of turret aim
 var _buildings3d := Building3D.new()  # region G1b
 var _belt_layer := BeltLayer.new()  # region A2c
+var _power_layer := PowerLayer.new()  # region L4
 
 
 func _ready() -> void:
@@ -87,6 +88,7 @@ func _ready() -> void:
 	_w2b_ready()  # region W2b
 	add_child(_buildings3d)  # region G1b
 	add_child(_belt_layer)  # region A2c
+	add_child(_power_layer)  # region L4
 
 
 func bind(p_sim: Simulation, world_2d: World2D) -> void:
@@ -98,6 +100,7 @@ func bind(p_sim: Simulation, world_2d: World2D) -> void:
 	sim.bus.tile_changed.connect(_on_tile_changed)
 	_g1c_bind()  # region G1c
 	_belt_layer.bind(sim)  # region A2c
+	_power_layer.bind(sim)  # region L4
 	if overlay and not overlay.draw.is_connected(_draw_overlay):
 		overlay.draw.connect(_draw_overlay)
 
@@ -110,6 +113,7 @@ func unbind() -> void:
 	_clear_units()
 	_buildings3d.clear()  # region G1b
 	_belt_layer.clear()  # region A2c
+	_power_layer.clear()  # region L4
 	sim = null
 
 
@@ -233,6 +237,7 @@ func _process(delta: float) -> void:
 	_g1c_update()  # region G1c
 	_buildings3d.sync(sim, _aim_of, _tint)  # region G1b
 	_a2c_update(delta)  # region A2c
+	_power_layer.sync(_tint)  # region L4
 	_w2b_update()  # region W2b
 	if overlay:
 		overlay.queue_redraw()
