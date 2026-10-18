@@ -187,3 +187,4 @@ old saves marked incompatible (save version bump). Plan: docs/automation_batch_p
 - Expeditions = a real second playable map; factories for specific parts live on separate maps
   that yield specific elements.
 - Target engine: undecided; engine comparison written for the owner (docs/engine_choice.md).
+- Tutorial/onboarding (R5) comes AFTER expeditions (R4).
