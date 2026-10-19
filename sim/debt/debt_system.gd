@@ -156,7 +156,7 @@ func _daily(c: Colonist, st: DebtState) -> void:
 			if sim.traits.has_tag(c, "despair_frozen"):
 				tm = 0.0
 			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short * bm * dm * tm)
-			if sim.blocks != null:  # region I1
+			if sim.blocks != null and not (sim.quests != null and sim.quests.flag("path_fight")):  # region I1 (N3: fight path: not counted as missed)
 				sim.blocks.on_installment_missed(c)
 	else:
 		if sim.day() >= st.due_day:  # installment met: roll the period, interest grows the debt

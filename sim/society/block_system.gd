@@ -12,6 +12,9 @@ var member_of: Dictionary = {}  # colonist id -> block id (kept out of bio so ot
 var quiet: Dictionary = {}  # block id -> days without a negative event
 var _informant_id := 0
 var _touched := false
+var _succeeded := false  # region N3: M2 once per run
+var _low_days: Dictionary = {}  # region N3: block -> days at/below walkout standing
+var _ultimatum: Dictionary = {}  # region N3: block -> {deadline, refined0}
 
 
 static func load_cfg() -> Dictionary:
@@ -77,6 +80,7 @@ func on_installment_missed(c: Colonist) -> void:
 func _on_died(id: int) -> void:
 	var c := sim.colonists.get_by_id(id)
 	_change(block_of(c), -float(cfg["death_loss"]), true)
+	_debt_of_the_dead(c)  # region N3
 
 
 func _on_escaped(id: int) -> void:
@@ -97,7 +101,7 @@ func _change(b: String, delta: float, negative: bool) -> void:
 
 
 func has_state() -> bool:
-	return _touched or _informant_id != 0
+	return _touched or _informant_id != 0 or _succeeded or not _ultimatum.is_empty()
 
 
 func state_parts() -> Array:
@@ -106,6 +110,10 @@ func state_parts() -> Array:
 	var out: Array = [_informant_id]
 	for k in keys:
 		out.append([k, snappedf(standing[k], 0.001), quiet[k]])
+	if _succeeded or not _ultimatum.is_empty():  # region N3 (hash part only once a moment fired)
+		var uk: Array = _ultimatum.keys()
+		uk.sort()
+		out.append(["n3", _succeeded, uk])
 	return out
 
 
@@ -113,6 +121,8 @@ func tick() -> void:
 	if not is_enabled() or sim.tick % sim.ticks_per_day != 0:
 		return
 	_pick_informant()
+	_succession()  # region N3
+	_walkouts()  # region N3
 	var keys: Array = standing.keys()
 	keys.sort()
 	for b: String in keys:
@@ -173,3 +183,128 @@ func _pick_informant() -> void:
 			best = c
 	member_of[best.id] = "informant"
 	_informant_id = best.id
+
+
+# region N3
+## Path choice (verb `path`): flag path_<id>, Standing +-leaning_delta per block (data: leaning).
+func apply_path(id: String) -> void:
+	if sim.quests != null:
+		sim.quests.set_flag("path_" + id)
+	if not is_enabled():
+		return
+	var lean: Dictionary = cfg.get("leaning", {})
+	var ids: Array = standing.keys()
+	ids.sort()
+	for b: String in ids:
+		var l := int((lean.get(b, {}) as Dictionary).get(id, 0))
+		if l != 0:
+			_change(b, l * float(cfg.get("leaning_delta", 15.0)), l < 0)
+
+
+func _path_flag(id: String) -> bool:
+	return sim.quests != null and sim.quests.flag(id)
+
+
+func _letter(title: String, text: String) -> void:
+	if sim.quests != null and sim.quests.mod("pa_silent") > 0.0:
+		return
+	sim.bus.letter_received.emit(title, text)
+
+
+## M1 Debt of the Dead: the open installment moves to the block (+pct of each member's remaining debt).
+func _debt_of_the_dead(c: Colonist) -> void:
+	if not is_enabled() or c == null or sim.debt == null or _path_flag("path_fight"):
+		return
+	var st := sim.debt.state_of(c)
+	if st == null or st.remaining() <= 0:
+		return
+	var b := block_of(c)
+	var pct := float(cfg.get("debt_of_dead_pct", 1.0))
+	for m in _members(b):
+		if m.id == c.id:
+			continue
+		var ms := sim.debt.state_of(m)
+		if ms != null and ms.remaining() > 0:
+			ms.total += ceili(ms.remaining() * pct / 100.0)
+	_letter(str(cfg["debt_of_dead_title"]), str(cfg["debt_of_dead_text"]).replace("{id}", str(4000 + c.id)))
+
+
+## M2 Informant Succession: once per run, the highest-Standing block supplies the new Informant.
+func _succession() -> void:
+	if _succeeded or _informant_id == 0:
+		return
+	var old := sim.colonists.get_by_id(_informant_id)
+	if old != null and old.alive and not sim.debt.gone.has(old.id):
+		return
+	var best := ""
+	var ids: Array = standing.keys()
+	ids.sort()
+	for b: String in ids:
+		if b == "informant" or _members(b).is_empty():
+			continue
+		if best == "" or standing_of(b) > standing_of(best):
+			best = b
+	if best == "":
+		return
+	var pick: Colonist = _members(best)[0]
+	_succeeded = true
+	member_of[pick.id] = "informant"
+	_informant_id = pick.id
+	if sim.quests != null:
+		sim.quests.set_flag("informant_succeeded")
+	_change(best, -float(cfg["succession_loss"]), true)
+	_letter(str(cfg["succession_title"]), str(cfg["succession_text"]))
+
+
+## M3 Walkout: Standing <= 15 for 3 days -> ultimatum; unmet -> two most despairing members run for the dock.
+func _walkouts() -> void:
+	var ids: Array = standing.keys()
+	ids.sort()
+	for b: String in ids:
+		if _ultimatum.has(b):
+			if sim.day() >= int(_ultimatum[b]["deadline"]):
+				_resolve_ultimatum(b)
+			continue
+		if standing_of(b) <= float(cfg.get("walkout_standing", 15.0)) and not _members(b).is_empty():
+			_low_days[b] = int(_low_days.get(b, 0)) + 1
+			if int(_low_days[b]) >= int(cfg.get("walkout_days", 3)):
+				_low_days[b] = 0
+				_ultimatum[b] = {"deadline": sim.day() + int(cfg.get("walkout_deadline_days", 2)),
+						"refined0": int(sim.ledger.produced.get("refined_essence", 0))}
+				_touched = true
+				var key := "walkout_text_fight" if _path_flag("path_fight") else "walkout_text"
+				_letter(str(cfg["walkout_title"]), str(cfg[key]).replace("{block}", str(cfg["blocks"][b]["name"])))
+		else:
+			_low_days[b] = 0
+
+
+func _ultimatum_met(b: String) -> bool:
+	if _path_flag("path_fight"):
+		return int(sim.ledger.produced.get("refined_essence", 0)) <= int(_ultimatum[b]["refined0"])
+	var inst := int(sim.defs.debt["installment"])
+	for m in _members(b):
+		var st := sim.debt.state_of(m)
+		if st != null and st.remaining() > 0 and st.period_paid < inst:
+			return false
+	return true
+
+
+func _resolve_ultimatum(b: String) -> void:
+	var met := _ultimatum_met(b)
+	_ultimatum.erase(b)
+	var nm := str(cfg["blocks"][b]["name"])
+	if met:
+		_change(b, float(cfg.get("walkout_gain", 20.0)), false)
+		for m in _members(b):
+			sim.mood.add_thought(m, "block_proud")
+		_letter(str(cfg["walkout_met_title"]), str(cfg["walkout_met_text"]).replace("{block}", nm))
+		return
+	var ms := _members(b)
+	ms.sort_custom(func(x: Colonist, y: Colonist) -> bool:
+		var dx := sim.debt.state_of(x).despair if sim.debt.state_of(x) != null else 0.0
+		var dy := sim.debt.state_of(y).despair if sim.debt.state_of(y) != null else 0.0
+		return dx > dy or (dx == dy and x.id < y.id))
+	for i in mini(int(cfg.get("walkout_breakers", 2)), ms.size()):
+		sim.jobs.request_override(ms[i], sim.debt.start_break(ms[i], "escape"))
+	_letter(str(cfg["walkout_failed_title"]), str(cfg["walkout_failed_text"]).replace("{block}", nm))
+# endregion
