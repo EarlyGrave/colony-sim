@@ -150,10 +150,15 @@ func _daily(c: Colonist, st: DebtState) -> void:
 			if sim.quests != null and sim.quests.is_enabled() and not sim.quests.flag("installment_missed"):  # region R1
 				sim.quests.set_flag("installment_missed")
 			var short := float(inst - st.period_paid) / float(maxi(1, inst))
-			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short)
+			var bm := sim.blocks.despair_mult(c) if sim.blocks != null else 1.0  # region I1
+			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short * bm)
+			if sim.blocks != null:  # region I1
+				sim.blocks.on_installment_missed(c)
 	else:
 		if sim.day() >= st.due_day:  # installment met: roll the period, interest grows the debt
 			st.period_paid -= inst
+			if sim.blocks != null:  # region I1
+				sim.blocks.on_installment_paid(c)
 			st.due_day += int(cfg["period_days"])
 			var add := ceili(st.remaining() * float(cfg["interest_pct"]) / 100.0)
 			st.total += add

@@ -140,8 +140,9 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `shuttle.json` | preset_mult, gantry, parts_need, part_cost, countdown_days, siege_* numbers, repair_cost, win_letter (S1, gated by balance s1_enabled) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
 | `beacons.json` | S2: building, build_ticks, cost, life_days, cut_pct, diminish, cap_pct, max_alive (gated by balance s2_enabled) |
+| `blocks.json` | I1: cell blocks (names, assign_order, informant_min_inmates), Standing gains/losses, despair mults, block thoughts, Cohesion fee letter |
 | `models.json` | art model descriptors (view only, not read by sim) |
-| `mood.json` | base, check_ticks, thresholds, chances, thoughts |
+| `mood.json` | base, check_ticks, thresholds, chances, thoughts (block_proud/shamed from I1 `blocks.json`: cell-block Standing, despair mults, Cohesion fee) |
 | `quests_q1.json` | Q1 Clerk's Margin Note: tag, trigger, debt caps, loophole/report tuning, beat texts |
 | `mutation.json` | update_ticks, cap, diffusion, decay, bloom/illness chances |
 | `threat.json` | enabled (threat_v2), d0, k_poll, stick, pull_ratio, region_size/cap_per_region, recompute_ticks, base/state_mod/colonist_mod/species_bias; def fields `threat`, `threat_mods`; API `ThreatSystem.pick_target(e)`, `Building.threat_now(sim)`, `Building.threat_flags`; C2 `sim.abilities.flags_of(colonist_id)` {flag: [until_tick, mult, radius]} (kept off `Colonist`: its property list feeds golden dumps) multiplies `ThreatModel.colonist_value` (radius > 0: fades beyond it) |
@@ -230,7 +231,6 @@ Nests (2-4, map edge, reachable) are placed from the ecology stream at `start_ne
 `pollution_at(nest) * absorb_rate * dt * chip_pressure` (local mutation field + planet level), capped. A raid keeps `starved_max` units free and
 pays `unit_cost` per further unit from the banks, dropping what it cannot afford; waves leave from the fullest nest. `letter_received`
 "Creatures are massing" fires `rally_ticks` before the wave. Mutant variants roll per unit from the nest's pollution tier (hysteresis `revert_ratio`).
-
 ## 12. Squads (C1, `sim.squads`, `sim/squads/`)
 `SquadSystem` (list of `Squad`, ascending id) keeps `members`, `role_of`, `hold` anchor, `focus` enemy id. No rng. `tick()` runs after `threats.tick()`: when a focus target is gone, focus clears and members return to their slots.
 Role = `data/roles.json`; auto-suggest `suggest_roles(ids)`: score = skill level (`affinity_skill`) x `skill_weight` + trait `role_affinity` x `trait_weight`; distinct roles are filled first (best score, ties lower id).
