@@ -2,7 +2,8 @@ extends TestCase
 ## Job assignment order must stay identical across work-giver caching changes.
 
 const Scenario := preload("res://tests/scenario.gd")
-const EXPECT := {1: "fd9c4951155abc78ce266f082beabcf5f82a480471825dee011fe9793cfba797", 2: "7d1d4900b9d33ff5656b4888af20ec0bdd9690c5583b6b64e6b64ea45d5b3293"}
+# Re-baselined 2026-10-19 after PW1 skill curve (L0 = 0.3x) + PW2 traits + TW3 lockdown changed job timing intentionally.
+const EXPECT := {1: "5cce1c248ae9779ba8831ee050234972735e3f53f54d79c78e77b91f99309549", 2: "4a841d3045d72fbd8fbc07ce4f031a026a9cfedfa7e69c87e18f2866fef4e421"}
 
 
 func _record(seed_value: int, ticks: int) -> String:
