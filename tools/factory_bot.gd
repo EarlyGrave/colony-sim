@@ -11,17 +11,18 @@ const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), 
 ## Build order, one blueprint batch at a time: ["line", resource, smelt?] = miner(+smelter)+belts+storage_in at the hub,
 ## ["miner"] = hand-hauled essence miner (no belt, works before Conveyance), plus single machines.
 const PLAN: Array = [
-	["workbench"], ["miner"], ["line", "essence_ore", false], ["miner"], ["line", "iron_ore", true], ["terminal"], ["refinery"], ["line", "copper_ore", true], ["assembler"],
+	["workbench"], ["miner"], ["refinery"], ["line", "iron_ore", true], ["line", "copper_ore", true], ["assembler"], ["line", "essence_ore", false], ["terminal"],
 	["line", "coal", false], ["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
 	["line", "iron_ore", true], ["gen"], ["assembler"], ["line", "iron_ore", true],
 ]
 ## tech -> first PLAN step at which it is queued (bench time and essence are not wasted early).
-const RESEARCH: Dictionary = {"filters": 2, "assembly": 3, "electrification": 5}
+const RESEARCH: Dictionary = {"filters": 0, "assembly": 1, "electrification": 3, "fortification": 7, "decoys_1": 7}  # D3: decoys_1 = ash beacon (burns waste)
 
 var sim: Simulation
 var base: Bot
 var cap_percent := 50
 var plate_target := 45
+var plate_reserve := 12  # D3: fuel cells / extra bills never take the stock below this once an assembler is planned
 var assume_nitrogen := false
 var _failed_step := -1
 var _step := 0  ## index into PLAN
@@ -87,20 +88,10 @@ func _upkeep() -> void:
 		var tc := _spot("turret", near, false)
 		if tc.x >= 0:
 			sim.place_building("turret", tc)
-	var reserve := maxi(0, want - have) * 10
-	var stock := sim.items.count_stored("refined_essence") - reserve
-	var active_need := 0
-	for c in sim.contracts.open_contracts("active"):
-		active_need += int(c["essence"])
-	for c in sim.contracts.open_contracts("offered"):
-		if stock + 3 >= active_need + int(c["essence"]):
-			if sim.accept_contract(int(c["id"])):
-				active_need += int(c["essence"])
-	for c in sim.contracts.open_contracts("active"):
-		sim.deliver_contract(int(c["id"]))
-	# Debt first (unpaid debt -> despair -> escapes), from the refined surplus after turrets and contracts.
-	var research_hold := 25 if not sim.research.queue.is_empty() else 0  # techs are paid in refined essence
-	var surplus := sim.items.count_stored("refined_essence") - reserve - active_need - 5 - research_hold
+	# D3: debt first (unpaid debt -> despair -> escapes): refined goes to the debt item before turrets/contracts/research,
+	# keeping a floor of one turret's cost; the earliest due tranche is paid every upkeep, long before the due day.
+	var floor_keep := 10 if have < want else 0
+	var debt_stock := sim.items.count_stored("refined_essence") - floor_keep - 3
 	var target: Colonist = null
 	for c in sim.colonists.list:
 		if not c.alive:
@@ -112,8 +103,20 @@ func _upkeep() -> void:
 			sim.choose_payoff(c.id, true)
 		elif st.remaining() > 0 and (target == null or st.due_day < sim.debt.state_of(target).due_day):
 			target = c
-	if target != null and surplus > 0:
-		sim.pay_debt(target.id, mini(surplus, sim.debt.state_of(target).remaining()))
+	if target != null and debt_stock > 0:
+		sim.pay_debt(target.id, mini(debt_stock, sim.debt.state_of(target).remaining()))
+	var reserve := maxi(0, want - have) * 10
+	var stock := sim.items.count_stored("refined_essence") - reserve
+	var active_need := 0
+	for c in sim.contracts.open_contracts("active"):
+		active_need += int(c["essence"])
+	for c in sim.contracts.open_contracts("offered"):
+		if stock + 3 >= active_need + int(c["essence"]):
+			if sim.accept_contract(int(c["id"])):
+				active_need += int(c["essence"])
+	for c in sim.contracts.open_contracts("active"):
+		sim.deliver_contract(int(c["id"]))
+	_beacon()
 	if sim.tick % sim.ticks_per_day == 0:
 		for c in sim.colonists.list:
 			if c.alive:
@@ -151,6 +154,8 @@ func _bills() -> void:
 	# YX: a small plate stock for repairs early; the audit-2 stockpile (plate_target) only once the assembler/power chain stands,
 	# so the early essence ore goes to miners and smelters instead of 120 ore of hammered plates.
 	var want := plate_target if sim.buildings.count_of("coal_generator") > 0 else mini(plate_target, 8)
+	if _step >= 3:
+		want = maxi(want, plate_reserve)  # D3: repair reserve once the assembler chain is planned
 	for bill: Bill in sim.crafting.bills_of(wb):
 		if bill.recipe_id == "hand_plate":
 			if bill.target != want:
@@ -236,6 +241,8 @@ func _build() -> void:
 		"refinery":
 			ok = _hub_place("refinery", Vector2i(-4, 2))
 	if ok:
+		if str(s[0]) == "assembler" and not log.any(func(l: String) -> bool: return l.ends_with("built [\"assembler\"]")):
+			log.append("assembler chain d%.1f" % _day_f())
 		_step += 1
 		log.append("d%.1f built %s" % [float(sim.tick) / sim.ticks_per_day, str(s)])
 	elif _failed_step != _step:
@@ -492,6 +499,20 @@ func _power(cell: Vector2i) -> void:
 		poles.append(spot)
 
 
+## D3: one ash beacon to burn waste (existing sink) once decoys_1 is researched; if D2's `waste_sink_early` flag exists, it is read
+## (the bot works the same with the flag off: the 50% taint cap rule is already on).
+func _beacon() -> void:
+	if sim.tick % 200 != 0 or not sim.research.is_done("decoys_1"):
+		return
+	if sim.buildings.count_of("ash_beacon") + _bp_count("ash_beacon") >= 1:
+		return
+	if sim.items.count_stored("essence_ore") < 12 and not bool(sim.defs.balance.get("waste_sink_early", false)):
+		return
+	var c := _spot("ash_beacon", sim.map_center() + Vector2i(3, 3), false)
+	if c.x >= 0 and sim.place_building("ash_beacon", c) != null:
+		log.append("d%.1f built ash_beacon" % _day_f())
+
+
 # --- petitions / shuttle -------------------------------------------------------------------------
 
 func _deliveries() -> void:
@@ -523,7 +544,7 @@ func _shuttle() -> void:
 			if sim.tick % 600 == 0:
 				sim.deliver_shuttle_parts()
 			var wb := _first("workbench")
-			if wb != null and not _has_bill(wb, "fuel_cell") and sim.defs.recipes.has("fuel_cell"):
+			if wb != null and not _has_bill(wb, "fuel_cell") and sim.defs.recipes.has("fuel_cell") and int(st.get("parts", 0)) >= int(st.get("need", 24)) and sim.items.count_stored("plate") >= plate_reserve + 4:  # D3: parts first, plates keep a repair reserve
 				sim.add_bill(wb.id, "fuel_cell", "until", 8)
 	if ph == "ready" and sim.launch_shuttle():
 		launch_day = day
