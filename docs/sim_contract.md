@@ -73,7 +73,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `disband_squad` | sid: int | bool | C1: squad exists; members un-drafted, weapons restored |
 | `squad_hold` | sid: int, cell: cell | bool | C1: cell passable; members `order_move` to cell + role offset (nearest free reachable cell); clears focus |
 | `squad_shakedown` | sid: int | bool | I3: contraband enabled, squad alive + off cooldown (1 patrol day), stash > 0; recovers stash to map centre, +despair on top holder |
-| `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` |
+| `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` | `give_gear` | cid, base, rarity, ilvl | int | E2: gear id or -1 | `equip` | cid, item_id | bool | E2: owner only, replaces slot, one resum | `unequip` | cid, slot | bool | E2 | `socket` | item_id, upgrade_id | bool | E2: free slot by rarity + tags |
 | `resolve_crisis` | crisis_id: str, option_id: str | bool | crisis active, option exists |
 | `answer_event` | event_uid: int, accept: bool | bool | pending storyteller choice with that uid |
 | `answer_quest` | uid: int, option_id: String | bool | pending quest choice; false if disabled/unknown |
@@ -172,7 +172,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `time.json` | start_hour, dawn/dusk hours, night_daylight |
 | `roles.json` | C1: max_size, hold_search_radius, slot_spread, affinity{skill_weight,trait_weight}, order[], roles id -> {name, weapon, dmg_taken_mult, threat_mult, formation_offset, affinity_skill, ability} |
 | `traits.json` | traits id -> {effects, role_affinity? {role: bonus}} |
-| `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...}, C2 `abilities` id -> {role, cooldown_ticks, essence_cost, contam_puff, noise_burst{mult,ticks}, taunt/volley/radius} |
+| `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...}, C2 `abilities` id -> {role, cooldown_ticks, essence_cost, contam_puff, noise_burst{mult,ticks}, taunt/volley/radius} | `equipment.json` | slots, rarity, upgrade_slots, durability | `gear.json` | bases id -> {slot, stats, tags} | `upgrades.json` | id -> {stats, tags_any} |
 | `work.json` | default_priority, max_priority, types{} |
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
 | `zones.json` | id -> {name, color, accepts[], waste_emission_factor} |

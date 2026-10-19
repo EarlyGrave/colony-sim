@@ -1,0 +1,141 @@
+class_name EquipmentSystem
+extends RefCounted
+## E2: gear instances, per-colonist slots, cached stat totals. No per-tick work, no rng (rolling is E3's hook).
+## Commands go through Simulation (give_gear / equip / unequip / socket).
+
+var sim: Simulation
+var instances: Dictionary = {}  # id -> GearItem
+var equipped: Dictionary = {}  # cid -> {slot: item_id}
+var totals: Dictionary = {}  # cid -> PackedFloat64Array (StatBlock order), valid after a resum
+var resum_count := 0
+var _next_id := 1
+
+
+func _init(p_sim: Simulation) -> void:
+	sim = p_sim
+
+
+func has_state() -> bool:
+	return not instances.is_empty()
+
+
+func slot_ids() -> Array:
+	var ids: Array = sim.defs.equipment["slots"].keys()
+	ids.sort()
+	return ids
+
+
+func give(cid: int, base: String, rarity: String, ilvl: int) -> int:
+	if sim.colonists.get_by_id(cid) == null or not sim.defs.gear.has(base) or base.begins_with("_"):
+		return -1
+	var eq: Dictionary = sim.defs.equipment
+	if not eq["rarity"].has(rarity) or not eq["slots"].has(str(sim.defs.gear[base].get("slot", ""))):
+		return -1
+	var g := GearItem.new()
+	g.id = _next_id
+	_next_id += 1
+	g.base = base
+	g.slot = str(sim.defs.gear[base]["slot"])
+	g.rarity = rarity
+	g.ilvl = ilvl
+	g.max_durability = float(eq["durability"].get("default_max", 100))
+	g.durability = g.max_durability
+	g.owner = cid
+	g.resum_stats(sim.defs)
+	instances[g.id] = g
+	return g.id
+
+
+func equip(cid: int, item_id: int) -> bool:
+	var g: GearItem = instances.get(item_id)
+	if g == null or g.owner != cid or sim.colonists.get_by_id(cid) == null:
+		return false
+	if not sim.defs.equipment["slots"].has(g.slot):
+		return false
+	var slots: Dictionary = equipped.get(cid, {})
+	if slots.get(g.slot, -1) == item_id:
+		return true
+	slots[g.slot] = item_id
+	equipped[cid] = slots
+	_resum(cid)
+	return true
+
+
+func unequip(cid: int, slot: String) -> bool:
+	var slots: Dictionary = equipped.get(cid, {})
+	if not slots.has(slot):
+		return false
+	slots.erase(slot)
+	_resum(cid)
+	return true
+
+
+func socket(item_id: int, upgrade_id: String) -> bool:
+	var g: GearItem = instances.get(item_id)
+	if g == null or not sim.defs.upgrades.has(upgrade_id):
+		return false
+	if g.upgrades.size() >= int(sim.defs.equipment["upgrade_slots"].get(g.rarity, 0)):
+		return false
+	var tags: Array = sim.defs.gear[g.base].get("tags", [])
+	var need: Array = sim.defs.upgrades[upgrade_id].get("tags_any", [])
+	if not need.is_empty():
+		var ok := false
+		for t in need:
+			ok = ok or tags.has(t)
+		if not ok:
+			return false
+	g.upgrades.append(upgrade_id)
+	g.resum_stats(sim.defs)
+	if equipped.get(g.owner, {}).get(g.slot, -1) == g.id:
+		_resum(g.owner)
+	return true
+
+
+## Durability change (future hit path); resums only when the contribution band changes.
+func set_durability(item_id: int, value: float) -> void:
+	var g: GearItem = instances.get(item_id)
+	if g == null:
+		return
+	var cfg: Dictionary = sim.defs.equipment["durability"]
+	var before := g.dur_mult(cfg)
+	g.durability = clampf(value, 0.0, g.max_durability)
+	if not is_equal_approx(before, g.dur_mult(cfg)) and equipped.get(g.owner, {}).get(g.slot, -1) == g.id:
+		_resum(g.owner)
+
+
+func total(cid: int, key: String) -> float:
+	var t: PackedFloat64Array = totals.get(cid, PackedFloat64Array())
+	return t[StatBlock.IDX[key]] if not t.is_empty() else 0.0
+
+
+func _resum(cid: int) -> void:
+	var p := StatBlock.make()
+	var cfg: Dictionary = sim.defs.equipment["durability"]
+	var slots: Dictionary = equipped.get(cid, {})
+	var keys: Array = slots.keys()  # sorted: float sums stay deterministic
+	keys.sort()
+	for s in keys:
+		var g: GearItem = instances[slots[s]]
+		StatBlock.sum_into(p, g.stats, g.dur_mult(cfg))
+	totals[cid] = p
+	resum_count += 1
+	# region E1: hook point, copy `p` into CombatState.att/def once E1 lands
+	# endregion
+
+
+func state_parts() -> Array:
+	var parts: Array = []
+	var ids: Array = instances.keys()
+	ids.sort()
+	for i in ids:
+		var g: GearItem = instances[i]
+		parts.append([g.id, g.base, g.rarity, g.ilvl, g.affixes, g.upgrades, g.durability, g.owner])
+	var cids: Array = equipped.keys()
+	cids.sort()
+	for c in cids:
+		var s: Dictionary = equipped[c]
+		var ks: Array = s.keys()
+		ks.sort()
+		for k in ks:
+			parts.append([c, k, s[k]])
+	return parts

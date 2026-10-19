@@ -31,6 +31,9 @@ var mood: Dictionary = {}
 var crafting: Dictionary = {}
 # region combat
 var weapons: Dictionary = {}
+var equipment: Dictionary = {}  # region E2
+var gear: Dictionary = {}  # region E2
+var upgrades: Dictionary = {}  # region E2
 # region progression
 var xp: Dictionary = {}
 # endregion
@@ -139,6 +142,9 @@ func load_from(dir: String) -> void:
 	crafting = _load_json(dir + "crafting.json")
 	# region combat
 	weapons = _load_json(dir + "weapons.json")
+	equipment = _load_json(dir + "equipment.json")  # region E2
+	gear = _load_json(dir + "gear.json")  # region E2
+	upgrades = _load_json(dir + "upgrades.json")  # region E2
 	# region progression
 	xp = _load_json(dir + "xp.json")
 	# endregion
@@ -231,6 +237,9 @@ func duplicate_defs() -> Defs:
 	d.crafting = crafting.duplicate(true)
 	# region combat
 	d.weapons = weapons.duplicate(true)
+	d.equipment = equipment.duplicate(true)  # region E2
+	d.gear = gear.duplicate(true)  # region E2
+	d.upgrades = upgrades.duplicate(true)  # region E2
 	# region progression
 	d.xp = xp.duplicate(true)
 	# endregion
