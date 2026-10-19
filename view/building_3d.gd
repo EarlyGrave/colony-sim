@@ -10,6 +10,7 @@ const HEIGHTS := {
 	"miner": 0.6, "smelter": 0.85, "assembler": 0.7, "storage_in": 0.35, "storage_out": 0.35,  # region A2c
 	"research_bench": 0.6,  # region R2c
 	"ash_beacon": 1.0, "penitent_wall": 1.0, "mourning_bell": 1.0,  # region T2
+	"waste_compactor": 0.5,  # region D2
 	"power_pole": 1.5, "coal_generator": 1.6, "nitrogen_extractor": 1.3, "nitrogen_turbine": 1.4, "nuclear_reactor": 2.1, "solar_array": 0.6,  # region L4
 }
 ## Buildings drawn by ShuttleView3D's procedural models (nothing flat underneath).
