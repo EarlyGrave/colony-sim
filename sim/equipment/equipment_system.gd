@@ -41,6 +41,10 @@ func give(cid: int, base: String, rarity: String, ilvl: int) -> int:
 	g.max_durability = float(eq["durability"].get("default_max", 100))
 	g.durability = g.max_durability
 	g.owner = cid
+	if int(eq["rarity"][rarity].get("affixes", 0)) > 0:  # region E3
+		var r := RandomNumberGenerator.new()  # region E3
+		r.seed = sim.rng.randi()  # region E3: child rng, one parent draw per rolled item
+		g.affixes = AffixRoller.roll(sim.defs, base, rarity, ilvl, r)  # region E3
 	g.resum_stats(sim.defs)
 	instances[g.id] = g
 	return g.id
