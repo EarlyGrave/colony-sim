@@ -220,28 +220,49 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 		if dmin >= min_d and rid != coal:
 			blobs.append([dmin, k, cells, rid])
 	var ess := NodeData.res_index("essence_ore")
-	blobs.sort_custom(func(a, b):  # iron/copper blobs first (essence stays for chains), then farthest first
-		var ea: int = 1 if int(a[3]) == ess else 0
-		var eb: int = 1 if int(b[3]) == ess else 0
-		if ea != eb:
-			return ea < eb
-		return a[0] > b[0] or (a[0] == b[0] and a[1] < b[1]))
+	var cnt := {}  # blobs per resource
+	for b in blobs:
+		cnt[int(b[3])] = int(cnt.get(int(b[3]), 0)) + 1
 	var ids: Array = want.keys()
 	ids.sort()
-	var bi := 0
 	for id in ids:
 		var res := NodeData.res_index(String(id))
-		var have := 0
-		for b in blobs:
-			if int(b[3]) == res:
-				have += 1
-		var n: int = int(want[id]) - have
-		while n > 0 and bi < blobs.size():
-			var b: Array = blobs[bi]
-			bi += 1
-			if int(b[3]) == res:
-				continue
-			for q in b[2]:
+		var n: int = int(want[id]) - int(cnt.get(res, 0))
+		while n > 0:
+			# YX: spare the LAST blob of iron/copper (and keep 2 essence blobs): pass 0 only takes from resources with spare
+			# blobs, pass 1 (nothing spare) falls back to any blob. Iron/copper first, then farthest from HQ.
+			var best := -1
+			for pass_i in 2:
+				for k in blobs.size():
+					var b: Array = blobs[k]
+					var r: int = int(b[3])
+					if r == res:
+						continue
+					if pass_i == 0 and (int(cnt[r]) < (3 if r == ess else 2)):
+						continue
+					if best < 0:
+						best = k
+						continue
+					var o: Array = blobs[best]
+					var eb: int = 1 if r == ess else 0
+					var eo: int = 1 if int(o[3]) == ess else 0
+					if eb != eo:
+						if eb < eo:
+							best = k
+					elif int(cnt[r]) != int(cnt[int(o[3])]):
+						if int(cnt[r]) > int(cnt[int(o[3])]):
+							best = k
+					elif b[0] > o[0] or (b[0] == o[0] and b[1] < o[1]):
+						best = k
+				if best >= 0:
+					break
+			if best < 0:
+				break
+			var pick: Array = blobs[best]
+			for q in pick[2]:
 				map.node_res[q] = res
+			cnt[int(pick[3])] = int(cnt[int(pick[3])]) - 1
+			cnt[res] = int(cnt.get(res, 0)) + 1
+			blobs[best][3] = res
 			n -= 1
 # endregion
