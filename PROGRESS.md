@@ -373,3 +373,10 @@ HP); волны заканчиваются по таймеру и твари о�
 - Bot 60 d: launch 1/10 (seed 5), alive>=8 9/10, audit 8, P1 5, P3 3. 90 d: launch 1/10, P1 8, P3 4, alive>=8 6/10.
 - Next: copper ore stuck in rock-bound miners (no copper ingots -> no parts) on seeds 3/4/7/10.
 - Full suite 912 green, web smoke PASS.
+
+## Night sprint 2026-10-19/20 (owner notes → 5 Fable design leads → ~30 Sonnet workers)
+- Design: docs/design/{GDD,economy_endgame,society_narrative,threats_pacing,combat_items,progression_traits,next_batches}.md, docs/story/{bible,revelation}.md, owner notes verbatim.
+- Built (dev branch): threats TW1-4 + metro skeleton MT; combat/equipment E1-E5 (perf 0.66 ms combat bucket @224×6 legendary vs 300); skills curve + XP PW1, traits v2 PW2, milestones/NG+ traits PW3, branches PW4; society N1-N4 (Q14 path choice, S4/S5, moments, covert trade, Blocks panel); endings EN1-EN4 (path/PoNR, Submit manifest+siege, Fight uplink+relay, Escape bandits+extraction, Remission behind flag), Ending panel EV; revelation RV (Q15 Roll Call, Q16 receipt, epilogues, Warden lines); bot knobs F1b.
+- Fixers: FX (13 red after merge; lockdown_radius 24→36), FX2 (3 tests), FX3 (drone sprites/combat_model). First-wave gate ships OFF (0 days).
+- F1c: raid_objectives ON vs OFF (10 seeds, 60 d): alive>=8 7→5/10 → stays OFF. Baseline on dev now: alive>=8 7/10, audit 5, P1 3, P3 2, launch 0 (morning main: 9/8/5/3/1) → balance regression, BL working.
+- Full suite 1037 green on dev. main NOT updated (last main 42247d1) until balance restored.
