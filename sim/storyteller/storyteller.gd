@@ -77,6 +77,8 @@ func colony_is_whole() -> bool:
 		return false
 	if t.awakened and t.next_wave_tick - sim.tick < int(cfg["quiet_before_wave_ticks"]):
 		return false
+	if wave_pending():  # region ST: no harmful events inside the warning window
+		return false
 	for b in sim.buildings.list:
 		if b.broken:
 			return false
@@ -436,6 +438,15 @@ func _requires_ok(reqs: Array) -> bool:
 			"room":
 				if not _room_for(1 + pending.size()):
 					return false
+			"wave_pending":  # region ST
+				if not wave_pending():
+					return false
+			"dormant":  # region ST
+				if not is_dormant():
+					return false
+			"scent_high":  # region ST
+				if not scent_high():
+					return false
 	return true
 
 
@@ -581,6 +592,14 @@ func _apply_effects(effects: Array, ctx: Dictionary, def: Dictionary) -> void:
 					st2.pending_choice = true
 					st2.despair = 0.0
 					sim.bus.debt_paid.emit(d.id)
+			"scout":  # region ST
+				var side := sim.threats.side_name(sim.threats.next_spawn_origin)
+				var obj := str(sim.threats.get("raid_objective_next")) if sim.threats.get("raid_objective_next") != null else "unknown"
+				ctx["target"] = "%s (goal: %s)" % [side, obj]
+			"molt":  # region ST
+				var du: Variant = sim.threats.get("dormant_until")
+				if du != null:
+					sim.threats.set("dormant_until", int(du) + sim.ticks_per_day)
 			"anger":
 				if sim.contracts != null:
 					sim.contracts.anger = clampf(sim.contracts.anger + float(ef["amount"]),
@@ -654,4 +673,26 @@ func _maybe_complicate(wave: int) -> void:
 				_cave_in_cell(cell, int(cc.get("rubble_ticks", 1200)))
 	last_complication_wave = wave
 	_say("complication_" + kind, str(cc["texts"][kind]).replace("{target}", target))
+# endregion
+
+
+# region ST
+## Threat-state reads for event `requires` (design threats_pacing E). All pure reads of sim state.
+## (molt keeps no state var of its own: goldens dump every var; fired["molt"] marks it for the mutant band)
+## A wave is inside its warning window (the same window that fires wave_incoming).
+func wave_pending() -> bool:
+	var t := sim.threats
+	return t.awakened and not t.wave_active and t.next_wave_tick >= 0 \
+		and t.next_wave_tick - sim.tick < int(t.cfg["warning_ticks"])
+
+
+## Nests are dormant (threat system exposes dormant_until once scent/dormancy lands; false before).
+func is_dormant() -> bool:
+	var du: Variant = sim.threats.get("dormant_until")
+	return du != null and int(du) > sim.tick
+
+
+func scent_high() -> bool:
+	var sc: Variant = sim.threats.get("scent")
+	return sc != null and float(sc) >= float(sim.defs.balance.get("scent", {}).get("high", 1e9))
 # endregion

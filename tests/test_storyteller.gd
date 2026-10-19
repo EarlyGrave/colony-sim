@@ -84,3 +84,30 @@ func test_events_happen_and_are_deterministic() -> void:
 	for id in a.storyteller.fired:
 		total += int(a.storyteller.fired[id])
 	assert_gt(total, 1, "storyteller should fire a few events in 8 days")
+
+
+# region ST
+func test_scout_sighting_needs_pending_wave() -> void:
+	var sim := _colony()
+	sim.threats.awakened = true
+	sim.threats.wave_active = false
+	sim.threats.next_wave_tick = sim.tick + 100000
+	assert_false(sim.storyteller.fire("scout_sighting"), "no pending wave -> no sighting")
+	sim.threats.next_wave_tick = sim.tick + 50
+	assert_true(sim.storyteller.fire("scout_sighting"), "wave inside warning window")
+
+
+func test_no_harmful_event_inside_warning() -> void:
+	var sim := _colony()
+	sim.threats.awakened = true
+	sim.threats.wave_active = false
+	sim.threats.next_wave_tick = sim.tick + 190
+	assert_false(sim.storyteller.colony_is_whole(), "inside warning_ticks")
+	sim.threats.next_wave_tick = sim.tick + 100000
+	assert_true(sim.storyteller.colony_is_whole())
+
+
+func test_molt_needs_dormancy() -> void:
+	var sim := _colony()
+	assert_false(sim.storyteller.fire("molt"), "not dormant")
+# endregion
