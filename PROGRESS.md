@@ -325,3 +325,12 @@ HP); волны заканчиваются по таймеру и твари о�
 - R4: real bot still 0/10 shuttle launch (P3 ~d37-43; P4 + shuttle need ~20 more days); alive≥8 8/10, tier2 7/10, P1/P3 4/10. haul_blocked_fix still off.
 - Open: essence_drop_mult (Q8) and review_sponsored (Q3) have no consumers; quest fallback list now covers all 8 quest files.
 - 859 green, web smoke PASS.
+
+## Batch LN + inmate society (2026-10-19)
+- LN: Q8 `essence_drop_mult` (kill drops essence ore) and Q3 `review_sponsored` consumers live. Bot shuttle launch still 0/10 (60 and 90 d): refined is spent on debt/research/construction, parts = 0 on every seed.
+- I1 Cell Block Standing (`sim/society/block_system.gd`, `data/blocks.json`): 5 blocks, Standing scales despair 1.2x..0.9x; one Informant per run. Breaks+riots ratio 1.00 vs off.
+- I2 Informant quest Q13 (`informant_mod.gd`): petition fee 1.1-1.3x while he reports; tolerate / false info (Clerk) / transfer.
+- I3 Contraband + `squad_shakedown` (`sim/society/contraband.gd`): skim <=3% of refined; shipped disabled.
+- I4 haul_blocked_fix stays OFF (alive>=8: 9/10 off vs 4/10 on). Pillar gap 2.2.
+- Full suite 884 green, web smoke PASS.
+- Next: refined-spend priority so parts/plates accumulate (shuttle), wire `pa.informant_report` flavor, decide contraband on.

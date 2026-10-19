@@ -288,3 +288,9 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 
 ## haul_blocked_fix stays OFF (I4, decided without owner, review)
 factory_eval 10 seeds/60 d, off vs on: alive>=8 9/10 vs 4/10; audit tier2 7 vs 6; P1 4 vs 5; hq_destroyed/colonists_dead 1 vs 5. Decision rule (alive>=8 >= 8/10) fails, so default stays false. Pillar baseline 6.2 vs throttle 4.0 (gap 2.2) unchanged.
+
+## Inmate society batch (2026-10-19, decided without owner, review)
+- Scope: blocks/standing + informant + contraband + haul_blocked_fix eval (standing orders and NG+ veteran network deferred).
+- Contraband ships with `enabled=false` until a bot pass shows it is fun, not just a tax.
+- haul_blocked_fix stays OFF: ON drops alive>=8 from 9/10 to 4/10.
+- Block tuning kept mild (breaks/riots unchanged vs off); a stronger tuning doubled riots and was rejected.
