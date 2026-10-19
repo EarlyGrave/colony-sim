@@ -325,7 +325,10 @@
 		"informant_report": [
 			"A report on you was filed. It was flattering to him.",
 			"The Informant is thorough. Fees reflect his diligence.",
-			"Someone is keeping notes. The Warden thanks him."
+			"Someone is keeping notes. The Warden thanks him.",
+			"Tip received: 'They are counting plates.' Thank you.",
+			"Your petition is progressing. Someone has been very helpful.",
+			"The review date has been adjusted. For your convenience. Not yours."
 		]
 	},
 	"barks": {

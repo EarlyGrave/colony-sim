@@ -113,9 +113,9 @@ func load_from(dir: String) -> void:
 	if qd != null:
 		for f in qd.get_files():
 			var fn: String = f.trim_suffix(".remap")
-			if fn.begins_with("quests_q") and fn.ends_with(".json") and not qfiles.has(fn):
+			if (fn.begins_with("quests_q") or fn.begins_with("quests_s")) and fn.ends_with(".json") and not qfiles.has(fn):
 				qfiles.append(fn)
-	for extra in ["quests_q1.json", "quests_q2.json", "quests_q3.json", "quests_q6.json", "quests_q8.json", "quests_q10.json", "quests_q11.json", "quests_q12.json", "quests_q13.json", "quests_s1.json"]:  # region W1  # fallback when listing is unavailable (export)
+	for extra in ["quests_q1.json", "quests_q2.json", "quests_q3.json", "quests_q6.json", "quests_q8.json", "quests_q10.json", "quests_q11.json", "quests_q12.json", "quests_q13.json", "quests_s1.json", "quests_s3.json"]:  # region W1  # fallback when listing is unavailable (export)
 		if not qfiles.has(extra) and FileAccess.file_exists(dir + extra):
 			qfiles.append(extra)
 	qfiles.sort()

@@ -37,7 +37,6 @@ System construction order in `_init_systems()` fixes id allocation and listener 
 Each command calls `_record(name, args)` as its FIRST line, even if validation later fails (a rejected command replays as rejected). `_record` is a no-op while `replaying`.
 Arg types: int, bool, string, cell (`Vector2i`), `[cell]`. Return value is not saved. A failed command changes no state.
 Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wraps `set_patrol_route_text`).
-
 | command | args | returns | validation / effect |
 |---|---|---|---|
 | `designate_mine` | c: cell, on: bool | void | ignored if out of bounds; sets mine designation |
@@ -248,3 +247,4 @@ Normal waves are held (`waves_held()`) until the audit step; entering it calls `
 View-side only: no sim state, no `sim.rng`, not in `state_hash`/saves, goldens unaffected. `FlavorPicker.load_bank()` (alias `load_default()`), `pick(key, ctx)`, `pick_first([keys], ctx)`, `has_key`, `all_keys`, `K_*` key constants. Keys are dotted paths (`feed.<enemy>.<cause>`, `pa.<signal>`, `barks.<state>`...). ctx: `tick`, `id` (seed = hash([tick,key,id])), placeholders `who victim enemy n cause`. Ring of last 4 lines per key is picker state.
 ## L3 Power (`sim.power`, `sim/power/`, API in `docs/power_api.md`)
 Off (factor 1, no hash part) until a pole/generator exists; networks = union-find, rebuilt on `buildings.version`; factor = clamp(supply/demand, 0.2, 1); no pole in range = 0.5; fuel from `data/fuels.json`; deterministic, no rng.
+| `quests_s3.json` | S3 Whisper Network (data quest, needs cond `informant_alive`): trigger q13 done + tier 2; options decoy (requires `tag_alive` Clerk, -5 parts, fee x0.9) / bait (gamble 0.5) / cut (verbs `informant_standing`, `remove_colonist how:transfer`); InformantMod emits Warden `pa.informant_report` letter every 3rd day unless `pa_silent` |

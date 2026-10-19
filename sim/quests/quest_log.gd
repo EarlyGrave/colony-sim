@@ -283,6 +283,8 @@ func _finish(qid: String) -> void:
 
 
 func _requires_ok(r: Dictionary) -> bool:
+	if r.has("tag_alive") and not _w2_tag_alive(str(r["tag_alive"])):  # region W2
+		return false
 	if r.has("item") and sim.items.count_stored(str(r["item"])) < int(r.get("n", 1)):
 		return false
 	var its: Variant = r.get("items", null)  # {item: n} or [{item, n}]
@@ -318,14 +320,21 @@ func _apply_effects(qid: String, effects: Array) -> void:
 				if e.has("as"):
 					quests[qid]["refs"][str(e["as"])] = nc.id
 			"remove_colonist":
-				var c := sim.colonists.get_by_id(ref(qid, str(e.get("who", ""))))
+				var c := sim.colonists.get_by_id(_w2_ref(qid, str(e.get("who", ""))))  # region W2
 				if c != null and c.alive:
-					sim.colonists.kill(c)
+					if str(e.get("how", "")) == "transfer":
+						sim.debt._remove(c, "transferred")
+					else:
+						sim.colonists.kill(c)
+			"informant_standing":  # region W2: shift the Informant's block Standing
+				var ic := sim.colonists.get_by_id(_w2_ref(qid, "informant"))
+				if ic != null and sim.get("blocks") != null:
+					sim.blocks._change(sim.blocks.block_of(ic), float(e["delta"]), float(e["delta"]) < 0.0)
 			"pollution":  # value = fraction of the planet's max (0.03 = +3%)
 				var mx := float(sim.defs.balance["contamination"]["max"])
 				sim.contamination.level = clampf(sim.contamination.level + float(e["value"]) * mx, 0.0, mx * 0.999)
-			"gamble":  # region R3: one sim.rng draw picks win/lose effect lists
-				_apply_effects(qid, e.get("win", []) if sim.rng.randf() < float(e.get("chance", 0.5)) else e.get("lose", []))
+			"gamble":  # region R3 (W2: "p" = win probability without the generic chance pre-roll): one sim.rng draw picks win/lose effect lists
+				_apply_effects(qid, e.get("win", []) if sim.rng.randf() < float(e.get("p", e.get("chance", 0.5))) else e.get("lose", []))
 			"spawn_enemy":  # region R2: quest-only creatures (never in raid tables)
 				for _i in int(e.get("n", 1)):
 					sim.threats._spawn(str(e["enemy"]), sim.threats._spawn_cell_near(sim.map_center()))
@@ -452,4 +461,31 @@ func _w1_resolve(qid: String, name: String) -> String:
 		if f.begins_with(pre):
 			return f.trim_prefix(pre)
 	return ""
+# endregion
+
+
+# region W2
+## Colonist id for a quest ref; "informant" falls back to sim.blocks.informant_id() (or the Informant tag).
+func _w2_ref(qid: String, name: String) -> int:
+	var id := ref(qid, name)
+	if id < 0 and name == "informant":
+		var m: Variant = _modules.get("q13_informant", null)
+		if m != null:
+			var ic: Colonist = m.find_informant()
+			id = ic.id if ic != null else -1
+		var b: Variant = sim.get("blocks")
+		if id < 0 and b != null:
+			id = int(b.informant_id())
+		if id < 0:
+			for c in sim.colonists.list:
+				if c.alive and str(c.bio.get("tag", "")) == "Informant":
+					return c.id
+	return id
+
+
+func _w2_tag_alive(tag: String) -> bool:
+	for c in sim.colonists.list:
+		if c.alive and str(c.bio.get("tag", "")) == tag and not sim.debt.gone.has(c.id):
+			return true
+	return false
 # endregion
