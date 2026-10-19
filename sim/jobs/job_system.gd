@@ -252,13 +252,13 @@ func _reserve_limited(item: String, cell: Vector2i, want: int) -> int:
 
 
 ## Nearest working building whose input wants `item`, not already being fed.
-func _building_needing(item: String, near: Vector2i, c: Colonist) -> Building:
+func _building_needing(item: String, near: Vector2i, c: Colonist, skip_id := -1) -> Building:
 	if sim.buildings == null:
 		return null
 	var best: Building = null
 	var best_d := 1 << 30
 	for b: Building in sim.buildings.list:
-		if b.input_space(item) <= 0 or not _free(c, "bin:%d" % b.id):
+		if b.id == skip_id or b.input_space(item) <= 0 or not _free(c, "bin:%d" % b.id):
 			continue
 		if not sim.pathfinder.reachable(near, b.cell):
 			continue
