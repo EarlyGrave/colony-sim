@@ -326,6 +326,8 @@ func _apply_effects(qid: String, effects: Array) -> void:
 			"spawn_enemy":  # region R2: quest-only creatures (never in raid tables)
 				for _i in int(e.get("n", 1)):
 					sim.threats._spawn(str(e["enemy"]), sim.threats._spawn_cell_near(sim.map_center()))
+			"block_standing":  # region W3: target "strong"/"weak" = highest/lowest Standing block now
+				_w3_block_fx(e)
 			"letter":
 				if mod("pa_silent") > 0.0:  # region R1
 					continue
@@ -407,4 +409,19 @@ func _r3_cond(k: String, v: Variant) -> bool:
 	if k == "sentence_min":
 		return int(sim.opts.get("sentence", 1)) >= int(v)
 	return int(sim.opts.get("carry_debt", 0)) >= int(v)
+# endregion
+
+
+# region W3
+func _w3_block_fx(e: Dictionary) -> void:
+	if sim.blocks == null or not sim.blocks.is_enabled():
+		return
+	var ids: Array = sim.blocks.standing.keys()
+	ids.sort()
+	var pick := ""
+	for b: String in ids:
+		if pick == "" or (sim.blocks.standing_of(b) > sim.blocks.standing_of(pick) if str(e.get("target", "strong")) == "strong" else sim.blocks.standing_of(b) < sim.blocks.standing_of(pick)):
+			pick = b
+	if pick != "":
+		sim.blocks._change(pick, float(e.get("delta", 0.0)), float(e.get("delta", 0.0)) < 0.0)
 # endregion
