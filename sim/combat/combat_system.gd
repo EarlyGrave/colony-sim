@@ -13,6 +13,11 @@ func _init(p_sim: Simulation) -> void:
 
 
 func weapon_def(c: Colonist) -> Dictionary:
+	# region E4: an equipped weapon item overrides the CombatState base
+	var cached: Variant = _wdef.get(c.id)
+	if cached != null:
+		return cached
+	# endregion
 	return sim.defs.weapons["weapons"][c.combat.weapon]
 
 
@@ -26,6 +31,44 @@ func hit_chance(c: Colonist, w: Dictionary, dist: float) -> float:
 	if c.combat != null:
 		p += att_of(c)[StatBlock.ACC]  # region E1
 	return clampf(p, float(cfg["hit_min"]), float(cfg["hit_max"]))
+
+
+# region E4
+## Per colonist: [shots_left_in_burst, rounds_in_magazine]. Absent = fresh weapon, full magazine.
+var _pattern: Dictionary = {}
+var _award_us := 0
+var _wdef: Dictionary = {}  # cid -> gear.json base of the equipped weapon (cleared on resum)
+
+
+## Before the shot: magazine gate. Returns false (and starts the reload pause) when the magazine is empty.
+func _mag_gate(c: Colonist, w: Dictionary) -> bool:
+	var mag_cap := int(w.get("magazine", 0))
+	if mag_cap <= 0:
+		return true
+	var st: Array = _pattern.get(c.id, [0, mag_cap])
+	if st[1] <= 0:
+		st[1] = mag_cap
+		st[0] = 0
+		_pattern[c.id] = st
+		c.combat.next_attack_tick = sim.tick + int(w.get("reload_ticks", 30))
+		return false
+	st[1] -= 1
+	_pattern[c.id] = st
+	return true
+
+
+## After the shot (normal cooldown already set): burst gap instead of cooldown between burst shots.
+func _burst_step(c: Colonist, w: Dictionary) -> void:
+	var b: Dictionary = w["burst"]
+	var st: Array = _pattern.get(c.id, [0, int(w.get("magazine", 0))])
+	if st[0] <= 0:
+		st[0] = int(b["shots"]) - 1  # this shot opens a burst
+	else:
+		st[0] -= 1
+	if st[0] > 0:
+		c.combat.next_attack_tick = sim.tick + maxi(1, int(b["gap_ticks"]))
+	_pattern[c.id] = st
+# endregion
 
 
 # region E1
@@ -50,6 +93,16 @@ func def_of(c: Colonist) -> PackedFloat64Array:
 
 ## Rebuilds both vectors. Wave 1: no gear contributes yet (E2 adds sources), so they stay at defaults.
 func resum(c: Colonist) -> void:
+	_wdef.erase(c.id)  # region E4
+	if sim.equipment != null and sim.equipment.has_state():  # region E4: cache the equipped weapon base def
+		var wid: int = sim.equipment.equipped.get(c.id, {}).get("weapon", -1)
+		if wid >= 0:
+			_wdef[c.id] = sim.defs.gear[sim.equipment.instances[wid].base]
+	if sim.equipment != null and sim.equipment.totals.has(c.id):  # region E4: gear totals feed both vectors
+		_att[c.id] = (sim.equipment.totals[c.id] as PackedFloat64Array).duplicate()
+		_def[c.id] = (sim.equipment.totals[c.id] as PackedFloat64Array).duplicate()
+		resum_count += 1
+		return
 	_att[c.id] = StatBlock.make()
 	_def[c.id] = StatBlock.make()
 	resum_count += 1
@@ -86,15 +139,31 @@ func enemy_by_id(id: int) -> Enemy:
 
 ## Tries one attack on `e`. Returns true if an attack was made (hit or miss).
 func try_attack(c: Colonist, e: Enemy) -> bool:
+	if sim.tick < c.combat.next_attack_tick:  # region E4: cheapest gate first (also keeps it out of the profile bucket)
+		return false
+	if sim.profiling:  # region E4: "combat" profiling bucket = attack path only (gate, hit roll, resolve_hit, damage)
+		var t0 := Time.get_ticks_usec()
+		_award_us = 0
+		var r := _try_attack(c, e)
+		sim.profile["combat"] = int(sim.profile.get("combat", 0)) + Time.get_ticks_usec() - t0 - _award_us
+		return r
+	return _try_attack(c, e)
+
+
+func _try_attack(c: Colonist, e: Enemy) -> bool:
 	if sim.tick < c.combat.next_attack_tick:
 		return false
 	var w := weapon_def(c)
 	var dist := Vector2(c.cell).distance_to(Vector2(e.cell))
 	if dist > float(w["range"]):
 		return false
+	if w.has("magazine") and not _mag_gate(c, w):  # region E4: reload pause replaces the shot (no ammo spent)
+		return true
 	if str(w["kind"]) == "ranged" and not sim.ammo.rifle_try_fire(c):  # region ammo
 		return false
 	c.combat.next_attack_tick = sim.tick + maxi(1, roundi(float(w["cooldown_ticks"]) / maxf(0.1, 1.0 + sim.perks.mod(c, "attack_speed"))))  # region perks
+	if w.has("burst"):  # region E4
+		_burst_step(c, w)
 	var skill := str(w["skill"])
 	if str(w["kind"]) == "ranged":
 		sim.threats.shots.append([Vector2(c.cell), e.visual_pos(), sim.tick])
@@ -114,6 +183,11 @@ func try_attack(c: Colonist, e: Enemy) -> bool:
 	if aimed or volley or sim.rng.randf() < hit_chance(c, w, dist):
 		dmg = resolve_hit(att_of(c), e.def_stats, dmg, str(w.get("damage_kind", "phys")))  # region E1
 		sim.threats.damage_enemy(e, dmg, "melee", c)  # region F2 + F3
+	if sim.profiling:  # region E4: XP award has its own cost, keep it out of the "combat" bucket
+		var ta := Time.get_ticks_usec()
+		sim.progression.award(c, skill, float(cfg["xp_per_attack"]), "attack", false)  # region progression
+		_award_us += Time.get_ticks_usec() - ta
+		return true
 	sim.progression.award(c, skill, float(cfg["xp_per_attack"]), "attack", false)  # region progression
 	return true
 
@@ -168,6 +242,10 @@ func order_attack(c: Colonist, enemy_id: int) -> bool:
 ## Called first thing in JobSystem.tick_colonist. Returns true if combat
 ## handled this colonist's tick (drafted, fighting back, or staying hidden).
 func tick_colonist(c: Colonist) -> bool:
+	return _tick_colonist(c)
+
+
+func _tick_colonist(c: Colonist) -> bool:
 	if c.combat == null:
 		return false
 	if c.combat.drafted:

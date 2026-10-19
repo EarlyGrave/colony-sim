@@ -9,6 +9,7 @@
 		"mutation": {"avg": 0.5, "p95": 2.0},
 		"total": {"avg": 4.0, "p95": 10.0}
 	},
+	"combat": {"avg": 0.6, "p95": 1.5, "_doc": "tests/test_equip_perf.gd: CombatSystem.try_attack bucket, 220 inmates x 6 legendary, 300 enemies in contact"},
 	"splitters_8k_200": {"avg": 1.0, "p95": 2.0},
 	"first_tick_ms": 20.0,
 	"flow_builds_per_600": 60,
