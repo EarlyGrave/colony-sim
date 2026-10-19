@@ -33,7 +33,7 @@ func test_view_syncs_without_shuttle_api() -> void:
 func test_win_screen() -> void:
 	var lines := WinScreen.stats_lines({"days": 12, "colonists": 4, "debt_paid": 300, "pollution": 0.37})
 	assert_eq(lines[0], "Days survived: 12")
-	assert_eq(lines[3], "Pollution: 37%")
+	assert_eq(lines[4], "Pollution: 37%")
 	var w := WinScreen.new({"days": 1})
 	var btns: Array = w.find_children("*", "Button", true, false)
 	assert_eq(btns.size(), 3)  # N2: + Next Sentence
