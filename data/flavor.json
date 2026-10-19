@@ -321,6 +321,11 @@
 			"The Warden notes a lack of drama.",
 			"Smooth operations. Management is bored.",
 			"No attacks. Statistically, concerning."
+		],
+		"informant_report": [
+			"A report on you was filed. It was flattering to him.",
+			"The Informant is thorough. Fees reflect his diligence.",
+			"Someone is keeping notes. The Warden thanks him."
 		]
 	},
 	"barks": {

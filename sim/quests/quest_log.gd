@@ -33,6 +33,11 @@ func _init(p_sim: Simulation) -> void:
 		return
 	sim.listen(sim.bus.day_started, _on_day)
 	sim.listen(sim.bus.tick_advanced, _on_tick)
+	# region I2
+	var inf := InformantMod.new(sim)
+	if inf.enabled():
+		register_module(InformantMod.ID, inf)
+	# endregion
 
 
 func is_enabled() -> bool:
