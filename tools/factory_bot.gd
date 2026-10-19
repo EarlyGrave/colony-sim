@@ -131,8 +131,8 @@ func _priorities() -> void:
 			sim.set_work_priority(c.id, "growing", 1)
 			sim.set_work_priority(c.id, "cooking", 1)
 		elif i >= 4:
-			sim.set_work_priority(c.id, "construction", 1)
-			sim.set_work_priority(c.id, "hauling", 2)
+			sim.set_work_priority(c.id, "construction", 2)
+			sim.set_work_priority(c.id, "hauling", 1)
 			sim.set_work_priority(c.id, "mining", 2)
 		i += 1
 
@@ -143,8 +143,15 @@ func _bills() -> void:
 	var wb := _first("workbench")
 	if wb == null or not sim.defs.recipes.has("hand_plate"):
 		return
-	if not _has_bill(wb, "hand_plate"):
-		sim.add_bill(wb.id, "hand_plate", "until", plate_target)
+	# YX: a small plate stock for repairs early; the audit-2 stockpile (plate_target) only once the assembler/power chain stands,
+	# so the early essence ore goes to miners and smelters instead of 120 ore of hammered plates.
+	var want := plate_target if sim.buildings.count_of("coal_generator") > 0 else mini(plate_target, 8)
+	for bill: Bill in sim.crafting.bills_of(wb):
+		if bill.recipe_id == "hand_plate":
+			if bill.target != want:
+				sim.update_bill(wb.id, bill.id, "until", want, bill.paused)
+			return
+	sim.add_bill(wb.id, "hand_plate", "until", want)
 
 
 func _has_bill(wb: Building, recipe_id: String) -> bool:

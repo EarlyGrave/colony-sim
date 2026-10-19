@@ -517,7 +517,7 @@ func _tick_processor(b: Building) -> void:
 				continue
 			b.recipe = b.station_defs[rid]
 			b.recipe_id = rid
-			if b.can_run_recipe():
+			if b.can_run_recipe() and may_operate(b):  # YX: a capped/locked refine recipe must not wedge a smelter that could smelt
 				break
 			b.recipe = {}
 			b.recipe_id = ""

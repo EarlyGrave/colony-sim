@@ -55,10 +55,10 @@
 	"smelt_copper": {
 		"name": "Smelt copper",
 		"inputs": {
-			"copper_ore": 2
+			"copper_ore": 4
 		},
 		"outputs": {
-			"ingot_copper": 1,
+			"ingot_copper": 2,
 			"waste": 1
 		},
 		"taint_cap_exempt": true,
@@ -70,10 +70,10 @@
 	"smelt_iron": {
 		"name": "Smelt iron",
 		"inputs": {
-			"iron_ore": 2
+			"iron_ore": 4
 		},
 		"outputs": {
-			"ingot_iron": 1,
+			"ingot_iron": 2,
 			"waste": 1
 		},
 		"taint_cap_exempt": true,
