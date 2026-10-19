@@ -286,3 +286,10 @@ HP); волны заканчиваются по таймеру и твари о�
 - D4 tools/factory_eval.sh: 10 seeds in parallel, ~4 min, PASS/FAIL table.
 - Real bot 10 seeds/60 d: 6/10 end with all 8 alive (was 2/10 with survivors), debt 100% on 9/10 (was 26-69%), planet_dead 2/10. Still 0/10 audit tier 2 / petition / parts: plates eaten by repairs, assembler only d28-40, research chain ~8100 bench ticks.
 - 782 green x2, web smoke PASS.
+
+## Session 4 — Plates / progression pass (PL)
+- Root causes: every recipe batch polluted (plates/parts pushed planet to 70-100%, cap froze smelting); 2x2 tutorial stockpile full; research starved by debt-first payments; one blueprint at a time; make_parts overproduced and ate plates.
+- Sim: only recipes with a contaminating output pollute; smelt recipes cap_margin + contam_mult 0.4; make_parts stock_cap 25; assembler input 8.
+- Real bot 10 seeds/60 d: audit tier 2 0/10 -> 7/10 (d44-55), alive 10/10. P1/P3/launch still 0/10.
+- Next: 2+ iron/copper lines + generator by ~d25; seeds 4/9 no copper line, 6 no iron (bot placement); plate-free miner repair?; nitrogen/fuel-cell chain.
+- 782 green x2, web smoke PASS, pillar 7.2 / 4.2 / 4.0.
