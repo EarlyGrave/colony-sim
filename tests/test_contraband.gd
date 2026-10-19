@@ -146,7 +146,7 @@ func test_inspection_at_60_and_decay() -> void:
 	sim.quests.set_flag("contraband_on")
 	sim.quests.set_flag("path_escape")
 	sim.contraband.suspicion = 59.0
-	assert_true(sim.covert_sale(30))
+	assert_true(sim.covert_sale(1))  # +2 (or +4 with Informant): 59 -> inspection band, not raid
 	assert_eq(sim.contraband.inspections, 1)
 	assert_eq(sim.quests.mod("audit_parts_mult"), 1.3)
 	var s0 := sim.contraband.suspicion
@@ -160,16 +160,21 @@ func test_missed_installment_triggers_skim_and_conserves() -> void:
 	sim.quests.set_flag("contraband_on")
 	sim.colonists.spawn(Vector2i(8, 10))
 	var dc: Dictionary = sim.defs.debt
-	for d in 40:
+	dc["installment"] = 100000  # unreachable, so the colonist's own payments cannot cover it
+	sim.step()  # debt states are created lazily on the first tick
+	for st: DebtState in sim.debt.states.values():
+		st.due_day = -20  # installment long overdue; the colony only survives ~4 days, so do not wait for the real deadline
+	for d in 3:
+		for t in sim.ticks_per_day - 1:
+			sim.step()
 		for st: DebtState in sim.debt.states.values():
 			st.despair = 0.0
-		for t in sim.ticks_per_day:
-			sim.step()
+			st.period_paid = 0  # unpaid right before the daily skim check (the colonist pays from the store mid-day)
+		sim.step()
 	var cb := sim.contraband
 	assert_gt(cb.skimmed, 0, "missed installment skims without despair")
 	assert_true(cb.skimmed <= int(sim.ledger.get_count("recipe:refined_essence") * 0.03))
 	assert_eq(cb.skimmed, cb.stash_total() + cb.recovered + cb.leaked)
-	assert_true(dc.has("installment"))
 
 
 func test_covert_deterministic() -> void:
