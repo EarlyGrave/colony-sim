@@ -46,7 +46,7 @@ func find(c: Colonist) -> Job:
 		var b := js._building_needing(item, cell, c)
 		var feed := 0
 		if b != null:
-			feed = js._reserve_limited(item, cell, mini(count, b.input_space(item)))
+			feed = mini(count, b.input_space(item)) if b.def_id == "workbench" else js._reserve_limited(item, cell, mini(count, b.input_space(item)))  # PM: the reserve guards plates (workbench) from the refinery, so it must not block the workbench itself
 		if b != null and feed > 0:
 			job = js._haul(HaulJob.Src.GROUND, cell, -1, HaulJob.Dst.BUILDING_IN, JobSystem.NO_CELL, b.id, item, feed)
 		else:
