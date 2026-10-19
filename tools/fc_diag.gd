@@ -9,6 +9,13 @@ func _init() -> void:
 			sd = int(a.get_slice("=", 1))
 		if a.begins_with("--days="):
 			days = int(a.get_slice("=", 1))
+	for a in OS.get_cmdline_user_args():
+		if a == "--cu":
+			Defs.get_default().balance["pg_bot"]["cu_first"] = 1
+		if a == "--repfix":
+			Defs.get_default().balance["repair_rock_fix"] = true
+		if a == "--haulfix":
+			Defs.get_default().balance["haul_blocked_fix"] = true
 	var bus = load("res://autoload/event_bus.gd").new()
 	var sim := Simulation.new(sd, bus, null, {"tutorial": true, "research_locked": true})
 	sim.start_new_game()
@@ -26,4 +33,8 @@ func _init() -> void:
 				if b.def_id in ["assembler", "smelter", "miner"]:
 					s += " | %s%s brk=%s in=%s out=%s pw=%.2f" % [b.def_id.substr(0, 3), str(b.cell), str(b.broken), str(b.input), str(b.output), sim.power.factor_for(b)]
 			print(s)
+	for bp in sim.buildings.blueprints:
+		print("BP ", bp.def_id, bp.cell)
+	for l in bot.log:
+		print(l)
 	quit()
