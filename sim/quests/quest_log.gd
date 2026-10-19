@@ -44,10 +44,16 @@ func _init(p_sim: Simulation) -> void:
 	# region N3
 	register_cond("clues_held", func(n: Variant) -> bool:
 		var k := 0
-		for f: String in ["clue_manifest", "clue_survey_tag", "clue_warden_quota", "clue_buyer"]:
+		for f: String in ["clue_manifest", "clue_survey_tag", "clue_warden_quota", "clue_buyer", "clue_our_dead", "clue_receipt"]:  # region RV: + C5/C6
 			if flag(f):
 				k += 1
 		return k >= int(n))
+	# endregion
+	# region RV
+	register_cond("rv_roll_call", func(_n: Variant) -> bool:
+		return flag("rv_mimic_killed") and (flag("clue_survey_tag") or flag("rv_colonist_died")))
+	sim.listen(sim.bus.enemy_killed, _rv_on_enemy_killed)
+	sim.listen(sim.bus.colonist_died, func(_id: int) -> void: set_flag("rv_colonist_died"))
 	# endregion
 
 
@@ -525,4 +531,12 @@ func _w3_block_fx(e: Dictionary) -> void:
 			pick = b
 	if pick != "":
 		sim.blocks._change(pick, float(e.get("delta", 0.0)), float(e.get("delta", 0.0)) < 0.0)
+# endregion
+
+
+# region RV
+func _rv_on_enemy_killed(enemy_id: int) -> void:
+	for e: Enemy in sim.threats.enemies:
+		if e.id == enemy_id and e.def_id == "mimic":
+			set_flag("rv_mimic_killed")
 # endregion
