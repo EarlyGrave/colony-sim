@@ -108,7 +108,7 @@
 		"awaken_mined_total": 60,
 		"first_wave_max_points": 3.0,
 		"first_wave_delay_days": 3.5,
-		"first_wave_gate_days": 2.0,
+		"first_wave_gate_days": 0.0,
 		"wave_interval_days": 3.5,
 		"wave_duration_ticks": 350,
 		"base_strength": 1.2,

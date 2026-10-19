@@ -81,7 +81,9 @@ func test_epilogue_letter_on_win() -> void:
 
 
 func test_first_wave_gate() -> void:
-	var sim := make_sim(5, false, 30, 30, TestCase.peaceful_defs())
+	var d := TestCase.peaceful_defs()
+	d.balance["threat"]["first_wave_gate_days"] = 2.0  # gate ships off (0.0) until a balance pass; test it when on
+	var sim := make_sim(5, false, 30, 30, d)
 	assert_false(sim.threats._rv_gate_ok())
 	sim.bus.first_refine_done.emit()
 	assert_true(sim.threats._rv_gate_ok())
