@@ -21,7 +21,8 @@ func _init(p_sim: Simulation) -> void:
 
 
 func _on_batch_refined(_building_id: int, _recipe_id: String) -> void:
-	level += float(_cfg["per_batch"]) * maxf(0.0, 1.0 + sim.perks.mod(sim.buildings.batch_operator, "contamination_per_batch")) * sim.crises.mult("refine_contam_mult")  # region perks
+	var rmult := float(sim.defs.recipes.get(_recipe_id, {}).get("contam_mult", 1.0))  # PL: smelting pollutes less than refining
+	level += float(_cfg["per_batch"]) * rmult * maxf(0.0, 1.0 + sim.perks.mod(sim.buildings.batch_operator, "contamination_per_batch")) * sim.crises.mult("refine_contam_mult")  # region perks
 
 
 func _on_first_refine() -> void:

@@ -54,6 +54,7 @@
 	},
 	"smelt_copper": {
 		"cap_margin": 30,
+		"contam_mult": 0.4,
 		"name": "Smelt copper",
 		"inputs": {
 			"copper_ore": 4
@@ -69,6 +70,7 @@
 	},
 	"smelt_iron": {
 		"cap_margin": 30,
+		"contam_mult": 0.4,
 		"name": "Smelt iron",
 		"inputs": {
 			"iron_ore": 4
