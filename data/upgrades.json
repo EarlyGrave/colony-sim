@@ -1,0 +1,4 @@
+{
+	"kevlar_plate": {"name": "Kevlar Plate", "stats": {"flat_phys": 3}, "tags_any": ["armor"]},
+	"ap_rounds": {"name": "AP Rounds", "stats": {"pen_pct_phys": 0.25}, "tags_any": ["weapon"]}
+}

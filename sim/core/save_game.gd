@@ -125,6 +125,8 @@ static func state_hash(sim: Simulation) -> int:
 		parts.append(sim.tutorial.state_parts())
 	if not sim.squads.list.is_empty():  # region C1: only while a squad exists, other hashes stay as they were
 		parts.append(sim.squads.state_parts())
+	if sim.equipment.has_state():  # region E2: only once a gear instance exists, goldens stay identical
+		parts.append(sim.equipment.state_parts())
 	var ab: Array = sim.abilities.state_parts()  # region C2: only after an ability was used
 	if not ab.is_empty():
 		parts.append(ab)

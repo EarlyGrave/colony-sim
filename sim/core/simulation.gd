@@ -99,6 +99,7 @@ var in_step := false
 var chips: ChipSystem  # region R4b
 var power: PowerSystem  # region L3
 var squads: SquadSystem  # region C1
+var equipment: EquipmentSystem  # region E2
 var contraband: Contraband  # region I3
 var abilities: Abilities  # region C2
 ## True for buildings whose recipes produce waste (refinery, smelter): refining class.
@@ -327,6 +328,7 @@ func _init_systems() -> void:
 	chips = ChipSystem.new(self)  # region T4
 	power = PowerSystem.new(self)  # region L3
 	squads = SquadSystem.new(self)  # region C1
+	equipment = EquipmentSystem.new(self)  # region E2
 	abilities = Abilities.new(self)  # region C2
 	contraband = Contraband.new(self)  # region I3
 	if bool(opts.get("tutorial", false)):  # region O1
@@ -841,6 +843,29 @@ func order_attack(colonist_id: int, enemy_id: int) -> bool:
 	_record("order_attack", [colonist_id, enemy_id])  # save-load
 	return combat.order_attack(colonists.get_by_id(colonist_id), enemy_id)
 # region C1
+# region E2
+## Equipment (sim/equipment). Returns the gear item id, or -1 if rejected.
+func give_gear(cid: int, base: String, rarity: String = "common", ilvl: int = 0) -> int:
+	_record("give_gear", [cid, base, rarity, ilvl])  # save-load
+	return equipment.give(cid, base, rarity, ilvl)
+
+
+func equip(cid: int, item_id: int) -> bool:
+	_record("equip", [cid, item_id])  # save-load
+	return equipment.equip(cid, item_id)
+
+
+func unequip(cid: int, slot: String) -> bool:
+	_record("unequip", [cid, slot])  # save-load
+	return equipment.unequip(cid, slot)
+
+
+func socket(item_id: int, upgrade_id: String) -> bool:
+	_record("socket", [item_id, upgrade_id])  # save-load
+	return equipment.socket(item_id, upgrade_id)
+# endregion
+
+
 ## Squads (sim/squads). `ids_in` / `roles_in`: Array or JSON text (recorded as text). Empty roles = auto by affinity.
 ## Returns the squad id, or -1 if rejected (unknown/dead/already squadded member, > max size, bad role).
 func form_squad(ids_in: Variant, roles_in: Variant = "[]") -> int:
