@@ -82,6 +82,8 @@ func act() -> void:
 	if sim.tick % 200 == 0:
 		_bills()
 	_retry_routes()
+	if _knob("refinery2", 1) == 1 and sim.tick % 100 == 50 and sim.petition.done_phases.size() >= 2 and sim.buildings.count_of("refinery") + _bp_count("refinery") == 1 and sim.research.is_done("drilling") and sim.items.count_stored("plate") >= 6:
+		_hub_place("refinery", Vector2i(4, 2))  # region LN: second refinery after petition II
 	if sim.buildings.count_of("refinery") > 0 and sim.research.is_done("drilling"):
 		_build()
 	elif sim.tick % 100 == 0 and sim.research.is_done("drilling") and _bp_count("refinery") == 0 and _step >= 2:
@@ -166,6 +168,8 @@ func _upkeep() -> void:
 ## PL: essence still owed to the factory techs (filters / assembly / electrification) that are not queued-and-paid yet.
 func _research_reserve() -> int:
 	var n := 0
+	if _knob("stop_research", 1) == 1 and sim.petition.done_phases.size() >= 3:  # region LN: P3 landed, refined goes to P4 + shuttle parts
+		return 0
 	for t: String in RESEARCH:
 		if sim.research.is_done(t) or sim.research.paid.has(t) or not sim.defs.research.has(t) or t in ["fortification", "decoys_1"] or (t == "electrification" and _knob("gens", 1) == 0):
 			continue
@@ -225,6 +229,8 @@ func _research() -> void:
 	if sim.buildings.count_of("research_bench") == 0:
 		return
 	for t: String in RESEARCH:
+		if _knob("stop_research", 1) == 1 and sim.petition.done_phases.size() >= 3 and not sim.research.is_done(t):
+			continue  # region LN: no new research once petition III is done
 		if t == "filters" and _knob("asm_first", 1) == 1 and not (sim.research.is_done("assembly") or sim.research.queue.has("assembly")):
 			continue  # PG: assembly (20 essence) gates parts/audit; filters (10) used to grab the first essence and delay it by 4 days
 		if t == "electrification" and _knob("gens", 1) == 0:
@@ -703,6 +709,10 @@ func _shuttle() -> void:
 			var wb := _first("workbench")
 			if wb != null and not _has_bill(wb, "fuel_cell") and sim.defs.recipes.has("fuel_cell") and int(st.get("parts", 0)) >= int(st.get("need", 24)) and sim.items.count_stored("plate") >= plate_reserve + 4:  # D3: parts first, plates keep a repair reserve
 				sim.add_bill(wb.id, "fuel_cell", "until", 8)
+	if _knob("prebuild", 1) == 1 and sim.petition.done_phases.size() >= 3 and sim.tick % 200 == 0:  # region LN: fuel cells in parallel with P3/P4
+		var wb2 := _first("workbench")
+		if wb2 != null and not _has_bill(wb2, "fuel_cell") and sim.defs.recipes.has("fuel_cell") and sim.items.count_stored("plate") >= plate_reserve + 8:
+			sim.add_bill(wb2.id, "fuel_cell", "until", 8)
 	if ph == "ready" and sim.launch_shuttle():
 		launch_day = day
 	if ph == "countdown":
