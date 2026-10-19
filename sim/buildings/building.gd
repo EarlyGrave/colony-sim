@@ -34,6 +34,8 @@ var bill_items: Dictionary = {}
 ## Station recipes of a processor machine (recipe ids, sorted); miner: node cell + fractional output.
 var station_recipes: Array[String] = []
 var station_defs: Dictionary = {}
+var gated_recipes: Array[String] = []  # region EN1: station recipes with requires_tech
+var gated_ok := false
 var node_cell := Vector2i(-1, -1)
 var mach_acc := 0.0
 var mach_items := 0
@@ -76,8 +78,11 @@ func _init(p_id: int, p_def_id: String, p_def: Dictionary, p_cell: Vector2i, rec
 	if def.get("machine", "") == "processor":  # region A2a
 		for rid: String in recipes:
 			if def_id in recipes[rid].get("station", []):
-				station_recipes.append(rid)
 				station_defs[rid] = recipes[rid]
+				if recipes[rid].has("requires_tech"):  # region EN1
+					gated_recipes.append(rid)
+				else:
+					station_recipes.append(rid)
 		station_recipes.sort()
 
 
@@ -136,7 +141,7 @@ func input_space(item_id: String) -> int:
 	if def.get("port_building", false):  # region A2b
 		return PortLink.manual_input_space(self)
 	if not station_recipes.is_empty():  # region A2a: processor takes inputs of any station recipe
-		for rid in station_recipes:
+		for rid in station_recipes + (gated_recipes if gated_ok else []):  # region EN1
 			if station_defs[rid]["inputs"].has(item_id):
 				return int(def["input_capacity"]) - int(input.get(item_id, 0))
 		return 0

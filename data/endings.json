@@ -1,0 +1,5 @@
+{
+	"paths": ["submit", "fight", "escape", "remission"],
+	"ponr_flags": {"fight": "ponr_fight", "escape": "ponr_escape", "remission": "ponr_remission"},
+	"submit_ponr_petition_phase": 1
+}

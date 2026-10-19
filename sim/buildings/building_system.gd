@@ -516,8 +516,18 @@ func _tick_processor(b: Building) -> void:
 	if b.progress == 0:
 		b.recipe = {}
 		b.recipe_id = ""
-		for rid in b.station_recipes:
+		var rids: Array[String] = b.station_recipes
+		if not b.gated_recipes.is_empty():  # region EN1: dirty fuel needs bulk_refining
+			b.gated_ok = false
+			for g in b.gated_recipes:
+				b.gated_ok = b.gated_ok or sim.endings.tech_ok(g)
+			if b.gated_ok:
+				rids = b.station_recipes + b.gated_recipes
+				rids.sort()
+		for rid in rids:
 			if not sim.chips.recipe_ok(rid):  # region T4: chip recipe is tech-gated
+				continue
+			if not sim.endings.tech_ok(rid):
 				continue
 			b.recipe = b.station_defs[rid]
 			b.recipe_id = rid

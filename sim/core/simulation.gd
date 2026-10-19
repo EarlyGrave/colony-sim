@@ -73,6 +73,7 @@ var ecology: EcologySystem  # region T5
 var milestones: MilestoneSystem  # region R2b
 var quests: QuestLog  # region Q0
 var petition: PetitionSystem  # region E1
+var endings: EndingSystem  # region EN1
 var shuttle: ShuttleSystem  # region S1
 var beacons: BeaconSystem  # region S2
 var blocks: BlockSystem  # region I1
@@ -314,6 +315,7 @@ func _init_systems() -> void:
 	milestones = MilestoneSystem.new(self)  # region R2b
 	petition = PetitionSystem.new(self)  # region E1
 	quests = QuestLog.new(self)  # region Q0
+	endings = EndingSystem.new(self)  # region EN1
 	q1_clerk = QuestClerkNote.new(self)  # region Q1
 	q2_pilgrims = Q2Pilgrims.new(self)  # region Q2
 	if quests.is_enabled():  # region QX: code quests are polled and hashed by QuestLog only
@@ -1013,9 +1015,27 @@ func get_beacon_state() -> Dictionary:
 # endregion
 
 
+# region EN1: path / point of no return / ending_won
+func path() -> String:
+	return endings.path()
+
+
+func set_path(id: String) -> bool:
+	_record("set_path", [id])
+	return endings.set_path(id)
+
+
+func ending_won(id: String) -> bool:
+	_record("ending_won", [id])
+	return endings.mark_won(id)
+# endregion
+
+
 # region E1: Sentence Commutation Petition (needs balance e1_enabled)
 func deliver_petition(phase: int) -> bool:
 	_record("deliver_petition", [phase])  # save-load
+	if not endings.petition_allowed():  # region EN1
+		return false
 	return petition.deliver(phase)
 
 

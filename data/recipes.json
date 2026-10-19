@@ -135,6 +135,15 @@
 			"workbench"
 		]
 	},
+	"fuel_cell_dirty": {
+		"pollutes": true,
+		"name": "Dirty Fuel Cell",
+		"inputs": {"essence_ore": 6, "refined_essence": 1},
+		"outputs": {"fuel_cell": 1, "waste": 3},
+		"work_ticks": 60,
+		"requires_tech": "bulk_refining",
+		"station": ["refinery", "smelter"]
+	},
 	"fuel_cell": {
 		"name": "Fuel Cell",
 		"inputs": {"nitrogen": 2, "plate": 1},
