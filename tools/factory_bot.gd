@@ -23,6 +23,7 @@ var base: Bot
 var cap_percent := 50
 var plate_target := 45
 var assume_nitrogen := false
+var _failed_step := -1
 var _step := 0  ## index into PLAN
 var _hub := Vector2i.ZERO
 var _used_nodes: Dictionary = {}
@@ -57,6 +58,8 @@ func act() -> void:
 	_retry_routes()
 	if sim.buildings.count_of("refinery") > 0 and sim.research.is_done("drilling"):
 		_build()
+	elif sim.tick % 100 == 0 and sim.research.is_done("drilling") and _bp_count("refinery") == 0 and _step >= 2:
+		_hub_place("refinery", Vector2i(-4, 2))  # YX: a raid took the refinery; a player rebuilds it, the bot used to freeze
 	if sim.tick % 600 == 0:
 		_deliveries()
 	if sim.tick % 100 == 0:
@@ -134,6 +137,8 @@ func _priorities() -> void:
 			sim.set_work_priority(c.id, "construction", 2)
 			sim.set_work_priority(c.id, "hauling", 1)
 			sim.set_work_priority(c.id, "mining", 2)
+			sim.set_work_priority(c.id, "repair", 1)  # YX: repair/operating default to 3 and starved behind endless hauling/building
+			sim.set_work_priority(c.id, "operating", 1)
 		i += 1
 
 
@@ -233,6 +238,9 @@ func _build() -> void:
 	if ok:
 		_step += 1
 		log.append("d%.1f built %s" % [float(sim.tick) / sim.ticks_per_day, str(s)])
+	elif _failed_step != _step:
+		_failed_step = _step
+		log.append("d%.1f step %d %s waiting (placement/research)" % [float(sim.tick) / sim.ticks_per_day, _step, str(s)])
 
 
 ## Nearest free spot of `def_id` around hub+off; machines also need their port cells free.

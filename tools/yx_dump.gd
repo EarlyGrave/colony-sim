@@ -34,6 +34,21 @@ func _init() -> void:
 	for b in sim.buildings.list:
 		if b.def_id in ["miner", "smelter", "assembler", "refinery", "storage_in", "workbench"]:
 			print(b.def_id, b.cell, " in=", b.input, " out=", b.output, " rec=", b.recipe_id, " broken=", b.broken, " cond=%.0f" % b.condition, " net=", b.power_net, " prog=", b.progress)
+	for b in sim.buildings.list:
+		if b.def_id == "workbench":
+			for bill: Bill in sim.crafting.bills_of(b):
+				print("BILL ", b.cell, bill.recipe_id, bill.mode, bill.target, "done=", bill.done, "paused=", bill.paused, " stock plate=", sim.items.count_stored("plate"), " world=", sim.items.count_world("plate"), " ground=", sim.items.count_on_ground("plate"))
+	for c in sim.colonists.list:
+		if c.alive:
+			print("COL ", c.id, " job=", c.job.type if c.job != null else "-", " prio=", c.skills.priorities, " cell=", c.cell)
+	for bp in sim.buildings.blueprints:
+		print("BP ", bp.def_id, bp.cell, " delivered=", bp.delivered, " work=", bp.work_done, " mats=", bp.has_all_materials())
+	print("routes pending: ", bot._routes.size(), " mine: ", bot._mine)
+	var ws := []
+	for k: String in sim.ledger.by_source:
+		if k.ends_with(":waste"):
+			ws.append("%s=%d" % [k, sim.ledger.by_source[k]])
+	print("waste: ", ", ".join(ws), " pol=%.0f%%" % (sim.contamination.fraction() * 100.0))
 	var srcs := []
 	for k: String in sim.ledger.by_source:
 		if k.ends_with(":essence_ore"):
