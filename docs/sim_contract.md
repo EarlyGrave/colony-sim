@@ -1,5 +1,4 @@
 # Sim contract (portable spec)
-
 What a re-implementation (other engine/language) must reproduce to be "the same game": same seed + same command log
 = same `state_hash` at every tick. Source of truth is the code; `tests/test_contract_doc.gd` keeps the command table and
 the data-file table below in sync with it. "(GD)" marks GDScript-specific behaviour a port must emulate or replace.
@@ -155,6 +154,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `needs.json` | start_food/rest, retry_ticks, food{}, rest{} |
 | `perks.json` | caps, respec_cost, perks id -> {skill, level, effect}, levels_per_point |
 | `plants.json` | id -> {item, yield, grow_ticks, sow_ticks, harvest_ticks, min_daylight} |
+| `quests_q6.json` | Q6 quest defs (QuestLog-merged, gated by q_enabled) |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
 | `tutorial.json` | R5 O1: settings{audit_step, audit_delay_ticks}, steps[12] -> {id,title,text,reason,target{kind,id},done{signal,count/min_cells/where/or/latch},nudge_ticks} |
