@@ -65,7 +65,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `deliver_petition` | phase: int (1..4) | bool | e1_enabled + audit tier 2 + warden_terminal; phases sequential; consumes only still-required items; completing pays the reward (debt cut %, items, tier 3 on P3) and emits petition_phase_done |
 | `deliver_shuttle_parts` | none | int | s1_enabled + petition P4 done + a Release Gantry; consumes part_cost per part from storage up to the need; returns parts added (S1) |
 | `launch_shuttle` | none | bool | phase ready (all parts, gantry powered); starts the countdown and siege waves (S1) |
-| `set_manifest` | n:int | bool | EN2: seats aboard on the Submit path (parts need = seats); refused during countdown / win |
+| `set_manifest` | n:int | bool | EN2 Submit seats; refused when counting |
 | `repair_gantry` | none | bool | pays repair_cost, restores gantry HP (S1) |
 | `deliver_audit` | tier: int | bool | warden_terminal exists; consumes only still-required parts of that tier's set from storage; completes -> research.unlock_tier(tier) + warden letter once |
 | `trigger_bell` | building_id: int | bool | Mourning Bell exists, not broken, no burst running, cooldown 0; starts burst (threat x`burst_mult` for `burst_ticks`, then `cooldown_ticks`); debits `essence_cost` refined essence from storage, shortfall -> ledger event `decoy_essence_debt` |
@@ -204,7 +204,6 @@ Map ids are stable (a recalled outpost leaves a gap); use `entry(id)` / `Expedit
 `sling_send(0, items)` (fires from the ACTIVE outpost; its sling + stored items), `switch_map(id)`. Active-map arrivals go through sim commands (`receive_cargo`/`receive_party`); otherwise they wait in the
 target ledger (`inbox`, `returning_crew`) and `switch_map` flushes them. `state_hash()` canonicalises dictionaries (sorted keys), so it survives a JSON save round trip.
 Collateral debt is a counter (`ledgers["campaign"].collateral_debt`) because `sim/debt` has no add-debt API (it is per-colonist, drawn at join).
-
 ## 8. `state_hash` (`SaveGame.state_hash(sim)`)
 An `int` hash of observable state. Parts in order: `[tick, game_over_reason, alarm]`; each `items.stacks` entry `[cell, stack]` (insertion order);
 each colonist in `colonists.list` `[id, cell, hp, alive, carry_item, carry_count, carry_quality, learned_perks]`; each building in `buildings.list`

@@ -75,6 +75,8 @@ func test_notices_stepwise_and_stop_at_launch() -> void:
 	sim.run_ticks(every * 2 - sim.tick + 1)
 	assert_true(sim.shuttle.notices >= 2)
 	var n: int = sim.shuttle.notices
+	sim.buildings.place("release_gantry", Vector2i(10, 6), false)
 	sim.shuttle.counting = true
+	sim.shuttle.t_left = every * 3
 	sim.run_ticks(every)
 	assert_eq(sim.shuttle.notices, n, "stops once counting")
