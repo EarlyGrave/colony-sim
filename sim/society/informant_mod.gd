@@ -93,6 +93,7 @@ func poll() -> void:
 			if find_informant() == null:
 				_end()
 				return
+			_w2_pa()  # region W2
 			reports += 1
 			_set_fee(current_mult())
 			if tolerated:
@@ -137,3 +138,21 @@ func state_parts() -> Array:
 	if state == "idle":
 		return []
 	return [state, informant_id, reports, base_mult, choice, tolerated]
+
+
+# region W2
+## Warden PA line from flavor pa.informant_report: once per 3 days while he lives; silent under mod pa_silent.
+func _w2_pa() -> void:
+	if sim.day() % 3 != 0 or sim.quests.mod("pa_silent") > 0.0:
+		return
+	var f := FileAccess.open("res://data/flavor.json", FileAccess.READ)
+	if f == null:
+		return
+	var j: Variant = JSON.parse_string(f.get_as_text())
+	if not (j is Dictionary):
+		return
+	var lines: Array = (j as Dictionary).get("pa", {}).get("informant_report", [])
+	if lines.is_empty():
+		return
+	sim.bus.letter_received.emit("Warden", str(lines[sim.day() / 3 % lines.size()]))
+# endregion

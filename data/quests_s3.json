@@ -1,0 +1,46 @@
+{
+	"s3_whisper_network": {
+		"title": "Whisper Network",
+		"_comment": "Society line S3 (docs/story/society.md). Needs cond informant_alive (W1). Standing/transfer verbs live in quest_log region W2.",
+		"trigger": {"quest_done": "q13_informant", "tier_done": 2, "informant_alive": true},
+		"start": "tip",
+		"beats": {
+			"tip": {
+				"text": "The Informant's reports now name petition evidence. The Warden has adjusted the review date. Someone has been very helpful.",
+				"effects": [{"verb": "letter", "title": "Informant stipend", "text": "Informant stipend: 2 rations. Source: you."}],
+				"options": {
+					"decoy": {
+						"label": "Feed him a decoy",
+						"requires": {"items": {"parts": 5}, "tag_alive": "Clerk"},
+						"text": "A Clerk forges a convincing pile of nothing. The Warden files it under progress.",
+						"hint": "Costs 5 parts, needs a Clerk. Petition fee x0.9 for 4 days.",
+						"effects": [
+							{"verb": "items", "item": "parts", "n": -5},
+							{"verb": "mod", "name": "petition_fee_mult", "value": 0.9, "days": 4}
+						]
+					},
+					"bait": {
+						"label": "Bait the Warden",
+						"text": "You leave a trail of crumbs. Someone follows it. Possibly the wrong someone.",
+						"hint": "50%: audit dates known, audit parts x0.8. Else petition fee x1.3 for 3 days.",
+						"effects": [
+							{"verb": "gamble", "p": 0.5,
+								"win": [{"verb": "flag", "id": "audit_dates_known"}, {"verb": "mod", "name": "audit_parts_mult", "value": 0.8, "days": 6}],
+								"lose": [{"verb": "mod", "name": "petition_fee_mult", "value": 1.3, "days": 3}]}
+						]
+					},
+					"cut": {
+						"label": "Cut him off",
+						"text": "Inmate tip received: 'They are counting plates.' Thank you for your service. He is transferred.",
+						"hint": "He leaves (transferred). His block loses Standing. Fee back to normal.",
+						"effects": [
+							{"verb": "informant_standing", "delta": -10},
+							{"verb": "remove_colonist", "who": "informant", "how": "transfer"},
+							{"verb": "mod", "name": "petition_fee_mult", "value": 1.0, "days": 0}
+						]
+					}
+				}
+			}
+		}
+	}
+}
