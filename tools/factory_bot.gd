@@ -641,6 +641,9 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	for item in ["essence_ore", "refined_essence", "iron_ore", "ingot_iron", "copper_ore", "ingot_copper", "coal", "plate", "parts"]:
 		led[item] = "%d/%d" % [int(sim.ledger.produced.get(item, 0)), int(sim.ledger.consumed.get(item, 0))]
 	r["ledger"] = led
+	# region D4
+	r["waste_prod"] = int(sim.ledger.produced.get("waste", 0))
+	# endregion
 	var power_f := 1.0
 	if sim.power != null and sim.power.enabled:
 		var w: Dictionary = sim.power.worst_net()
