@@ -1,6 +1,6 @@
 {
 	"ticks_per_day": 600,
-	"pg_bot": {"gens": 0, "asm_first": 1, "extra_miners": 2, "plate_step": 6, "plate_p1": 90, "ore_reserve": 0, "ore_reserve_max": 120, "sink_after_miners": 0},
+	"pg_bot": {"gens": 0, "asm_first": 1, "extra_miners": 2, "plate_step": 6, "plate_p1": 90, "ore_reserve": 0, "ore_reserve_max": 120, "sink_after_miners": 0, "miner_fails": 5},
 	"waste_sink_early": true,
 	"automation": {"belt_ticks_per_cell": 5},
 	"map": {

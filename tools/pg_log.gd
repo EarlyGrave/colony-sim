@@ -11,6 +11,9 @@ func _init() -> void:
 			s = int(a.get_slice("=", 1))
 		if a.begins_with("--days="):
 			days = int(a.get_slice("=", 1))
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--ov="):
+			load("res://tools/factory_bot_report.gd").apply_overrides(Defs.get_default(), JSON.parse_string(a.substr(5)))
 	var r: Dictionary = FactoryBot.play(s, days, {})
 	print("\n".join(r["log"]))
 	print(r["built"])
@@ -20,7 +23,7 @@ func _init() -> void:
 	var sim := Simulation.new(s, bus, null, {"tutorial": true, "research_locked": true})
 	sim.start_new_game()
 	var hub := sim.map_center() + Vector2i(-2, 9)
-	for res in ["iron_ore", "copper_ore", "coal", "nitrogen"]:
+	for res in ["essence_ore", "iron_ore", "copper_ore", "coal", "nitrogen"]:
 		var ds := []
 		for n in sim.map.node_cells():
 			if sim.map.node_resource(n) == res:

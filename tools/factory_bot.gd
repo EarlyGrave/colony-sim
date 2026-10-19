@@ -12,8 +12,8 @@ const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), 
 ## Build order, one blueprint batch at a time: ["line", resource, smelt?] = miner(+smelter)+belts+storage_in at the hub,
 ## ["miner"] = hand-hauled essence miner (no belt, works before Conveyance), plus single machines.
 const PLAN: Array = [
-	["workbench"], ["miner"], ["refinery"], ["miner"], ["miner"], ["line", "iron_ore", true], ["line", "copper_ore", true], ["assembler"], ["terminal"], ["line", "essence_ore", false],
-	["line", "coal", false], ["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
+	["workbench"], ["miner"], ["refinery"], ["miner"], ["miner"], ["line", "iron_ore", true], ["line", "copper_ore", true], ["assembler"], ["terminal"], ["miner", "coal"], ["miner", "nitrogen"], ["line", "essence_ore", false],
+	["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
 	["line", "iron_ore", true], ["gen"], ["assembler"], ["line", "iron_ore", true],
 ]
 ## tech -> first PLAN step at which it is queued (bench time and essence are not wasted early).
@@ -283,7 +283,7 @@ func _build() -> void:
 	var ok := false
 	match str(s[0]):
 		"miner":
-			ok = _ore_miner()
+			ok = _ore_miner(str(s[1]) if s.size() > 1 else "essence_ore")
 		"line":
 			if not sim.research.is_done("conveyance"):
 				return
@@ -307,7 +307,7 @@ func _build() -> void:
 	else:
 		if str(s[0]) == "miner" or (str(s[0]) == "line" and sim.research.is_done("conveyance")):
 			_step_fails += 1
-		if _step_fails > 60 and str(s[0]) in ["miner", "line"]:  # PL: a step that cannot be placed for ~40 tries is skipped, not waited on forever
+		if _step_fails > (_knob("miner_fails", 5) if str(s[0]) == "miner" else 60) and str(s[0]) in ["miner", "line"]:  # PL: a step that cannot be placed for ~40 tries is skipped, not waited on forever
 			_step += 1
 			_step_fails = 0
 			return
@@ -379,10 +379,10 @@ func _belt_free(c: Vector2i) -> bool:
 
 
 ## Essence miner without belts: colonists haul its output buffer to the stockpile (works from day 2).
-func _ore_miner() -> bool:
+func _ore_miner(res := "essence_ore") -> bool:
 	var cands: Array[Vector2i] = []
 	for n in sim.map.node_cells():
-		if sim.map.node_resource(n) == "essence_ore" and not _used_nodes.has(n):
+		if sim.map.node_resource(n) == res and not _used_nodes.has(n):
 			cands.append(n)
 	cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		return a.distance_squared_to(sim.map_center()) < b.distance_squared_to(sim.map_center()))
@@ -394,7 +394,7 @@ func _ore_miner() -> bool:
 			for yy in 2:
 				for xx in 2:
 					var p := t + Vector2i(xx, yy)
-					if sim.map.is_node(p) and sim.map.node_resource(p) != "essence_ore":
+					if sim.map.is_node(p) and sim.map.node_resource(p) != res:
 						pure = false
 			if pure and _put("miner", t) != null:
 				for yy in 2:
