@@ -43,6 +43,8 @@ func placement_error(def_id: String, c: Vector2i, check_cost := true) -> String:
 	if not sim.defs.buildings.has(def_id):
 		return "Unknown building"
 	var def: Dictionary = sim.defs.buildings[def_id]
+	if def.has("waste_sink") and not waste_sink_enabled():  # region D2
+		return "locked: waste_sink_early"
 	if not sim.research.building_unlocked(def_id):  # region R2a
 		return "locked: " + sim.research.building_tech(def_id)
 	var on_node := bool(def.get("on_node", false))  # region A2a
@@ -473,6 +475,7 @@ func _nearest_walkable(from: Vector2i) -> Vector2i:
 ## Once per tick (after logistics): miners extract, processors run recipes. No operator needed.
 func tick_machines() -> void:
 	tick_decoys()  # region T2
+	tick_waste_sinks()  # region D2
 	for b in list:
 		match str(b.def.get("machine", "")):
 			"extractor":
@@ -549,4 +552,29 @@ func tick_decoys() -> void:
 	for b in list:
 		if b.def.has("decoy"):
 			Decoy.tick(b, sim)
+# endregion
+
+
+# region D2
+## Early waste sink (default-off balance flag `waste_sink_early`). A Waste Compactor eats stored
+## waste items at a capped throughput (def "waste_sink"), paying a small pollution cost per unit,
+## so refining stays dangerous: ~6 waste/day per compactor against ~4 waste per refine batch.
+func waste_sink_enabled() -> bool:
+	return bool(sim.defs.balance.get("waste_sink_early", false))
+
+
+func tick_waste_sinks() -> void:
+	if not waste_sink_enabled():
+		return
+	for b in list:
+		if b.destroyed or b.broken or not b.def.has("waste_sink"):
+			continue
+		var cfg: Dictionary = b.def["waste_sink"]
+		if sim.tick % int(cfg.get("every_ticks", 100)) != 0:
+			continue
+		var item := str(cfg.get("item", "waste"))
+		var n := int(cfg.get("per", 1))
+		if sim.items.consume_stored(item, n, b.cell):
+			sim.ledger.record_consumed(item, n, "waste_sink")
+			sim.contamination.level += float(cfg.get("pollution_per_unit", 0.0)) * n
 # endregion

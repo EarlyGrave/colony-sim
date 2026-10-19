@@ -360,6 +360,19 @@
 		"repair_cost": {"essence_ore": 6},
 		"decoy": {"fuel_item": "waste", "burn_ticks": 300, "unlit_mult": 0.25, "pollution_per_burn": 0.02}
 	},
+	"waste_compactor": {
+		"name": "Waste Compactor",
+		"size": [1, 1],
+		"color": "#6b7a3a",
+		"max_hp": 200,
+		"cost": {"essence_ore": 10},
+		"build_work": 60,
+		"buildable": true,
+		"threat": 4,
+		"threat_priority": 1,
+		"repair_cost": {"essence_ore": 5},
+		"waste_sink": {"item": "waste", "every_ticks": 100, "per": 1, "pollution_per_unit": 0.01}
+	},
 	"penitent_wall": {
 		"name": "Penitent Wall",
 		"size": [2, 1],
