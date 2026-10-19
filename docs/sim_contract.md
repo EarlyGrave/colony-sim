@@ -157,6 +157,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quests_q12.json` | Q12 Rolled Over (NG+, sentence_min 3 + carried debt) |
 | `quests_q10.json` | Q10 Maintenance Window quest defs (QuestLog-merged) |
 | `quests_q3.json` | Q3 Parole Board quest defs (QuestLog-merged) |
+| `quests_s2.json` | W3 S2 Pecking Order (data quest, min_day 8, conds block_standing_above/below; verb `block_standing` target strong/weak; mod `weak_despair_mult` read by BlockSystem.despair_mult) |
 | `quests_q13.json` | I2 Informant (code quest `sim/society/informant_mod.gd`, QuestLog module `q13_informant`, day >= 12): informant = `sim.blocks.informant_id()` (I1) else bio tag/block "Informant"; mod `petition_fee_mult` fee_start..fee_max (+step/day, +bonus if tolerated), restored to pre-quest value on false_info (needs Clerk, idles him 1 day) / transfer (`debt._remove`) / his death; state in hash only after start |
 | `quests_q8.json` | Q8 What the Creatures Wear (QuestLog-merged, gated by q_enabled) |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
