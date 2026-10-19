@@ -349,3 +349,8 @@ HP); волны заканчиваются по таймеру и твари о�
 - Root cause of no shuttle: taint cap blocks the refinery ~70% of the time (smelters run to cap+30). Margin 0 gives 2-3x refined but starves ingots/plates (P3 3->1/10).
 - PM: sim fix, workbench exempt from ore_reserve (hand_plate no longer starves).
 - Full suite 910 green, web smoke PASS. Open: shuttle path (cleaner smelting vs separate smelter cap) — asked owner.
+
+## Clean smelting (owner rule, 2026-10-19)
+- CS: recipe flag `pollutes` (only refine_essence true); smelters clean and uncapped. Pillar gap 2.2.
+- Bot 60 d: real refined seeds 1/5/7 228/582/252 (was 102/186/114); alive>=8 8/10; audit 7; P1 5; P3 3; launch 0. Next wall: plates.
+- Full suite 910 green, web smoke PASS.
