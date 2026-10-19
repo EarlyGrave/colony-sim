@@ -1671,6 +1671,13 @@ func _u1_layout(y0: float, right_off: float) -> void:
 	notification_anchor.offset_bottom = y0
 
 
+# region R5
+## True when the open quest sheet would cover `r`; the notification stack yields (hides) meanwhile.
+func r5_sheet_overlaps(r: Rect2) -> bool:
+	return _q0_sheet != null and _q0_sheet.visible and _q0_sheet.get_global_rect().intersects(r)
+# endregion
+
+
 # region U2
 var _u2_stack: NotificationStack
 
@@ -1705,6 +1712,7 @@ func _u2_on_report(r: Dictionary) -> void:
 func _u2_update() -> void:
 	if _u2_stack != null:
 		_u2_stack.suppressed = _side != null or (feed_ticker != null and feed_ticker.visible and feed_ticker.get_global_rect().intersects(_u2_stack.expected_rect()))
+		_u2_stack.suppressed = _u2_stack.suppressed or r5_sheet_overlaps(_u2_stack.expected_rect())  # region R5
 		_u2_stack.tick(get_process_delta_time())
 		if _b5_card != null and _b5_card.text_now().begins_with("Wave ") and " over:" in _b5_card.text_now():
 			_b5_card.visible = false  # the report strip is gone: the stack shows it instead
