@@ -60,7 +60,8 @@ func test_player_intervention_keeps_colony_alive_longer() -> void:
 		for item in sim.defs.items:
 			assert_eq(sim.items.count_world(item), sim.ledger.balance_of(item), "%s leaked" % item)
 	assert_gt(built, 3 * seeds.size(), "bot rebuilds turrets (total %d)" % built)
-	assert_true(gain >= 4, "total gain over seeds 1..5: %d" % gain)
+	# SR shelter ration: static colonies no longer starve while hidden, so the margin shrank (was >= 4).
+	assert_true(gain >= 2, "total gain over seeds 1..5: %d" % gain)
 	assert_true(worse <= 1, "rebuilding turrets must not be worse on more than one seed (%d worse)" % worse)
 
 
