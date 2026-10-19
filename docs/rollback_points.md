@@ -12,3 +12,4 @@ Restore: `git checkout -b restore <sha>` (or reset a branch to it).
 | 2026-10-19 03:17 | dff9db7 | economy batch Y | green |
 | 2026-10-19 03:52 | a5d87c3 | debt batch D | green |
 | 2026-10-19 05:39 | d4129cf | plates/progression | green |
+| 2026-10-19 10:09 | f1bbfa2 | petition progression + quests (off) | 810 green x2, smoke PASS |
