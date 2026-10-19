@@ -18,6 +18,8 @@ var t_left := 0
 var extract_failed := 0
 var extract_cell := Vector2i(-1, -1)
 var extracted := 0  # colonists that left (legacy)
+var relay_spawned := false  # region EN4
+var relay_done := false
 
 
 func _init(p_sim: Simulation) -> void:
@@ -153,6 +155,8 @@ func colonists_at_point() -> Array:
 		var cell: Vector2i = c.cell
 		if absi(cell.x - extract_cell.x) <= r and absi(cell.y - extract_cell.y) <= r:
 			out.append(c)
+	if relay_spawned:  # region EN4
+		out.append_array([relay_spawned, relay_done])
 	return out
 
 
@@ -174,12 +178,67 @@ func _escape_tick() -> void:
 # endregion
 
 
+# region EN4: Collector relay (metro track's final assault drops it; the powered Uplink burns it down)
+func relay() -> Building:
+	var id := str(_fc().get("relay", {}).get("building", "collector_relay"))
+	for b in sim.buildings.list:
+		if b.def_id == id and not b.destroyed:
+			return b
+	return null
+
+
+func on_collector_assault() -> void:
+	if sim.path() != "fight" or relay_spawned:
+		return
+	var c := _relay_cell()
+	if c.x < 0:
+		return
+	var b := sim.buildings.place(str(_fc().get("relay", {}).get("building", "collector_relay")), c, false)
+	if b == null:
+		return
+	relay_spawned = true
+	sim.quests.set_flag("ponr_fight")
+	sim.bus.letter_received.emit("Relay landed", str(_fc().get("relay", {}).get("lines", {}).get("landed", "")))
+
+
+func _relay_cell() -> Vector2i:
+	var id := str(_fc().get("relay", {}).get("building", "collector_relay"))
+	var mc := sim.map_center()
+	for d in range(0, maxi(sim.map.width, sim.map.height)):
+		for y in range(mc.y - d, mc.y + d + 1):
+			for x in range(mc.x - d, mc.x + d + 1):
+				if maxi(absi(x - mc.x), absi(y - mc.y)) != d:
+					continue
+				var c := Vector2i(x, y)
+				if sim.map.in_bounds(c) and sim.buildings.placement_error(id, c, false) == "":
+					return c
+	return Vector2i(-1, -1)
+
+
+func _relay_tick() -> void:
+	if not relay_spawned or relay_done:
+		return
+	var r := relay()
+	if r == null:
+		relay_done = true
+		sim.bus.letter_received.emit("Relay destroyed", str(_fc().get("relay", {}).get("lines", {}).get("won", "")))
+		sim.endings.mark_won("fight")
+		return
+	if uplink_ready():
+		sim.buildings.damage(r, float(_fc().get("relay", {}).get("damage_per_day", 400.0)) / sim.ticks_per_day)
+# endregion
+
+
 func tick() -> void:
+	_relay_tick()  # region EN4
 	_fight_tick()
 	_escape_tick()
 
 
 func state_parts() -> Array:
-	if assault_step < 0 and not assault_done and not contacted and assault_failed == 0:
+	if assault_step < 0 and not assault_done and not contacted and assault_failed == 0 and not relay_spawned:
 		return []
-	return [assault_step, assault_start, assault_done, assault_failed, contacted, paid, counting, t_left, extract_failed, extract_cell, extracted]
+	var out := [assault_step, assault_start, assault_done, assault_failed, contacted, paid, counting, t_left, extract_failed, extract_cell, extracted]
+	if relay_spawned:  # region EN4
+		out.append_array([relay_spawned, relay_done])
+	return out

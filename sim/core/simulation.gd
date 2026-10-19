@@ -75,6 +75,7 @@ var quests: QuestLog  # region Q0
 var petition: PetitionSystem  # region E1
 var endings: EndingSystem  # region EN1
 var fight_escape: FightEscape  # region EN3
+var remission: Remission  # region EN4
 var shuttle: ShuttleSystem  # region S1
 var beacons: BeaconSystem  # region S2
 var blocks: BlockSystem  # region I1
@@ -321,6 +322,7 @@ func _init_systems() -> void:
 	quests = QuestLog.new(self)  # region Q0
 	endings = EndingSystem.new(self)  # region EN1
 	fight_escape = FightEscape.new(self)  # region EN3
+	remission = Remission.new(self)  # region EN4
 	q1_clerk = QuestClerkNote.new(self)  # region Q1
 	q2_pilgrims = Q2Pilgrims.new(self)  # region Q2
 	if quests.is_enabled():  # region QX: code quests are polled and hashed by QuestLog only
@@ -461,6 +463,7 @@ func step() -> void:
 		_lap("threats")
 	shuttle.tick()  # region S1
 	fight_escape.tick()  # region EN3
+	remission.tick()  # region EN4
 	squads.tick()  # region C1
 	contraband.tick()  # region I3
 	if profiling:

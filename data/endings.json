@@ -28,6 +28,14 @@
 				"mult": 2.0
 			}
 		],
+		"relay": {
+			"building": "collector_relay",
+			"damage_per_day": 400.0,
+			"lines": {
+				"landed": "The Collector's relay is down. Hold the Uplink until it burns out.",
+				"won": "The relay is slag. The Collector is cut off."
+			}
+		},
 		"lines": {
 			"lost": "The Uplink Array fell. The Collector is still out there.",
 			"won": "The Collector is gone. The planet is yours."
@@ -42,6 +50,18 @@
 		"lines": {
 			"missed": "The bandits waited, saw nobody and left. Pay again.",
 			"won": "The bandits got you out. New sector, new debts."
+		}
+	},
+	"remission": {
+		"enabled": false,
+		"building": "decon_pylon",
+		"item": "cure",
+		"min_power_factor": 0.5,
+		"drop_per_cure": 3.0,
+		"quiet_frac": 0.1,
+		"quiet_days": 15,
+		"lines": {
+			"won": "The planet is quiet. The things in the dark remember their names."
 		}
 	}
 }

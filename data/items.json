@@ -92,6 +92,7 @@
 	},
 	"cinder_ore": {"name": "Cinder Ore", "color": "#d9602a", "stack": 50, "value": 3.0},
 	"prism_ore": {"name": "Prism Ore", "color": "#6fd8ff", "stack": 50, "value": 3.0},
+	"cure": {"name": "Remission Cure", "color": "#9be8c0", "stack": 20, "value": 8.0},
 	"bog_resin": {"name": "Bog Resin", "color": "#7a8f2a", "stack": 50, "value": 3.0},
 	"coal": {"name": "Coal", "color": "#2b2b30", "stack": 50, "value": 1.0},
 	"nitrogen": {"name": "Nitrogen", "color": "#9fd8e8", "stack": 50, "value": 2.0},
