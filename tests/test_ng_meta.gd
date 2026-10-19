@@ -58,7 +58,7 @@ func test_ng_opts_deterministic_and_preset_step() -> void:
 	assert_eq(JSON.stringify(oa), JSON.stringify(a.make_ng_opts()))
 	assert_eq(int(oa["seed"]), (7 * 1103515245 + 2 * 12345 + 1) & 0x7fffffff)
 	assert_eq(a.ng_next_preset(), "hard_time")
-	assert_eq(int(oa["opts"]["carry_debt"]), 501)
+	assert_eq(int(oa["opts"]["carry_debt"]), roundi(1001 * float(MetaState.new().ng_cfg()["debt_carry_frac"])))
 	assert_eq(oa["opts"]["veteran"]["name"], "B")
 	assert_eq(a.preset, "standard_term")  # player's pick untouched
 	var s2 := _summary(9)
@@ -89,7 +89,7 @@ func test_start_with_ng_opts() -> void:
 	var sim := Simulation.new(5, make_bus(), peaceful_defs(), o)
 	sim.start_new_game()
 	plain.run_ticks(1)  # plain inmates get their debt on the first tick
-	assert_eq(_debt_total(sim) - _debt_total(plain), 501)
+	assert_eq(_debt_total(sim) - _debt_total(plain), roundi(1001 * float(MetaState.new().ng_cfg()["debt_carry_frac"])))
 	var vet: Colonist = sim.colonists.list[0]
 	assert_eq(vet.display_name, "B")
 	assert_true(sim.perks.has(vet, "miner_pace"))
