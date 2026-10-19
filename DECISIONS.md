@@ -254,3 +254,7 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 - Tier 3 audit is gated by petition phase 3 instead of a 120-plate wall.
 - Review 4 "Ledger" loosened to debt left <75% (5% was unreachable); Review 5 "Range" threshold 50.
 - Dispatch bundles are mostly food (the economy's real surplus).
+
+## Shuttle batch S (decided without owner, review)
+- Winning does not end the run (Continue keeps playing).
+- Shuttle needs 24 parts on standard (scaled by preset); siege waves every 1200 ticks (min 500 when polluted).

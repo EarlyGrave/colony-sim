@@ -253,3 +253,11 @@ HP); волны заканчиваются по таймеру и твари о�
 - E4 Petition / Dispatch panels + HUD chip. E5 hard preset audits 4.2 d (7.8 waves by d21), threats bench ~2.08 ms.
 - 735 green x2, web smoke PASS.
 - Open: petition bot uses scripted supply (no real production bot); planets die ~d28-34 in long runs; food income dies ~d17; threats 2.08 vs 2.0 ms.
+
+## Session 4 — Shuttle batch S (win condition)
+- S1 Release Shuttle: gantry (4x4, 800 HP, 20 power) after petition P4; 24 parts (2 plate + 1 refined + 1 fuel_cell each); 2-day countdown siege, faster when polluted; win -> "Sentence Ended" screen (Continue / New Run).
+- S2 Penance Beacons: launcher makes beacons from plate + refined essence, 3 d life, 3% debt/day diminishing, cap 10%/day, max 8.
+- S5 found long runs died because the bot never used the Taint cap rule; shuttle_bot sets it (50%) and survives 60 d on 5/5.
+- Bot (scripted supply, 6 turrets): launch 4/5 seeds (d29-37), 4/4 sieges won; debt paid 81-100% by d60.
+- 757 green x2, web smoke PASS.
+- Open: on the phone the HUD covers most of the world (siege shot shows little of the gantry); win screen overlay is low-contrast; siege easy with 6 turrets; supply in bots is scripted, not a real factory.
