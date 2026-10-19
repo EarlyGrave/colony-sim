@@ -62,7 +62,7 @@ func _burst_step(c: Colonist, w: Dictionary) -> void:
 	var b: Dictionary = w["burst"]
 	var st: Array = _pattern.get(c.id, [0, int(w.get("magazine", 0))])
 	if st[0] <= 0:
-		st[0] = int(b["shots"]) - 1  # this shot opens a burst
+		st[0] = int(b["shots"]) + roundi(sim.perks.mod(c, "burst_shots")) - 1  # this shot opens a burst (region PW4: gunner)
 	else:
 		st[0] -= 1
 	if st[0] > 0:
@@ -171,6 +171,11 @@ func _try_attack(c: Colonist, e: Enemy) -> bool:
 	var dmg := float(w["damage"])
 	if str(w["kind"]) == "melee":
 		dmg *= 1.0 + sim.perks.mod(c, "melee_damage")
+	if str(w["kind"]) == "melee" and _wdef.get(c.id) == null:  # region PW4: monk, unarmed (no equipped weapon)
+		dmg *= 1.0 + sim.perks.mod(c, "unarmed_damage")
+	var crit_b := sim.perks.mod(c, "crit_chance")  # region PW4: rng drawn only with the branch
+	if crit_b > 0.0 and sim.rng.randf() < crit_b:
+		dmg *= 1.5
 	var aimed := sim.perks.consume_flag(c, "aimed_shot")
 	if aimed:
 		dmg *= 1.5

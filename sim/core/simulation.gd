@@ -943,6 +943,11 @@ func use_perk(colonist_id: int, perk_id: String) -> bool:
 	return perks.use(colonists.get_by_id(colonist_id), perk_id)
 
 
+func choose_branch(colonist_id: int, skill: String, branch: String) -> bool:  # region PW4
+	_record("choose_branch", [colonist_id, skill, branch])  # save-load
+	return perks.choose_branch(colonists.get_by_id(colonist_id), skill, branch)
+
+
 func respec_perks(colonist_id: int) -> bool:
 	_record("respec_perks", [colonist_id])  # save-load
 	return perks.respec(colonists.get_by_id(colonist_id))

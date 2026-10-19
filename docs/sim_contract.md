@@ -87,7 +87,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `set_turret_ammo_policy` | building_id: int, policy: str | bool | turret exists, policy in `ammo.json` policies |
 | `learn_perk` | colonist_id: int, perk_id: str | bool | colonist exists, perk point and prereqs, not yet learned |
 | `use_perk` | colonist_id: int, perk_id: str | bool | learned, off cooldown |
-| `respec_perks` | colonist_id: int | bool | pays `perks.respec_cost` |
+| `choose_branch` | colonist_id: int, skill: str, branch: str | bool | PW4: alive, branch in `skills.json branches[skill]`, skill level >= `branch_level` (5), none chosen yet (permanent). Effects are `perks.mod` stats (hit_chance, crit_chance, burst_shots, unarmed_damage, melee_damage, plant_speed, harvest_yield, craft_quality, craft_input, ore_yield, mining_speed); none chosen by default | | `respec_perks` | colonist_id: int | bool | pays `perks.respec_cost` |
 | `use_ability` | squad_id: int, ability_id: str | bool | C2: squad has a living member in the ability role, off cooldown, `essence_cost` refined_essence in storage (stabilise: a Down inmate in range and `health.stabilise`); pays essence, puffs contamination at the user, sets threat flag `burst` |
 | `accept_contract` | contract_id: int | bool | offer open |
 | `decline_contract` | contract_id: int | bool | offer open |

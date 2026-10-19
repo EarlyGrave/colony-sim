@@ -53,6 +53,7 @@ func mod(c: Colonist, stat: String, _ctx: Dictionary = {}) -> float:
 		total += float(fx.get(stat, 0.0))
 	for b: Dictionary in c.perks.buffs.values():
 		total += float(b["stats"].get(stat, 0.0))
+	total += branch_mod(c, stat)  # region PW4
 	if _caps.has(stat):
 		total = maxf(total, float(_caps[stat]))
 	return total
@@ -214,3 +215,52 @@ func _on_skill_leveled(colonist_id: int, skill_id: String, _level: int) -> void:
 	var pts := points_available(c, skill_id)
 	if pts > 0:
 		sim.bus.perk_point_available.emit(colonist_id, skill_id, pts)
+
+
+# region PW4: skill specialisation branches (data/skills.json "branches")
+func branches_of(skill: String) -> Dictionary:
+	return sim.defs.skills.get("branches", {}).get(skill, {})
+
+
+func branch_of(c: Colonist, skill: String) -> String:
+	if c == null or c.perks == null:
+		return ""
+	return str(c.perks.branches.get(skill, ""))
+
+
+## "" if the colonist may pick `branch` for `skill`, otherwise: dead, unknown_branch, level, chosen.
+func can_choose_branch(c: Colonist, skill: String, branch: String) -> String:
+	if c == null or not c.alive:
+		return "dead"
+	if not branches_of(skill).has(branch):
+		return "unknown_branch"
+	if c.skills.level(skill) < int(sim.defs.skills.get("branch_level", 5)):
+		return "level"
+	if branch_of(c, skill) != "":
+		return "chosen"
+	return ""
+
+
+## True if `skill` has branches and none is chosen yet and the level is reached.
+func branch_pending(c: Colonist, skill: String) -> bool:
+	if c == null or not c.alive or branches_of(skill).is_empty():
+		return false
+	return branch_of(c, skill) == "" and c.skills.level(skill) >= int(sim.defs.skills.get("branch_level", 5))
+
+
+func choose_branch(c: Colonist, skill: String, branch: String) -> bool:
+	if can_choose_branch(c, skill, branch) != "":
+		return false
+	state_of(c).branches[skill] = branch
+	return true
+
+
+func branch_mod(c: Colonist, stat: String) -> float:
+	if c.perks.branches.is_empty():
+		return 0.0
+	var total := 0.0
+	for sk: String in c.perks.branches:
+		var d: Dictionary = branches_of(sk).get(str(c.perks.branches[sk]), {})
+		total += float(d.get("effects", {}).get(stat, 0.0))
+	return total
+# endregion
