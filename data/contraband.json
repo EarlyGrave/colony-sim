@@ -1,6 +1,6 @@
 {
 	"enabled": false,
-	"despair_min": 40,
+	"despair_min": 25,
 	"skim_per_inmate_day": 1,
 	"skim_cap_pct": 3.0,
 	"item": "refined_essence",
@@ -16,6 +16,19 @@
 	"lines": {
 		"title": "Warden: Contraband",
 		"shakedown": "Shakedown done. %d units back on the books.",
-		"blackmarket": "The black market ate %d units. The creatures noticed."
-	}
+		"blackmarket": "The black market ate %d units. The creatures noticed.",
+		"inspection": "The Warden inspected the books. Audits will be strict for a while.",
+		"raid": "Raid. The Warden took what he found."
+	},
+	"shakedown_suspicion": 10,
+	"suspicion_per_unit": 2.0,
+	"informant_suspicion_mult": 2.0,
+	"suspicion_decay_day": 1.0,
+	"inspection_at": 60,
+	"raid_at": 90,
+	"inspection_confiscate": 10,
+	"raid_confiscate": 20,
+	"inspection_audit_mult": 1.3,
+	"inspection_days": 5,
+	"inspection_cooldown_days": 3
 }

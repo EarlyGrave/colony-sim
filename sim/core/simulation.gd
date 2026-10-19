@@ -897,6 +897,12 @@ func squad_shakedown(sid: int) -> bool:
 	_record("squad_shakedown", [sid])  # save-load
 	return contraband.shakedown(sid)
 # endregion
+# region N2
+## Escape path: sell n refined to the Ferry for escape_credit; raises suspicion.
+func covert_sale(n: int) -> bool:
+	_record("covert_sale", [n])  # save-load
+	return contraband.covert_sale(n)
+# endregion
 # region crises
 func resolve_crisis(crisis_id: String, option_id: String) -> bool:
 	_record("resolve_crisis", [crisis_id, option_id])  # save-load

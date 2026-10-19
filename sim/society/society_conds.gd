@@ -10,6 +10,8 @@ static func register(log: QuestLog) -> void:
 	log.register_cond("block_standing_below", func(a: Variant) -> bool: return standing_cmp(sim, a, true))
 	log.register_cond("block_standing_above", func(a: Variant) -> bool: return standing_cmp(sim, a, false))
 	log.register_cond("contraband_stash_over", func(n: Variant) -> bool: return stash_over(sim, int(n)))
+	log.register_cond("installment_missed", func(_a: Variant) -> bool: return sim.quests.flag("installment_missed"))  # region N2
+	log.register_cond("suspicion_over", func(n: Variant) -> bool: return sim.contraband != null and sim.contraband.suspicion > float(n))  # region N2
 	log.register_cond("informant_alive", func(_a: Variant) -> bool: return informant_alive(sim))
 
 
