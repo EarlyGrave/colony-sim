@@ -1,0 +1,97 @@
+{
+	"s4a_unaccounted_essence": {
+		"title": "Unaccounted Essence",
+		"_comment": "Narrative N1. Sets contraband_on (read by N2 contraband).",
+		"trigger": {
+			"min_day": 20,
+			"flag": "installment_missed"
+		},
+		"start": "dispatch",
+		"beats": {
+			"dispatch": {
+				"text": "Dispatch: essence is unaccounted for. The Warden suspects the shortfall is a rumour about you.",
+				"effects": [
+					{
+						"verb": "flag",
+						"id": "contraband_on"
+					},
+					{
+						"verb": "letter",
+						"title": "Unaccounted essence",
+						"text": "Refined stock has been 'mislaid'. Please mislay it less."
+					}
+				]
+			}
+		}
+	},
+	"s4b_stash_inventory": {
+		"title": "The Stash Inventory",
+		"_comment": "Narrative N1. Let it ride -> clue_buyer (a buyer asked for the calm stuff).",
+		"trigger": {
+			"quest_done": "s4a_unaccounted_essence",
+			"contraband_stash_over": 6
+		},
+		"start": "count",
+		"beats": {
+			"count": {
+				"text": "The stash is big enough to have its own paperwork. The squad awaits instructions.",
+				"options": {
+					"shakedown": {
+						"label": "Squad shakedown",
+						"text": "The squad finds it in the third mattress. Morale is a separate line item.",
+						"hint": "Squad flags the stash. Lifers -5.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "shaken_down"
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": -5
+							}
+						]
+					},
+					"ride": {
+						"label": "Let it ride",
+						"text": "A buyer arrives and asks for 'the calm stuff'. Not for the money. For the calm.",
+						"hint": "Black market grows. You learn who is buying.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "clue_buyer"
+							},
+							{
+								"verb": "letter",
+								"title": "A buyer",
+								"text": "They asked for the calm stuff."
+							}
+						]
+					},
+					"turn_in": {
+						"label": "Turn it in",
+						"text": "The Warden is touched. The skimmers are not.",
+						"hint": "Warden favour. Lifers -15. Petition fee x0.95 for 5 d.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "warden_favor"
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": -15
+							},
+							{
+								"verb": "mod",
+								"name": "petition_fee_mult",
+								"value": 0.95,
+								"days": 5
+							}
+						]
+					}
+				}
+			}
+		}
+	}
+}
