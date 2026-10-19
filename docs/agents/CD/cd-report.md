@@ -1,0 +1,11 @@
+# CD report: despair_mult + contraband scenario
+- (1) DebtSystem despair gain now multiplies by `sim.quests.mod("despair_mult")` (region CD); `despair_mult: 1.0` added to QuestLog.MOD_DEFAULTS. Default 1.0 so goldens are untouched. S1 "Pay" (0.9 x 5 d) now takes effect. Test: tests/test_despair_mult.gd (default 1.0; 0.5 mult gives less despair than 1.0).
+- (2) tools/contraband_scenario.gd `-- --on=0|1 [--seeds=10 --days=30 --force=4]`: FactoryBot economy, tutorial opts, first 4 inmates forced to despair >= 60 each step; when on, a 2-person squad calls squad_shakedown whenever stash >= 3. Prints CBSC json per seed.
+- Results (10 seeds x 30 d):
+  - Skim: max 2.9% of refined (seed 2: 16/552; seed 3: 9/324; seed 1: 9/324 = 2.8%). Within the 3% cap.
+  - Shakedown: recovered 3-15 units on 7 seeds (24 shakedowns total); recovered >= skimmed - stash - leaked (conservation holds).
+  - Wave bump: seen once (seed 1: 1 black market, 4 leaked, 20 bump steps); the shakedown loop prevents the stash reaching blackmarket_stash on the other 9.
+  - Alive at day 30: off [9,0,8,8,9,6,9,7,0,4] sum 60 (3 game-overs); on [6,8,7,8,8,8,6,1,6,6] sum 66 (0 game-overs). Per seed on is worse by > 1 on seeds 1, 7, 8 (-3, -3, -6), better on 2, 6, 9, 10.
+- Caveat: runs diverge chaotically (squad pulls 2 inmates off work, rng stream shifts), so per-seed alive is noisy; the 3 worse seeds are not clearly caused by contraband (bump fired only in seed 1). Skim is tiny relative to output.
+- Recommendation: keep `enabled: false` for now. Mechanics work as designed (cap, conservation, shakedown, bump) but the strict per-seed "not worse than 1 seed" criterion fails (3 seeds), and aggregate survival is not worse. If the owner wants it on, enable it behind the S4 on-ramp and re-run with a squad-less control (e.g. a shakedown by a dedicated extra colonist) to remove the confounder. Flag NOT flipped.
+- Quick tests: green (4 files, 14 tests).

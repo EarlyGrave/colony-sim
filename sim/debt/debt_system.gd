@@ -151,7 +151,8 @@ func _daily(c: Colonist, st: DebtState) -> void:
 				sim.quests.set_flag("installment_missed")
 			var short := float(inst - st.period_paid) / float(maxi(1, inst))
 			var bm := sim.blocks.despair_mult(c) if sim.blocks != null else 1.0  # region I1
-			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short * bm)
+			var dm := sim.quests.mod("despair_mult") if sim.quests != null else 1.0  # region CD
+			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short * bm * dm)
 			if sim.blocks != null:  # region I1
 				sim.blocks.on_installment_missed(c)
 	else:
