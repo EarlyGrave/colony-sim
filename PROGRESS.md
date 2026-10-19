@@ -334,3 +334,11 @@ HP); волны заканчиваются по таймеру и твари о�
 - I4 haul_blocked_fix stays OFF (alive>=8: 9/10 off vs 4/10 on). Pillar gap 2.2.
 - Full suite 884 green, web smoke PASS.
 - Next: refined-spend priority so parts/plates accumulate (shuttle), wire `pa.informant_report` flavor, decide contraband on.
+
+## Society quests batch (2026-10-19)
+- W1: conds block_standing_below/above, contraband_stash_over, informant_alive (`sim/society/society_conds.gd`); quest S1 Cohesion Fee.
+- W2: quest S3 Whisper Network; Informant reports to the Warden PA every 3 days (`pa.informant_report`).
+- W3: quest S2 Pecking Order; contraband bot pass inconclusive (bot never reaches despair 40) -> stays off.
+- Fix: Q12 gamble rolled twice (generic `chance` pre-roll); now uses `p`.
+- Full suite 908 green, web smoke PASS. SP (refined spend) not merged: real cause is refinery duty cycle; RF investigating.
+- Open: S1 `despair_mult` mod has no reader; S4 needs contraband on; scenario forcing despair>=40 to evaluate contraband.

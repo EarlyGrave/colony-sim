@@ -294,3 +294,8 @@ factory_eval 10 seeds/60 d, off vs on: alive>=8 9/10 vs 4/10; audit tier2 7 vs 6
 - Contraband ships with `enabled=false` until a bot pass shows it is fun, not just a tax.
 - haul_blocked_fix stays OFF: ON drops alive>=8 from 9/10 to 4/10.
 - Block tuning kept mild (breaks/riots unchanged vs off); a stronger tuning doubled riots and was rejected.
+
+## Society quests (2026-10-19, decided without owner, review)
+- Built S1, S2, S3 from docs/story/society.md; S4/S5 deferred.
+- Contraband stays disabled until a high-despair scenario shows it works.
+- Q12 gamble now a true 50% (was ~25% due to double roll).
