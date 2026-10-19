@@ -13,6 +13,8 @@ var select_count := 0  # times a card changed the stored preset (tests)
 var cards: Dictionary = {}  # preset id -> Button
 var start_button: Button
 var tutorial_button: Button  # region R5X
+var ng_row: Control  # region N2
+var use_ng := true  # region N2
 var _on_save: Callable
 
 
@@ -60,11 +62,12 @@ func _init(p_meta: MetaState, on_save: Callable = Callable()) -> void:
 		meta.launched = true
 		if _on_save.is_valid():
 			_on_save.call(meta)
-		var o := meta.make_opts()
+		var o: Dictionary = meta.call("make_ng_opts") if _n2_ng_active() else meta.make_opts()  # region N2
 		if meta.tutorial:
 			o["tutorial"] = true
 		start_requested.emit(o))
 	top.add_child(start_button)
+	_n2_build(box)  # region N2
 	var presets: Dictionary = meta.defs.presets["presets"]
 	for id: String in meta.defs.presets["order"]:
 		var b := Button.new()
@@ -97,3 +100,38 @@ func _refresh() -> void:
 	tutorial_button.text = "Warden's Orientation (tutorial): %s" % ("ON" if meta.tutorial else "OFF")  # region R5X
 	for id: String in cards:
 		cards[id].modulate = Color(1, 0.9, 0.5) if id == meta.preset else Color.WHITE
+
+
+# region N2
+func _n2_ng() -> Dictionary:
+	var v: Variant = meta.get("ng")
+	return v if v is Dictionary else {}
+
+
+func _n2_ng_active() -> bool:
+	return use_ng and int(_n2_ng().get("sentence", 1)) > 1 and meta.has_method("make_ng_opts")
+
+
+func _n2_build(box: VBoxContainer) -> void:
+	var ng := _n2_ng()
+	var row := VBoxContainer.new()
+	row.name = "NextSentenceRow"
+	row.visible = DossierCard.has_carry(ng)
+	row.add_theme_constant_override("separation", 8)
+	var h := Label.new()
+	h.text = "Next Sentence"
+	row.add_child(h)
+	row.add_child(DossierCard.new(ng))
+	var fresh := Button.new()
+	fresh.name = "StartFresh"
+	fresh.text = "Start fresh instead: OFF"
+	fresh.toggle_mode = true
+	fresh.custom_minimum_size = BTN
+	fresh.focus_mode = Control.FOCUS_NONE
+	fresh.toggled.connect(func(on: bool) -> void:
+		use_ng = not on
+		fresh.text = "Start fresh instead: %s" % ("ON" if on else "OFF"))
+	row.add_child(fresh)
+	ng_row = row
+	box.add_child(row)
+# endregion

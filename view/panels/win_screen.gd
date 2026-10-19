@@ -4,11 +4,23 @@ extends PanelContainer
 
 signal continue_pressed
 signal new_run_pressed
+signal next_sentence_pressed  # region N2
 
 const BTN := Vector2(0, 64)
 const FALLBACK_TEXT := "The gantry lights burn through the night. You rise above the grey sky, debt unpaid but sentence ended. Below, the planet keeps its poison and its teeth. Somebody else will be sent to dig."
 
 var stats: Dictionary
+var next_button: Button  # region N2
+
+
+## N2: 'Balance carried forward' + veteran lines from the N1 ng dict / balance.
+static func carry_lines(balance: int, ng: Dictionary) -> Array[String]:
+	var d: Dictionary = ng.get("dossier", {})
+	var out: Array[String] = ["Balance carried forward: %d" % balance]
+	if not d.is_empty():
+		var perk := str(d.get("perk_id", ""))
+		out.append("Veteran: %s%s" % [str(d.get("name", "")), (" (%s)" % perk.capitalize().replace("_", " ")) if perk != "" else ""])
+	return out
 
 
 ## Stats keys: days, colonists, debt_paid, pollution (0..1).
@@ -30,7 +42,7 @@ static func stats_lines(st: Dictionary) -> Array[String]:
 	]
 
 
-func _init(p_stats: Dictionary = {}, ending_text: String = "") -> void:
+func _init(p_stats: Dictionary = {}, ending_text: String = "", p_balance := 0, p_ng: Dictionary = {}) -> void:
 	stats = p_stats
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP  # region U3: scrim blocks the world
@@ -44,7 +56,7 @@ func _init(p_stats: Dictionary = {}, ending_text: String = "") -> void:
 	c.add_child(card)
 	var box := VBoxContainer.new()
 	box.custom_minimum_size = Vector2(640, 0)
-	box.add_theme_constant_override("separation", 8)
+	box.add_theme_constant_override("separation", 4)
 	card.add_child(box)
 	var t := Label.new()
 	t.text = "SENTENCE ENDED"
@@ -66,14 +78,22 @@ func _init(p_stats: Dictionary = {}, ending_text: String = "") -> void:
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		ModalStyle.style_label(l)
 		grid.add_child(l)
+	for cl in carry_lines(p_balance, p_ng):  # region N2
+		var cll := Label.new()
+		cll.text = cl
+		ModalStyle.style_label(cll)
+		box.add_child(cll)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	box.add_child(row)
 	var cont := _btn("Continue", func(): continue_pressed.emit())
 	ModalStyle.style_button(cont, false)
 	row.add_child(cont)
+	next_button = _btn("Next Sentence", func(): next_sentence_pressed.emit())  # region N2
+	ModalStyle.style_button(next_button, true)
+	row.add_child(next_button)
 	var nr := _btn("New Run", func(): new_run_pressed.emit())
-	ModalStyle.style_button(nr, true)
+	ModalStyle.style_button(nr, false)
 	row.add_child(nr)
 
 

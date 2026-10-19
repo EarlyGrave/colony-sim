@@ -186,7 +186,10 @@ func _sx_on_shuttle_won() -> void:
 	_sx_layer = CanvasLayer.new()
 	_sx_layer.layer = 62
 	add_child(_sx_layer)
-	var w := WinScreen.new(st, _sx_ending_text())
+	var m := MetaStore.load_state()  # region NG
+	var ngv: Variant = m.get("ng")
+	var w := WinScreen.new(st, _sx_ending_text(), m.balance, ngv if ngv is Dictionary else {})
+	w.next_sentence_pressed.connect(_ng_next_sentence)
 	w.continue_pressed.connect(_sx_close)
 	w.new_run_pressed.connect(func() -> void:
 		_sx_close()
@@ -226,6 +229,26 @@ func _r5x_cell_rect(target_id: String) -> Rect2:
 	var lo := a.min(b).min(d).min(e)
 	var hi := a.max(b).max(d).max(e)
 	return Rect2(lo, hi - lo)
+# endregion
+
+
+# region NG
+## N1 API (assumed): MetaState.finish_sentence(summary), make_ng_opts() -> Dictionary incl. "seed".
+func _ng_next_sentence() -> void:
+	var m := MetaStore.load_state()
+	if not (m.has_method("finish_sentence") and m.has_method("make_ng_opts")):
+		_sx_close()
+		_o3_open_dialog()
+		return
+	var summ := WinScreen.stats_from(sim)
+	summ["days"] = sim.day()
+	summ["debt_paid"] = _sx_debt_paid()
+	summ["result"] = "shuttle"
+	m.call("finish_sentence", summ)
+	MetaStore.save_state(m)
+	var o: Dictionary = m.call("make_ng_opts")
+	_sx_close()
+	new_game(int(o.get("seed", _random_seed())), o)
 # endregion
 
 

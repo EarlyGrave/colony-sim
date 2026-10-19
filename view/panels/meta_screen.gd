@@ -64,6 +64,7 @@ func _rebuild() -> void:
 		func() -> void:
 			var nbd := meta.make_next_batch()
 			next_batch.emit(int(nbd["seed"]), nbd["opts"]), not nb)
+	_history_section()  # region N2
 	_label("Legacy - knowledge, not power:", Color(0.7, 0.7, 0.7))
 	var un: Dictionary = meta.defs.meta["unlocks"]
 	for id: String in un:
@@ -84,3 +85,31 @@ func _rebuild() -> void:
 				if meta.buy(id):
 					MetaStore.save_state(meta)
 					_rebuild(), why != "")
+
+
+# region N2
+static func history_line(h: Dictionary) -> String:
+	return "#%d  %s  %d days  %s" % [int(h.get("n", 0)), str(h.get("preset", "")),
+		int(h.get("days", 0)), str(h.get("result", ""))]
+
+
+func _history_section() -> void:
+	var nv: Variant = meta.get("ng")
+	var ng: Dictionary = nv if nv is Dictionary else {}
+	var hist: Array = ng.get("history", [])
+	if hist.is_empty():
+		return
+	_label("Sentence history:", Color(0.7, 0.7, 0.7))
+	var sc := ScrollContainer.new()
+	sc.name = "HistoryScroll"
+	sc.custom_minimum_size = Vector2(0, 120)
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var v := VBoxContainer.new()
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.add_child(v)
+	for h: Dictionary in hist.slice(maxi(0, hist.size() - 20)):
+		var l := Label.new()
+		l.text = history_line(h)
+		v.add_child(l)
+	_box.add_child(sc)
+# endregion
