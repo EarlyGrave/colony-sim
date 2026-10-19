@@ -354,3 +354,8 @@ HP); волны заканчиваются по таймеру и твари о�
 - CS: recipe flag `pollutes` (only refine_essence true); smelters clean and uncapped. Pillar gap 2.2.
 - Bot 60 d: real refined seeds 1/5/7 228/582/252 (was 102/186/114); alive>=8 8/10; audit 7; P1 5; P3 3; launch 0. Next wall: plates.
 - Full suite 910 green, web smoke PASS.
+
+## Plates (2026-10-19)
+- PL sim fix: haul offered ore only to the nearest consumer; now falls through to the workbench when the refinery declines. tools/pl_diag.gd probe.
+- Bot 60 d: alive>=8 9/10, audit 8, P1 4, P3 4, P4 on 2 seeds, launch 0. Remaining: ore supply (miners), no-iron maps, sickness on s9, repairs eat plates.
+- Full suite 910 green, web smoke PASS.
