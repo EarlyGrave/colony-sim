@@ -36,7 +36,7 @@ func test_win_screen() -> void:
 	assert_eq(lines[3], "Pollution: 37%")
 	var w := WinScreen.new({"days": 1})
 	var btns: Array = w.find_children("*", "Button", true, false)
-	assert_eq(btns.size(), 2)
+	assert_eq(btns.size(), 3)  # N2: + Next Sentence
 	for b: Button in btns:
 		assert_true(b.custom_minimum_size.y >= 64.0)
 	w.free()

@@ -10,7 +10,7 @@ func test_modal_contrast_and_sizes() -> void:
 	assert_true(ModalStyle.contrast(ModalStyle.ACCENT_TEXT, ModalStyle.ACCENT) >= 4.5)
 	var w := WinScreen.new({"days": 3})
 	var btns: Array = w.find_children("*", "Button", true, false)
-	assert_eq(btns.size(), 2)
+	assert_eq(btns.size(), 3)  # N2: + Next Sentence
 	for b: Button in btns:
 		assert_true(b.custom_minimum_size.y >= 64.0)
 	assert_eq(w.mouse_filter, Control.MOUSE_FILTER_STOP)
