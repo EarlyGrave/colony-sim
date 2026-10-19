@@ -190,14 +190,24 @@ func current_review() -> Dictionary:
 	return {}
 
 
+## LN: Q3 flag review_sponsored lets the next review count as sponsor_boost further along.
+func _sponsored_progress(r: Dictionary) -> float:
+	var p := review_progress(r)
+	if sim.quests != null and sim.quests.flag("review_sponsored"):
+		p = minf(1.0, p + float(sim.defs.balance.get("b3", {}).get("sponsor_boost", 0.25)) * (1.0 if p > 0.0 else 0.0))
+	return p
+
+
 ## Called every tick from Simulation.step (checks once per second).
 func tick_reviews() -> void:
 	if sim.tick % Simulation.TICKS_PER_SECOND != 0:
 		return
 	var r := current_review()
-	if r.is_empty() or review_progress(r) < 1.0 or pa_silent():  # region R1
+	if r.is_empty() or _sponsored_progress(r) < 1.0 or pa_silent():  # region R1
 		return
 	reviews_done.append(str(r["id"]))
+	if sim.quests != null:
+		sim.quests.flags["review_sponsored"] = false  # LN: the sponsor's favour is used up
 	var near := sim.map_center()
 	var rw: Dictionary = r.get("reward", {})
 	for item: String in _sorted_keys(rw):

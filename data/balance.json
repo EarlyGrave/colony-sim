@@ -68,8 +68,10 @@
 		"overlay_rows_per_frame": 12
 	},
 	"b3": {
-		"enabled": true
+		"enabled": true,
+		"sponsor_boost": 0.25
 	},
+	"creature_essence_base": 1,
 	"e3_enabled": true,
 	"e3": {"clean_ref": 0.5},
 	"k2_enabled": true,
