@@ -70,6 +70,8 @@ static func make_panel(id: String) -> GamePanel:
 			if p is GamePanel:
 				var gp := p as GamePanel
 				gp.set_title(str(e[1]))
+				if str(e[0]) in ModalStyle.MODAL_IDS:  # region U3
+					ModalStyle.apply(gp)
 				return gp
 			return null
 	return null

@@ -5,7 +5,7 @@ extends PanelContainer
 signal continue_pressed
 signal new_run_pressed
 
-const BTN := Vector2(0, 72)
+const BTN := Vector2(0, 64)
 const FALLBACK_TEXT := "The gantry lights burn through the night. You rise above the grey sky, debt unpaid but sentence ended. Below, the planet keeps its poison and its teeth. Somebody else will be sent to dig."
 
 var stats: Dictionary
@@ -33,33 +33,48 @@ static func stats_lines(st: Dictionary) -> Array[String]:
 func _init(p_stats: Dictionary = {}, ending_text: String = "") -> void:
 	stats = p_stats
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0, 0, 0, 0.78)
-	add_theme_stylebox_override("panel", sb)
+	mouse_filter = Control.MOUSE_FILTER_STOP  # region U3: scrim blocks the world
+	var sc := StyleBoxFlat.new()
+	sc.bg_color = ModalStyle.SCRIM_COLOR
+	add_theme_stylebox_override("panel", sc)
 	var c := CenterContainer.new()
 	add_child(c)
+	var card := PanelContainer.new()
+	ModalStyle.apply(card)
+	c.add_child(card)
 	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(520, 0)
-	box.add_theme_constant_override("separation", 10)
-	c.add_child(box)
+	box.custom_minimum_size = Vector2(640, 0)
+	box.add_theme_constant_override("separation", 8)
+	card.add_child(box)
 	var t := Label.new()
 	t.text = "SENTENCE ENDED"
-	t.add_theme_font_size_override("font_size", 28)
+	ModalStyle.style_label(t, true)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(t)
 	var body := Label.new()
 	body.text = ending_text if ending_text != "" else FALLBACK_TEXT
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ModalStyle.style_label(body)
 	box.add_child(body)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 24)
+	box.add_child(grid)
 	for line in stats_lines(stats):
 		var l := Label.new()
 		l.text = line
-		box.add_child(l)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ModalStyle.style_label(l)
+		grid.add_child(l)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	box.add_child(row)
-	row.add_child(_btn("Continue", func(): continue_pressed.emit()))
-	row.add_child(_btn("New Run", func(): new_run_pressed.emit()))
+	var cont := _btn("Continue", func(): continue_pressed.emit())
+	ModalStyle.style_button(cont, false)
+	row.add_child(cont)
+	var nr := _btn("New Run", func(): new_run_pressed.emit())
+	ModalStyle.style_button(nr, true)
+	row.add_child(nr)
 
 
 func _btn(text: String, cb: Callable) -> Button:
