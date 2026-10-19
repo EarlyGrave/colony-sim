@@ -38,10 +38,11 @@ static func hit_chance(defs_: Defs, w: Dictionary, lvl: int, d: float) -> float:
 static func creature(defs_: Defs, id: String, variant := "") -> Dictionary:
 	var d: Dictionary = defs_.enemies[id]
 	var hp := float(d["max_hp"])
-	var dmg := float(d["damage"])
-	if variant != "":
-		hp *= float(d["variants"][variant]["hp_mult"])
-		dmg *= float(d["variants"][variant]["damage_mult"])
+	var dmg := float(d.get("damage", 0.0))
+	var vs: Dictionary = d.get("variants", {})
+	if variant != "" and vs.has(variant):
+		hp *= float(vs[variant]["hp_mult"])
+		dmg *= float(vs[variant]["damage_mult"])
 	var cycle := float(d["attack_cooldown_ticks"])
 	if d.has("telegraph"):
 		cycle += float(d["telegraph"]["windup_ticks"])

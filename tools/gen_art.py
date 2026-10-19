@@ -269,6 +269,26 @@ def creatures():
         "........",
     ])
     save(grid(burrower), "burrower")
+    # region FX3: Metropolis drones (metal palette, placeholder art)
+    drone_scout = mirror([
+        "........", "........", "........", "...kkkkk", "..kmmmmm", ".kmllwmm",
+        ".kmmmmmm", "kmmMMMMM", "kmmmmmmm", ".kMMMMMM", "..kkkkkk", "...k.k..",
+        "........", "........", "........", "........",
+    ])
+    save(grid(drone_scout), "drone_scout")
+    drone_gunner = mirror([
+        "........", "...kkkkk", "..kmmmmm", ".kmmwwmm", ".kmmmmmm", "kkmMMMMM",
+        "kykmmmmm", "kykmmMMM", "kkkmmmmm", ".kMMMMMM", ".kmmmmmm", "..kMMkkk",
+        "..kkk...", "........", "........", "........",
+    ])
+    save(grid(drone_gunner), "drone_gunner")
+    drone_enforcer = mirror([
+        "...kkkkk", "..kmmmmm", ".kmlllll", ".kmmwymw", ".kmmmmmm", "kkMMMMMM",
+        "kmmmmmmm", "kmtmmMMM", "kmmmmmmm", "kmMMMMMM", ".kmmmmmm", ".kMMMMMM",
+        "..kmmkkk", "..kMMk..", "..kkkk..", "........",
+    ])
+    save(grid(drone_enforcer), "drone_enforcer")
+    # endregion
 
 
 # --- Turret ---------------------------------------------------------------------
@@ -642,7 +662,7 @@ def _shift(img, dx, dy, y0, y1):
 
 def creature_sheets():
     from collections import Counter
-    for name in ["crawler", "brute", "spitter", "burrower"]:
+    for name in ["crawler", "brute", "spitter", "burrower", "drone_scout", "drone_gunner", "drone_enforcer"]:
         front = Image.open(os.path.join(OUT, name + ".png")).convert("RGBA")
         px = front.load()
         cnt = Counter(px[x, y] for x in range(16) for y in range(16)
