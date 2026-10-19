@@ -46,9 +46,44 @@ static func apply(sim: Simulation, opts: Dictionary) -> void:
 		for item: String in items:
 			sim.ledger.record_produced(item, int(crate[item]), "meta_crate")
 			sim.items.drop(at, item, int(crate[item]))
+	_apply_ng(sim, opts)  # region NG
 	var site := int(opts.get("site", 0))
 	if site != 0:
 		sim.rng.seed = sim.seed_value * 31 + site * 104729
+
+
+# region NG
+## Next Sentence carry-over: veteran, start techs, carried debt. All keys optional.
+static func _apply_ng(sim: Simulation, opts: Dictionary) -> void:
+	var techs: Array = opts.get("start_techs", [])
+	if not techs.is_empty():
+		for t: Variant in techs:
+			var id := str(t)
+			if sim.defs.research.has(id) and not sim.research.done.has(id):
+				sim.research.done.append(id)
+		sim.research.done.sort()
+	var vet: Dictionary = opts.get("veteran", {})
+	if not vet.is_empty() and not sim.colonists.list.is_empty():
+		var c: Colonist = sim.colonists.list[0]
+		for x in sim.colonists.list:
+			if x.id < c.id:
+				c = x
+		if str(vet.get("name", "")) != "":
+			c.display_name = str(vet["name"])
+		var sk: Dictionary = vet.get("skills", {})
+		for k: Variant in sk:
+			if c.skills.levels.has(str(k)):
+				c.skills.levels[str(k)] = maxi(int(c.skills.levels[str(k)]), int(sk[k]))
+		c.skills.mark_joined()
+		var pid := str(vet.get("perk_id", ""))
+		if pid != "" and not sim.perks.perk_def(pid).is_empty():
+			var cp := sim.perks.state_of(c)
+			if not cp.learned.has(pid):
+				cp.learned.append(pid)
+	var carry := int(opts.get("carry_debt", 0))
+	if carry > 0:
+		sim.debt.add_carry(carry)
+# endregion
 
 
 # region O3

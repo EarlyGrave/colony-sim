@@ -37,3 +37,24 @@ static func summarize(sim: Simulation, reason: String) -> Dictionary:
 		"perks": perks, "debt_points": sim.debt.legacy_points,
 		"contamination": sim.contamination.level, "legacy": int(floor(pts)),
 	}
+
+
+# region NG
+## Snapshot for MetaState.finish_sentence (read-only; summarize() is unchanged).
+static func ng_snapshot(sim: Simulation, result: String, preset_id := "") -> Dictionary:
+	var left := 0
+	var paid := 0
+	for id: int in sim.debt.states:
+		var st: DebtState = sim.debt.states[id]
+		paid += st.paid
+		if not sim.debt.gone.has(id):
+			left += st.remaining()
+	var cols: Array = []
+	for c in sim.colonists.list:
+		if not c.alive:
+			continue
+		cols.append({"id": c.id, "name": c.display_name, "skills": c.skills.levels.duplicate(),
+			"perks": (c.perks.learned.duplicate() if c.perks != null else [])})
+	return {"seed": sim.seed_value, "days": sim.day(), "result": result, "preset": preset_id,
+		"debt_left": left, "debt_paid": paid, "colonists": cols, "techs": sim.research.done.duplicate()}
+# endregion

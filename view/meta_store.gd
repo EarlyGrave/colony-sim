@@ -17,11 +17,19 @@ static func load_state(path := PATH, defs: Defs = null) -> MetaState:
 
 
 static func save_state(m: MetaState, path := PATH) -> bool:
-	var f := FileAccess.open(path, FileAccess.WRITE)
+	var tmp := path + ".tmp"  # region NG: atomic write (tmp file + rename)
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		return false
 	f.store_string(JSON.stringify(m.to_dict()))
 	f.close()
+	if DirAccess.rename_absolute(tmp, path) != OK:
+		DirAccess.remove_absolute(tmp)
+		var g := FileAccess.open(path, FileAccess.WRITE)
+		if g == null:
+			return false
+		g.store_string(JSON.stringify(m.to_dict()))
+		g.close()
 	return true
 
 

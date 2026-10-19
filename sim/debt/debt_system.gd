@@ -35,6 +35,23 @@ func _assign(c: Colonist) -> void:
 	states[c.id] = st
 
 
+# region NG
+## Next Sentence: spreads carried debt over the current prisoners (installments + interest apply as usual).
+func add_carry(amount: int) -> void:
+	for c in sim.colonists.list:  # starting inmates get their state lazily on the first tick: create it now
+		if c.alive:
+			_assign(c)
+	var ids: Array = states.keys()
+	ids.sort()
+	if ids.is_empty() or amount <= 0:
+		return
+	var share := amount / ids.size()
+	var rest := amount - share * ids.size()
+	for i in ids.size():
+		(states[ids[i]] as DebtState).total += share + (rest if i == 0 else 0)
+# endregion
+
+
 func _on_joined(id: int) -> void:
 	var c := sim.colonists.get_by_id(id)
 	if c != null:
