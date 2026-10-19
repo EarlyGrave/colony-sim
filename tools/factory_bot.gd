@@ -82,7 +82,7 @@ func act() -> void:
 	if sim.tick % 200 == 0:
 		_bills()
 	_retry_routes()
-	if _knob("refinery2", 1) == 1 and sim.tick % 100 == 50 and sim.petition.done_phases.size() >= 2 and sim.buildings.count_of("refinery") + _bp_count("refinery") == 1 and sim.research.is_done("drilling") and sim.items.count_stored("plate") >= 6:
+	if _knob("refinery2", 1) == 1 and sim.tick % 100 == 40 and sim.milestones.is_tier_done(2) and sim.buildings.count_of("refinery") + _bp_count("refinery") == 1 and sim.research.is_done("drilling") and sim.items.count_stored("plate") >= 6:
 		_hub_place("refinery", Vector2i(4, 2))  # region LN: second refinery after petition II
 	if sim.buildings.count_of("refinery") > 0 and sim.research.is_done("drilling"):
 		_build()
@@ -685,7 +685,7 @@ func _hold_ingots(on: bool) -> void:
 func _hoarding() -> bool:
 	if _knob("hoard", 1) == 0:
 		return false
-	return sim.milestones.is_tier_done(2) and sim.petition.next_phase() >= 3 or sim.shuttle.unlocked()
+	return sim.milestones.is_tier_done(2) or sim.shuttle.unlocked()  # region LN: from tier 2 on
 # endregion
 
 
@@ -815,6 +815,9 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	var led := {}
 	for item in ["essence_ore", "refined_essence", "iron_ore", "ingot_iron", "copper_ore", "ingot_copper", "coal", "plate", "parts"]:
 		led[item] = "%d/%d" % [int(sim.ledger.produced.get(item, 0)), int(sim.ledger.consumed.get(item, 0))]
+	for k: String in sim.ledger.by_source:
+		if k.ends_with(":refined_essence"):
+			led[k] = str(sim.ledger.by_source[k])  # region LN: where the refined essence went
 	r["ledger"] = led
 	# region D4
 	var qs: Array = []
