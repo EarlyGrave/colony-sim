@@ -19,3 +19,4 @@ Restore: `git checkout -b restore <sha>` (or reset a branch to it).
 | 2026-10-19 13:33 | 8d46b68 | batch R (quests 3/8/10/11/12) | 859 green, smoke PASS |
 | 2026-10-19 | 38d9f1e | LN + inmate society (I1-I4) | 884 green, smoke PASS |
 | 2026-10-19 | 53f63b0 | society quests S1-S3 + Q12 fix | 908 green, smoke PASS |
+| 2026-10-19 | 3ddda77 | CD + RF/SP tools + PM workbench fix | 910 green, smoke PASS |
