@@ -35,7 +35,7 @@ mode — the main session does NOT implement features itself:
    re-read files the agents already read; short reports.
 6. **Merge to `main`** (owner rule 2026-10-18): when a whole batch is merged into the
    dev branch and the full suite is green, fast-forward/merge it into `main` and push
-   (Pages deploys from `main`). Never merge a half-done batch. Every merge to `main` gets an annotated tag `save-YYYYMMDD-HHMM-<batch>` pushed to origin as a rollback point (owner rule 2026-10-19).
+   (Pages deploys from `main`). Never merge a half-done batch. Every merge to `main` is a rollback point: append `date | main SHA | batch | tests` to `docs/rollback_points.md` (owner rule 2026-10-19; the cloud git proxy refuses tag pushes, so no tags). Roll back with `git checkout -b restore <sha>`.
 7. **Autonomous mode** (owner rule 2026-10-18): the orchestrator keeps a 5-minute
    self check-in (`send_later`). On each check-in: if workers are still running,
    re-arm and wait; if everything is merged, nothing is pending and the owner has
