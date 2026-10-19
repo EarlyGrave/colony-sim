@@ -227,7 +227,6 @@ at each day start (retried every tick while unpaid; unpaid = chip stops). Calibr
 with `operating` >= `calibrate_min_skill` runs `CalibrateJob` (`calibrate_ticks` ticks on site). A broken or destroyed building drops its chip.
 Read-only API for the threat system: `chips.threat_mult(building)` (`chip_threat_mult` while the chip is busy, else 1.0) and `chips.colony_threat_mult()` (max over busy chips).
 `ai_chip` is accepted by the stockpile zone; recipe `make_ai_chip` (assembler) needs tech `ai_chips`. Chip state is not in `state_hash`; it is rebuilt by command replay.
-
 ## T5 ecology (summary)
 Nests (2-4, map edge, reachable) are placed from the ecology stream at `start_new_game`. Every `update_ticks` each nest banks
 `pollution_at(nest) * absorb_rate * dt * chip_pressure` (local mutation field + planet level), capped. A raid keeps `starved_max` units free and
