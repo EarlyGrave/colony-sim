@@ -107,9 +107,19 @@ func load_from(dir: String) -> void:
 	events = _load_json(dir + "events.json")
 	# region Q0: quests.json + optional per-quest-line files merged by id
 	quests = _load_json(dir + "quests.json")
-	for extra in ["quests_q1.json", "quests_q2.json", "quests_q6.json"]:
-		if FileAccess.file_exists(dir + extra):
-			quests.merge(_load_json(dir + extra), true)
+	var qd := DirAccess.open(dir)
+	var qfiles: Array = []
+	if qd != null:
+		for f in qd.get_files():
+			var fn: String = f.trim_suffix(".remap")
+			if fn.begins_with("quests_q") and fn.ends_with(".json") and not qfiles.has(fn):
+				qfiles.append(fn)
+	for extra in ["quests_q1.json", "quests_q2.json", "quests_q6.json"]:  # fallback when listing is unavailable (export)
+		if not qfiles.has(extra) and FileAccess.file_exists(dir + extra):
+			qfiles.append(extra)
+	qfiles.sort()
+	for extra: String in qfiles:
+		quests.merge(_load_json(dir + extra), true)
 	# endregion
 	rules = _load_json(dir + "rules.json")
 	# region jobs-core
