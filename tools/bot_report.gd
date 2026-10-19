@@ -218,7 +218,7 @@ static func _act(sim: Simulation, base_turrets: int, r: Dictionary) -> void:
 			continue
 		if st.pending_choice:
 			sim.choose_payoff(c.id, true)
-		elif st.remaining() > 0 and (target == null or st.due_day < sim.debt.state_of(target).due_day):
+		elif st.remaining() > 0 and (target == null or st.period_paid < sim.debt.state_of(target).period_paid):
 			target = c
 	if target != null and surplus > 0:
 		sim.pay_debt(target.id, mini(surplus, sim.debt.state_of(target).remaining()))

@@ -127,8 +127,17 @@ func _upkeep() -> void:
 			continue
 		if st.pending_choice:
 			sim.choose_payoff(c.id, true)
-		elif st.remaining() > 0 and (target == null or st.due_day < sim.debt.state_of(target).due_day):
+		elif st.remaining() > 0 and (target == null or st.period_paid < sim.debt.state_of(target).period_paid):
 			target = c
+	# DB: installments are paid before any other refined use (missing one feeds despair -> escapes); the rest is the optional extra above.
+	var inst := int(sim.defs.debt["installment"])
+	for c in sim.colonists.list:
+		var ist := sim.debt.state_of(c) if c.alive else null
+		if ist != null and ist.remaining() > 0 and ist.period_paid < inst and sim.day() >= ist.due_day - 6:
+			var avail := sim.items.count_stored("refined_essence") - 2
+			if avail > 0:
+				sim.pay_debt(c.id, mini(mini(avail, inst - ist.period_paid), ist.remaining()))
+	debt_stock = sim.items.count_stored("refined_essence") - floor_keep - 3 - _research_reserve()
 	if target != null and debt_stock > 0:
 		sim.pay_debt(target.id, mini(debt_stock, sim.debt.state_of(target).remaining()))
 	var reserve := maxi(0, want - have) * 10

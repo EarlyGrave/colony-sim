@@ -273,3 +273,10 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 - Debt: almost unpayable ("that's the point of a prison"). Supersedes D1 intent (paid by d40-50). Progress/escape must come from petition/shuttle, not from clearing debt.
 - Clean crafts (plates/parts) don't pollute: approved.
 - After the shuttle win: Continue is fine, or an NG+ mechanic (next sentence with carry-over) — queue as a feature.
+
+## Debt batch DB (decided without owner, review)
+- Debt is a prison sentence: 120-280 refined per inmate (8 inmates ~1600) plus 3% interest on the remainder every 10-day period; a good factory pays ~10-30% by d60 (tools/debt_model.gd: d60 18%, never paid off).
+- Despair tracks the schedule, not the balance: each inmate owes an installment of 4 refined per 10-day period (first deadline d25); a missed installment adds 4 despair/day, a met one rolls the period (surplus carries over) and despair decays. Break threshold 50.
+- Escapes/riots therefore happen when a colony stops paying; clearing the debt is no longer the way out (petition/shuttle is).
+- haul_blocked_fix (balance, default off): hauling output of a miner anchored on a deposit cell; on it raids shift and survival drops, so it stays off until its own balance pass. Blueprints may take loose essence ore (refinery no longer starves them).
+- Factory bot pays installments first; extra goes to the inmate with the least paid this period.

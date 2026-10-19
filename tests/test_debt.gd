@@ -84,7 +84,9 @@ func test_payoff_choice_stay_and_leave() -> void:
 	var sim := _sim()
 	var a: Colonist = sim.colonists.list[0]
 	var b: Colonist = sim.colonists.list[1]
-	_stock(sim, 300)
+	_stock(sim, 100)
+	sim.debt.state_of(a).total = 20  # DB: sentences are heavy; shrink them so the stock can pay
+	sim.debt.state_of(b).total = 20
 	var paid_ids: Array[int] = []
 	sim.bus.debt_paid.connect(func(id: int) -> void: paid_ids.append(id))
 	assert_false(sim.choose_payoff(a.id, true), "nothing to choose yet")
@@ -109,7 +111,7 @@ func test_overdue_raises_despair_and_mood() -> void:
 	var c: Colonist = sim.colonists.list[0]
 	var st := sim.debt.state_of(c)
 	var base := sim.mood.mood_of(c)
-	sim.run_ticks(sim.ticks_per_day * (int(sim.defs.debt["due_days"]) + 6) + 40)  # despair 8/day: 6 overdue days > despair_mid
+	sim.run_ticks(sim.ticks_per_day * (int(sim.defs.debt["due_days"]) + 12) + 40)  # despair 4/day: 12 overdue days > despair_mid
 	assert_true(sim.debt.is_overdue(c))
 	assert_gt(st.despair, 33.0)
 	assert_lt(sim.mood.mood_of(c), base)
@@ -249,11 +251,27 @@ func test_shelter_destruction_injures_hidden_colonists() -> void:
 # region D1
 func test_d1_schedule_and_zero_payment_still_breaks() -> void:
 	var d: Dictionary = Defs.get_default().debt
-	assert_true(int(d["due_days"]) >= 28 and int(d["debt_max"]) <= 45, "gentle first tranche")
+	assert_true(int(d["debt_min"]) >= 100, "debt is a heavy sentence (DB)")
 	var days_to_break := ceili(float(d["break_despair_min"]) / float(d["despair_per_day"]))
 	assert_true(int(d["due_days"]) + days_to_break <= 40, "idle colony reaches break despair by d40")
 	var sim := _sim()
 	var c: Colonist = sim.colonists.list[0]
 	sim.run_ticks(sim.ticks_per_day * (int(d["due_days"]) + days_to_break + 1))
 	assert_true(sim.debt.state_of(c).despair >= float(d["break_despair_min"]), "zero payment -> despair")
+
+
+func test_db_installments_keep_despair_down_and_interest_grows() -> void:
+	var sim := _sim()
+	var c: Colonist = sim.colonists.list[0]
+	var st := sim.debt.state_of(c)
+	_stock(sim, 400)
+	var inst := int(sim.defs.debt["installment"])
+	var total0 := st.total
+	for k in 8:  # pay every installment on time for 80 days
+		sim.pay_debt(c.id, inst)
+		sim.run_ticks(sim.ticks_per_day * int(sim.defs.debt["period_days"]))
+	assert_true(st.despair < 1.0, "on schedule -> no despair")
+	assert_gt(st.interest, 0)
+	assert_gt(st.total, total0)
+	assert_gt(st.remaining(), total0 - 8 * inst)
 # endregion D1

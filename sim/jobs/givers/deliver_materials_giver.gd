@@ -1,6 +1,6 @@
 class_name DeliverMaterialsGiver
 extends WorkGiver
-## Brings blueprint cost items from storage into the blueprint.
+## Brings blueprint cost items from storage (or loose essence ore) into the blueprint.
 
 
 func _init(p_sim: Simulation) -> void:
@@ -48,7 +48,7 @@ func find(c: Colonist) -> Job:
 func _index_stored(out: Dictionary) -> void:
 	out["_"] = []  # marker so an empty result is not rebuilt
 	for cell: Vector2i in sim.items.stacks:
-		if sim.items.is_stored(cell):
+		if sim.items.is_stored(cell) or sim.items.item_at(cell) == "essence_ore":  # DB: loose ore may feed blueprints (the refinery ate it all)
 			var it: String = sim.items.stacks[cell]["item"]
 			if not out.has(it):
 				out[it] = []
