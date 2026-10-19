@@ -642,6 +642,11 @@ func damage_enemy(e: Enemy, amount: float, cause := "generic", by: Colonist = nu
 		if by != null:  # region F3
 			sim.colonists.add_kill(by, e.def_id)
 			sim.colonists.record_changed(by)
+		if sim.quests != null and sim.quests.is_started():  # LN: Q8 Study doubles the essence a kill yields (base 1 ore, only while the mod runs)
+			var extra := roundi(float(sim.defs.balance.get("creature_essence_base", 1)) * (sim.quests.mod("essence_drop_mult") - 1.0))
+			if extra > 0:
+				sim.ledger.record_produced("essence_ore", extra, "creature")
+				sim.items.drop(e.cell, "essence_ore", extra)
 		sim.bus.enemy_killed.emit(e.id)
 		_hot.cause = "generic"  # region F2
 
