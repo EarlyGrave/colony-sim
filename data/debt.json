@@ -2,7 +2,7 @@
 	"item": "refined_essence",
 	"debt_min": 120,
 	"debt_max": 280,
-	"due_days": 15,
+	"due_days": 25,
 	"despair_per_day": 8.0,
 	"despair_decay_per_day": 10.0,
 	"despair_relief_per_unit": 0.5,
@@ -23,7 +23,7 @@
 	"stay_thought": "freedman",
 	"leave_reward": 15,
 	"leave_legacy_points": 1,
-	"installment": 10,
+	"installment": 6,
 	"period_days": 10,
 	"interest_pct": 3.0
 }
