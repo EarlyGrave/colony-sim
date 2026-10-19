@@ -88,12 +88,30 @@ func act() -> void:
 		_build()
 	elif sim.tick % 100 == 0 and sim.research.is_done("drilling") and _bp_count("refinery") == 0 and _step >= 2:
 		_hub_place("refinery", Vector2i(-4, 2))  # YX: a raid took the refinery; a player rebuilds it, the bot used to freeze
+	if sim.tick % 200 == 120:
+		_rf_reserve()  # region RF
 	if sim.tick % 600 == 0:
 		_deliveries()
 	if sim.tick % 100 == 0:
 		_shuttle()
 	if assume_nitrogen:
 		_nitrogen_trickle()
+
+
+# region RF
+## The refinery eats every loose ore stack, so the hand_plate bill (3 ore a plate) starves when the taint cap leaves the
+## refinery running: keep a small ore reserve in the stockpile while plates are short, drop it once they are back.
+func _rf_reserve() -> void:
+	if _knob("rf_reserve", 1) != 1 or sim.day() < 12 or sim.buildings.count_of("refinery") == 0:
+		return
+	var low := sim.items.count_stored("plate") < _knob("rf_plate_low", 30)
+	var amt := _knob("rf_reserve_amt", 40)
+	if low and not sim.is_rule_on("ore_reserve"):
+		sim.defs.rules["ore_reserve"]["amount"] = amt
+		sim.set_rule("ore_reserve", true)
+	elif not low and sim.is_rule_on("ore_reserve") and sim.items.count_stored("plate") >= _knob("rf_plate_high", 60):
+		sim.set_rule("ore_reserve", false)
+# endregion
 
 
 func after() -> void:
