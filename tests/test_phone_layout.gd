@@ -314,3 +314,20 @@ func test_world_visible_percent() -> void:
 	assert_false(game.auto_panel.visible, "belt strip hidden while idle")
 	assert_true(game.hud.notification_anchor != null and game.hud.modal_root != null, "U1 hooks exist")
 # endregion
+
+
+# region EV
+func test_ending_sheet_fits() -> void:
+	var game := _make_game()
+	game.sim.run_ticks(60)
+	game.sim.set_path("escape")
+	_each_size(func(size: Vector2i, sc: float) -> void:
+		var tag := "%dx%d@%.2f" % [size.x, size.y, sc]
+		game.hud.toggle_panel("ending")
+		_settle(game, size, sc)
+		var vp := game.hud.get_viewport().get_visible_rect().size
+		var r := game.hud._side.get_global_rect()
+		assert_true(r.position.x >= 80.0 and r.size.x <= vp.x * 0.45 + 16.0, "%s ending sheet %s" % [tag, r])
+		_check_state(game, tag + " ending sheet")
+		_drop_sheets(game))
+# endregion
