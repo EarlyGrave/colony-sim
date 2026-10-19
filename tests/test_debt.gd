@@ -11,8 +11,8 @@ func _sim(seed_value := 5) -> Simulation:
 	for i in 3:  # food, so long runs don't end in starvation
 		var f := sim.map_center() + Vector2i(3 + i, 3)
 		sim.set_zone(f, "stockpile")
-		sim.ledger.record_produced("raw_food", 40, "test")
-		sim.items.drop(f, "raw_food", 40)
+		sim.ledger.record_produced("raw_food", 400, "test")
+		sim.items.drop(f, "raw_food", 400)
 	sim.run_ticks(1)  # starting colonists get their debt on the first tick
 	return sim
 
@@ -109,7 +109,7 @@ func test_overdue_raises_despair_and_mood() -> void:
 	var c: Colonist = sim.colonists.list[0]
 	var st := sim.debt.state_of(c)
 	var base := sim.mood.mood_of(c)
-	sim.run_ticks(sim.ticks_per_day * (int(sim.defs.debt["due_days"]) + 3) + 40)  # despair 16/day: 3 overdue days > despair_mid
+	sim.run_ticks(sim.ticks_per_day * (int(sim.defs.debt["due_days"]) + 6) + 40)  # despair 8/day: 6 overdue days > despair_mid
 	assert_true(sim.debt.is_overdue(c))
 	assert_gt(st.despair, 33.0)
 	assert_lt(sim.mood.mood_of(c), base)
@@ -244,3 +244,16 @@ func test_shelter_destruction_injures_hidden_colonists() -> void:
 	sim.buildings.destroy(hq)
 	assert_false(c.hidden)
 	assert_gt(c.health.total_damage() if c.health.total_damage() > 0.0 else 0.0, 0.0)
+
+
+# region D1
+func test_d1_schedule_and_zero_payment_still_breaks() -> void:
+	var d: Dictionary = Defs.get_default().debt
+	assert_true(int(d["due_days"]) >= 28 and int(d["debt_max"]) <= 45, "gentle first tranche")
+	var days_to_break := ceili(float(d["break_despair_min"]) / float(d["despair_per_day"]))
+	assert_true(int(d["due_days"]) + days_to_break <= 40, "idle colony reaches break despair by d40")
+	var sim := _sim()
+	var c: Colonist = sim.colonists.list[0]
+	sim.run_ticks(sim.ticks_per_day * (int(d["due_days"]) + days_to_break + 1))
+	assert_true(sim.debt.state_of(c).despair >= float(d["break_despair_min"]), "zero payment -> despair")
+# endregion D1
