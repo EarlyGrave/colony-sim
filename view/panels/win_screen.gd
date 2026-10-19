@@ -13,13 +13,13 @@ var stats: Dictionary
 var next_button: Button  # region N2
 
 
-## N2: 'Balance carried forward' + veteran lines from the N1 ng dict / balance.
-static func carry_lines(balance: int, ng: Dictionary) -> Array[String]:
-	var d: Dictionary = ng.get("dossier", {})
-	var out: Array[String] = ["Balance carried forward: %d" % balance]
+## 'Balance carried forward' (round(debt_left * debt_carry_frac)) + veteran lines from MetaState.ng after finish_sentence.
+static func carry_lines(ng: Dictionary) -> Array[String]:
+	var d: Dictionary = ng["dossier"]
+	var out: Array[String] = ["Balance carried forward: %d" % int(ng["carry_debt"])]
 	if not d.is_empty():
-		var perk := str(d.get("perk_id", ""))
-		out.append("Veteran: %s%s" % [str(d.get("name", "")), (" (%s)" % perk.capitalize().replace("_", " ")) if perk != "" else ""])
+		var perk := str(d["perk_id"])
+		out.append("Veteran: %s%s" % [str(d["name"]), (" (%s)" % perk.capitalize().replace("_", " ")) if perk != "" else ""])
 	return out
 
 
@@ -28,8 +28,7 @@ static func stats_from(sim: Simulation) -> Dictionary:
 	var s := {"days": 0, "colonists": 0, "debt_paid": 0, "pollution": 0.0}
 	if sim == null:
 		return s
-	if sim.get("colonists") != null:
-		s["colonists"] = sim.colonists.list.size()
+	s["colonists"] = sim.colonists.alive_count()
 	return s
 
 
@@ -38,11 +37,12 @@ static func stats_lines(st: Dictionary) -> Array[String]:
 		"Days survived: %d" % int(st.get("days", 0)),
 		"Colonists: %d" % int(st.get("colonists", 0)),
 		"Debt paid: %d" % int(st.get("debt_paid", 0)),
+		"Debt left: %d" % int(st.get("debt_left", 0)),
 		"Pollution: %d%%" % int(round(float(st.get("pollution", 0.0)) * 100.0)),
 	]
 
 
-func _init(p_stats: Dictionary = {}, ending_text: String = "", p_balance := 0, p_ng: Dictionary = {}) -> void:
+func _init(p_stats: Dictionary = {}, ending_text: String = "", p_ng: Dictionary = {}) -> void:
 	stats = p_stats
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP  # region U3: scrim blocks the world
@@ -78,7 +78,7 @@ func _init(p_stats: Dictionary = {}, ending_text: String = "", p_balance := 0, p
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		ModalStyle.style_label(l)
 		grid.add_child(l)
-	for cl in carry_lines(p_balance, p_ng):  # region N2
+	for cl in carry_lines(p_ng) if not p_ng.is_empty() else ([] as Array[String]):  # region N2
 		var cll := Label.new()
 		cll.text = cl
 		ModalStyle.style_label(cll)

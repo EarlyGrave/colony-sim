@@ -6,11 +6,6 @@ extends PanelContainer
 const MAX_SKILLS := 3
 
 
-static func has_carry(ng: Dictionary) -> bool:
-	return int(ng.get("sentence", 1)) > 1 or int(ng.get("carry_debt", 0)) > 0 \
-		or not (ng.get("dossier", {}) as Dictionary).is_empty()
-
-
 static func top_skills(skills: Dictionary, n := MAX_SKILLS) -> Array[String]:
 	var ids: Array = skills.keys()
 	ids.sort_custom(func(a: Variant, b: Variant) -> bool:
@@ -24,16 +19,16 @@ static func top_skills(skills: Dictionary, n := MAX_SKILLS) -> Array[String]:
 
 
 static func card_text(ng: Dictionary) -> String:
-	var d: Dictionary = ng.get("dossier", {})
+	var d: Dictionary = ng["dossier"]
 	var lines: Array[String] = []
-	lines.append("Sentence %d" % int(ng.get("sentence", 1)))
-	lines.append("Veteran: %s" % str(d.get("name", "none")))
-	var sk := top_skills(d.get("skills", {}))
+	lines.append("Sentence %d" % int(ng["sentence"]))
+	lines.append("Veteran: %s" % (str(d["name"]) if not d.is_empty() else "none"))
+	var sk := top_skills(d.get("skills", {}) if not d.is_empty() else {})
 	lines.append("Skills: %s" % (", ".join(sk) if not sk.is_empty() else "-"))
-	var perk := str(d.get("perk_id", ""))
+	var perk := (str(d["perk_id"]) if not d.is_empty() else "")
 	lines.append("Perk: %s" % (perk.capitalize().replace("_", " ") if perk != "" else "-"))
-	lines.append("Carried debt: %d" % int(ng.get("carry_debt", 0)))
-	var techs: Array = ng.get("techs", [])
+	lines.append("Carried debt: %d" % int(ng["carry_debt"]))
+	var techs: Array = ng["techs"]
 	lines.append("Techs: %s" % (", ".join(PackedStringArray(techs)) if not techs.is_empty() else "-"))
 	return "\n".join(lines)
 

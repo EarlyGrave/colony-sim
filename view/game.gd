@@ -186,9 +186,11 @@ func _sx_on_shuttle_won() -> void:
 	_sx_layer = CanvasLayer.new()
 	_sx_layer.layer = 62
 	add_child(_sx_layer)
-	var m := MetaStore.load_state()  # region NG
-	var ngv: Variant = m.get("ng")
-	var w := WinScreen.new(st, _sx_ending_text(), m.balance, ngv if ngv is Dictionary else {})
+	var preview := MetaStore.load_state()  # region NG: what finish_sentence would carry (not saved)
+	var snap := Legacy.ng_snapshot(sim, "shuttle", _ng_preset)
+	st["debt_left"] = int(snap["debt_left"])
+	preview.finish_sentence(snap)
+	var w := WinScreen.new(st, _sx_ending_text(), preview.ng)
 	w.next_sentence_pressed.connect(_ng_next_sentence)
 	w.continue_pressed.connect(_sx_close)
 	w.new_run_pressed.connect(func() -> void:
@@ -234,21 +236,25 @@ func _r5x_cell_rect(target_id: String) -> Rect2:
 
 # region NG
 ## N1 API (assumed): MetaState.finish_sentence(summary), make_ng_opts() -> Dictionary incl. "seed".
+var _ng_preset := ""  ## preset id of the running game (for the history entry)
+
+
 func _ng_next_sentence() -> void:
 	var m := MetaStore.load_state()
-	if not (m.has_method("finish_sentence") and m.has_method("make_ng_opts")):
-		_sx_close()
-		_o3_open_dialog()
-		return
-	var summ := WinScreen.stats_from(sim)
-	summ["days"] = sim.day()
-	summ["debt_paid"] = _sx_debt_paid()
-	summ["result"] = "shuttle"
-	m.call("finish_sentence", summ)
+	m.finish_sentence(Legacy.ng_snapshot(sim, "shuttle", _ng_preset if _ng_preset != "" else m.preset))
 	MetaStore.save_state(m)
-	var o: Dictionary = m.call("make_ng_opts")
+	var r := m.make_ng_opts()
+	var o: Dictionary = r["opts"]
+	o["preset_id"] = m.ng_next_preset()
 	_sx_close()
-	new_game(int(o.get("seed", _random_seed())), o)
+	new_game(int(r["seed"]), o)
+
+
+## Warden letters for sentence 2+ (flavor.json "sentence"), posted once the new colony is bound.
+func _ng_intro(opts: Dictionary) -> void:
+	_ng_preset = str(opts.get("preset_id", ""))
+	for l: Dictionary in NgFlavor.letters(int(opts.get("sentence", 1)), opts.get("veteran", {})):
+		EventBus.letter_received.emit(l["title"], l["text"])
 # endregion
 
 
@@ -266,7 +272,7 @@ func _o3_open_dialog() -> void:
 	dlg.start_requested.connect(func(o: Dictionary) -> void:
 		_o3_layer.queue_free()
 		_o3_layer = null
-		new_game(_random_seed(), o))
+		new_game(int(o.get("ng_seed", _random_seed())), o))
 	_o3_layer.add_child(dlg)
 # endregion
 
@@ -301,6 +307,7 @@ func new_game(seed_value: int, opts: Dictionary = {}) -> void:
 	_accum = 0.0
 	set_speed(1)
 	hud.show_message("Seed %d. Mark ore with the Mine tool - the colonists will start digging." % seed_value, 8.0)
+	_ng_intro(opts)  # region NG
 
 
 func set_speed(s: int) -> void:

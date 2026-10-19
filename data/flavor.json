@@ -543,5 +543,14 @@
 			"Below, the planet keeps its poison and its teeth.",
 			"Somebody else will be sent to dig."
 		]
+	},
+	"sentence": {
+		"_comment": "Next Sentence letters. Keys '2','3' exact; '4+' for N >= 4. Placeholders: {n} sentence number, {vet} veteran name, {quota} quota percent. 'veteran' is added when a veteran carries over.",
+		"letters": {
+			"2": {"title": "Release Processed", "text": "Your release has been processed. Your debt has been rolled over. Sentence {n} begins at once."},
+			"3": {"title": "Welcome Back", "text": "Welcome back. You were never here. Sentence {n} has been issued, and the quota raised by {quota}%."},
+			"4+": {"title": "Quota Notice", "text": "Sentence {n}. The Warden has stopped counting your returns, but not your quota, which is up {quota}%."}
+		},
+		"veteran": {"title": "Transfer Slip", "text": "Inmate {vet} is returned to the colony, experience on file. The Warden calls this efficiency."}
 	}
 }

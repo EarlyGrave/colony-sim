@@ -62,7 +62,15 @@ func _init(p_meta: MetaState, on_save: Callable = Callable()) -> void:
 		meta.launched = true
 		if _on_save.is_valid():
 			_on_save.call(meta)
-		var o: Dictionary = meta.call("make_ng_opts") if _n2_ng_active() else meta.make_opts()  # region N2
+		var o: Dictionary  # region N2
+		if _n2_ng_active():
+			var r := meta.make_ng_opts()
+			o = r["opts"]
+			o["ng_seed"] = int(r["seed"])
+			o["preset_id"] = meta.ng_next_preset()
+		else:
+			o = meta.make_opts()
+			o["preset_id"] = meta.preset
 		if meta.tutorial:
 			o["tutorial"] = true
 		start_requested.emit(o))
@@ -103,20 +111,15 @@ func _refresh() -> void:
 
 
 # region N2
-func _n2_ng() -> Dictionary:
-	var v: Variant = meta.get("ng")
-	return v if v is Dictionary else {}
-
-
 func _n2_ng_active() -> bool:
-	return use_ng and int(_n2_ng().get("sentence", 1)) > 1 and meta.has_method("make_ng_opts")
+	return use_ng and meta.has_ng_carry()
 
 
 func _n2_build(box: VBoxContainer) -> void:
-	var ng := _n2_ng()
+	var ng := meta.ng
 	var row := VBoxContainer.new()
 	row.name = "NextSentenceRow"
-	row.visible = DossierCard.has_carry(ng)
+	row.visible = meta.has_ng_carry()
 	row.add_theme_constant_override("separation", 8)
 	var h := Label.new()
 	h.text = "Next Sentence"
