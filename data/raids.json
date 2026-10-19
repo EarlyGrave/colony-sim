@@ -1,20 +1,24 @@
 {
 	"swarm": {
 		"name": "Swarm", "min_points": 0.0, "weight": 5.0, "spawn": "edge", "retreat_fraction": 0.75,
+		"objective": {"hunt": 2.0, "gorge": 1.0}, "objective_params": {"gorge": {"items": ["waste", "essence_ore"], "need": 12}},
 		"units": [{"enemy": "crawler", "weight": 1.0}]
 	},
 	"brute_pack": {
 		"name": "Brute Pack", "min_points": 8.0, "weight": 3.0, "spawn": "edge", "retreat_fraction": 0.5,
+		"objective": {"hunt": 2.0, "wreck": 1.0},
 		"units": [{"enemy": "brute", "weight": 3.0}, {"enemy": "crawler", "weight": 1.0}]
 	},
 	"spitters": {
 		"name": "Spitters", "min_points": 4.0, "weight": 3.0, "spawn": "edge", "retreat_fraction": 0.7,
+		"objective": {"hunt": 2.0, "gorge": 1.0, "wreck": 1.0}, "objective_params": {"gorge": {"need": 8}},
 		"units": [{"enemy": "spitter", "weight": 3.0}, {"enemy": "crawler", "weight": 1.0}]
 	},
 	"burrowers": {
 		"name": "Burrowers", "min_points": 3.5, "weight": 3.0, "spawn": "drop", "retreat_fraction": 0.7,
 		"tremor_ticks": 60, "drop_scatter": 2,
 		"warning_text": "The ground shakes! Something is burrowing beneath the colony...",
+		"objective": "hunt",
 		"units": [{"enemy": "burrower", "weight": 1.0}]
 	},
 	"tutorial_audit": {
