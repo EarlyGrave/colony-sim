@@ -21,3 +21,4 @@ Restore: `git checkout -b restore <sha>` (or reset a branch to it).
 | 2026-10-19 | 53f63b0 | society quests S1-S3 + Q12 fix | 908 green, smoke PASS |
 | 2026-10-19 | 3ddda77 | CD + RF/SP tools + PM workbench fix | 910 green, smoke PASS |
 | 2026-10-19 | 639a966 | clean smelting (only refining pollutes) | 910 green, smoke PASS |
+| 2026-10-19 | 3d5f4ad | PL haul fallthrough to workbench | 910 green, smoke PASS |
