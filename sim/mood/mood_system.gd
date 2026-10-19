@@ -35,8 +35,11 @@ func add_thought(c: Colonist, id: String) -> bool:
 	if i >= 0:
 		m.thoughts[i]["until"] = until
 		return true
-	m.thoughts.append({"id": id, "value": float(def["value"]), "until": until})
-	_recalc(m)
+	var tv := float(def["value"])
+	if sim.traits != null:  # region PW2
+		tv *= maxf(0.0, 1.0 + sim.traits.mod(c, "thought_" + id))
+	m.thoughts.append({"id": id, "value": tv, "until": until})
+	_recalc(m, c)
 	sim.bus.thought_added.emit(c.id, id)
 	return true
 
@@ -45,8 +48,10 @@ func mood_of(c: Colonist) -> float:
 	return state_of(c).value
 
 
-func _recalc(m: Mood) -> void:
+func _recalc(m: Mood, c: Colonist = null) -> void:
 	var v := float(cfg["base"])
+	if c != null and sim.traits != null:  # region PW2
+		v += sim.traits.mod(c, "mood_base")
 	for t in m.thoughts:
 		v += float(t["value"])
 	m.value = clampf(v, 0.0, 100.0)
@@ -70,7 +75,7 @@ func tick() -> void:
 			if int(t["until"]) < 0 or int(t["until"]) > sim.tick:
 				keep.append(t)
 		m.thoughts = keep
-		_recalc(m)
+		_recalc(m, c)
 		if m.break_kind != "" and (c.job == null or c.job.type != "mental_break"):
 			m.break_kind = ""
 		if day_roll:
@@ -84,6 +89,7 @@ func _roll_break(c: Colonist, m: Mood) -> void:
 		return
 	var extreme := m.value < float(cfg["extreme_threshold"])
 	var chance := float(cfg["extreme_chance"] if extreme else cfg["minor_chance"])
+	chance *= maxf(0.0, 1.0 + sim.traits.mod(c, "break_chance"))  # region PW2
 	if sim.rng.randf() >= chance:
 		return
 	# region debt

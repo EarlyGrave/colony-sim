@@ -1,12 +1,333 @@
 {
-	"_comment": "Colonist traits. skills: level bonus at creation. work_speed: extra multiplier on all work.",
+	"_comment": "Colonist traits v2. effects: summed additive via sim.traits.mod(c, stat). skills: level bonus at creation. Acquired traits are never rolled at birth. Weighted draw in file order.",
+	"schema": 2,
+	"rarity_weight": {
+		"common": 30,
+		"uncommon": 12,
+		"rare": 5
+	},
+	"max_traits": 2,
+	"none_chance": 0.25,
+	"acquired_max": 1,
+	"aliases": {
+		"lazy": "slow_burner"
+	},
+	"acquire": {
+		"despair_level": 80,
+		"despair_days": 5,
+		"calm_days": 30
+	},
 	"traits": {
-		"strong": {"name": "Strong", "skills": {"mining": 3}, "role_affinity": {"bulwark": 1}, "work_speed": 0.0},
-		"handy": {"name": "Handy", "skills": {"construction": 2, "crafting": 2}, "work_speed": 0.0},
-		"careful": {"name": "Careful", "skills": {"medicine": 3}, "role_affinity": {"medic": 1}, "work_speed": 0.0},
-		"hasty": {"name": "Hasty", "skills": {}, "role_affinity": {"lancer": 1}, "work_speed": 0.1},
-		"lazy": {"name": "Lazy", "skills": {}, "work_speed": -0.1},
-		"clumsy": {"name": "Clumsy", "skills": {"crafting": -2, "operating": -2}, "work_speed": 0.0},
-		"green_thumb": {"name": "Green Thumb", "skills": {"plants": 4}, "work_speed": 0.0}
+		"strong": {
+			"name": "Strong",
+			"desc": "Built like a bulkhead door.",
+			"rarity": "common",
+			"excludes": [
+				"frail"
+			],
+			"skills": {
+				"mining": 2
+			},
+			"effects": {
+				"carry": 0.25
+			},
+			"role_affinity": {
+				"bulwark": 1
+			}
+		},
+		"frail": {
+			"name": "Frail",
+			"desc": "Eats little, learns the hard way.",
+			"rarity": "uncommon",
+			"excludes": [
+				"strong"
+			],
+			"skills": {},
+			"effects": {
+				"hunger": -0.2,
+				"work_speed": -0.08,
+				"xp_mult_crafting": 0.15,
+				"xp_mult_medicine": 0.15
+			}
+		},
+		"handy": {
+			"name": "Handy",
+			"desc": "Fixes things nobody asked to be fixed.",
+			"rarity": "common",
+			"excludes": [],
+			"skills": {
+				"construction": 2,
+				"crafting": 2
+			},
+			"effects": {}
+		},
+		"careful": {
+			"name": "Careful",
+			"desc": "Measures twice, bleeds never.",
+			"rarity": "common",
+			"excludes": [
+				"hasty"
+			],
+			"skills": {
+				"medicine": 2
+			},
+			"effects": {
+				"machine_breakage": -0.3,
+				"work_speed": -0.05
+			},
+			"role_affinity": {
+				"medic": 1
+			}
+		},
+		"hasty": {
+			"name": "Hasty",
+			"desc": "Always one step ahead of the foreman.",
+			"rarity": "common",
+			"excludes": [
+				"careful"
+			],
+			"skills": {},
+			"effects": {
+				"work_speed": 0.1,
+				"hit": -0.08,
+				"quality_tier": -1
+			},
+			"role_affinity": {
+				"lancer": 1
+			}
+		},
+		"slow_burner": {
+			"name": "Slow Burner",
+			"desc": "Never hurries, never riots.",
+			"rarity": "common",
+			"excludes": [],
+			"skills": {},
+			"effects": {
+				"work_speed": -0.1,
+				"mood_base": 6,
+				"despair_mult": -0.2
+			}
+		},
+		"green_thumb": {
+			"name": "Green Thumb",
+			"desc": "Even prison dirt grows for them.",
+			"rarity": "common",
+			"excludes": [],
+			"skills": {
+				"plants": 3
+			},
+			"effects": {
+				"xp_mult_plants": 0.2
+			}
+		},
+		"iron_stomach": {
+			"name": "Iron Stomach",
+			"desc": "Raw or rotten, it all goes down.",
+			"rarity": "uncommon",
+			"excludes": [
+				"delicate"
+			],
+			"skills": {},
+			"effects": {
+				"thought_ate_raw": -1.0,
+				"thought_spoiled": -1.0,
+				"hunger": 0.1
+			}
+		},
+		"delicate": {
+			"name": "Delicate",
+			"desc": "Complains loudly, learns quickly.",
+			"rarity": "uncommon",
+			"excludes": [
+				"iron_stomach"
+			],
+			"skills": {
+				"medicine": 1
+			},
+			"effects": {
+				"thought_ate_raw": 1.0,
+				"xp_mult_all": 0.1
+			}
+		},
+		"night_owl": {
+			"name": "Night Owl",
+			"desc": "Comes alive after the lights go out.",
+			"rarity": "uncommon",
+			"excludes": [
+				"early_bird"
+			],
+			"skills": {},
+			"effects": {
+				"work_night": 0.15,
+				"work_day": -0.1
+			}
+		},
+		"early_bird": {
+			"name": "Early Bird",
+			"desc": "Up before the sirens.",
+			"rarity": "uncommon",
+			"excludes": [
+				"night_owl"
+			],
+			"skills": {},
+			"effects": {
+				"work_day": 0.15,
+				"work_night": -0.1
+			}
+		},
+		"cold_blood": {
+			"name": "Cold Blood",
+			"desc": "Does not run. Ever.",
+			"rarity": "rare",
+			"excludes": [
+				"jittery"
+			],
+			"skills": {},
+			"effects": {
+				"flee_threshold": -1.0,
+				"break_chance": -0.5,
+				"xp_mult_medicine": -0.2
+			}
+		},
+		"jittery": {
+			"name": "Jittery",
+			"desc": "Flinches first, lives longest.",
+			"rarity": "common",
+			"excludes": [
+				"cold_blood"
+			],
+			"skills": {},
+			"effects": {
+				"flee_threshold": 0.3,
+				"move_speed": 0.15,
+				"xp_mult_shooting": 0.3
+			}
+		},
+		"done_time": {
+			"name": "Done Time",
+			"desc": "Has seen worse cells than this one.",
+			"rarity": "uncommon",
+			"excludes": [
+				"quick_study"
+			],
+			"skills": {},
+			"effects": {
+				"despair_mult": -0.3,
+				"xp_mult_all": -0.1
+			},
+			"block_only": "lifer"
+		},
+		"quick_study": {
+			"name": "Quick Study",
+			"desc": "Learns fast, sits still never.",
+			"rarity": "rare",
+			"excludes": [
+				"done_time"
+			],
+			"skills": {},
+			"effects": {
+				"xp_mult_all": 0.25,
+				"mood_base": -3
+			}
+		},
+		"essence_nose": {
+			"name": "Essence Nose",
+			"desc": "Smells the glow before the gauge shows it.",
+			"rarity": "rare",
+			"excludes": [],
+			"skills": {},
+			"effects": {
+				"refining_speed": 0.1,
+				"thought_taint": -1.0,
+				"mutation_risk": 0.2
+			}
+		},
+		"thick_hide": {
+			"name": "Thick Hide",
+			"desc": "Hits bounce. Meals do not.",
+			"rarity": "uncommon",
+			"excludes": [],
+			"skills": {},
+			"effects": {
+				"armor_flat": 1,
+				"hunger": 0.1
+			}
+		},
+		"loud_mouth": {
+			"name": "Loud Mouth",
+			"desc": "Block politics run through them.",
+			"rarity": "uncommon",
+			"excludes": [],
+			"skills": {},
+			"effects": {
+				"standing_gain": 0.5,
+				"break_chance": 0.2
+			}
+		},
+		"ledger_eye": {
+			"name": "Ledger Eye",
+			"desc": "Haggles with the warden over every credit.",
+			"rarity": "rare",
+			"excludes": [],
+			"skills": {},
+			"effects": {
+				"installment_pct": -0.05,
+				"work_speed": -0.05
+			},
+			"block_only": "clerk"
+		},
+		"scrapper": {
+			"name": "Scrapper",
+			"desc": "Fights like the yard taught them.",
+			"rarity": "common",
+			"excludes": [],
+			"skills": {
+				"melee": 2
+			},
+			"effects": {
+				"unarmed_hit": 0.1
+			}
+		},
+		"hardened": {
+			"name": "Hardened",
+			"desc": "Pulled back from the edge once. Fear has less grip now.",
+			"rarity": "rare",
+			"excludes": [],
+			"skills": {},
+			"effects": {
+				"thought_injured": -0.5,
+				"flee_threshold": -0.3
+			},
+			"acquired": true,
+			"trigger": "rescued"
+		},
+		"resigned": {
+			"name": "Resigned",
+			"desc": "Nothing left to lose, nothing left to give.",
+			"rarity": "rare",
+			"excludes": [],
+			"skills": {},
+			"effects": {
+				"work_speed": -0.15,
+				"mood_base": 4
+			},
+			"acquired": true,
+			"trigger": "despair",
+			"tags": [
+				"despair_frozen"
+			]
+		},
+		"settled": {
+			"name": "Settled",
+			"desc": "Found a rhythm in the grind.",
+			"rarity": "uncommon",
+			"excludes": [],
+			"skills": {},
+			"effects": {
+				"mood_base": 5
+			},
+			"acquired": true,
+			"trigger": "calm"
+		}
 	}
 }

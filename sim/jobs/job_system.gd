@@ -32,7 +32,7 @@ func tick_colonist(c: Colonist) -> void:
 	if _engineer_on_duty(c):
 		_tick_engineer(c)
 		return
-	if sim.alarm and not c.hidden and (c.job == null or c.job.type != "flee") and not c.is_unreachable("flee", sim.tick):
+	if sim.alarm and not c.hidden and sim.traits.mod(c, "flee_threshold") > -1.0 and (c.job == null or c.job.type != "flee") and not c.is_unreachable("flee", sim.tick):  # region PW2: Cold Blood never flees
 		var shelter := sim.buildings.find_shelter(c.cell) if sim.buildings else null
 		# region B3: rule "evacuate_low_hq": a badly hurt shelter would collapse on its occupants, so nobody hides in it
 		if shelter != null and sim.milestones.b3_on() and sim.is_rule_on("evacuate_low_hq") and _b3_hurt(shelter):

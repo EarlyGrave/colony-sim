@@ -26,7 +26,7 @@ func tick() -> void:
 		if not c.alive:
 			continue
 		var n := state_of(c)
-		n.food = maxf(0.0, n.food - float(cfg["food"]["decay_per_tick"]))
+		n.food = maxf(0.0, n.food - float(cfg["food"]["decay_per_tick"]) * maxf(0.0, 1.0 + sim.traits.mod(c, "hunger")))  # region PW2
 		if c.job == null or c.job.type != "sleep":
 			n.rest = maxf(0.0, n.rest - float(cfg["rest"]["decay_per_tick"]))
 		_ration(c, n)
