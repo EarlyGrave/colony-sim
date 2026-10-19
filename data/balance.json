@@ -1,5 +1,6 @@
 {
 	"ticks_per_day": 600,
+	"pg_bot": {"gens": 1},
 	"waste_sink_early": true,
 	"automation": {"belt_ticks_per_cell": 5},
 	"map": {
@@ -14,7 +15,8 @@
 		"clear_radius": 6,
 		"min_deposit_distance": 7,
 		"extra_share": 0.35,
-		"extra_min_distance": 13
+		"extra_min_distance": 13,
+		"deposit_rings": true
 	},
 	"colony": {
 		"colonists": 4,

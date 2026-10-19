@@ -255,7 +255,7 @@ func _build() -> void:
 		"terminal":
 			ok = _hub_place("warden_terminal", Vector2i(-3, 3))
 		"gen":
-			ok = sim.research.is_done("electrification") and _gen()
+			ok = true if _knob("gens", 1) == 0 else (sim.research.is_done("electrification") and _gen())  # PG: poles/generators switch the power system on (unpowered = 50%)
 		"assembler":
 			ok = sim.research.is_done("assembly") and _hub_place("assembler", Vector2i(0, 0))
 		"workbench":
@@ -368,6 +368,33 @@ func _ore_miner() -> bool:
 	return false
 
 
+## PG: a deposit inside rock (seeds 4/6/9) has no placeable 2x2 miner spot (rock cannot be dug). Colonists can still hand-mine
+## the nodes: designate them, and a smelter at the hub gets the ore hauled in (hauler feed) and the ingots hauled out.
+func _hand_mine(res: String, smelt: bool) -> bool:
+	var cells: Array[Vector2i] = []
+	for n in sim.map.node_cells():
+		if sim.map.node_resource(n) == res and not _used_nodes.has(n):
+			cells.append(n)
+	if cells.is_empty():
+		return false
+	cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return a.distance_squared_to(_hub) < b.distance_squared_to(_hub))
+	var first := cells[0]
+	var n_marked := 0
+	for c in cells:
+		if c.distance_squared_to(first) <= 100 and n_marked < 4:
+			sim.designate_mine(c, true)
+			_used_nodes[c] = true
+			n_marked += 1
+	if smelt:
+		var sc := _spot("smelter", _hub + Vector2i(-3, -2), false)
+		if sc.x < 0 or _put("smelter", sc) == null:
+			return false
+		_power(sc)
+	log.append("d%.1f hand-mining %d %s nodes (no free 2x2 spot)" % [_day_f(), n_marked, res])
+	return true
+
+
 ## Miner (+ optional smelter) on the nearest unused node of `res`, belts to a storage_in at the hub.
 func _line(res: String, smelt: bool) -> bool:
 	if smelt and not sim.research.is_done("smelting"):
@@ -396,6 +423,8 @@ func _line(res: String, smelt: bool) -> bool:
 		if miner_at.x >= 0:
 			break
 	if miner_at.x < 0:
+		if _hand_mine(res, smelt):
+			return true
 		log.append("no node for %s" % res)
 		return false
 	var proc_at := Vector2i(-1, -1)
@@ -488,6 +517,11 @@ func _gen() -> bool:
 	if sim.buildings.count_of("power_pole") + _bp_count("power_pole") == 0:
 		_hub_place("power_pole", Vector2i(4, 4))
 	return true
+
+
+## PG: experiment knobs from balance.json "pg_bot" (so factory_eval --ov can A/B them without code edits).
+func _knob(k: String, dflt: int) -> int:
+	return int(sim.defs.balance.get("pg_bot", {}).get(k, dflt))
 
 
 func _bp_count(def_id: String) -> int:

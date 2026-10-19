@@ -27,3 +27,6 @@ c = lambda fn: sum(1 for r in ok if fn(r))
 for name, v, th in [("audit tier2", c(lambda r: r["audit"]), 6), ("P1", c(lambda r: r["p"][0]), 5),
                     ("P3", c(lambda r: r["p"][2]), 3), ("launch", c(lambda r: r["launch"]), 1)]:
     print(f"{name:<12} {v}/{n}  need>={th}  {'PASS' if v >= th else 'FAIL'}")
+ad = [r["audit_day"] for r in ok if r.get("audit_day", -1) >= 0]
+if ad:
+    print(f"audit day: mean {sum(ad)/len(ad):.1f}  min {min(ad):.0f}  max {max(ad):.0f}   alive8: {c(lambda r: r['alive'] == 8)}/{n}")
