@@ -34,8 +34,9 @@ func _init() -> void:
 			d.balance["pacing"]["pollution_interval"]["hi"] = float(a.get_slice("=", 1))
 		elif a.begins_with("--pts="):
 			d.balance["pacing"]["floor_pts_per_day"] = float(a.get_slice("=", 1))
-	if "--y3=1" in OS.get_cmdline_user_args():  # region Y3
-		Defs.get_default().apply_y3()
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--ovf="):  # YX: JSON file {defs_property: {"a.b.c": value}} (see factory_bot_report.apply_overrides)
+			(load("res://tools/factory_bot_report.gd") as GDScript).apply_overrides(d, JSON.parse_string(FileAccess.get_file_as_string(a.substr(6))))
 	BotReport.preset_id = preset
 	var bus: Node = load("res://autoload/event_bus.gd").new()
 	for p: String in profiles:

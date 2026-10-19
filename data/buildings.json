@@ -23,14 +23,14 @@
 		"color": "#b0446b",
 		"max_hp": 250,
 		"cost": {
-			"essence_ore": 20
+			"essence_ore": 15
 		},
 		"build_work": 120,
 		"buildable": true,
 		"recipe": "refine_essence",
 		"input_capacity": 20,
 		"output_capacity": 30,
-		"wear_per_batch": 12,
+		"wear_per_batch": 6,
 		"threat_priority": 3
 	},
 	"research_bench": {
@@ -55,7 +55,7 @@
 		"color": "#8a6a3a",
 		"max_hp": 150,
 		"cost": {
-			"essence_ore": 15
+			"essence_ore": 10
 		},
 		"buildable": true,
 		"bills": true,
@@ -72,7 +72,7 @@
 		"color": "#5f9ea0",
 		"max_hp": 120,
 		"cost": {
-			"refined_essence": 10
+			"refined_essence": 7
 		},
 		"build_work": 80,
 		"buildable": true,
@@ -172,7 +172,7 @@
 		"color": "#8a7a5a",
 		"max_hp": 200,
 		"cost": {
-			"essence_ore": 25
+			"essence_ore": 15
 		},
 		"build_work": 100,
 		"buildable": true,
@@ -188,8 +188,8 @@
 			}
 		],
 		"input_capacity": 0,
-		"output_capacity": 20,
-		"wear_per_batch": 6,
+		"output_capacity": 60,
+		"wear_per_batch": 2,
 		"batch_items": 10
 	},
 	"smelter": {
@@ -203,7 +203,7 @@
 		"color": "#b0602b",
 		"max_hp": 250,
 		"cost": {
-			"essence_ore": 30
+			"essence_ore": 20
 		},
 		"build_work": 100,
 		"buildable": true,
@@ -226,7 +226,7 @@
 		],
 		"input_capacity": 20,
 		"output_capacity": 30,
-		"wear_per_batch": 12
+		"wear_per_batch": 6
 	},
 	"assembler": {
 		"name": "Assembler",
@@ -239,7 +239,7 @@
 		"color": "#4f7fa0",
 		"max_hp": 250,
 		"cost": {
-			"essence_ore": 30
+			"essence_ore": 20
 		},
 		"build_work": 100,
 		"buildable": true,
@@ -273,7 +273,7 @@
 		"color": "#7a6a4a",
 		"max_hp": 100,
 		"cost": {
-			"essence_ore": 10
+			"essence_ore": 5
 		},
 		"build_work": 100,
 		"buildable": true,

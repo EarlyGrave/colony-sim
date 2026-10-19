@@ -16,8 +16,6 @@ func _init() -> void:
 			days = int(a.get_slice("=", 1))
 		elif a.begins_with("--plate="):
 			plate = int(a.get_slice("=", 1))
-		elif a == "--y3":
-			Defs.get_default().apply_y3()
 		elif a.begins_with("--ovf="):
 			Report.apply_overrides(Defs.get_default(), JSON.parse_string(FileAccess.get_file_as_string(a.substr(6))))
 	var bus: Node = load("res://autoload/event_bus.gd").new()

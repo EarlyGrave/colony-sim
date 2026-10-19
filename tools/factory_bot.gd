@@ -21,7 +21,7 @@ const RESEARCH: Dictionary = {"filters": 2, "assembly": 3, "electrification": 5}
 var sim: Simulation
 var base: Bot
 var cap_percent := 50
-var plate_target := 8
+var plate_target := 45
 var assume_nitrogen := false
 var _step := 0  ## index into PLAN
 var _hub := Vector2i.ZERO
@@ -582,7 +582,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	var bot: RefCounted = (load("res://tools/factory_bot.gd") as GDScript).new(sim)
 	bot.assume_nitrogen = bool(opts.get("assume_nitrogen", false))
 	bot.cap_percent = int(opts.get("cap", 50))
-	bot.plate_target = int(opts.get("plate", 8))
+	bot.plate_target = int(opts.get("plate", 45))
 	var died := 0
 	sim.bus.colonist_died.connect(func(_i: int) -> void: died += 1)
 	var limit := days * sim.ticks_per_day

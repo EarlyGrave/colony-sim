@@ -5,7 +5,7 @@
 			"essence_ore": 10
 		},
 		"outputs": {
-			"refined_essence": 3,
+			"refined_essence": 6,
 			"waste": 4
 		},
 		"work_ticks": 100,
