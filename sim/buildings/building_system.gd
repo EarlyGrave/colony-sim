@@ -122,7 +122,9 @@ func refining_capped() -> bool:
 func may_operate(b: Building) -> bool:
 	if sim.crises.flag("refine_lock") and _is_refining(b):  # region crises
 		return false
-	return b.can_run_recipe() and (b.progress > 0 or not refining_capped())
+	# YX: metal smelting (recipe flag taint_cap_exempt) is not stopped by the taint cap; only essence refining is.
+	var exempt: bool = bool(b.recipe.get("taint_cap_exempt", false))
+	return b.can_run_recipe() and (b.progress > 0 or exempt or not refining_capped())
 
 
 # region crises

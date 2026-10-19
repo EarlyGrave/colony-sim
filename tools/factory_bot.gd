@@ -11,7 +11,7 @@ const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), 
 ## Build order, one blueprint batch at a time: ["line", resource, smelt?] = miner(+smelter)+belts+storage_in at the hub,
 ## ["miner"] = hand-hauled essence miner (no belt, works before Conveyance), plus single machines.
 const PLAN: Array = [
-	["workbench"], ["miner"], ["line", "essence_ore", true], ["miner"], ["line", "iron_ore", true], ["terminal"], ["refinery"], ["line", "copper_ore", true], ["assembler"],
+	["workbench"], ["miner"], ["line", "essence_ore", false], ["miner"], ["line", "iron_ore", true], ["terminal"], ["refinery"], ["line", "copper_ore", true], ["assembler"],
 	["line", "coal", false], ["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
 	["line", "iron_ore", true], ["gen"], ["assembler"], ["line", "iron_ore", true],
 ]
@@ -21,6 +21,7 @@ const RESEARCH: Dictionary = {"filters": 2, "assembly": 3, "electrification": 5}
 var sim: Simulation
 var base: Bot
 var cap_percent := 50
+var plate_target := 8
 var assume_nitrogen := false
 var _step := 0  ## index into PLAN
 var _hub := Vector2i.ZERO
@@ -143,7 +144,7 @@ func _bills() -> void:
 	if wb == null or not sim.defs.recipes.has("hand_plate"):
 		return
 	if not _has_bill(wb, "hand_plate"):
-		sim.add_bill(wb.id, "hand_plate", "until", 8)
+		sim.add_bill(wb.id, "hand_plate", "until", plate_target)
 
 
 func _has_bill(wb: Building, recipe_id: String) -> bool:
@@ -574,6 +575,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	var bot: RefCounted = (load("res://tools/factory_bot.gd") as GDScript).new(sim)
 	bot.assume_nitrogen = bool(opts.get("assume_nitrogen", false))
 	bot.cap_percent = int(opts.get("cap", 50))
+	bot.plate_target = int(opts.get("plate", 8))
 	var died := 0
 	sim.bus.colonist_died.connect(func(_i: int) -> void: died += 1)
 	var limit := days * sim.ticks_per_day

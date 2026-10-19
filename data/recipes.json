@@ -61,6 +61,7 @@
 			"ingot_copper": 1,
 			"waste": 1
 		},
+		"taint_cap_exempt": true,
 		"work_ticks": 80,
 		"station": [
 			"smelter"
@@ -75,6 +76,7 @@
 			"ingot_iron": 1,
 			"waste": 1
 		},
+		"taint_cap_exempt": true,
 		"work_ticks": 80,
 		"station": [
 			"smelter"

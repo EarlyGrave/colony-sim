@@ -18,10 +18,13 @@ func _init() -> void:
 			first = int(a.get_slice("=", 1))
 		elif a.begins_with("--nitrogen="):
 			opts["assume_nitrogen"] = int(a.get_slice("=", 1)) == 1
+		elif a.begins_with("--plate="):
+			opts["plate"] = int(a.get_slice("=", 1))
 		elif a.begins_with("--cap="):
 			opts["cap"] = int(a.get_slice("=", 1))
-	if "--y3=1" in OS.get_cmdline_user_args():  # region Y3
-		Defs.get_default().apply_y3()
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--ov="):  # YX: --ov={"balance":{"mining.yield":10},"recipes":{"refine_essence.outputs.refined_essence":5}}
+			apply_overrides(Defs.get_default(), JSON.parse_string(a.substr(5)))
 	for sv in range(first, first + seeds):
 		var r: Dictionary = FactoryBot.play(sv, days, opts)
 		print(format(r))
@@ -41,3 +44,21 @@ static func format(r: Dictionary) -> String:
 		"-" if r["launch_day"] < 0.0 else "%.1f" % r["launch_day"], "-" if r["won_day"] < 0.0 else "%.1f" % r["won_day"],
 		r["min_hp"], r["alive"], r["died"], r["pollution"], r["food"], r["over"], r["debt_pct"], r["blocker"],
 		r["nitrogen_nodes"], r["steps"], str(r["built"]), r["power_factor"], str(r["ledger"])]
+
+
+## YX: sweep helper. ov = {defs_property: {"a.b.c": value}} applied to the default Defs (tools only, never the game).
+static func apply_overrides(d: Defs, ov: Dictionary) -> void:
+	for prop: String in ov:
+		var root: Variant = d.get(prop)
+		if not (root is Dictionary):
+			continue
+		for path: String in ov[prop]:
+			var parts := path.split(".")
+			var cur: Dictionary = root
+			for i in range(parts.size() - 1):
+				if not cur.has(parts[i]) or not (cur[parts[i]] is Dictionary):
+					cur = {}
+					break
+				cur = cur[parts[i]]
+			if parts.size() > 0 and (cur.has(parts[-1]) or not cur.is_empty()):
+				cur[parts[-1]] = ov[prop][path]
