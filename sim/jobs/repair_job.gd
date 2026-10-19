@@ -44,7 +44,10 @@ func tick(c: Colonist, sim: Simulation) -> int:
 	var b := sim.buildings.get_by_id(building_id)
 	if b == null or not b.needs_repair(sim):
 		return Status.DONE
-	var m := c.move_toward(b.cell, sim)
+	var at := b.cell if (sim.pathfinder.is_walkable(b.cell) or not bool(sim.defs.balance.get("repair_rock_fix", false))) else sim.pathfinder.best_adjacent(c.cell, b.cell)  # RP: solid / rock-bound machines are fixed from a neighbour cell
+	if at.x < 0:
+		return Status.FAILED
+	var m := c.move_toward(at, sim)
 	if m == GridMover.Move.FAILED:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:

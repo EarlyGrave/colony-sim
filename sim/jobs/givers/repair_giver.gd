@@ -13,11 +13,12 @@ func find(c: Colonist) -> Job:
 		return null
 	var mode := sim.get_rule_mode("repair_priority")  # region T3
 	var best: Building = null
+	var rock_fix := bool(sim.defs.balance.get("repair_rock_fix", false))  # RP: measured worse for survival/audit (chaotic), off by default
 	var best_d := 1 << 30
 	var best_pri := -1
 	for b: Building in sim.buildings.list:
 		var key := "rep:%d" % b.id
-		if not b.needs_repair(sim) or not sim.jobs._free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
+		if not b.needs_repair(sim) or not sim.jobs._free(c, key) or not (sim.pathfinder.can_approach(c.cell, b.cell) if rock_fix else sim.pathfinder.reachable(c.cell, b.cell)):  # RP: miners on rock node cells are not walkable, so reachable() hid them forever
 			continue
 		if b.hp < b.max_hp and not _affordable(sim.buildings.repair_cost_of(b)):  # region T3
 			continue
