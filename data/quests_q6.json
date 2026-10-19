@@ -1,6 +1,9 @@
 {
 	"q6_auditor": {
-		"trigger": {"tier_done": 2},
+		"trigger": {
+			"tier_done": 2
+		},
+		"start": "announce",
 		"beats": {
 			"announce": {
 				"text": "Dispatch: Auditor Pell will inspect the premises. Please tidy the evidence.",
@@ -12,31 +15,68 @@
 					"hide": {
 						"label": "Hide the pollution (30 plates of tarp)",
 						"text": "The tarp is noted. So is the shape under it.",
-						"requires": {"items": {"plate": 30}},
+						"requires": {
+							"items": {
+								"plate": 30
+							}
+						},
 						"effects": [
-							{"verb": "items", "item": "plate", "count": -30},
-							{"verb": "mod", "name": "wave_mult", "value": 1.2, "days": 5}
-						]
+							{
+								"verb": "items",
+								"item": "plate",
+								"count": -30,
+								"n": -30
+							},
+							{
+								"verb": "mod",
+								"name": "wave_mult",
+								"value": 1.2,
+								"days": 5
+							}
+						],
+						"hint": "Costs 30 plate. Waves +20% for 5 days."
 					},
 					"show": {
 						"label": "Show everything (fine: 10% of debt as interest)",
 						"text": "Pell notes: 'crop yield exceeds expectations.'",
 						"effects": [
-							{"verb": "debt_pct", "value": 10.0, "kind": "fine"},
-							{"verb": "flag", "id": "clue_manifest"},
-							{"verb": "letter", "text": "Orbital manifest, line 3: Biomass: forecast."}
-						]
+							{
+								"verb": "debt_pct",
+								"value": 10.0,
+								"kind": "fine",
+								"pct": 10.0
+							},
+							{
+								"verb": "flag",
+								"id": "clue_manifest"
+							},
+							{
+								"verb": "letter",
+								"text": "Orbital manifest, line 3: Biomass: forecast."
+							}
+						],
+						"hint": "Debt interest +10%. Unlocks a manifest clue."
 					},
 					"tour": {
 						"label": "Offer a tour of the dump",
 						"text": "Auditor Pell has sat down. Nobody offered him a chair.",
 						"effects": [
-							{"verb": "mod", "name": "petition_fee_mult", "value": 0.95, "days": 0},
-							{"verb": "pollution", "value": 0.03}
-						]
+							{
+								"verb": "mod",
+								"name": "petition_fee_mult",
+								"value": 0.95,
+								"days": 0
+							},
+							{
+								"verb": "pollution",
+								"value": 0.03
+							}
+						],
+						"hint": "Petition fees -5%. Pollution +3%."
 					}
 				}
 			}
-		}
+		},
+		"title": "Auditor Visit"
 	}
 }

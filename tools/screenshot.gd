@@ -70,9 +70,17 @@ func _ready() -> void:
 	game.camera.zoom_level = zoom
 	if cat != "":
 		game.hud._toggle_cat(cat)
-	if panel == "quest":  # region QX: Auditor Visit choice pending
-		game.sim.quests.start("q6_auditor")
-		game.sim.run_ticks(game.sim.ticks_per_day + 5)
+	if panel.begins_with("quest"):  # region QX/QU: quest, quest_announce (Q6 before the choice), quest_q1, quest_q2
+		if panel == "quest_q1":
+			var o: Dictionary = game.sim.q1_clerk.cfg["beats"]["offer"]
+			game.sim.quests.start("q1")
+			game.sim.quests.offer("q1", "offer", str(o["text"]).replace("{clerk}", "Pell"), o["options"])
+		elif panel == "quest_q2":
+			game.sim.q2_pilgrims.begin()
+		else:
+			game.sim.quests.start("q6_auditor")
+			if panel != "quest_announce":
+				game.sim.run_ticks(game.sim.ticks_per_day + 5)
 		game.hud._process(0.1)
 	if panel == "research":  # demo state: T2 audited, essence in stock, one tech half done, one queued
 		var r: ResearchSystem = game.sim.research
