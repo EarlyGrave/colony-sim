@@ -1,0 +1,50 @@
+{
+	"q10_maintenance": {
+		"title": "Warden Maintenance Window",
+		"trigger": {"min_day": 40, "flag": "installment_missed"},
+		"start": "silence",
+		"beats": {
+			"silence": {
+				"text": "Installment 1 is overdue. The Warden is out; the interest is not. The PA is silent for six hours.",
+				"effects": [{"verb": "mod", "name": "pa_silent", "value": 1.0, "days": 0.25}],
+				"then": "apology",
+				"delay_days": 0.25
+			},
+			"apology": {
+				"text": "Apology form 9-A: 'We regret nothing, in writing.' Guards left a supply cache unmanned. The office is out of the Warden.",
+				"options": {
+					"raid": {
+						"label": "Raid the supply cache",
+						"text": "The cache is lighter. The audit will be heavier.",
+						"effects": [
+							{"verb": "items", "item": "refined_essence", "n": 30},
+							{"verb": "items", "item": "parts", "n": 10},
+							{"verb": "mod", "name": "audit_parts_mult", "value": 1.2, "days": 5}
+						],
+						"hint": "+30 refined, +10 parts. Audit parts +20% for 5 days."
+					},
+					"respect": {
+						"label": "Respect the quiet",
+						"text": "Debt adjusted: clerical error. The Warden notes your restraint and, regrettably, your quota.",
+						"effects": [
+							{"verb": "flag", "id": "clue_warden_quota"},
+							{"verb": "debt_pct", "pct": -2.0},
+							{"verb": "letter", "title": "Clerical Error", "text": "Quota memo, misfiled: 'The sentence is the product.'"}
+						],
+						"hint": "Debt -2% (clerical error). Unlocks a quota clue."
+					},
+					"sabotage": {
+						"label": "Sabotage the terminal",
+						"text": "The terminal sparks. Nobody is auditing anything for three days.",
+						"effects": [
+							{"verb": "mod", "name": "pa_silent", "value": 1.0, "days": 3},
+							{"verb": "mod", "name": "petition_fee_mult", "value": 0.8, "days": 3},
+							{"verb": "mod", "name": "wave_mult", "value": 1.1, "days": 3}
+						],
+						"hint": "PA, audits and reviews off 3 days. Petition fee -20%, waves +10%."
+					}
+				}
+			}
+		}
+	}
+}

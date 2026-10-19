@@ -19,6 +19,12 @@ func _init(p_sim: Simulation) -> void:
 	# endregion
 
 
+# region R1: Q10 sabotage silences the PA, so audits and reviews cannot be processed
+func pa_silent() -> bool:
+	return sim.quests != null and sim.quests.is_started() and sim.quests.mod("pa_silent") > 0.0
+# endregion
+
+
 func tier() -> int:
 	return done_tiers.back()
 
@@ -62,7 +68,7 @@ func next_tier() -> int:
 ## Delivers as many parts as are in storage (never more than still required).
 ## Only the next tier can be audited. Returns true when the tier unlocked now.
 func deliver(t: int) -> bool:
-	if t != next_tier() or not has_terminal():
+	if t != next_tier() or not has_terminal() or pa_silent():  # region R1
 		return false
 	var have: Dictionary = delivered.get(t, {})
 	var req := required(t)
@@ -189,7 +195,7 @@ func tick_reviews() -> void:
 	if sim.tick % Simulation.TICKS_PER_SECOND != 0:
 		return
 	var r := current_review()
-	if r.is_empty() or review_progress(r) < 1.0:
+	if r.is_empty() or review_progress(r) < 1.0 or pa_silent():  # region R1
 		return
 	reviews_done.append(str(r["id"]))
 	var near := sim.map_center()

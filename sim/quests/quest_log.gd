@@ -4,7 +4,7 @@ extends RefCounted
 ## Quests live in data/quests*.json; beats post letters and N-way choices; effects are a small verb set.
 ## Deterministic: all randomness via sim.rng, timers in ticks. State shows up in state_hash only after a quest started.
 
-const MOD_DEFAULTS := {"audit_parts_mult": 1.0, "wave_mult": 1.0, "refine_mult": 1.0, "fine_pct": 0.0, "petition_fee_mult": 1.0}
+const MOD_DEFAULTS := {"audit_parts_mult": 1.0, "wave_mult": 1.0, "refine_mult": 1.0, "fine_pct": 0.0, "petition_fee_mult": 1.0, "pa_silent": 0.0}  # region R1: pa_silent > 0 blocks audits, reviews, quest letters
 const MAX_DEBT_CUT_PCT := 2.0
 
 var sim: Simulation
@@ -314,6 +314,8 @@ func _apply_effects(qid: String, effects: Array) -> void:
 				var mx := float(sim.defs.balance["contamination"]["max"])
 				sim.contamination.level = clampf(sim.contamination.level + float(e["value"]) * mx, 0.0, mx * 0.999)
 			"letter":
+				if mod("pa_silent") > 0.0:  # region R1
+					continue
 				sim.bus.letter_received.emit(str(e.get("title", "Dispatch")), str(e.get("text", "")))
 
 
