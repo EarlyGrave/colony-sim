@@ -100,6 +100,7 @@ func test_hud_builds_with_crisis_and_contract() -> void:
 	var game := _game()
 	var sim := game.sim
 	_crisis_level(sim)
+	game.hud._u1_drawer_open = true  # region U1: the contract chip lives in the Maps drawer
 	var c := {"id": 99, "template": "t", "name": "Test", "essence": 5, "parts": 0, "offered_day": 0, "expire_day": 9,
 		"deadline_day": 5, "deadline_days": 5, "reward": {"kind": "supplies"}, "state": "active"}
 	sim.contracts.list.append(c)

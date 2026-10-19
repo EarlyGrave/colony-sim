@@ -266,6 +266,7 @@ func _ready() -> void:
 	_game_over.visible = false
 
 	_o2_build(root)  # region O2
+	_u1_build(root)  # region U1
 	root.move_child(_alerts, -1)
 	select_tool("inspect")
 	get_viewport().size_changed.connect(_check_layout)
@@ -1202,6 +1203,7 @@ func _o4_layout() -> void:
 	# Top-left chip row: map chips, then the contract chip; the tutorial slot takes the rest.
 	var x := O4_LEFT
 	var slot_r := vp.x - 8.0 - ((sw + 8.0) if side_open else 0.0)
+	x = _u1_chips(x, y0, slot_r)  # region U1: one small Maps button; the map chips + contract chip live in its drawer
 	if map_switcher != null and map_switcher.visible:
 		if map_switcher.get_parent() != _root:
 			_reparent_to(map_switcher, _root)
@@ -1226,7 +1228,7 @@ func _o4_layout() -> void:
 	var quiet := not pop_open and not side_open
 	var c5h := _c5_layout(lim2, pop_open)  # region C5: squad bar takes the bottom row, the stack moves up
 	_o4_place_corner(_legend, O4_LEFT, -8.0 - c5h)
-	_legend.visible = c5h == 0.0 and _overlay_on and quiet and _legend.get_combined_minimum_size().x + O4_LEFT <= lim2
+	_legend.visible = c5h == 0.0 and _overlay_on and quiet and _u1_legend_on() and _legend.get_combined_minimum_size().x + O4_LEFT <= lim2  # region U1: legend auto-hides
 	var toast_b := -(8.0 + c5h + (O4_LEGEND_H + 4.0 if c5h == 0.0 else 0.0))
 	_message.visible = true
 	_message.anchor_left = 0.0
@@ -1266,7 +1268,7 @@ func _o4_layout() -> void:
 			_message.visible = false
 			tool_b = -8.0
 		_o4_place_corner(apc, O4_LEFT, tool_b)
-		apc.visible = quiet and not _patrol_bar.visible and c5h == 0.0
+		apc.visible = quiet and not _patrol_bar.visible and c5h == 0.0 and (u1_strip_wanted() or machines_open)  # region U1: context drawer
 		if apc.visible and not machines_open:  # region F5: dock the strip on the bottom edge, legend/toast stack above it
 			var ah := maxf(apc.get_combined_minimum_size().y, 64.0)
 			_o4_place_corner(apc, O4_LEFT, -8.0)
@@ -1289,6 +1291,7 @@ func _o4_layout() -> void:
 		var gs: Variant = g.get("sim")
 		cb.visible = quiet and SaveStore.has_save() and (gs == null or gs.tick < 50 or gs.game_over_reason != "")
 	_f2_layout(y0, limit, cs.y, pop_open)  # region F2
+	_u1_layout(y0, limit - vp.x)  # region U1
 
 
 func _o4_buttons(n: Node) -> Array[Button]:
@@ -1553,4 +1556,104 @@ func _s4_update() -> void:
 	var bb: Button = _panel_buttons.get("beacons")
 	if bb != null:
 		bb.visible = int(BeaconPanel.state_of(sim).get("alive", 0)) > 0
+# endregion
+
+
+# region U1
+## HUD declutter: automation strip only while a build/belt/machine tool is active, one Maps button
+## (drawer) instead of the map chips + contract chip, legend that fades after a few seconds.
+## Hooks for other workers: `notification_anchor` (empty Control, top-right below the speed row, grows
+## downwards) and `modal_layer` (CanvasLayer above everything) with `modal_root` (full-rect Control).
+const U1_LEGEND_SECS := 5.0
+const U1_DRAWER_SECS := 10.0
+var notification_anchor: Control
+var modal_layer: CanvasLayer
+var modal_root: Control
+var _u1_maps_btn: Button
+var _u1_drawer_open := false
+var _u1_drawer_t := 0.0
+var _u1_legend_t := 0.0
+
+
+func _u1_now() -> float:
+	return Time.get_ticks_msec() / 1000.0
+
+
+func _u1_build(root: Control) -> void:
+	notification_anchor = Control.new()
+	notification_anchor.name = "NotificationAnchor"
+	notification_anchor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(notification_anchor)
+	modal_layer = CanvasLayer.new()
+	modal_layer.name = "ModalLayer"
+	modal_layer.layer = 40
+	add_child(modal_layer)
+	modal_root = Control.new()
+	modal_root.name = "ModalRoot"
+	modal_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	modal_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	modal_layer.add_child(modal_root)
+	_u1_maps_btn = _button(root, "Maps", Vector2(96, 64))
+	_u1_maps_btn.add_theme_font_size_override("font_size", 16)
+	_u1_maps_btn.visible = false
+	_u1_maps_btn.pressed.connect(func() -> void:
+		_u1_drawer_open = not _u1_drawer_open
+		_u1_drawer_t = _u1_now()
+		_o4_layout())
+	_u1_legend_t = _u1_now()
+	overlay_toggled.connect(func(on: bool) -> void:
+		if on:
+			_u1_legend_t = _u1_now())
+
+
+func _u1_legend_on() -> bool:
+	return _u1_now() - _u1_legend_t < U1_LEGEND_SECS
+
+
+## True while the belt/machine strip is useful: a build, belt, node or machine tool is active.
+func u1_strip_wanted() -> bool:
+	var g := get_parent()
+	if g == null:
+		return false
+	var t := str(g.get("tool"))
+	return t in GameController.BUILD_TOOLS or t in GameController.BELT_TOOLS or t.begins_with("node_")
+
+
+## Places the Maps button and shows/hides the chips behind it. Returns the x where the chips start.
+func _u1_chips(x: float, y0: float, slot_r: float) -> float:
+	var maps_avail := _campaign != null and map_switcher != null
+	var contract_on := _u1_contract_on()
+	if not maps_avail and not contract_on:
+		_u1_maps_btn.visible = false
+		_u1_drawer_open = false
+		return x
+	if _u1_drawer_open and _u1_now() - _u1_drawer_t > U1_DRAWER_SECS:
+		_u1_drawer_open = false
+	_u1_maps_btn.text = ("Maps" if maps_avail else "Contract") + (" (1)" if contract_on and not _u1_drawer_open else "")
+	_u1_maps_btn.modulate = Color(1.0, 0.85, 0.4) if contract_on and not _u1_drawer_open else Color.WHITE
+	_u1_maps_btn.visible = true
+	_o4_anchor_tl(_u1_maps_btn, x, y0, 96.0, 64.0)
+	if maps_avail:
+		map_switcher.visible = _u1_drawer_open
+	_contract_btn.visible = contract_on and _u1_drawer_open
+	return x + 104.0
+
+
+func _u1_contract_on() -> bool:
+	if sim == null or sim.contracts == null:
+		return false
+	return not sim.contracts.open_contracts().is_empty()
+
+
+func _u1_layout(y0: float, right_off: float) -> void:
+	if notification_anchor == null:
+		return
+	notification_anchor.anchor_left = 1.0
+	notification_anchor.anchor_right = 1.0
+	notification_anchor.anchor_top = 0.0
+	notification_anchor.anchor_bottom = 0.0
+	notification_anchor.offset_left = right_off - 300.0
+	notification_anchor.offset_right = right_off
+	notification_anchor.offset_top = y0
+	notification_anchor.offset_bottom = y0
 # endregion

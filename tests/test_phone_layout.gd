@@ -201,6 +201,7 @@ func test_radial_ring_clear_of_belt_strip() -> void:
 	game.sim.run_ticks(60)
 	_each_size(func(size: Vector2i, sc: float) -> void:
 		var tag := "%dx%d@%.2f" % [size.x, size.y, sc]
+		game.tool = "wall"  # region U1: the strip is a context drawer, shown while a build tool is active
 		_settle(game, size, sc)
 		var vp := game.hud.get_viewport().get_visible_rect().size
 		var strip := game.auto_panel.get_global_rect()
@@ -258,4 +259,58 @@ func test_logic_row_and_splitter_sheet_do_not_overlap() -> void:
 		_settle(game, size, sc)
 		_check_state(game, tag + " item picker")
 		game.splitter_panel.close())
+# endregion
+
+
+# region U1
+func _u1_covers(c: Control) -> bool:
+	if c is Button or c is ColonistBar or c is GamePanel or c is ForecastBar:
+		return true
+	if c is PanelContainer:
+		var sb := c.get_theme_stylebox("panel")
+		if sb is StyleBoxEmpty:
+			return false
+		if c.mouse_filter != Control.MOUSE_FILTER_IGNORE:
+			return true
+		return sb is StyleBoxFlat and (sb as StyleBoxFlat).bg_color.a >= 0.5
+	return false
+
+
+func _u1_rects(n: Node, out: Array[Rect2]) -> void:
+	if n is Control and not (n as Control).visible:
+		return
+	if n is Control and _u1_covers(n as Control):
+		var r := _clipped(n as Control)
+		if r.size.x > 1.0 and r.size.y > 1.0:
+			out.append(r)
+	for ch in n.get_children():
+		_u1_rects(ch, out)
+
+
+func test_world_visible_percent() -> void:
+	var game := _make_game()
+	game.sim.run_ticks(60)
+	var size := Vector2i(844, 390)
+	_settle(game, size, 1.0)
+	game.hud._u1_legend_t = -100.0  # steady state: the legend has faded
+	_settle(game, size, 1.0)
+	var rects: Array[Rect2] = []
+	_u1_rects(game.hud._root, rects)
+	_u1_rects(game.auto_panel.get_parent(), rects)
+	var cb: Variant = game.get("_continue_btn")
+	if cb is Button and (cb as Button).is_visible_in_tree():
+		rects.append((cb as Button).get_global_rect())
+	var covered := 0
+	for y in size.y:
+		for x in size.x:
+			var p := Vector2(x + 0.5, y + 0.5)
+			for r in rects:
+				if r.has_point(p):
+					covered += 1
+					break
+	var pct := 100.0 * (1.0 - float(covered) / float(size.x * size.y))
+	print("U1 world visible: %.1f%%" % pct)
+	assert_true(pct >= 55.0, "world visible %.1f%% >= 55" % pct)
+	assert_false(game.auto_panel.visible, "belt strip hidden while idle")
+	assert_true(game.hud.notification_anchor != null and game.hud.modal_root != null, "U1 hooks exist")
 # endregion

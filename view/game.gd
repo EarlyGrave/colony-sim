@@ -291,6 +291,8 @@ func _process(delta: float) -> void:
 		radial.press_tick(delta)
 	if auto_panel != null and hud != null:  # R4X: on narrow screens a side panel would be covered by the belt strip
 		auto_panel.visible = hud._side == null or not is_instance_valid(hud._side) or not auto_panel.get_global_rect().intersects(hud._side.get_global_rect())
+		if not hud.u1_strip_wanted() and not auto_panel._machine_row.visible and not auto_panel._logic_row.visible:  # region U1
+			auto_panel.visible = false
 	if sim == null or speed == 0:
 		return
 	_accum += delta * Simulation.TICKS_PER_SECOND * speed * _c5_time_scale()  # region C5
