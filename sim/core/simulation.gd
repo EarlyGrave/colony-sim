@@ -38,6 +38,7 @@ var health: HealthSystem
 var mood: MoodSystem
 # endregion
 var q1_clerk: QuestClerkNote  # region Q1
+var q2_pilgrims: Q2Pilgrims  # region Q2
 # region debt
 var debt: DebtSystem
 # endregion
@@ -312,6 +313,10 @@ func _init_systems() -> void:
 	petition = PetitionSystem.new(self)  # region E1
 	quests = QuestLog.new(self)  # region Q0
 	q1_clerk = QuestClerkNote.new(self)  # region Q1
+	q2_pilgrims = Q2Pilgrims.new(self)  # region Q2
+	if quests.is_enabled():  # region QX: code quests are polled and hashed by QuestLog only
+		quests.register_module(QuestClerkNote.QUEST_ID, q1_clerk)
+		quests.register_module(Q2Pilgrims.ID, q2_pilgrims)
 	shuttle = ShuttleSystem.new(self)  # region S1
 	beacons = BeaconSystem.new(self)  # region S2
 	chips = ChipSystem.new(self)  # region T4

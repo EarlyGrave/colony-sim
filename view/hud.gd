@@ -1762,10 +1762,19 @@ func _y5_add_sheet(p: GamePanel) -> void:
 
 
 # region Q0
+var _q0_sheet: QuestSheet
+
+
 func _q0_bind(p_sim: Simulation) -> void:
+	if _q0_sheet != null and is_instance_valid(_q0_sheet):  # restart: drop the old sheet and its bus connections
+		_q0_sheet.unbind()
+		remove_child(_q0_sheet)
+		_q0_sheet.free()
+		_q0_sheet = null
 	if not p_sim.quests.is_enabled():
 		return
 	var qs := QuestSheet.new()
+	_q0_sheet = qs
 	add_child(qs)
 	qs.bind(p_sim)
 # endregion

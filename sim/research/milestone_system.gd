@@ -32,7 +32,15 @@ func has_terminal() -> bool:
 
 
 func required(t: int) -> Dictionary:
-	return (cfg.get(str(t), {}) as Dictionary).get("parts", {})
+	var parts: Dictionary = (cfg.get(str(t), {}) as Dictionary).get("parts", {})
+	if sim.quests != null and sim.quests.is_started():  # region QX: audit_parts_mult (Q1 loophole)
+		var m := sim.quests.mod("audit_parts_mult")
+		if m != 1.0:
+			var out: Dictionary = {}
+			for item: String in parts:
+				out[item] = maxi(1, roundi(float(parts[item]) * m))
+			return out
+	return parts
 
 
 func remaining(t: int) -> Dictionary:

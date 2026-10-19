@@ -36,9 +36,6 @@ func _init(p_sim: Simulation) -> void:
 	cfg = load_cfg()
 	if not bool(sim.defs.balance.get("q_enabled", false)):
 		return
-	sim.listen(sim.bus.day_started, _on_day)
-	if sim.bus.has_signal("quest_resolved"):
-		sim.listen(sim.bus.get("quest_resolved"), on_resolved)
 
 
 func _log() -> Object:
@@ -95,9 +92,11 @@ func _say(beat: String) -> void:
 	sim.bus.letter_received.emit(str(b["title"]), str(b["text"]).replace("{clerk}", nm))
 
 
-func _on_day(day: int) -> void:
+## Called by QuestLog once per day (register_module).
+func poll() -> void:
 	if not enabled():
 		return
+	var day := sim.day()
 	var l := _log()
 	match stage:
 		0:
@@ -120,7 +119,12 @@ func _on_day(day: int) -> void:
 				_payoff()
 
 
-## Called when the player answers the offer (QuestLog bus signal quest_resolved).
+## Called by QuestLog when the player answers the offer.
+func resolve(option_id: String) -> void:
+	on_resolved(QUEST_ID, option_id)
+
+
+## Test-facing entry for an answer.
 func on_resolved(quest_id: String, option_id: String) -> void:
 	if quest_id != QUEST_ID or stage != 2:
 		return
@@ -201,3 +205,6 @@ func _payoff() -> void:
 		_:
 			_say("clue")
 	stage = 4
+	var l := _log()
+	if l != null and l.has_method("finish"):
+		l.call("finish", QUEST_ID)

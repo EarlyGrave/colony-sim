@@ -38,7 +38,7 @@ func required(p: int) -> Dictionary:
 		return out
 	var parts: Dictionary = (phase_defs()[p - 1] as Dictionary).get("parts", {})
 	for item: String in parts:
-		out[item] = maxi(1, roundi(float(parts[item]) * preset_mult()))
+		out[item] = maxi(1, roundi(float(parts[item]) * preset_mult() * (sim.quests.mod("petition_fee_mult") if sim.quests != null else 1.0)))  # region QX: Q6 tour discount
 	return out
 
 

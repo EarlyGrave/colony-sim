@@ -51,6 +51,7 @@ func begin() -> void:
 	sim.bus.letter_received.emit(str(cfg["zealot_name"]), str(cfg["letter"]) + " " + str(cfg["prayer"]))
 	var q := _quests()
 	if q != null:
+		q.start(ID)
 		q.offer(ID, "prayer", str(cfg["prayer"]), cfg["options"])
 
 
@@ -88,8 +89,15 @@ func resolve(option_id: String) -> bool:
 	if q != null:
 		q.set_flag("q2_" + option_id)
 	if option_id != "let":
-		state = "done"
+		_done()
 	return true
+
+
+func _done() -> void:
+	state = "done"
+	var q := _quests()
+	if q != null:
+		q.finish(ID)
 
 
 func _mod(mod_name: String, mult: float, days: float) -> void:
@@ -102,7 +110,7 @@ func _mod(mod_name: String, mult: float, days: float) -> void:
 func _on_wave_ended(_i: int) -> void:
 	if state != "active" or option != "let":
 		return
-	state = "done"
+	_done()
 	if oto_dies:
 		var c := sim.colonists.get_by_id(oto_id)
 		if c != null:

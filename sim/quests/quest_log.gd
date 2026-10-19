@@ -106,6 +106,8 @@ func start(id: String) -> bool:
 		return false
 	quests[id] = {"state": "active", "beat": "", "refs": {}}
 	sim.bus.quest_started.emit(id)
+	if _modules.has(id):  # code quest: the module drives its own beats and calls finish()
+		return true
 	_enter(id, str(sim.defs.quests[id].get("start", "start")))
 	return true
 
@@ -142,8 +144,8 @@ func answer(uid: int, option_id: String) -> bool:
 			return false
 		pending.erase(p)
 		if _modules.has(p["quest"]):
-			sim.bus.quest_resolved.emit(str(p["quest"]), option_id)
 			_modules[p["quest"]].resolve(option_id)
+			sim.bus.quest_resolved.emit(str(p["quest"]), option_id)
 			return true
 		_resolve(str(p["quest"]), str(p["beat"]), option_id)
 		return true
@@ -178,7 +180,7 @@ func _on_day(_d: int) -> void:
 	if _poll_ids.is_empty():
 		_poll_ids = _sorted(sim.defs.quests.keys())
 	for id: String in _poll_ids:
-		if state(id) == "idle" and sim.defs.quests[id].has("trigger") and _trigger_ok(sim.defs.quests[id]["trigger"]):
+		if not _modules.has(id) and state(id) == "idle" and sim.defs.quests[id].has("trigger") and _trigger_ok(sim.defs.quests[id]["trigger"]):
 			start(id)
 
 
@@ -258,6 +260,10 @@ func _resolve(qid: String, beat_id: String, opt_id: String) -> void:
 		schedule(qid, str(o["then"]), float(o.get("delay_days", 1.0)))
 	else:
 		_finish(qid)
+
+
+func finish(qid: String) -> void:
+	_finish(qid)
 
 
 func _finish(qid: String) -> void:

@@ -136,7 +136,7 @@
 		"free_tiers": 1,
 		"essence_item": "refined_essence"
 	},
-	"q_enabled": false,
+	"q_enabled": true,
 	"b4_enabled": true,
 	"k5_enabled": true,
 	"e1_enabled": true,

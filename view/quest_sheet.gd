@@ -27,6 +27,14 @@ func bind(p_sim: Simulation) -> void:
 	_refresh()
 
 
+func unbind() -> void:
+	if sim == null:
+		return
+	for sig: Signal in [sim.bus.quest_started, sim.bus.quest_beat, sim.bus.quest_choice_posted, sim.bus.quest_resolved]:
+		if sig.is_connected(_changed):
+			sig.disconnect(_changed)
+
+
 func _changed(_a: Variant = null, _b: Variant = null, _c: Variant = null) -> void:
 	if sim != null and not sim.quests.pending.is_empty():
 		_collapsed = false

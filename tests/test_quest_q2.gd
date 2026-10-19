@@ -10,6 +10,7 @@ func _sim(seed_value := 5) -> Simulation:
 
 func test_disabled_is_inert() -> void:
 	var sim := _sim()
+	sim.defs.balance["q_enabled"] = false
 	var q := Q2Pilgrims.new(sim)
 	sim.contamination.level = 90.0
 	q.poll()

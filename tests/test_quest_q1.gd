@@ -169,7 +169,9 @@ func test_ignore_sets_clue_flag_and_letter() -> void:
 
 
 func test_generator_tags_only_when_enabled() -> void:
-	var off := make_sim(5, true, 24, 24, peaceful_defs())
+	var offd := peaceful_defs()
+	offd.balance["q_enabled"] = false
+	var off := make_sim(5, true, 24, 24, offd)
 	for i in 9:
 		var c := ColonistGenerator.generate(off, Vector2i(3, 3))
 		assert_false(c.bio.has("tag"))

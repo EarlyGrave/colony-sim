@@ -142,7 +142,10 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 	if not b.can_run_recipe() or steps <= 0:
 		return false
 	b.progress += steps
-	if b.progress < int(b.recipe["work_ticks"]):
+	var need := int(b.recipe["work_ticks"])
+	if sim.quests != null and sim.quests.is_started() and _is_refining(b):  # region QX: refine_mult scales refining speed
+		need = maxi(1, roundi(need / maxf(0.1, sim.quests.mod("refine_mult"))))
+	if b.progress < need:
 		return false
 	b.progress = 0
 	# region perks
