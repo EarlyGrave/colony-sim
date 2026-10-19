@@ -342,3 +342,10 @@ HP); волны заканчиваются по таймеру и твари о�
 - Fix: Q12 gamble rolled twice (generic `chance` pre-roll); now uses `p`.
 - Full suite 908 green, web smoke PASS. SP (refined spend) not merged: real cause is refinery duty cycle; RF investigating.
 - Open: S1 `despair_mult` mod has no reader; S4 needs contraband on; scenario forcing despair>=40 to evaluate contraband.
+
+## Refinery diagnosis + fixes (2026-10-19)
+- CD: quest mod `despair_mult` now read by DebtSystem (S1 Pay works); tools/contraband_scenario.gd (forced despair) -> contraband stays off.
+- SP/RF (tools only): factory_eval summary counted alive==8 (now >=8, true 10/10); `real` refined column; tools/rf_diag.gd.
+- Root cause of no shuttle: taint cap blocks the refinery ~70% of the time (smelters run to cap+30). Margin 0 gives 2-3x refined but starves ingots/plates (P3 3->1/10).
+- PM: sim fix, workbench exempt from ore_reserve (hand_plate no longer starves).
+- Full suite 910 green, web smoke PASS. Open: shuttle path (cleaner smelting vs separate smelter cap) — asked owner.
