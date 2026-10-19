@@ -58,6 +58,7 @@ static func generate(map: MapGrid, rng: RandomNumberGenerator, cfg: Dictionary) 
 
 	_open_enclosed_pockets(map, center)
 	_convert_extra_nodes(map, rng.seed, biome, cfg)  # region L5
+	_guarantee_nodes(map, biome, cfg)  # region Y1
 
 
 ## Compact blob of up to `size` cells grown from `start` (each step extends
@@ -180,4 +181,67 @@ static func _convert_extra_nodes(map: MapGrid, seed_value: int, biome: Dictionar
 		var coal := NodeData.res_index(String(ids[r2.randi_range(0, ids.size() - 1)]))
 		for q in blob:
 			map.node_res[q] = coal
+# endregion
+
+
+# region Y1
+## Biome `guaranteed_nodes` ({resource: count}): converts the farthest not-near-start deposit blobs (not coal, not
+## already guaranteed) so e.g. nitrogen exists on the home map. No rng use; only node_res changes.
+static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -> void:
+	var want: Dictionary = biome.get("guaranteed_nodes", {})
+	if want.is_empty():
+		return
+	var center := Vector2i(map.width / 2, map.height / 2)
+	var min_d := float(cfg.get("extra_min_distance", int(cfg.get("min_deposit_distance", 7)) + 6))
+	var coal := NodeData.res_index("coal")
+	var blobs: Array = []  # [dist, first_cell, cells]
+	var done := {}
+	for k in map.node_res.size():
+		if map.tiles[k] != MapGrid.Tile.DEPOSIT or map.node_res[k] == 0 or done.has(k):
+			continue
+		var rid := int(map.node_res[k])
+		var cells: Array[int] = []
+		var stack: Array[int] = [k]
+		var seen := {k: true}
+		var dmin := 1.0e9
+		while not stack.is_empty():
+			var q: int = stack.pop_back()
+			cells.append(q)
+			done[q] = true
+			var qc := Vector2i(q % map.width, q / map.width)
+			dmin = minf(dmin, Vector2(qc - center).length())
+			for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var n: Vector2i = qc + d
+				if map.in_bounds(n):
+					var ni := map.idx(n)
+					if not seen.has(ni) and map.tiles[ni] == MapGrid.Tile.DEPOSIT and int(map.node_res[ni]) == rid:
+						seen[ni] = true
+						stack.append(ni)
+		if dmin >= min_d and rid != coal:
+			blobs.append([dmin, k, cells, rid])
+	var ess := NodeData.res_index("essence_ore")
+	blobs.sort_custom(func(a, b):  # iron/copper blobs first (essence stays for chains), then farthest first
+		var ea: int = 1 if int(a[3]) == ess else 0
+		var eb: int = 1 if int(b[3]) == ess else 0
+		if ea != eb:
+			return ea < eb
+		return a[0] > b[0] or (a[0] == b[0] and a[1] < b[1]))
+	var ids: Array = want.keys()
+	ids.sort()
+	var bi := 0
+	for id in ids:
+		var res := NodeData.res_index(String(id))
+		var have := 0
+		for b in blobs:
+			if int(b[3]) == res:
+				have += 1
+		var n: int = int(want[id]) - have
+		while n > 0 and bi < blobs.size():
+			var b: Array = blobs[bi]
+			bi += 1
+			if int(b[3]) == res:
+				continue
+			for q in b[2]:
+				map.node_res[q] = res
+			n -= 1
 # endregion

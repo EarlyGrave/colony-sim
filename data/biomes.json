@@ -16,6 +16,9 @@
 		"refining_allowed": true,
 		"extra_resources": {
 			"coal": 1
+		},
+		"guaranteed_nodes": {
+			"nitrogen": 2
 		}
 	},
 	"ash": {

@@ -27,11 +27,11 @@ func test_no_scripted_supply_in_ledger() -> void:
 		assert_false(key.contains("test:"), "no test spawn: " + key)
 
 
-func test_home_map_has_no_nitrogen_node() -> void:
+func test_home_map_has_nitrogen_node() -> void:
 	for sv in [1, 2, 3, 4, 5]:
 		var sim := make_sim(sv)
 		var n := 0
 		for c in sim.map.node_cells():
 			if sim.map.node_resource(c) == "nitrogen":
 				n += 1
-		assert_eq(n, 0, "seed %d: nitrogen only exists on the vents outpost biome" % sv)
+		assert_true(n > 0, "seed %d: Y1 guaranteed nitrogen vent on the home map" % sv)
