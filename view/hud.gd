@@ -175,7 +175,7 @@ func _ready() -> void:
 		pb.add_theme_font_size_override("font_size", 17)
 		pb.pressed.connect(func() -> void: toggle_panel(pid))
 		_panel_buttons[pid] = pb
-		if pid == "petition" or pid == "dispatch" or pid == "shuttle" or pid == "beacons":  # region S4  # region E4: shown only while the sim exposes it
+		if pid == "petition" or pid == "dispatch" or pid == "shuttle" or pid == "beacons" or pid == "blocks":  # region S4  # region N4: blocks button appears with the first Standing change  # region E4: shown only while the sim exposes it
 			pb.visible = false
 
 	_menu_btn = _button(speed_row, "More", Vector2(88, 64))
@@ -505,6 +505,7 @@ func bind(p_sim: Simulation) -> void:
 	sim = p_sim
 	_b5_bind()  # region B5
 	_u2_bind(p_sim)  # region U2
+	_n4_bind(p_sim)  # region N4
 	invalidate()  # region W2c
 	_game_over.visible = false
 	_alarm_btn.set_pressed_no_signal(false)
@@ -628,6 +629,7 @@ func _open_side(p: GamePanel, id: String) -> void:
 	p.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	_y5_add_sheet(p)  # region Y5 (was _root.add_child)
 	_place_side()
+	_n4_wire(p)  # region N4
 	p.open(sim)
 	if id == "letters":
 		_letters.mark_read()
@@ -1791,4 +1793,42 @@ func _q0_bind(p_sim: Simulation) -> void:
 	qs.choice_posted.connect(func(t: String) -> void:  # region QU: a choice needs an answer
 		if _u2_stack != null:
 			_u2_stack.push("Dispatch: " + t, "warn", 20.0))
+# endregion
+
+
+# region N4
+var _n4_standing: Dictionary = {}  # block id -> Standing at the last notice
+var _n4_sim: Simulation
+
+
+func _n4_wire(p: GamePanel) -> void:
+	if p is BlocksPanel and not (p as BlocksPanel).members_highlighted.is_connected(_n4_pick):
+		(p as BlocksPanel).members_highlighted.connect(_n4_pick)
+
+
+func _n4_pick(ids: Array) -> void:
+	if not ids.is_empty():
+		colonist_card_pressed.emit(int(ids[0]))
+
+
+func _n4_bind(p_sim: Simulation) -> void:
+	_n4_sim = p_sim
+	_n4_standing = p_sim.blocks.standing.duplicate() if p_sim.blocks != null else {}
+	var bb: Button = _panel_buttons.get("blocks")
+	if bb != null:
+		bb.visible = p_sim.blocks != null and p_sim.blocks.has_state()
+	if p_sim.blocks != null and not p_sim.bus.block_standing_changed.is_connected(_n4_on_standing):
+		p_sim.bus.block_standing_changed.connect(_n4_on_standing)
+
+
+func _n4_on_standing(b: String, v: float) -> void:
+	var bb: Button = _panel_buttons.get("blocks")
+	if bb != null:
+		bb.visible = true
+	var t := BlocksPanel.notice_text(str(_n4_sim.blocks.cfg["blocks"].get(b, {}).get("name", b)), float(_n4_standing.get(b, v)), v)
+	if t == "":
+		return
+	_n4_standing[b] = v
+	if _u2_stack != null:
+		_u2_stack.push(t, "info", 8.0)
 # endregion
