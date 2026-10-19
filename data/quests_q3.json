@@ -1,0 +1,47 @@
+{
+	"q3_parole_board": {
+		"title": "The Parole Board Loves You",
+		"trigger": {"reviews_done": 1},
+		"start": "hint",
+		"beats": {
+			"hint": {
+				"text": "The Board welcomes gifts. The Board welcomes the gifts you will inevitably give.",
+				"then": "offer",
+				"delay_days": 1.0
+			},
+			"offer": {
+				"text": "A Warden gala needs a sponsor. Installments are 4 refined per inmate; 20 refined is five inmates' worth of paperwork.",
+				"options": {
+					"sponsor": {
+						"label": "Sponsor the gala (20 refined)",
+						"text": "Your rank has improved. Your standing has not.",
+						"requires": {"items": {"refined_essence": 20}},
+						"effects": [
+							{"verb": "items", "item": "refined_essence", "n": -20},
+							{"verb": "flag", "id": "review_sponsored"},
+							{"verb": "mod", "name": "petition_fee_mult", "value": 1.1, "days": 0}
+						],
+						"hint": "Costs 20 refined (5 installments of 4). Petition fee +10% for good."
+					},
+					"decline": {
+						"label": "Decline politely",
+						"text": "The Board notes the absence of a gift. The Board notes everything.",
+						"effects": [],
+						"hint": "Free. Rank on schedule."
+					},
+					"bribe": {
+						"label": "Bribe the Informant (10 refined)",
+						"text": "The Informant sells audit dates. He remains the Warden's. Both of you are paid.",
+						"requires": {"items": {"refined_essence": 10}},
+						"effects": [
+							{"verb": "items", "item": "refined_essence", "n": -10},
+							{"verb": "flag", "id": "audit_dates_known"},
+							{"verb": "mod", "name": "audit_parts_mult", "value": 0.8, "days": 6}
+						],
+						"hint": "Costs 10 refined (2.5 installments). Audit parts -20% for 6 days."
+					}
+				}
+			}
+		}
+	}
+}

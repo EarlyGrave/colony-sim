@@ -97,18 +97,15 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `tutorial_ack` | - | void | R5 O1: view-mirrored confirmation (portrait selected, forecast opened, release tap); completes only an `ack`-type step. No-op unless `opts.tutorial` |
 | `tutorial_skip_step` | - | void | completes the current step without its condition (still runs the next step's entry, e.g. arms the audit) |
 | `tutorial_skip_all` | - | void | step = 12, `skipped` = true, `tutorial_finished` emitted once |
-
 ### Research (pending R2a)
 Research commands (queue/cancel research, audit delivery) are being added by R2a. Placeholder: R2a/orchestrator must add each new `_record`
 command as a table row in the table above (the test fails until they are listed), and describe the research tick slot, the bench-operator work rule
 (completion after exactly `bench_ticks` of operator work), and the ledger spend/refund of essence here.
-
 ## 5. Event bus
 `autoload/event_bus.gd` declares every cross-system signal (about 70: tick/day, tile/zone/designation changes, building and blueprint lifecycle,
 waves and raids, colonist/health/mood/skill events, contracts, debt, perks, crises, run end, mutation). Signals are an observer channel plus some
 inter-system wiring through `Simulation.listen`. Reactions must be deterministic and synchronous in emission order. A port may use direct calls or
 event queues but must preserve listener order (registration order in `_init_systems`).
-
 ## 6. Data files (`data/*.json`, loaded by `Defs`, read-only after load)
 `events_prison.json` is merged into `events`. Keys starting `_comment`/`_doc` are ignored. A port loads the files verbatim.
 | file | top-level schema |
@@ -155,6 +152,8 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quests_q6.json` | Q6 quest defs (QuestLog-merged, gated by q_enabled) |
 | `quests_q11.json` | Q11 Previous Tenant (NG+, sentence_min 2) |
 | `quests_q12.json` | Q12 Rolled Over (NG+, sentence_min 3 + carried debt) |
+| `quests_q10.json` | Q10 Maintenance Window quest defs (QuestLog-merged) |
+| `quests_q3.json` | Q3 Parole Board quest defs (QuestLog-merged) |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
 | `tutorial.json` | R5 O1: settings{audit_step, audit_delay_ticks}, steps[12] -> {id,title,text,reason,target{kind,id},done{signal,count/min_cells/where/or/latch},nudge_ticks} |
