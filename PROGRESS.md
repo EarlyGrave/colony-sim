@@ -316,3 +316,12 @@ HP); волны заканчиваются по таймеру и твари о�
 - Quest sheet UI: titles, Warden text, option hints, disabled requirements; Q6 actually offers choices now (start beat fixed).
 - 836 green, web smoke PASS.
 - Open: shuttle launch 0/10 for real bot; haul fix balance; quest sheet overlaps notification stack edge.
+
+## Session 4 — Batch R (quests 3/8/10/11/12, sheet overlap, bot launch attempt)
+- R1 Q10 Maintenance Window (after missed installment, PA silence blocks audits/letters) + Q3 Parole Board (sponsor/decline/bribe).
+- R2 Q8 What the Creatures Wear + quest-only mimic, spawn_enemy verb.
+- R3 sentence_min / carry_debt triggers, gamble verb; NG+ quests Q11 Previous Tenant, Q12 Rolled Over (hints show the real 2% debt cap).
+- R5 notification stack hides while it would overlap the quest sheet.
+- R4: real bot still 0/10 shuttle launch (P3 ~d37-43; P4 + shuttle need ~20 more days); alive≥8 8/10, tier2 7/10, P1/P3 4/10. haul_blocked_fix still off.
+- Open: essence_drop_mult (Q8) and review_sponsored (Q3) have no consumers; quest fallback list now covers all 8 quest files.
+- 859 green, web smoke PASS.
