@@ -15,7 +15,7 @@ Common mechanism: a `quest` entry (id, trigger, beats[], choices[]) driven by St
 - Touches: events.json (choice kind), ThreatSystem spawn_point override (small), rules.
 - Lines: "Brother Oto says the dust is a verdict. Please file your own." / "He is singing to the slag. The slag is listening."
 
-## Q3 The Parole Board Loves You (Review gambit)  [M]
+## Q3 The Parole Board Loves You (Review gambit)  [SHIPPED batch R]
 - Trigger: Parole Review R2 reached.
 - Beats: (1) Board hints "contributions of a particular nature" would help; (2) offer: sponsor a Warden gala (cost 20 refined essence); (3) result letter; (4) Board returns with a catch.
 - Choice: Sponsor (rank +1 sooner, but petition fee +10% at p1) / Decline (rank on schedule) / Bribe the Informant (Informant gives future audit dates: next audit tier gets -20% cost; he stays a spy for the Warden).
@@ -43,14 +43,14 @@ Common mechanism: a `quest` entry (id, trigger, beats[], choices[]) driven by St
 - Touches: events.json (dispatch kind), contamination (visibility flag), debt.
 - Lines: "Auditor Pell requests a clean room. We have not been told what that is." / "Pell notes: 'crop yield exceeds expectations.'"
 
-## Q7 The Informant's Ration  [S]
+## Q7 The Informant's Ration  [SUPERSEDED: built as Q13 informant (informant_mod.gd, tolerate/false info/transfer); society lines in society.md]
 - Trigger: colonist count >=6 and 1 colonist has the Informant trait (new trait string, data only).
 - Beats: (1) rations quietly dip for loyal inmates; (2) a colonist whispers who; (3) choose.
 - Choice: Expose him (mood -, he's confined at jail cell or exiled) / Feed him lies (cost 5 refined: Warden's PA blocks a wave hint = next wave delayed) / Let him live (Warden gets intel: threat event predictions revealed?? - no, you see them first).
 - Touches: ColonistSystem traits, flavor.json, ThreatSystem delay.
 - Lines: "Someone is telling the Warden things. The Warden is delighted." / "Ration adjustment: for loyalty."
 
-## Q8 What the Creatures Wear (Mimics arc)  [L]
+## Q8 What the Creatures Wear (Mimics arc)  [SHIPPED batch R, mimic enemy + spawn_enemy]
 - Trigger: 3rd big wave or pollution >70%.
 - Beats: (1) waves bring dropped items shaped like earlier waste; (2) first mimic walks in as an inmate; (3) mimic hums an old inmate's name; (4) final: find the first survey crew's tag in a nest.
 - Choice: Study (+1 research point, creatures drop essence 2 d) / Cleanse (spend 40 plates + essence: pollution -15%, mimics stop for 5 d) / Feed them (dump waste at a Penance Beacon: no waves for 2 d, pollution +10%).
@@ -64,7 +64,7 @@ Common mechanism: a `quest` entry (id, trigger, beats[], choices[]) driven by St
 - Touches: NEW NG+ state persisted across runs (meta file), Simulation.new seed+carry dict, win screen, scenarios.
 - Lines: "Your release has been processed. Your debt has been rolled over." / "Welcome back. You were never here."
 
-## Q10 Warden Maintenance Window  [S]
+## Q10 Warden Maintenance Window  [SHIPPED batch R]
 - Trigger: day 40 or after any 3 deaths in a week (either).
 - Beats: (1) PA goes silent for 6 h (no letters/dispatch); (2) guards drop supplies unmanned; (3) PA returns with an apology form ("Humanity module reinstalled").
 - Choice: Raid the supply cache (+refined, +parts but Review -1 rank) / Respect the quiet (nothing; Warden reveals one mystery line) / Sabotage the terminal (disables PA 3 d; audits impossible 3 d).
@@ -77,9 +77,12 @@ Common mechanism: a `quest` entry (id, trigger, beats[], choices[]) driven by St
 3. **Q8 What the Creatures Wear [M, data + 1 enemy def]** - trigger pollution_over 70 + quest_done q2. Beacon-tied: Feed them (dump at Penance Beacon: mod wave_mult 0.5 2d, pollution +10) / Cleanse (40 plate, pollution -15) / Study (flag clue_survey_tag, +essence drop 2 d). Reveals the survey crew tag = mystery layer 3.
 
 ## NG+ quests (need sentence >=2 in meta; add trigger `sentence_min`, `flag veteran`, `carry_debt>0`)
-- **Q11 The Previous Tenant [S/M]** - trigger sentence_min 2 + min_day 6. Veteran finds a stamped tool crate with their OWN old ID inside. Options: open (items parts +10, flag clue_loop, letter "Inmate record: you. Status: pending.") / bury (veteran mood +, mod refine_mult 1.1 5d) / report (debt_pct -3 carried, Warden notes "prior knowledge"). Lines: "This colony has been used before. By you." / "The handwriting matches. The date does not."
-- **Q12 Rolled Over [S, data]** - trigger sentence_min 3 + quest_done q11 + carried debt>0. Clerk's ghost clause: carried debt is booked twice. Pay down (items refined 40: debt_pct -10, flag clue_double) / Contest (30 plate fee, 50% via sim.rng: -25% carried, else +5%) / Accept (flag clue_quota; unlocks loop-5 quota line). Line: "Balance carried forward. Balance also carried backward."
+- **Q11 The Previous Tenant [SHIPPED]** - trigger sentence_min 2 + min_day 6. Veteran finds a stamped tool crate with their OWN old ID inside. Options: open (items parts +10, flag clue_loop, letter "Inmate record: you. Status: pending.") / bury (veteran mood +, mod refine_mult 1.1 5d) / report (debt_pct -3 carried, Warden notes "prior knowledge"). Lines: "This colony has been used before. By you." / "The handwriting matches. The date does not."
+- **Q12 Rolled Over [SHIPPED]** - trigger sentence_min 3 + quest_done q11 + carried debt>0. Clerk's ghost clause: carried debt is booked twice. Pay down (items refined 40: debt_pct -10, flag clue_double) / Contest (30 plate fee, 50% via sim.rng: -25% carried, else +5%) / Accept (flag clue_quota; unlocks loop-5 quota line). Line: "Balance carried forward. Balance also carried backward."
 Mystery progress: Q6 manifest -> Q10 quota -> Q8 survey tag -> Q11 loop -> Q12 quota; loop 5 Warden screen when all flags held.
 
 ## Priorities
 Order: Q10, Q3, Q8, then Q11/Q12 once `sentence_min` trigger exists. Remaining: Q4, Q5, Q7.
+
+## Built status (2026-10-19)
+Shipped: Q1, Q2, Q3, Q6, Q8, Q9 (meta v2), Q10, Q11, Q12, Q13 informant (replaces Q7). Open: Q4, Q5. Next: docs/story/society.md (S1-S5).
