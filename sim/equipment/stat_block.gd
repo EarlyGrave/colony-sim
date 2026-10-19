@@ -7,11 +7,12 @@ const KEYS: Array[String] = [
 	"accuracy", "crit_chance", "crit_mult",
 	"pen_pct_phys", "pen_pct_energy", "flat_pen_phys", "flat_pen_energy",
 	"armor_phys", "armor_energy", "flat_phys", "flat_energy",
+	"damage",  # region E4: weapon base damage (summed for the gear panel; hit path still takes dmg_base)
 ]
 const IDX := {
 	"accuracy": 0, "crit_chance": 1, "crit_mult": 2,
 	"pen_pct_phys": 3, "pen_pct_energy": 4, "flat_pen_phys": 5, "flat_pen_energy": 6,
-	"armor_phys": 7, "armor_energy": 8, "flat_phys": 9, "flat_energy": 10,
+	"armor_phys": 7, "armor_energy": 8, "flat_phys": 9, "flat_energy": 10, "damage": 11,
 }
 const ACC := 0
 const CRIT := 1
@@ -24,7 +25,8 @@ const ARM_PHYS := 7
 const ARM_ENERGY := 8
 const FLAT_PHYS := 9
 const FLAT_ENERGY := 10
-const N := 11
+const DAMAGE := 11
+const N := 12
 const DEFAULT_CRIT_MULT := 1.5
 
 static func make() -> PackedFloat64Array:

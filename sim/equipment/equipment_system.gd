@@ -123,7 +123,10 @@ func _resum(cid: int) -> void:
 		StatBlock.sum_into(p, g.stats, g.dur_mult(cfg))
 	totals[cid] = p
 	resum_count += 1
-	# region E1: hook point, copy `p` into CombatState.att/def once E1 lands
+	# region E4: hand the summed vector to the combat caches (one resum per equip change)
+	var col := sim.colonists.get_by_id(cid)
+	if col != null and sim.combat != null:
+		sim.combat.resum(col)
 	# endregion
 
 

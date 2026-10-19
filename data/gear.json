@@ -5,5 +5,8 @@
 	"kevlar_vest": {"name": "Kevlar Vest", "slot": "torso_outer", "armor": {"phys": 40, "energy": 5}, "flat": {"phys": 2, "energy": 0}, "tags": ["armor", "body"], "value": 30},
 	"helmet": {"name": "Helmet", "slot": "head", "armor": {"phys": 20, "energy": 2}, "flat": {"phys": 1, "energy": 0}, "tags": ["armor", "head"], "value": 15},
 	"plasma_blade": {"name": "Plasma Blade", "slot": "weapon", "kind": "melee", "damage": 11, "damage_kind": "energy", "cooldown_ticks": 9, "range": 1.5, "skill": "melee", "crit_chance": 0.08, "crit_mult": 1.6, "accuracy": 0.05, "tags": ["weapon", "melee", "energy"], "value": 80},
-	"smg": {"name": "SMG", "slot": "weapon", "kind": "ranged", "damage": 5, "damage_kind": "phys", "cooldown_ticks": 4, "range": 6, "burst": {"shots": 3, "gap_ticks": 1}, "reload_ticks": 30, "magazine": 24, "skill": "shooting", "accuracy": -0.05, "tags": ["weapon", "ranged"], "value": 60}
+	"smg": {"name": "SMG", "slot": "weapon", "kind": "ranged", "damage": 5, "damage_kind": "phys", "cooldown_ticks": 4, "range": 6, "burst": {"shots": 3, "gap_ticks": 1}, "reload_ticks": 30, "magazine": 24, "skill": "shooting", "accuracy": -0.05, "tags": ["weapon", "ranged"], "value": 60},
+	"work_gloves": {"name": "Work Gloves", "slot": "hands", "armor": {"phys": 10, "energy": 1}, "flat": {"phys": 0, "energy": 0}, "tags": ["armor", "hands"], "value": 10},
+	"greaves": {"name": "Greaves", "slot": "legs", "armor": {"phys": 15, "energy": 2}, "flat": {"phys": 1, "energy": 0}, "tags": ["armor", "legs"], "value": 12},
+	"underlay": {"name": "Underlay", "slot": "torso_inner", "armor": {"phys": 10, "energy": 3}, "flat": {"phys": 0, "energy": 0}, "tags": ["armor", "body"], "value": 12}
 }

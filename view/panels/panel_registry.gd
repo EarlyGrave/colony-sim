@@ -52,6 +52,7 @@ const INSPECTOR_SECTIONS: Array = [
 	["mutation", "res://view/panels/sections/mutation_section.gd"],
 	["record", "res://view/panels/sections/record_section.gd"],  # region F3
 	# slot 6
+	["gear", "res://view/panels/gear_panel.gd"],  # region E4
 ]
 
 
