@@ -60,6 +60,8 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `queue_research` | tech_id: str, on: bool | bool | on: as set_research but appended; off: removes, exact essence refund if progress is 0 |
 | `install_chip` | building_id: int | bool | T4: building has `chip_slots` > 0 (bench/smelter/assembler, never a miner), no chip yet, not broken, tech `ai_chips` done (when gating), one `ai_chip` in storage (ledger sink `chip_install`) |
 | `remove_chip` | building_id: int | bool | T4: chip drops on the building cell (ledger source `chip_remove`) |
+| `set_path` | id: submit/fight/escape/remission | bool | EN1: path flag; refused after the path's point of no return |
+| `ending_won` | id | bool | EN1: flag + bus ending_won, once per id |
 | `deliver_petition` | phase: int (1..4) | bool | e1_enabled + audit tier 2 + warden_terminal; phases sequential; consumes only still-required items; completing pays the reward (debt cut %, items, tier 3 on P3) and emits petition_phase_done |
 | `deliver_shuttle_parts` | none | int | s1_enabled + petition P4 done + a Release Gantry; consumes part_cost per part from storage up to the need; returns parts added (S1) |
 | `launch_shuttle` | none | bool | phase ready (all parts, gantry powered); starts the countdown and siege waves (S1) |
@@ -135,6 +137,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `jobs.json` | flee/repair/operate/haul/mine tuning |
 | `meta.json` | legacy, next_batch, scout_cells, unlocks (cross-run meta, enters the sim via `opts`) |
 | `presets.json` | default, order, presets{id: name, sentence, wave_strength_mult, waste_mult, starting_debt_mult, crate, hint_density} (O3; become opts `wave_mult`, `waste_mult`, `debt_mult`, `crate`, `hint_density` via `StartOpts.preset_opts`; neutral values emit no key, so standard_term = `{}`) |
+| `endings.json` | paths[], ponr_flags{}, submit_ponr_petition_phase (EN1) |
 | `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter} (E1, gated by balance e1_enabled) |
 | `quests_q2.json` | Q2 Pilgrims of the Slag: trigger pollution_min, zealot, beats/options (gated by balance q_enabled) |
 | `shuttle.json` | preset_mult, gantry, parts_need, part_cost, countdown_days, siege_* numbers, repair_cost, win_letter (S1, gated by balance s1_enabled) |
@@ -206,19 +209,16 @@ An `int` hash of observable state. Parts in order: `[tick, game_over_reason, ala
 each colonist in `colonists.list` `[id, cell, hp, alive, carry_item, carry_count, carry_quality, learned_perks]`; each building in `buildings.list`
 `[id, def_id, cell, hp, condition, broken, input, output, output_q]` and again `[..., output, ammo, ammo_policy]`; `hash(mutation.field)`;
 `logistics.state_parts()` = `[belt_count, belts.state_hash()]`. Belt hp joins the hash only for tiles with hp != max (undamaged belts hash as before). `abilities.state_parts()` (cooldowns, threat flags, volley shots) is appended only after the first `use_ability`.
-
 ### Belt nodes (L1, `BeltGrid.kind`)
 `kind` 0 plain, 1 splitter_basic, 2 splitter_smart, 3 splitter_priority, 4 merger (1x1 cells in the belt grid, `dir` = flow). API: `place_node(kind, cell, dir)`, `remove_node(cell)`, `set_filter(cell, slot, value)` (smart only; slot 0 left, 1 front, 2 right; `"any"|"overflow"|item`), `get_filter`, `node_kind`, `node_count`. Basic: round-robin pointer over free outputs; priority: front, left, right first free; smart: explicit item match, then `any` (round-robin), then `overflow`; merger: round-robin among ready facing inputs (back, left, right). Version bumps on place/remove/filter change. `belts.state_hash()` includes node state only when `node_count > 0` (goldens unchanged).
 ### Line damage (T3, `balance.json` `line_damage`)
 `BeltGrid.hp` dense PackedFloat32Array (max `belt_hp`); hp < `stall_frac` x max: tile stops moving items; hp 0 stays as a broken marker (belt kept) until repaired. Creatures bite adjacent belt tiles (`structure_dmg` in `enemies.json`, own `bite_cd`, hook `ThreatSystem._attack_structure`). Machines get `broken` below `machine_broken_frac` hp. `RepairJob` (building or `RepairJob.for_belt(cell)`, reservation `rep:belt:x,y`) pays `belt_repair_cost`/`machine_repair_cost` (building def `repair_cost` overrides) from stored items, only for structural damage; the giver offers it only if affordable.
 (GD) Today it is `var_to_str(parts).hash()` (Godot text serialisation, 32-bit string hash): engine-specific, a port cannot match it bit for bit. Portable definition for cross-engine comparison: canonical JSON of the same parts (UTF-8, no whitespace, sorted keys, shortest round-trip floats, cells as `[x,y]`) fed to a stable hash such as FNV-1a 64; switching changes every golden (`tests/golden/`, R1b), so it is deferred.
 Not covered by the hash today (known gaps): needs, mood, skills/xp, injuries, contamination levels, bills, contracts, debt, enemies, rng state.
-
 ## 9. Architecture constraints a port must keep
 `sim/` has no rendering, Node, scene tree or autoload lookups; the view only reads state, listens to the bus and issues commands through `Simulation` methods.
 Systems are modules (`core, map, colonists, jobs, items, buildings, contamination, threats, storyteller, ...`); systems read map/items, never the view.
 Reachability: grid A* plus connected components (O(1) reachable test); equal-cost tie-break by neighbour order N,E,S,W. Job reservations use string keys; flee overrides all jobs while the alarm is on.
-
 ## 10. AI chip operator (T4, `sim.chips`)
 A chip replaces the operator of a bench/smelter/assembler: bench adds `bench_rate * chip_speed` per tick without a colonist; a processor takes 4 of 5 work steps (accumulator, no rng).
 Waste of a chip building is scaled by `chip_waste_mult` (fraction rolled on `sim.rng`, only with a chip, so chipless games are unchanged). Upkeep: `upkeep_per_day` refined essence

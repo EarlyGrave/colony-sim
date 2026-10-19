@@ -38,7 +38,7 @@ func test_every_view_command_records() -> void:
 	# Each public mutating Simulation method must write to the command log (first line `_record`).
 	var src := FileAccess.get_file_as_string("res://sim/core/simulation.gd")
 	var allowed_unrecorded := ["start_new_game", "start_empty", "step", "run_ticks", "end_game", "day", "map_center",
-		"cell_free_for_items", "can_place_building", "place_instant", "is_rule_on", "listen", "dispose", "set_patrol_route"]
+		"cell_free_for_items", "can_place_building", "place_instant", "is_rule_on", "path", "listen", "dispose", "set_patrol_route"]
 	var lines := src.split("\n")
 	for i in lines.size():
 		var l := lines[i]

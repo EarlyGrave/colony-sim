@@ -166,6 +166,7 @@ signal wave_report(report: Dictionary)  # {wave, lost:[{name,by,why}], main_atta
 # region E1
 signal petition_phase_done(phase: int)
 signal beacon_launched(alive: int)  # region S2
+signal ending_won(id: String)  # region EN1
 # endregion
 
 # region I1
