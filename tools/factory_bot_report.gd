@@ -41,10 +41,10 @@ static func format(r: Dictionary) -> String:
 	var ps: Array[String] = []
 	for d: float in pd:
 		ps.append("-" if d < 0.0 else "%.0f" % d)
-	return "seed %d audit2=%s P1..P4=%s parts=%d/%d launch=%s won=%s min_hp=%d alive=%d died=%d pol=%.0f%% food=%d over=%s debt=%.0f%% | blocker: %s | nitrogen_nodes=%d steps=%d built=%s pf=%.2f ledger(prod/cons)=%s" % [
+	return "seed %d audit2=%s P1..P4=%s parts=%d/%d launch=%s won=%s min_hp=%d alive=%d died=%d gone=%d pol=%.0f%% food=%d over=%s debt=%.0f%% | blocker: %s | nitrogen_nodes=%d steps=%d built=%s pf=%.2f ledger(prod/cons)=%s" % [
 		r["seed"], "-" if r["audit_day"] < 0.0 else "%.0f" % r["audit_day"], ",".join(ps), r["parts"], r["need"],
 		"-" if r["launch_day"] < 0.0 else "%.1f" % r["launch_day"], "-" if r["won_day"] < 0.0 else "%.1f" % r["won_day"],
-		r["min_hp"], r["alive"], r["died"], r["pollution"], r["food"], r["over"], r["debt_pct"], r["blocker"],
+		r["min_hp"], r["alive"], r["died"], r["gone"], r["pollution"], r["food"], r["over"], r["debt_pct"], r["blocker"],
 		r["nitrogen_nodes"], r["steps"], str(r["built"]), r["power_factor"], str(r["ledger"])]
 
 
