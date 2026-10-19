@@ -1,20 +1,90 @@
 {
 	"_comment": "Equipment module (E2). A new slot = one entry here + a gear.json base with that slot. Numbers are direction only.",
 	"slots": {
-		"head": {"name": "Head"},
-		"hands": {"name": "Hands"},
-		"legs": {"name": "Legs"},
-		"torso_outer": {"name": "Armour"},
-		"torso_inner": {"name": "Underlay"},
-		"weapon": {"name": "Weapon"}
+		"head": {
+			"name": "Head"
+		},
+		"hands": {
+			"name": "Hands"
+		},
+		"legs": {
+			"name": "Legs"
+		},
+		"torso_outer": {
+			"name": "Armour"
+		},
+		"torso_inner": {
+			"name": "Underlay"
+		},
+		"weapon": {
+			"name": "Weapon"
+		}
 	},
 	"rarity": {
-		"common": {"affixes": 0, "color": "#c0c0c8"},
-		"uncommon": {"affixes": 1, "color": "#5fd36b"},
-		"rare": {"affixes": 2, "color": "#4a90ff"},
-		"epic": {"affixes": 3, "color": "#b35cff"},
-		"legendary": {"affixes": 4, "color": "#ffb347"}
+		"common": {
+			"affixes": 0,
+			"color": "#c0c0c8"
+		},
+		"uncommon": {
+			"affixes": 1,
+			"color": "#5fd36b"
+		},
+		"rare": {
+			"affixes": 2,
+			"color": "#4a90ff"
+		},
+		"epic": {
+			"affixes": 3,
+			"color": "#b35cff"
+		},
+		"legendary": {
+			"affixes": 4,
+			"color": "#ffb347"
+		}
 	},
-	"upgrade_slots": {"common": 0, "uncommon": 1, "rare": 1, "epic": 2, "legendary": 2},
-	"durability": {"default_max": 100, "loss_per_hit_taken": 0.2, "loss_per_attack": 0.1, "zero_stat_mult": 0.5, "value_mult_at_zero": 0.1}
+	"upgrade_slots": {
+		"common": 0,
+		"uncommon": 1,
+		"rare": 1,
+		"epic": 2,
+		"legendary": 2
+	},
+	"durability": {
+		"default_max": 100,
+		"loss_per_hit_taken": 0.2,
+		"loss_per_attack": 0.1,
+		"zero_stat_mult": 0.5,
+		"value_mult_at_zero": 0.1
+	},
+	"sources": {
+		"craft_rarity_weights": {
+			"common": 60,
+			"uncommon": 28,
+			"rare": 10,
+			"epic": 2
+		},
+		"craft_ilvl": 3,
+		"drops": {
+			"enabled": true,
+			"metropolis": {
+				"chance": 0.12,
+				"bases": [
+					"rifle",
+					"smg",
+					"helmet",
+					"kevlar_vest",
+					"work_gloves",
+					"greaves"
+				],
+				"rarity_weights": {
+					"common": 40,
+					"uncommon": 35,
+					"rare": 18,
+					"epic": 6,
+					"legendary": 1
+				},
+				"ilvl": 6
+			}
+		}
+	}
 }

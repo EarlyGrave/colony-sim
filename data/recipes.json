@@ -93,7 +93,9 @@
 		]
 	},
 	"make_parts": {
-		"stock_cap": {"parts": 25},
+		"stock_cap": {
+			"parts": 25
+		},
 		"name": "Make components",
 		"inputs": {
 			"plate": 1,
@@ -138,17 +140,98 @@
 	"fuel_cell_dirty": {
 		"pollutes": true,
 		"name": "Dirty Fuel Cell",
-		"inputs": {"essence_ore": 6, "refined_essence": 1},
-		"outputs": {"fuel_cell": 1, "waste": 3},
+		"inputs": {
+			"essence_ore": 6,
+			"refined_essence": 1
+		},
+		"outputs": {
+			"fuel_cell": 1,
+			"waste": 3
+		},
 		"work_ticks": 60,
 		"requires_tech": "bulk_refining",
-		"station": ["refinery", "smelter"]
+		"station": [
+			"refinery",
+			"smelter"
+		]
 	},
 	"fuel_cell": {
 		"name": "Fuel Cell",
-		"inputs": {"nitrogen": 2, "plate": 1},
-		"outputs": {"fuel_cell": 1},
+		"inputs": {
+			"nitrogen": 2,
+			"plate": 1
+		},
+		"outputs": {
+			"fuel_cell": 1
+		},
 		"work_ticks": 90,
-		"benches": ["workbench"]
+		"benches": [
+			"workbench"
+		]
+	},
+	"craft_gear_rifle": {
+		"name": "Craft Rifle",
+		"inputs": {
+			"machine_parts": 3,
+			"refined_essence": 2
+		},
+		"outputs": {},
+		"gear_craft": "rifle",
+		"work_ticks": 120,
+		"benches": [
+			"workbench"
+		]
+	},
+	"craft_gear_vest": {
+		"name": "Craft Vest",
+		"inputs": {
+			"machine_parts": 3,
+			"refined_essence": 2
+		},
+		"outputs": {},
+		"gear_craft": "kevlar_vest",
+		"work_ticks": 120,
+		"benches": [
+			"workbench"
+		]
+	},
+	"craft_gear_helmet": {
+		"name": "Craft Helmet",
+		"inputs": {
+			"machine_parts": 2,
+			"refined_essence": 1
+		},
+		"outputs": {},
+		"gear_craft": "helmet",
+		"work_ticks": 120,
+		"benches": [
+			"workbench"
+		]
+	},
+	"craft_gear_gloves": {
+		"name": "Craft Gloves",
+		"inputs": {
+			"machine_parts": 1,
+			"refined_essence": 1
+		},
+		"outputs": {},
+		"gear_craft": "work_gloves",
+		"work_ticks": 120,
+		"benches": [
+			"workbench"
+		]
+	},
+	"craft_gear_greaves": {
+		"name": "Craft Greaves",
+		"inputs": {
+			"machine_parts": 2,
+			"refined_essence": 1
+		},
+		"outputs": {},
+		"gear_craft": "greaves",
+		"work_ticks": 120,
+		"benches": [
+			"workbench"
+		]
 	}
 }

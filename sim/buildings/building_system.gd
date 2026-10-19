@@ -185,6 +185,8 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 			for i in n:
 				b.output_q[item].append(q)
 		sim.ledger.record_produced(item, n, "recipe")
+	if b.recipe.has("gear_craft") and operator != null:  # region E5
+		sim.equipment.craft(operator.id, str(b.recipe["gear_craft"]))  # region E5
 	refined_batches += 1
 	wear(b, float(b.def.get("wear_per_batch", 0.0)))
 	batch_operator = operator  # region perks
