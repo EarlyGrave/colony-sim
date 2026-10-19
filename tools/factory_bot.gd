@@ -88,12 +88,30 @@ func act() -> void:
 		_build()
 	elif sim.tick % 100 == 0 and sim.research.is_done("drilling") and _bp_count("refinery") == 0 and _step >= 2:
 		_hub_place("refinery", Vector2i(-4, 2))  # YX: a raid took the refinery; a player rebuilds it, the bot used to freeze
+	if sim.tick % 200 == 120:
+		_rf_reserve()  # region RF
 	if sim.tick % 600 == 0:
 		_deliveries()
 	if sim.tick % 100 == 0:
 		_shuttle()
 	if assume_nitrogen:
 		_nitrogen_trickle()
+
+
+# region RF
+## The refinery eats every loose ore stack, so the hand_plate bill (3 ore a plate) starves when the taint cap leaves the
+## refinery running: keep a small ore reserve in the stockpile while plates are short, drop it once they are back.
+func _rf_reserve() -> void:
+	if _knob("rf_reserve", 1) != 1 or sim.day() < 12 or sim.buildings.count_of("refinery") == 0:
+		return
+	var low := sim.items.count_stored("plate") < _knob("rf_plate_low", 30)
+	var amt := _knob("rf_reserve_amt", 40)
+	if low and not sim.is_rule_on("ore_reserve"):
+		sim.defs.rules["ore_reserve"]["amount"] = amt
+		sim.set_rule("ore_reserve", true)
+	elif not low and sim.is_rule_on("ore_reserve") and sim.items.count_stored("plate") >= _knob("rf_plate_high", 60):
+		sim.set_rule("ore_reserve", false)
+# endregion
 
 
 func after() -> void:
@@ -201,6 +219,10 @@ func _bills() -> void:
 	var wb := _first("workbench")
 	if wb == null or not sim.defs.recipes.has("hand_plate"):
 		return
+	# region SP: hammered plates are the audit/P1 bottleneck (one workbench = ~150 plates / 60 d, while 400-900 ore piles up unused)
+	if _knob("sp_wb2", 1) == 1 and sim.buildings.count_of("workbench") + _bp_count("workbench") < 2 and _step >= 3 and sim.items.count_stored("essence_ore") >= _knob("sp_ore", 80):
+		_hub_place("workbench", Vector2i(0, 5))
+	# endregion
 	# YX: a small plate stock for repairs early; the audit-2 stockpile (plate_target) only once the assembler/power chain stands,
 	# so the early essence ore goes to miners and smelters instead of 120 ore of hammered plates.
 	var want := plate_target if (sim.buildings.count_of("coal_generator") > 0 or _knob("gens", 1) == 0 and _step >= _knob("plate_step", 6)) else mini(plate_target, 8)  # PG: without generators the old test never opened the big plate bill
@@ -208,12 +230,19 @@ func _bills() -> void:
 		want = maxi(want, _knob("plate_p1", 90))  # P1 needs 60 plates + 20 parts (= 20 more plates)
 	if _step >= 3:
 		want = maxi(want, plate_reserve)  # D3: repair reserve once the assembler chain is planned
-	for bill: Bill in sim.crafting.bills_of(wb):
-		if bill.recipe_id == "hand_plate":
-			if bill.target != want:
-				sim.update_bill(wb.id, bill.id, "until", want, bill.paused)
-			return
-	sim.add_bill(wb.id, "hand_plate", "until", want)
+	if _knob("sp_early", 1) == 1 and sim.items.count_stored("essence_ore") >= _knob("sp_ore", 80):
+		want = maxi(want, _knob("sp_want", 70))  # region SP: surplus ore -> plates now, not after the audit
+	for w: Building in sim.buildings.list:
+		if w.def_id != "workbench":
+			continue
+		var found := false
+		for bill: Bill in sim.crafting.bills_of(w):
+			if bill.recipe_id == "hand_plate":
+				found = true
+				if bill.target != want:
+					sim.update_bill(w.id, bill.id, "until", want, bill.paused)
+		if not found:
+			sim.add_bill(w.id, "hand_plate", "until", want)
 
 
 func _has_bill(wb: Building, recipe_id: String) -> bool:
@@ -654,6 +683,7 @@ func _beacon() -> void:
 
 func _deliveries() -> void:
 	var day := float(sim.tick) / sim.ticks_per_day
+	_cap_parts()
 	if not sim.milestones.is_tier_done(2):
 		if sim.milestones.has_terminal() and sim.deliver_audit(2):
 			audit_day = day
@@ -677,6 +707,19 @@ func _hold_ingots(on: bool) -> void:
 			sim.defs.recipes["make_plate"].erase("stock_cap")
 	if sim.defs.recipes.has("make_parts"):
 		sim.defs.recipes["make_parts"]["stock_cap"] = {"parts": 1} if on else {"parts": 25}
+
+
+# region SP
+## SP: the assembler turned every hammered plate into parts (81 made, 36 used per run) while audit / P1 still lacked plates;
+## parts now stop at what the open gate needs (+1), plates stay for the gate that eats them.
+func _cap_parts() -> void:
+	if _knob("sp_cap", 1) == 0 or _held or not sim.defs.recipes.has("make_parts"):
+		return
+	var cap := 11
+	if sim.milestones.is_tier_done(2):
+		cap = 21 if sim.petition.next_phase() <= 1 else 25
+	sim.defs.recipes["make_parts"]["stock_cap"] = {"parts": cap}
+# endregion
 
 
 # region R4
@@ -816,7 +859,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	for item in ["essence_ore", "refined_essence", "iron_ore", "ingot_iron", "copper_ore", "ingot_copper", "coal", "plate", "parts"]:
 		led[item] = "%d/%d" % [int(sim.ledger.produced.get(item, 0)), int(sim.ledger.consumed.get(item, 0))]
 	for k: String in sim.ledger.by_source:
-		if k.ends_with(":refined_essence"):
+		if k.ends_with(":refined_essence") or k.ends_with(":essence_ore"):
 			led[k] = str(sim.ledger.by_source[k])  # region LN: where the refined essence went
 	r["ledger"] = led
 	# region D4
