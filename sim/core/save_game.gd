@@ -149,6 +149,9 @@ static func state_hash(sim: Simulation) -> int:
 	var fe: Array = sim.fight_escape.state_parts()  # region EN3: only once an ending step happened
 	if not fe.is_empty():
 		parts.append(fe)
+	var rm: Array = sim.remission.state_parts()  # region EN4: only once a cure was applied
+	if not rm.is_empty():
+		parts.append(rm)
 	return var_to_str(parts).hash()
 
 

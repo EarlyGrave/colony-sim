@@ -480,6 +480,16 @@
 		"cost": {"essence_ore": 40, "plate": 10}, "build_work": 120, "buildable": true, "threat_priority": 2,
 		"threat": 5, "power_use": 5, "s2_beacon": true
 	},
+	"decon_pylon": {
+		"name": "Decontamination Pylon", "size": [2, 2], "color": "#7ad8a0", "max_hp": 150,
+		"cost": {"plate": 10, "parts": 6}, "build_work": 200, "buildable": true, "threat_priority": 2,
+		"threat": 3, "power_use": 8
+	},
+	"collector_relay": {
+		"name": "Collector Relay", "size": [2, 2], "color": "#d84a4a", "max_hp": 400,
+		"cost": {}, "build_work": 1, "buildable": false, "unique": true, "threat_priority": 0,
+		"threat": 0, "power_use": 0, "deconstructible": false
+	},
 	"uplink_array": {
 		"name": "Uplink Array", "size": [3, 3], "color": "#5ac8c0", "max_hp": 600,
 		"cost": {"parts": 60, "fuel_cell": 20}, "build_work": 600, "buildable": true, "unique": true, "threat_priority": 6,

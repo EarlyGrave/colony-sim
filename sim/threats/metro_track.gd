@@ -135,6 +135,8 @@ func tick() -> bool:
 	# the pollution timer yields: no creature wave for grace_days after a drone raid ends
 	th.next_wave_tick = maxi(th.next_wave_tick, th.wave_end_tick + grace)
 	sim.bus.metro_raid_started.emit(id, pts)
+	if id == "collector_assault":  # region EN4
+		sim.fight_escape.on_collector_assault()
 	return true
 
 

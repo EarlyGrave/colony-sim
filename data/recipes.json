@@ -144,6 +144,13 @@
 		"requires_tech": "bulk_refining",
 		"station": ["refinery", "smelter"]
 	},
+	"cure": {
+		"name": "Remission Cure",
+		"inputs": {"refined_essence": 2, "bog_resin": 1},
+		"outputs": {"cure": 1},
+		"work_ticks": 90,
+		"benches": ["workbench"]
+	},
 	"fuel_cell": {
 		"name": "Fuel Cell",
 		"inputs": {"nitrogen": 2, "plate": 1},
