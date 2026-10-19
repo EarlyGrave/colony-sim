@@ -34,8 +34,7 @@ System construction order in `_init_systems()` fixes id allocation and listener 
 - JSON numbers read back as floats; every consumer wraps with `int(...)` (saves too, see 7).
 - No gameplay number is hard-coded in systems; all live in `data/*.json`.
 ## 4. Commands (recorded in `command_log` as `[tick, name, args]`)
-Each command calls `_record(name, args)` as its FIRST line, even if validation later fails (a rejected command replays as rejected). `_record` is a no-op while `replaying`.
-Arg types: int, bool, string, cell (`Vector2i`), `[cell]`. Return value is not saved. A failed command changes no state.
+Each command calls `_record(name, args)` as its FIRST line, even if validation later fails (a rejected command replays as rejected). `_record` is a no-op while `replaying`. Arg types: int, bool, string, cell (`Vector2i`), `[cell]`. Return value is not saved. A failed command changes no state.
 Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wraps `set_patrol_route_text`).
 | command | args | returns | validation / effect |
 |---|---|---|---|
