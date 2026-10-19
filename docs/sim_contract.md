@@ -154,6 +154,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quests_q12.json` | Q12 Rolled Over (NG+, sentence_min 3 + carried debt) |
 | `quests_q10.json` | Q10 Maintenance Window quest defs (QuestLog-merged) |
 | `quests_q3.json` | Q3 Parole Board quest defs (QuestLog-merged) |
+| `quests_q8.json` | Q8 What the Creatures Wear (QuestLog-merged, gated by q_enabled) |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
 | `tutorial.json` | R5 O1: settings{audit_step, audit_delay_ticks}, steps[12] -> {id,title,text,reason,target{kind,id},done{signal,count/min_cells/where/or/latch},nudge_ticks} |

@@ -318,6 +318,9 @@ func _apply_effects(qid: String, effects: Array) -> void:
 				sim.contamination.level = clampf(sim.contamination.level + float(e["value"]) * mx, 0.0, mx * 0.999)
 			"gamble":  # region R3: one sim.rng draw picks win/lose effect lists
 				_apply_effects(qid, e.get("win", []) if sim.rng.randf() < float(e.get("chance", 0.5)) else e.get("lose", []))
+			"spawn_enemy":  # region R2: quest-only creatures (never in raid tables)
+				for _i in int(e.get("n", 1)):
+					sim.threats._spawn(str(e["enemy"]), sim.threats._spawn_cell_near(sim.map_center()))
 			"letter":
 				if mod("pa_silent") > 0.0:  # region R1
 					continue
