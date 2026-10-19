@@ -65,9 +65,9 @@ func test_speed_multiplier_grows_with_level() -> void:
 	var defs := Defs.get_default()
 	var s := Skills.new()
 	s.levels["mining"] = 0
-	assert_near(s.speed_mult(defs, "mining"), 1.0, 0.0001)
+	assert_near(s.speed_mult(defs, "mining"), 0.3, 0.0001)
 	s.levels["mining"] = 10
-	assert_gt(s.speed_mult(defs, "mining"), 1.5)
+	assert_gt(s.speed_mult(defs, "mining"), 2.0)
 	assert_near(s.speed_mult(defs, ""), 1.0, 0.0001)
 
 
@@ -102,3 +102,35 @@ func test_spawn_skills_depend_on_seed_only() -> void:
 	var b := make_sim(4, false, 10, 10).colonists.spawn(Vector2i(1, 1))
 	assert_eq(a.skills.levels, b.skills.levels)
 	assert_eq(a.skills.passions, b.skills.passions)
+
+
+# region progression
+func test_curve_from_data() -> void:
+	var defs := Defs.get_default()
+	var s := Skills.new()
+	for pair in [[0, 0.3], [3, 1.0], [10, 2.2]]:
+		s.levels["mining"] = pair[0]
+		assert_near(s.speed_mult(defs, "mining"), pair[1], 0.0001)
+	var total := 0.0
+	for l in 10:
+		s.levels["mining"] = l
+		total += s.xp_needed(defs, "mining")
+	assert_near(total, 17160.0, 0.001)
+	s.levels["mining"] = 10
+	assert_near(s.xp_total(defs, "mining"), 17160.0, 0.001)
+
+
+func test_award_emits_each_level_once() -> void:
+	var sim := make_sim(8, false, 20, 20, peaceful_defs())
+	var c := sim.colonists.spawn(Vector2i(2, 2))
+	c.skills.levels["mining"] = 0
+	c.skills.xp["mining"] = 0.0
+	c.skills.passions["mining"] = Skills.Passion.NONE
+	var got: Array = []
+	sim.bus.skill_leveled.connect(func(_id: int, _s: String, lvl: int) -> void: got.append(lvl))
+	sim.progression.award(c, "mining", 600.0, "test")
+	assert_eq(got, [1, 2, 3])
+	sim.progression.award(c, "mining", 1.0e6, "test")
+	assert_eq(got, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+	assert_false(sim.progression.award(c, "mining", 5.0, "test") and got.size() > 10)
+# endregion

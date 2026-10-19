@@ -35,8 +35,8 @@ func tick(c: Colonist, sim: Simulation) -> int:
 
 func _train(c: Colonist, sim: Simulation, xp: float) -> void:
 	var skill := sim.idle_work.training_skill(c)
-	if skill != "" and c.skills.add_xp(sim.defs, skill, xp):
-		sim.bus.skill_leveled.emit(c.id, skill, c.skills.level(skill))
+	if skill != "":
+		sim.progression.award(c, skill, xp, "training", false)  # region progression
 
 
 func on_end(c: Colonist, sim: Simulation) -> void:
