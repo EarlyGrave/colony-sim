@@ -1,0 +1,92 @@
+{
+	"q8_creatures_wear": {
+		"title": "What the Creatures Wear",
+		"trigger": {
+			"pollution_over": 70,
+			"quest_done": "pilgrims_of_the_slag"
+		},
+		"start": "drops",
+		"beats": {
+			"drops": {
+				"text": "The latest wave dropped items shaped like earlier waste. Same dents. Same stamps.",
+				"then": "walk_in",
+				"delay_days": 0.5
+			},
+			"walk_in": {
+				"text": "A new inmate walked in at dawn. It has your sentence number. It has your handwriting.",
+				"then": "hum",
+				"delay_days": 0.5
+			},
+			"hum": {
+				"text": "It hums an old inmate's name. We are all just ledger entries with legs.",
+				"then": "nest",
+				"delay_days": 0.5
+			},
+			"nest": {
+				"text": "In a nest: a survey crew tag, still warm. The creatures wear what they have eaten.",
+				"options": {
+					"feed": {
+						"label": "Feed them (dump waste at the Penance Beacon)",
+						"text": "They eat. The hum stops for two days.",
+						"effects": [
+							{
+								"verb": "mod",
+								"name": "wave_mult",
+								"value": 0.5,
+								"days": 2
+							},
+							{
+								"verb": "pollution",
+								"value": 0.1
+							}
+						],
+						"hint": "Waves -50% for 2 days. Pollution +10%."
+					},
+					"cleanse": {
+						"label": "Cleanse (40 plates)",
+						"text": "The tags burn. The planet breathes out.",
+						"requires": {
+							"items": {
+								"plate": 40
+							}
+						},
+						"effects": [
+							{
+								"verb": "items",
+								"item": "plate",
+								"n": -40
+							},
+							{
+								"verb": "pollution",
+								"value": -0.15
+							}
+						],
+						"hint": "Costs 40 plate. Pollution -15%."
+					},
+					"study": {
+						"label": "Study the tag",
+						"text": "Survey crew, tag 7. Last seen: here. Specimen secured.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "clue_survey_tag"
+							},
+							{
+								"verb": "mod",
+								"name": "essence_drop_mult",
+								"value": 2.0,
+								"days": 2
+							},
+							{
+								"verb": "spawn_enemy",
+								"enemy": "mimic",
+								"n": 1
+							}
+						],
+						"hint": "Unlocks the survey tag clue. Creatures drop double essence for 2 days. One mimic specimen escapes."
+					}
+				}
+			}
+		}
+	}
+}

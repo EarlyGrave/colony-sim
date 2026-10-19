@@ -313,6 +313,9 @@ func _apply_effects(qid: String, effects: Array) -> void:
 			"pollution":  # value = fraction of the planet's max (0.03 = +3%)
 				var mx := float(sim.defs.balance["contamination"]["max"])
 				sim.contamination.level = clampf(sim.contamination.level + float(e["value"]) * mx, 0.0, mx * 0.999)
+			"spawn_enemy":  # region R2: quest-only creatures (never in raid tables)
+				for _i in int(e.get("n", 1)):
+					sim.threats._spawn(str(e["enemy"]), sim.threats._spawn_cell_near(sim.map_center()))
 			"letter":
 				sim.bus.letter_received.emit(str(e.get("title", "Dispatch")), str(e.get("text", "")))
 

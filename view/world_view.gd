@@ -400,7 +400,7 @@ func _draw_enemies() -> void:
 			continue  # blob shadows come from WorldView3D
 		_ellipse_shadow(p + Vector2(0, TILE * 0.4 * scale))
 		var mod := Color(1, 1, 1, 0.55) if e.leaving else Color.WHITE
-		_sprite(e.def_id, p + Vector2(0, wobble), Vector2(TILE, TILE) * scale, flip, mod)
+		_sprite(str(e.def.get("sprite", e.def_id)), p + Vector2(0, wobble), Vector2(TILE, TILE) * scale, flip, mod)
 		if _time < float(last[2]):
 			draw_circle(p, TILE * 0.35 * scale, Color(1, 1, 1, 0.55))
 		if e.hp < e.max_hp:
