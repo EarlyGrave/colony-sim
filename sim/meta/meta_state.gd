@@ -144,7 +144,8 @@ func _load_ng(v: Variant) -> void:
 		if raw is Dictionary:
 			for k: Variant in raw:
 				sk[str(k)] = int(raw[k])
-		ng["dossier"] = {"name": str(dos.get("name", "")), "skills": sk, "perk_id": str(dos.get("perk_id", ""))}
+		ng["dossier"] = {"name": str(dos.get("name", "")), "skills": sk, "perk_id": str(dos.get("perk_id", "")),
+			"traits": _str_list(dos.get("traits", []))}
 	var techs: Array = []
 	var traw: Variant = d.get("techs", [])
 	if traw is Array:
@@ -160,6 +161,15 @@ func _load_ng(v: Variant) -> void:
 				hist.append({"n": int(h.get("n", 0)), "seed": int(h.get("seed", 0)), "days": int(h.get("days", 0)),
 					"debt_paid": int(h.get("debt_paid", 0)), "preset": str(h.get("preset", "")), "result": str(h.get("result", ""))})
 	ng["history"] = hist.slice(maxi(0, hist.size() - NG_HISTORY_CAP))
+
+
+static func _str_list(v: Variant) -> Array:  # region PW3
+	var out: Array = []
+	if v is Array:
+		for t: Variant in v:
+			if not out.has(str(t)):
+				out.append(str(t))
+	return out
 
 
 func ng_cfg() -> Dictionary:
@@ -195,7 +205,8 @@ func finish_sentence(summary: Dictionary) -> void:
 		for k: Variant in best.get("skills", {}):
 			sk[str(k)] = int(best["skills"][k])
 		ng["dossier"] = {"name": str(best.get("name", "")), "skills": sk,
-			"perk_id": str(perks[0]) if not perks.is_empty() else ""}
+			"perk_id": str(perks[0]) if not perks.is_empty() else "",
+			"traits": _str_list(best.get("traits", []))}
 	var cand: Array = []
 	for t: Variant in summary.get("techs", []):
 		var id := str(t)

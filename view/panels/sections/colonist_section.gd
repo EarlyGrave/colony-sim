@@ -50,11 +50,20 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 		add_bar(box, c.needs.rest, Color(0.4, 0.6, 0.95))
 	if c.mood != null:
 		add_line(box, "Mood %d / 100" % roundi(c.mood.value))
+	# region PW3
+	var tl: Array = c.bio.get("traits", [])
+	for t: String in tl:
+		var td := sim.traits.def(t)
+		if not td.is_empty():
+			add_line(box, "%s - %s" % [td.get("name", t), td.get("desc", "")], Color(0.8, 0.85, 1.0))
 	if c.skills != null and not c.skills.levels.is_empty():
 		var ids: Array = c.skills.levels.keys()
 		ids.sort_custom(func(a: String, b: String) -> bool: return c.skills.level(a) > c.skills.level(b))
-		var parts: PackedStringArray = []
-		for sid: String in ids.slice(0, 3):
+		for sid: String in ids:
+			var lv := c.skills.level(sid)
+			if lv <= 0:
+				continue
 			var nm: String = str(sim.defs.skills["skills"].get(sid, {}).get("label", sid))
-			parts.append("%s %d" % [nm, c.skills.level(sid)])
-		add_line(box, "Skills: " + ", ".join(parts))
+			var badge := " *" if [3, 6, 10].has(lv) else ""
+			add_line(box, "%s %d (%d%% speed)%s" % [nm, lv, roundi(c.skills.speed_mult(sim.defs, sid) * 100.0), badge])
+	# endregion
