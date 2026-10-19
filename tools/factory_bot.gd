@@ -22,6 +22,7 @@ var sim: Simulation
 var base: Bot
 var cap_percent := 50
 var plate_target := 45
+var compactors := 4  # PL: waste items bleed pollution; sinks stand right after the refinery
 var plate_reserve := 12  # D3: fuel cells / extra bills never take the stock below this once an assembler is planned
 var assume_nitrogen := false
 var _failed_step := -1
@@ -502,9 +503,9 @@ func _power(cell: Vector2i) -> void:
 ## D3: one ash beacon to burn waste (existing sink) once decoys_1 is researched; if D2's `waste_sink_early` flag exists, it is read
 ## (the bot works the same with the flag off: the 50% taint cap rule is already on).
 func _beacon() -> void:
-	if sim.tick % 200 == 100 and bool(sim.defs.balance.get("waste_sink_early", false)) and sim.defs.buildings.has("waste_compactor"):
+	if sim.tick % 120 == 60 and sim.buildings.count_of("refinery") > 0 and bool(sim.defs.balance.get("waste_sink_early", false)) and sim.defs.buildings.has("waste_compactor"):
 		var have := sim.buildings.count_of("waste_compactor") + _bp_count("waste_compactor")
-		if have < 3 and sim.items.count_stored("essence_ore") >= 10 and _bp_count("waste_compactor") == 0:
+		if have < compactors and sim.items.count_stored("essence_ore") >= 10 and _bp_count("waste_compactor") == 0:
 			var cc := _spot("waste_compactor", sim.map_center() + Vector2i(-3 + have * 2, 4), false)
 			if cc.x >= 0 and sim.place_building("waste_compactor", cc) != null:
 				log.append("d%.1f built waste_compactor" % _day_f())

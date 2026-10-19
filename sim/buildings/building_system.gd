@@ -109,16 +109,16 @@ func place(def_id: String, c: Vector2i, pay := true) -> Building:
 ## One tick of operator work on a production building.
 ## Rule "refine_cap": true when no NEW batch may start (contamination at the
 ## player's limit). A batch already in progress is always finished.
-func refining_capped() -> bool:
+func refining_capped(margin := 0.0) -> bool:
 	# region B3: rule "auto_throttle_above" (same effect as refine_cap, own limit)
 	if sim.milestones.b3_on() and sim.is_rule_on("auto_throttle_above"):
-		if sim.contamination.fraction() * 100.0 >= float(sim.defs.rules["auto_throttle_above"]["max_contamination_percent"]):
+		if sim.contamination.fraction() * 100.0 >= float(sim.defs.rules["auto_throttle_above"]["max_contamination_percent"]) + margin:
 			return true
 	# endregion
 	if not sim.is_rule_on("refine_cap"):
 		return false
 	var limit := float(sim.defs.rules["refine_cap"]["max_contamination_percent"])
-	return sim.contamination.fraction() * 100.0 >= limit
+	return sim.contamination.fraction() * 100.0 >= limit + margin
 
 
 func may_operate(b: Building) -> bool:
@@ -126,7 +126,7 @@ func may_operate(b: Building) -> bool:
 		return false
 	# YX: the taint cap stops waste-making recipes only (refining, smelting). Plates, parts and bench crafts keep running,
 	# otherwise a capped colony could not even hammer the plates its machine repairs cost.
-	return b.can_run_recipe() and (b.progress > 0 or not _is_refining(b) or not refining_capped())
+	return b.can_run_recipe() and (b.progress > 0 or not _is_refining(b) or not refining_capped(float(b.recipe.get("cap_margin", 0.0))))  # PL: smelting stops 30 points above the cap
 
 
 # region crises
