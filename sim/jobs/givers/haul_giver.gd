@@ -16,13 +16,15 @@ func find(c: Colonist) -> Job:
 	if sim.buildings:
 		for b: Building in sim.buildings.list:
 			var key := "bout:%d" % b.id
-			if b.output.is_empty() or not js._free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
+			if b.output.is_empty() or not js._free(c, key) or not sim.pathfinder.can_approach(c.cell, b.cell):
 				continue
 			var d := c.cell.distance_squared_to(b.cell)
 			if d >= best_d:
 				continue
+			# DB: a miner anchored on a deposit cell is not walkable; measure storage reach from the cell next to it.
+			var near := b.cell if sim.pathfinder.is_walkable(b.cell) else sim.pathfinder.best_adjacent(c.cell, b.cell)
 			for item: String in b.output:
-				var dst := js._storage_for(item, b.cell, c, str(b.next_run(item, 1)["q"]))
+				var dst := js._storage_for(item, near, c, str(b.next_run(item, 1)["q"]))
 				if dst.x >= 0:
 					best = js._haul(HaulJob.Src.BUILDING_OUT, JobSystem.NO_CELL, b.id, HaulJob.Dst.CELL, dst, -1, item, int(b.output[item]))
 					best.reservations.append(key)
