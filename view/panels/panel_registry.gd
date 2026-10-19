@@ -31,6 +31,7 @@ const PANELS: Array = [
 	["dispatch", "Dispatch", "res://view/panels/dispatch_panel.gd"],  # region E4
 	["shuttle", "Shuttle", "res://view/panels/shuttle_panel.gd"],  # region S4
 	["beacons", "Beacons", "res://view/panels/beacon_panel.gd"],  # region S4
+	["blocks", "Blocks", "res://view/panels/blocks_panel.gd"],  # region N4
 	["save", "Menu", "res://view/panels/save_panel.gd"],
 ]
 

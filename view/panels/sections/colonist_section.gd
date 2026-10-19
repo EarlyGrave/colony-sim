@@ -26,6 +26,12 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 		else:
 			status = "idle"
 	add_line(box, "Doing: " + status)
+	# region N4
+	if sim.blocks != null and sim.blocks.is_enabled():
+		var bid := sim.blocks.block_of(c)
+		var lean := BlocksPanel.leaning_for(sim, bid)
+		add_line(box, "Block: %s (Standing %d%s)" % [sim.blocks.cfg["blocks"].get(bid, {}).get("name", bid), roundi(sim.blocks.standing_of(bid)), ", leans " + lean if lean != "" else ""], Color(0.8, 0.8, 0.95))
+	# endregion
 	if c.carry_count > 0:
 		add_line(box, "Carrying: %s%s × %d" % [sim.defs.items[c.carry_item]["name"], "" if c.carry_quality == "" else " (%s)" % sim.quality.quality_name(c.carry_quality), c.carry_count])
 	if not c.alive:
