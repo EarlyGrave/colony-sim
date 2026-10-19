@@ -73,6 +73,11 @@ func register_module(quest_id: String, module: Object) -> void:
 	_modules[quest_id] = module
 
 
+## Absolute-expiry variant (expiry_tick in sim ticks).
+func set_mod_until(name: String, value: float, expiry_tick: int) -> void:
+	_mods[name] = {"value": value, "until": expiry_tick}
+
+
 func set_mod(name: String, value: float, days: float) -> void:
 	add_mod(name, value, days)
 

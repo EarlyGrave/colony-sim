@@ -81,6 +81,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` |
 | `resolve_crisis` | crisis_id: str, option_id: str | bool | crisis active, option exists |
 | `answer_event` | event_uid: int, accept: bool | bool | pending storyteller choice with that uid |
+| `answer_quest` | uid: int, option_id: String | bool | pending quest choice; false if disabled/unknown |
 | `set_turret_ammo_policy` | building_id: int, policy: str | bool | turret exists, policy in `ammo.json` policies |
 | `learn_perk` | colonist_id: int, perk_id: str | bool | colonist exists, perk point and prereqs, not yet learned |
 | `use_perk` | colonist_id: int, perk_id: str | bool | learned, off cooldown |
@@ -119,7 +120,8 @@ event queues but must preserve listener order (registration order in `_init_syst
 |---|---|
 | `ammo.json` | item, turret{}, pouch{}, policies[], default_policy |
 | `arrivals.json` | max_colonists, choice_timeout_ticks, age_min/max, max_traits, trait_chance, stories |
-| `balance.json` | ticks_per_day, automation, map{width,height,clusters}, colony{colonists,engineers,start_items,start_stockpile_size}, colonist, mining, construction, waves... |
+| `balance.json` | ticks_per_day, automation, map{width,height,clusters}, colony{colonists,engineers,start_items,start_stockpile_size}, colonist, mining, construction, waves..., `q_enabled`; `quests.json` (Q0: id -> {trigger, start, beats{text,then,options,effects}}, `quests_q*.json` merged) |
+| `quests.json` | Q0 quest lines (`quests_q*.json` merged), gated by balance `q_enabled` |
 | `biomes.json` | biome id -> {resources, purity_weights, node_density, hazard, yield_mult, refining_allowed}; R4: start, ash (cinder_ore), crystal (prism_ore), swamp (bog_resin) |
 | `buildings.json` | id -> {name, size[2], color, max_hp, cost{item:n}, buildable, shelter, critical, threat, repair_cost{item:n}, decoy{fuel_item,burn_ticks,unlit_mult,pollution_per_burn,burst_mult,burst_ticks,cooldown_ticks,essence_item,essence_cost}, ...} |
 | `contracts.json` | first_offer_day, offer_interval_days, offer_ttl_days, max_open, anger, templates[] |
@@ -233,13 +235,11 @@ pays `unit_cost` per further unit from the banks, dropping what it cannot afford
 `SquadSystem` (list of `Squad`, ascending id) keeps `members`, `role_of`, `hold` anchor, `focus` enemy id. No rng. `tick()` runs after `threats.tick()`: when a focus target is gone, focus clears and members return to their slots.
 Role = `data/roles.json`; auto-suggest `suggest_roles(ids)`: score = skill level (`affinity_skill`) x `skill_weight` + trait `role_affinity` x `trait_weight`; distinct roles are filled first (best score, ties lower id).
 Commands are logged as text for arrays (`form_squad("[1,2]", "[]")`). Death removes a member (empty squad is deleted). Manual `order_*` on a member is allowed and wins until the next squad command. `state_hash` appends `squads.state_parts()` only while a squad exists (goldens unchanged). API for other workers: `get_squad(sid)`, `squad_of(colonist_id)`, `list`, `Squad.role_of[id]`.
-
 ## 11. Warden's Orientation (R5 O1, `sim.tutorial`, `sim/tutorial/tutorial_system.gd`)
 Exists only with `opts.tutorial == true` (else `sim.tutorial == null`, commands are recorded no-ops, hashes unchanged). No rng. Runs last in `step()` (after `storyteller.tick`, before the colonists-dead check); `sim.in_step` is true during `step()`.
 State: `step` (0..12, 12 = finished), `done[]`, `skipped`, `ticks_in_step`, `seen[]` cells, per-step flags, latched facts; appended to `state_hash` only in tutorial mode. Bus: `tutorial_step_changed(step)`, `tutorial_finished()`.
 Each step advances only on its `done.signal` (ack command, 3 mine designations, 4 zone cells, 10 stored ore after `item_mined`, workbench/refinery placed, `first_refine_done`, `research_completed`, >=3 belts + an item arriving in a port building, `forecast_revealed` or ack, `wave_repelled` with player alarm or a turret, decoy placed or `wave_incoming`, ack).
 Normal waves are held (`waves_held()`) until the audit step; entering it calls `threats.schedule_scripted(delay)`: raid `tutorial_audit` (2 crawlers, 1800-tick limit, always counts as repelled, pod takes 0 damage, inmates take 0 damage). View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`, `step_count()`.
-
 ## 12. Health bands (C4)
 `HealthState.band(cfg)` / `sim.health.band(c)` derives `fit | wounded | down` from the existing model (down = `downed`; wounded = blood < `band.wounded_blood` or total damage >= `band.wounded_damage`). `sim.health.bleed_out_seconds(c)` = ceil(blood / bleed_rate / TICKS_PER_SECOND) while Down and bleeding, else -1. `sim.health.stabilise(c, medic)` tends all injuries at `band.stabilise_quality` (C2 Medic hook). Auto-rescue is the existing `RescueGiver` (any colonist with doctoring enabled carries a Down colonist to a free bed). No new RNG, no goldens change (derived reads only); data in `health.json` `band`.
 ## C3 telegraphed attacks (`ThreatSystem` region C3)
