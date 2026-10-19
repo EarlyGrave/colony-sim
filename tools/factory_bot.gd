@@ -651,9 +651,10 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	var limit := days * sim.ticks_per_day
 	while sim.tick < limit and sim.game_over_reason == "":
 		bot.act()
-		for qp in sim.quests.pending.duplicate():  # region QX: the bot always takes the first enabled option
+		for qp in sim.quests.pending.duplicate():  # region QX: the bot takes its preferred option (cheap, no plates), else the first enabled one
+			var pref: String = {"q6_auditor": "tour", "pilgrims_of_the_slag": "silence", "q1": "ignore"}.get(str(qp["quest"]), "")
 			for qo: Dictionary in qp["options"]:
-				if bool(qo["enabled"]):
+				if bool(qo["enabled"]) and (pref == "" or qo["id"] == pref):
 					sim.answer_quest(int(qp["uid"]), str(qo["id"]))
 					break
 		sim.run_ticks(Bot.STEP_TICKS)

@@ -79,5 +79,5 @@ static func json_line(r: Dictionary) -> String:
 		"seed": r["seed"], "over": r["over"], "alive": r["alive"], "audit": float(r["audit_day"]) >= 0.0,
 		"p": p, "parts": r["parts"], "need": r["need"], "launch": float(r["launch_day"]) >= 0.0, "pol": r["pollution"],
 		"debt": r["debt_pct"], "refined": int(str(led["refined_essence"]).get_slice("/", 0)),
-		"plates": int(built.get("stock_plate", 0)), "waste": r["waste_prod"], "quests": r.get("quests", [])})
+		"plates": int(built.get("stock_plate", 0)), "waste": r["waste_prod"], "quests": r.get("quests", []), "audit_day": r["audit_day"]})
 # endregion

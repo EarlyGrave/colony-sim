@@ -26,6 +26,7 @@ for r in rows:
     for q in r.get("quests", []):
         qc[q] = qc.get(q, 0) + 1
 print("quests fired:", qc)
+print("audit days:", [round(r.get("audit_day", -1)) for r in rows])
 n = len(rows)
 ok = [r for r in rows if "alive" in r]
 c = lambda fn: sum(1 for r in ok if fn(r))

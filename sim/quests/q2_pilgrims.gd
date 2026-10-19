@@ -48,6 +48,7 @@ func begin() -> void:
 	c.display_name = str(cfg["zealot_name"])
 	oto_id = c.id
 	sim.bus.colonist_joined.emit(c.id)
+	sim.debt.states.erase(c.id)  # a pilgrim owes the slag, not the Warden: keeps the colony debt total (and audit demands) untouched
 	sim.bus.letter_received.emit(str(cfg["zealot_name"]), str(cfg["letter"]) + " " + str(cfg["prayer"]))
 	var q := _quests()
 	if q != null:
