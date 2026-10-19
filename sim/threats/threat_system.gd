@@ -87,6 +87,7 @@ func _init(p_sim: Simulation) -> void:
 	sim.listen(sim.bus.item_mined, _on_item_mined)
 	_k1_init()  # region K1
 	_sc_init()  # region SC
+	set_meta("metro", MetroTrack.new(sim))  # region MT: meta keeps the golden state dump unchanged
 
 
 func _on_item_mined(_c: Vector2i, _item: String, _n: int) -> void:
@@ -152,7 +153,7 @@ func pick_raid_type(points: float) -> String:
 	var total := 0.0
 	for id: String in sim.defs.raids:
 		var r: Dictionary = sim.defs.raids[id]
-		if float(r["min_points"]) <= points and not r.get("scripted", false):  # region O1
+		if float(r["min_points"]) <= points and not r.get("scripted", false) and r.get("faction", "creature") == "creature":  # region O1 + MT
 			ids.append(id)
 			total += float(r["weight"])
 	if ids.is_empty():
@@ -198,6 +199,8 @@ func compose_raid(id: String, points: float) -> Array[String]:
 
 func tick() -> void:
 	var held := sim.tutorial != null and sim.tutorial.waves_held()  # region O1
+	if not held:  # region MT
+		metro().tick()
 	_k1_tick(held)  # region K1
 	if awakened and not wave_active and not held and sim.tick >= next_wave_tick and sim.tick >= _k1_calm_until and sim.tick >= dormant_until:  # region K1 + SC
 		start_wave()
@@ -272,6 +275,11 @@ func in_lockdown(cell: Vector2i) -> bool:
 # endregion
 
 
+## Metropolis tech track (region MT).
+func metro() -> MetroTrack:
+	return get_meta("metro") as MetroTrack
+
+
 func start_wave(strength_mult: float = 1.0) -> void:  # region EN2
 	wave_index += 1
 	wave_active = true
@@ -282,7 +290,10 @@ func start_wave(strength_mult: float = 1.0) -> void:  # region EN2
 		strength = _k1_audit_points
 	strength *= sim.contracts.take_raid_mult()  # region contracts
 	strength *= strength_mult  # region EN2
-	if wave_index == 1:
+	var metro_raid := has_meta("metro_points")  # region MT
+	if metro_raid:
+		strength = float(get_meta("metro_points"))
+	if wave_index == 1 and not metro_raid:
 		strength = minf(strength, float(cfg["first_wave_max_points"]))  # tutorial swarm
 	var origin := next_spawn_origin if next_spawn_origin.x >= 0 else _pick_spawn_origin()
 	if q2.cell.x >= 0:  # region Q2: the prayer wave comes to the dump, once
@@ -387,6 +398,7 @@ func _ro_tick() -> void:
 
 
 func end_wave() -> void:
+	var was_metro: bool = wave_active and str(sim.defs.raids.get(raid_id, {}).get("faction", "creature")) == "metropolis"  # region MT
 	var repelled := wave_active and _attackers() == 0 and pending_drop.is_empty()
 	var sc_audit := _k1_audit_now_wave  # region SC
 	if wave_active and _scripted("scripted"):  # region O1: the audit always counts as repelled
@@ -408,6 +420,8 @@ func end_wave() -> void:
 	_schedule_origin()
 	sim._alarm_raid(_alarm_before_wave)  # region LD
 	_k1_wave_over()  # region K1
+	if not was_metro:  # region MT
+		metro().on_creature_wave_end()
 	sim.bus.wave_ended.emit(wave_index)
 	if repelled and not sc_audit:
 		_sc_dormancy()  # region SC

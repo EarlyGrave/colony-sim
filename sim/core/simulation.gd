@@ -901,7 +901,10 @@ func squad_shakedown(sid: int) -> bool:
 ## Escape path: sell n refined to the Ferry for escape_credit; raises suspicion.
 func covert_sale(n: int) -> bool:
 	_record("covert_sale", [n])  # save-load
-	return contraband.covert_sale(n)
+	var ok := contraband.covert_sale(n)
+	if ok:
+		threats.metro().note_covert_sale(n)  # region MT
+	return ok
 # endregion
 # region crises
 func resolve_crisis(crisis_id: String, option_id: String) -> bool:
@@ -948,7 +951,10 @@ func accept_contract(contract_id: int) -> bool:
 
 func decline_contract(contract_id: int) -> bool:
 	_record("decline_contract", [contract_id])  # save-load
-	return contracts.decline(contract_id)
+	var ok := contracts.decline(contract_id)
+	if ok:
+		threats.metro().note_declined_audit()  # region MT
+	return ok
 
 
 func deliver_contract(contract_id: int) -> bool:

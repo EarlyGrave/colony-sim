@@ -99,6 +99,7 @@
 		"belt_repair_cost": {"plate": 1},
 		"machine_repair_cost": {"plate": 1}
 	},
+	"metro": {"enabled": false, "max": 100.0, "per_unmet_day": 2.0, "per_declined_audit": 10.0, "suspicion_per_sale": 0.5, "decay_on_ship": 3.0, "base": 2.0, "per_defiance": 0.15, "min_defiance": 8.0, "interval_days": 6.0, "grace_days": 1.0, "first_raid_day": 8.0, "fight_threshold": 60.0, "fight_escalation": 0.25, "final_after_raids": 4},
 	"scent": {"enabled": true, "per_refine": 0.15, "decay_per_day": 1.5, "free": 0.0, "s0": 3.0, "high": 1.0, "dormant_clean_days": 2.0, "dormant_polluted_days": 0.25},
 	"pacing": {"floor_pts_per_day": 0.7, "calm_after_hit_days": 2.0, "pollution_interval": {"lo": 0.45, "hi": 0.7, "clean_mult": 10.0, "dirty_mult": 0.35}},
 	"threat": {

@@ -50,6 +50,9 @@ signal colonist_died(colonist_id: int)
 signal alarm_changed(active: bool)
 signal rule_changed(rule_id: String, on: bool)
 
+# region MT
+signal metro_raid_started(raid_id: String, points: float)
+# endregion
 # region health
 signal colonist_downed(colonist_id: int)
 signal injury_added(colonist_id: int, part: String, kind: String, severity: float)
