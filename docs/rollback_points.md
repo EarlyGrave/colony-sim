@@ -16,3 +16,4 @@ Restore: `git checkout -b restore <sha>` (or reset a branch to it).
 | 2026-10-19 10:55 | 53b561c | quests on (QX) | 814 green x2, smoke PASS |
 | 2026-10-19 11:24 | 996000c | quest sheet UI + Q6 start fix | 818 green x2, smoke PASS |
 | 2026-10-19 12:55 | 984dbc1 | debt redesign + NG+ + quest UI | 836 green, smoke PASS |
+| 2026-10-19 13:33 | 8d46b68 | batch R (quests 3/8/10/11/12) | 859 green, smoke PASS |
