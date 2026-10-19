@@ -75,6 +75,7 @@ var quests: QuestLog  # region Q0
 var petition: PetitionSystem  # region E1
 var shuttle: ShuttleSystem  # region S1
 var beacons: BeaconSystem  # region S2
+var blocks: BlockSystem  # region I1
 # endregion
 # region perks
 var perks: PerkSystem
@@ -319,6 +320,7 @@ func _init_systems() -> void:
 		quests.register_module(Q2Pilgrims.ID, q2_pilgrims)
 	shuttle = ShuttleSystem.new(self)  # region S1
 	beacons = BeaconSystem.new(self)  # region S2
+	blocks = BlockSystem.new(self)  # region I1
 	chips = ChipSystem.new(self)  # region T4
 	power = PowerSystem.new(self)  # region L3
 	squads = SquadSystem.new(self)  # region C1
@@ -435,6 +437,7 @@ func step() -> void:
 		_lap("health")
 	debt.tick()  # region debt
 	beacons.tick()  # region S2
+	blocks.tick()  # region I1
 	if profiling:
 		_lap("debt")
 	mood.tick()  # region mood

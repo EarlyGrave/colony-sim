@@ -133,6 +133,8 @@ static func state_hash(sim: Simulation) -> int:
 	var qp: Array = sim.quests.state_parts()  # region Q0: only after a quest started
 	if not qp.is_empty():
 		parts.append(qp)
+	if sim.blocks.has_state():  # region I1: only once a block moved or the Informant exists
+		parts.append(sim.blocks.state_parts())
 	var tgs: Array = sim.threats.telegraph_state()  # region C3: only while a wind-up is active
 	if not tgs.is_empty():
 		parts.append(tgs)

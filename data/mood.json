@@ -24,6 +24,8 @@
 		"escape_rumors": {"label": "Escape rumors", "value": -5, "duration_days": 1.5},
 		"inspection_praise": {"label": "Inspector pleased", "value": 5, "duration_days": 2.0},
 		"freedman": {"label": "Free man", "value": 8, "duration_days": 0.0},
+		"block_proud": {"label": "Proud of the block", "value": 4, "duration_days": 1.5},
+		"block_shamed": {"label": "Shamed before the block", "value": -5, "duration_days": 1.5},
 		"clerk_reported": {"label": "Reported by the Warden's office", "value": -10, "duration_days": 3.0}
 	}
 }

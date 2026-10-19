@@ -1,0 +1,26 @@
+{
+	"enabled": true,
+	"blocks": {
+		"lifer": {"name": "Lifers"},
+		"clerk": {"name": "Clerks"},
+		"zealot": {"name": "Zealots"},
+		"informant": {"name": "The Informant"},
+		"fresh_fish": {"name": "Fresh Fish"}
+	},
+	"assign_order": ["lifer", "clerk", "fresh_fish", "zealot"],
+	"informant_min_inmates": 6,
+	"standing_start": 50.0,
+	"standing_regress_per_day": 1.0,
+	"paid_gain": 6.0,
+	"missed_loss_per_day": 0.2,
+	"death_loss": 6.0,
+	"dock_loss": 5.0,
+	"despair_mult_low_standing": 1.2,
+	"despair_mult_high_standing": 0.9,
+	"thought_high": 70.0,
+	"thought_low": 30.0,
+	"quiet_days": 6,
+	"quiet_min_standing": 55.0,
+	"cohesion_title": "Cohesion fee",
+	"cohesion_text": "Block {block} stayed quiet. The Warden bills the quiet: one cohesion fee, payable in goodwill."
+}

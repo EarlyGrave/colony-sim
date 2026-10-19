@@ -40,6 +40,7 @@ static func generate(sim: Simulation, cell: Vector2i) -> Colonist:
 	c.skills.mark_joined()
 	c.bio = {"age": age, "backstory": story, "traits": chosen, "work_speed": speed}
 	_q1_tag(sim, c)  # region Q1
+	sim.blocks.block_of(c)  # region I1: tags the newcomer's block (data only, no rng)
 	return c
 
 

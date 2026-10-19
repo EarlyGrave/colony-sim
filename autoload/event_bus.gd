@@ -168,6 +168,10 @@ signal petition_phase_done(phase: int)
 signal beacon_launched(alive: int)  # region S2
 # endregion
 
+# region I1
+signal block_standing_changed(block: String, standing: float)
+# endregion
+
 # region S1
 signal shuttle_phase(phase: String)
 signal shuttle_won
