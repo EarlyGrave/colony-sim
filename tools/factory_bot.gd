@@ -148,9 +148,9 @@ func _priorities() -> void:
 			sim.set_work_priority(c.id, "growing", 1)
 			sim.set_work_priority(c.id, "cooking", 1)
 		elif i >= 4:
-			sim.set_work_priority(c.id, "construction", 2)
+			sim.set_work_priority(c.id, "construction", 1)  # PL: builds were starved behind mining (refinery took d13-d30)
 			sim.set_work_priority(c.id, "hauling", 1)
-			sim.set_work_priority(c.id, "mining", 2)
+			sim.set_work_priority(c.id, "mining", 3)
 			sim.set_work_priority(c.id, "repair", 1)  # YX: repair/operating default to 3 and starved behind endless hauling/building
 			sim.set_work_priority(c.id, "operating", 1)
 		i += 1
