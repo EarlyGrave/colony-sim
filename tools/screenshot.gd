@@ -70,6 +70,10 @@ func _ready() -> void:
 	game.camera.zoom_level = zoom
 	if cat != "":
 		game.hud._toggle_cat(cat)
+	if panel == "quest":  # region QX: Auditor Visit choice pending
+		game.sim.quests.start("q6_auditor")
+		game.sim.run_ticks(game.sim.ticks_per_day + 5)
+		game.hud._process(0.1)
 	if panel == "research":  # demo state: T2 audited, essence in stock, one tech half done, one queued
 		var r: ResearchSystem = game.sim.research
 		r.unlock_tier(2)
