@@ -155,6 +155,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quests_q12.json` | Q12 Rolled Over (NG+, sentence_min 3 + carried debt) |
 | `quests_q10.json` | Q10 Maintenance Window quest defs (QuestLog-merged) |
 | `quests_q3.json` | Q3 Parole Board quest defs (QuestLog-merged) |
+| `quests_q13.json` | I2 Informant (code quest `sim/society/informant_mod.gd`, QuestLog module `q13_informant`, day >= 12): informant = `sim.blocks.informant_id()` (I1) else bio tag/block "Informant"; mod `petition_fee_mult` fee_start..fee_max (+step/day, +bonus if tolerated), restored to pre-quest value on false_info (needs Clerk, idles him 1 day) / transfer (`debt._remove`) / his death; state in hash only after start |
 | `quests_q8.json` | Q8 What the Creatures Wear (QuestLog-merged, gated by q_enabled) |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
@@ -236,8 +237,7 @@ pays `unit_cost` per further unit from the banks, dropping what it cannot afford
 Role = `data/roles.json`; auto-suggest `suggest_roles(ids)`: score = skill level (`affinity_skill`) x `skill_weight` + trait `role_affinity` x `trait_weight`; distinct roles are filled first (best score, ties lower id).
 Commands are logged as text for arrays (`form_squad("[1,2]", "[]")`). Death removes a member (empty squad is deleted). Manual `order_*` on a member is allowed and wins until the next squad command. `state_hash` appends `squads.state_parts()` only while a squad exists (goldens unchanged). API for other workers: `get_squad(sid)`, `squad_of(colonist_id)`, `list`, `Squad.role_of[id]`.
 ## 11. Warden's Orientation (R5 O1, `sim.tutorial`, `sim/tutorial/tutorial_system.gd`)
-Exists only with `opts.tutorial == true` (else `sim.tutorial == null`, commands are recorded no-ops, hashes unchanged). No rng. Runs last in `step()` (after `storyteller.tick`, before the colonists-dead check); `sim.in_step` is true during `step()`.
-State: `step` (0..12, 12 = finished), `done[]`, `skipped`, `ticks_in_step`, `seen[]` cells, per-step flags, latched facts; appended to `state_hash` only in tutorial mode. Bus: `tutorial_step_changed(step)`, `tutorial_finished()`.
+Exists only with `opts.tutorial == true` (else `sim.tutorial == null`, commands are recorded no-ops, hashes unchanged). No rng. Runs last in `step()` (after `storyteller.tick`, before the colonists-dead check); `sim.in_step` is true during `step()`. State: `step` (0..12, 12 = finished), `done[]`, `skipped`, `ticks_in_step`, `seen[]` cells, per-step flags, latched facts; appended to `state_hash` only in tutorial mode. Bus: `tutorial_step_changed(step)`, `tutorial_finished()`.
 Each step advances only on its `done.signal` (ack command, 3 mine designations, 4 zone cells, 10 stored ore after `item_mined`, workbench/refinery placed, `first_refine_done`, `research_completed`, >=3 belts + an item arriving in a port building, `forecast_revealed` or ack, `wave_repelled` with player alarm or a turret, decoy placed or `wave_incoming`, ack).
 Normal waves are held (`waves_held()`) until the audit step; entering it calls `threats.schedule_scripted(delay)`: raid `tutorial_audit` (2 crawlers, 1800-tick limit, always counts as repelled, pod takes 0 damage, inmates take 0 damage). View API: `current()`, `progress()`, `nudge_due()`, `is_done(id)`, `finished()`, `step_count()`.
 ## 12. Health bands (C4)

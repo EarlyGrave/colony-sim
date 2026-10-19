@@ -1,0 +1,41 @@
+{
+	"q13_informant": {
+		"title": "The Informant Reports",
+		"_comment": "Code quest: sim/society/informant_mod.gd (QuestLog module). Fee mult is a petition_fee_mult mod while the Informant reports.",
+		"trigger": {"min_day": 12},
+		"cfg": {
+			"min_day": 12,
+			"fee_start": 1.1,
+			"fee_step": 0.05,
+			"fee_max": 1.3,
+			"tolerate_bonus": 0.05,
+			"ration_thought": "ate_raw",
+			"tag_informant": "Informant",
+			"tag_clerk": "Clerk"
+		},
+		"start": "report",
+		"beats": {
+			"report": {
+				"text": "{who} files a daily report on you. Petition fees climb with it.",
+				"options": {
+					"tolerate": {
+						"label": "Tolerate the reports",
+						"text": "The reports continue. His rations do not.",
+						"hint": "Fee up to +30% while he lives. His rations are cut."
+					},
+					"false_info": {
+						"label": "Feed false information",
+						"requires_clerk": true,
+						"text": "A Clerk spends a day on fiction. The Warden loves fiction.",
+						"hint": "Needs a Clerk (loses his work day). Ends the reports."
+					},
+					"transfer": {
+						"label": "Transfer him out",
+						"text": "{who} is transferred to a better block. Nobody asks which.",
+						"hint": "Loses a worker. Ends the reports, fee back to normal."
+					}
+				}
+			}
+		}
+	}
+}
