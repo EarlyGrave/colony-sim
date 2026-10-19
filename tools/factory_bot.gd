@@ -7,6 +7,7 @@ extends RefCounted
 ## assemblers/workbench are hand-fed by colonists from the stockpile; coal generators + pole chains.
 ## Experiment switch `assume_nitrogen` (OFF by default) scripts a nitrogen trickle because the home map has no vents.
 const Bot := preload("res://tests/qa_tutorial_bot.gd")
+const Scen := preload("res://tests/scenario.gd")
 const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
 ## Build order, one blueprint batch at a time: ["line", resource, smelt?] = miner(+smelter)+belts+storage_in at the hub,
 ## ["miner"] = hand-hauled essence miner (no belt, works before Conveyance), plus single machines.
@@ -25,6 +26,7 @@ var plate_target := 45
 var compactors := 4  # PL: waste items bleed pollution; sinks stand right after the refinery
 var plate_reserve := 12  # D3: fuel cells / extra bills never take the stock below this once an assembler is planned
 var assume_nitrogen := false
+var _stock_grown := false
 var _failed_step := -1
 var _step := 0  ## index into PLAN
 var _hub := Vector2i.ZERO
@@ -50,6 +52,12 @@ func _init(p_sim: Simulation) -> void:
 ## One bot step (call every Bot.STEP_TICKS ticks, then sim.run_ticks).
 func act() -> void:
 	base._act()
+	if not _stock_grown and sim.tick >= 600:  # PL: the tutorial stockpile is 2x2 = 4 stacks; ore, ingots, plates, coal... filled it and haulers idled
+		_stock_grown = true
+		var spot := Scen.find_zone_spot(sim, sim.map_center() + Vector2i(-8, 6), Vector2i(6, 4))
+		for y in 4:
+			for x in 6:
+				sim.set_zone(spot + Vector2i(x, y), "stockpile")
 	if sim.tick % 20 == 0:
 		_upkeep()
 	_research()

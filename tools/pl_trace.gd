@@ -40,7 +40,7 @@ func _init() -> void:
 					print("RESEARCH ", t, " done d", lastd)
 			if lastd % 2 == 0 and lastd < 34:
 				print("RQ d%d queue=%s active=%s prog=%s refined=%d" % [lastd, str(sim.research.queue), sim.research.active(), str(sim.research.progress), sim.items.count_stored("refined_essence")])
-			print("BOT d%d pending=%s mine=%s routes=%d bps=%s" % [lastd, str(bot._pending()), str(bot._mine), bot._routes.size(), str(sim.buildings.blueprints.map(func(b): return b.def_id + '@' + str(b.cell) + ' del=' + str(b.delivered_total())))])
+			print("BOT ore=%d ref=%d jobs=%s " % [sim.items.count_stored("essence_ore"), sim.items.count_stored("refined_essence"), str(sim.colonists.list.map(func(c): return c.job.type if c.job != null else "-"))], "d%d pending=%s mine=%s routes=%d bps=%s" % [lastd, str(bot._pending()), str(bot._mine), bot._routes.size(), str(sim.buildings.blueprints.map(func(b): return b.def_id + '@' + str(b.cell) + ' del=' + str(b.delivered_total())))])
 			var brk := 0
 			var names := {}
 			for b in sim.buildings.list:
