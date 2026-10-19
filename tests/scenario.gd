@@ -203,4 +203,7 @@ static func _try_chain(sim: Simulation, t: Vector2i, blueprints: bool, force_nor
 		out["store"] = sim.buildings.place("storage_in", st, false)
 	sim.place_belt(cells.slice(0, 4), 1)
 	sim.place_belt(cells.slice(4, 8), 1)
+	if blueprints:  # region Y4: blueprint mode used to return {} on success (callers then built extra chains)
+		out["blueprints"] = true
+		out["miner_cell"] = t
 	return out

@@ -11,7 +11,7 @@ const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), 
 ## Build order, one blueprint batch at a time: ["line", resource, smelt?] = miner(+smelter)+belts+storage_in at the hub,
 ## ["miner"] = hand-hauled essence miner (no belt, works before Conveyance), plus single machines.
 const PLAN: Array = [
-	["workbench"], ["miner"], ["line", "essence_ore", true], ["line", "iron_ore", true], ["terminal"], ["refinery"], ["miner"], ["line", "copper_ore", true], ["assembler"],
+	["workbench"], ["miner"], ["line", "essence_ore", true], ["miner"], ["line", "iron_ore", true], ["terminal"], ["refinery"], ["line", "copper_ore", true], ["assembler"],
 	["line", "coal", false], ["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
 	["line", "iron_ore", true], ["gen"], ["assembler"], ["line", "iron_ore", true],
 ]
