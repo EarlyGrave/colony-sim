@@ -1,0 +1,54 @@
+{
+	"s2_pecking_order": {
+		"title": "Pecking Order",
+		"_comment": "S2 (docs/story/society.md). Needs W1 conds block_standing_above/below. Verb block_standing: target strong|weak = highest|lowest Standing block.",
+		"trigger": {
+			"min_day": 8,
+			"block_standing_above": {"block": "any", "v": 70},
+			"block_standing_below": {"block": "any", "v": 30}
+		},
+		"start": "tax",
+		"beats": {
+			"tax": {
+				"text": "Informal taxation has been observed. It was not authorized by us. Inmate 4471 is bruised. This has been recorded as a lifestyle.",
+				"options": {
+					"separate": {
+						"label": "Separate the cells (10 plate)",
+						"text": "Partitions go up. The strong block takes it personally; the weak one breathes.",
+						"requires": {"items": {"plate": 10}},
+						"effects": [
+							{"verb": "items", "item": "plate", "n": -10},
+							{"verb": "block_standing", "target": "strong", "delta": -15},
+							{"verb": "block_standing", "target": "weak", "delta": 15},
+							{"verb": "flag", "id": "blocks_split"}
+						],
+						"hint": "Costs 10 plate. Standing gap shrinks by 30."
+					},
+					"look_away": {
+						"label": "Look away",
+						"text": "Nobody saw anything. The Warden notes efficiency, and the weak block's despair deepens.",
+						"effects": [
+							{"verb": "block_standing", "target": "strong", "delta": 5},
+							{"verb": "mod", "name": "weak_despair_mult", "value": 1.15, "days": 4},
+							{"verb": "letter", "title": "Warden", "text": "Informal taxation has been observed. Efficiency +2%."}
+						],
+						"hint": "Strong block Standing +5. Weak block despair x1.15 for 4 days."
+					},
+					"mediate": {
+						"label": "Let the Lifer mediate",
+						"text": "A Lifer says: 'It was worse before the paperwork.'",
+						"effects": [
+							{
+								"verb": "gamble",
+								"chance": 0.6,
+								"win": [{"verb": "mood", "thought": "block_proud"}],
+								"lose": [{"verb": "mood", "thought": "riot_witness"}]
+							}
+						],
+						"hint": "60%: everyone cheers up. Else a brawl: mood penalty, nobody dies."
+					}
+				}
+			}
+		}
+	}
+}

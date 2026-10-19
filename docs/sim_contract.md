@@ -156,6 +156,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quests_q12.json` | Q12 Rolled Over (NG+, sentence_min 3 + carried debt) |
 | `quests_q10.json` | Q10 Maintenance Window quest defs (QuestLog-merged) |
 | `quests_q3.json` | Q3 Parole Board quest defs (QuestLog-merged) |
+| `quests_s2.json` | W3 S2 Pecking Order (data quest, min_day 8, conds block_standing_above/below; verb `block_standing` target strong/weak; mod `weak_despair_mult` read by BlockSystem.despair_mult) |
 | `quests_q13.json` | I2 Informant (code quest `sim/society/informant_mod.gd`, QuestLog module `q13_informant`, day >= 12): informant = `sim.blocks.informant_id()` (I1) else bio tag/block "Informant"; mod `petition_fee_mult` fee_start..fee_max (+step/day, +bonus if tolerated), restored to pre-quest value on false_info (needs Clerk, idles him 1 day) / transfer (`debt._remove`) / his death; state in hash only after start |
 | `quests_s1.json` | S1: W1 Society S1 Cohesion Fee (day >= 15, any block Standing < 30): conds `block_standing_below/above {block,v}`, `contraband_stash_over n`, `informant_alive` in `sim/society/society_conds.gd`; QuestLog verbs `ref_block {as,block|lowest}`, `standing {block|@ref,delta}`, `mood_block {block|@ref|!id,thought}` (quest_log.gd region W1); options pay (-15 refined, Standing +10) / refuse (thought left_to_ledger, fee 1.05 3d) / redirect (Lifer debt +1%)
 | `quests_q8.json` | Q8 What the Creatures Wear (QuestLog-merged, gated by q_enabled) |
@@ -191,7 +192,6 @@ each map `{id, biome, kind, seed, opts, sim_commands, sim_tick, crew_n, dead_cha
 `in_flight` entries: crate `{kind:"crate", from, to, items, arrive}`, party `{kind:"party", map_id, biome, crew, supplies, arrive}`,
 return `{kind:"return", from, crew, items, arrive}`. Arrival = send tick + `travel`/`travel_ticks`, exact. Collateral: each dead crew member
 (or whole crew of a lost outpost) adds `collateral` to `ledgers["campaign"].collateral_debt`, once. Tech `expeditions` (tier 2) gates `Expedition.send`.
-
 ### 7c. Campaign (`sim/campaign/campaign.gd`, R4X integration)
 `Campaign.new(seed, bus_factory: Callable, defs = null, opts = {})`, then `start()` (home = map 0, `Simulation.new(seed, bus, defs, opts.home_opts)`, so it equals a plain sim);
 `SaveGame.campaign_from_dict` builds it without `start()` and overwrites `maps, tick, active, campaign_seed, log, in_flight, ledgers`. `bus_factory` is called home-first, once per map.

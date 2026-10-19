@@ -340,6 +340,8 @@ func _apply_effects(qid: String, effects: Array) -> void:
 					sim.threats._spawn(str(e["enemy"]), sim.threats._spawn_cell_near(sim.map_center()))
 			"ref_block", "standing", "mood_block":  # region W1: block verbs (society quests)
 				_w1_block_fx(qid, e)
+			"block_standing":  # region W3: target "strong"/"weak" = highest/lowest Standing block now
+				_w3_block_fx(e)
 			"letter":
 				if mod("pa_silent") > 0.0:  # region R1
 					continue
@@ -488,4 +490,19 @@ func _w2_tag_alive(tag: String) -> bool:
 		if c.alive and str(c.bio.get("tag", "")) == tag and not sim.debt.gone.has(c.id):
 			return true
 	return false
+# endregion
+
+
+# region W3
+func _w3_block_fx(e: Dictionary) -> void:
+	if sim.blocks == null or not sim.blocks.is_enabled():
+		return
+	var ids: Array = sim.blocks.standing.keys()
+	ids.sort()
+	var pick := ""
+	for b: String in ids:
+		if pick == "" or (sim.blocks.standing_of(b) > sim.blocks.standing_of(pick) if str(e.get("target", "strong")) == "strong" else sim.blocks.standing_of(b) < sim.blocks.standing_of(pick)):
+			pick = b
+	if pick != "":
+		sim.blocks._change(pick, float(e.get("delta", 0.0)), float(e.get("delta", 0.0)) < 0.0)
 # endregion

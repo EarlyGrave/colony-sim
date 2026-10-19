@@ -60,9 +60,10 @@ func despair_mult(c: Colonist) -> float:
 	if not standing.has(b):
 		return 1.0
 	var s := standing_of(b)
+	var wk := sim.quests.mod("weak_despair_mult") if (s < float(cfg.get("thought_low", 30.0)) and sim.quests != null) else 1.0  # region W3: S2 Look away
 	if s < 50.0:
-		return 1.0 + (50.0 - s) / 50.0 * (float(cfg["despair_mult_low_standing"]) - 1.0)
-	return 1.0 - (s - 50.0) / 50.0 * (1.0 - float(cfg["despair_mult_high_standing"]))
+		return wk * (1.0 + (50.0 - s) / 50.0 * (float(cfg["despair_mult_low_standing"]) - 1.0))
+	return wk * (1.0 - (s - 50.0) / 50.0 * (1.0 - float(cfg["despair_mult_high_standing"])))
 
 
 func on_installment_paid(c: Colonist) -> void:
