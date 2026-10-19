@@ -126,6 +126,7 @@ func _ready() -> void:
 	_stack.add_child(top)
 	_t5_build_strip()  # region T5
 	_b5_build()  # region B5
+	_u2_build(root)  # region U2
 	var top_flow := HFlowContainer.new()
 	_top_flow = top_flow
 	top_flow.add_theme_constant_override("h_separation", 6)
@@ -498,6 +499,7 @@ func _exit_tree() -> void:
 func bind(p_sim: Simulation) -> void:
 	sim = p_sim
 	_b5_bind()  # region B5
+	_u2_bind(p_sim)  # region U2
 	invalidate()  # region W2c
 	_game_over.visible = false
 	_alarm_btn.set_pressed_no_signal(false)
@@ -530,6 +532,9 @@ func set_speed(speed: int) -> void:
 ## Queues a toast; shown one after another.
 func show_message(text: String, seconds := 3.0) -> void:
 	if text == "":
+		return
+	if _u2_stack != null:  # region U2: toasts and hints go to the notification stack
+		_u2_stack.push(text, "info", maxf(seconds, 4.0))
 		return
 	if not _toasts.is_empty() and _toasts[-1][0] == text:
 		return
@@ -710,6 +715,7 @@ func _refresh_texts() -> void:
 	_update_batch3()
 	_t5_update()  # region T5
 	_b5_update()  # region B5
+	_u2_update()  # region U2
 	_o2_update()  # region O2
 	_o4_update()  # region O4
 	_l4_update()  # region L4
@@ -1656,4 +1662,43 @@ func _u1_layout(y0: float, right_off: float) -> void:
 	notification_anchor.offset_right = right_off
 	notification_anchor.offset_top = y0
 	notification_anchor.offset_bottom = y0
+
+
+# region U2
+var _u2_stack: NotificationStack
+
+
+## Reconcile: U1's `NotificationAnchor` Control (top-right, below the speed row) adopts the stack;
+## without it the stack floats at the top-right with a fixed offset.
+func _u2_build(root: Control) -> void:
+	_u2_stack = NotificationStack.new()
+	var anchor := find_child("NotificationAnchor", true, false) as Control
+	if anchor != null:
+		anchor.add_child(_u2_stack)
+	else:
+		_u2_stack.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+		_u2_stack.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_u2_stack.offset_right = -8.0
+		_u2_stack.offset_left = -8.0 - NotificationStack.WIDTH
+		_u2_stack.offset_top = 76.0
+		root.add_child(_u2_stack)
+	_u2_stack.visible = false
+
+
+func _u2_bind(p_sim: Simulation) -> void:
+	_u2_stack.clear()
+	if not p_sim.bus.wave_report.is_connected(_u2_on_report):
+		p_sim.bus.wave_report.connect(_u2_on_report)
+
+
+func _u2_on_report(r: Dictionary) -> void:
+	_u2_stack.push(NotificationStack.wave_report_text(r), "wave", 10.0)
+
+
+func _u2_update() -> void:
+	if _u2_stack != null:
+		_u2_stack.suppressed = _side != null or (feed_ticker != null and feed_ticker.visible and feed_ticker.get_global_rect().intersects(_u2_stack.expected_rect()))
+		_u2_stack.tick(get_process_delta_time())
+		if _b5_card != null and _b5_card.text_now().begins_with("Wave ") and " over:" in _b5_card.text_now():
+			_b5_card.visible = false  # the report strip is gone: the stack shows it instead
 # endregion
