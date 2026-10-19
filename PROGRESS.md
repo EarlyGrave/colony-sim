@@ -359,3 +359,10 @@ HP); волны заканчиваются по таймеру и твари о�
 - PL sim fix: haul offered ore only to the nearest consumer; now falls through to the workbench when the refinery declines. tools/pl_diag.gd probe.
 - Bot 60 d: alive>=8 9/10, audit 8, P1 4, P3 4, P4 on 2 seeds, launch 0. Remaining: ore supply (miners), no-iron maps, sickness on s9, repairs eat plates.
 - Full suite 910 green, web smoke PASS.
+
+## Ore supply + shelter ration (2026-10-19)
+- OS: map generator guarantees iron/nitrogen/copper (coal donors) — seeds 7-10 maps changed; seed 9 "sickness" was starvation while hidden.
+- SR: shelter ration (`data/needs.json` "ration"): hidden/alarm/downed/sick colonists eat from stock. Goldens regenerated. test_waves gain threshold 4 -> 2 (static colonies no longer starve).
+- HM: miner haul priority hurt survival (reverted); bot rebuilds destroyed line miners (no effect yet).
+- Bot 60 d: alive>=8 9/10, audit 8, P1 5, P3 3, plates>=60 5/10, launch 0. Next lever: repair the broken remote iron miner (plates for repairs).
+- Full suite green (912 after the threshold fix), web smoke PASS.
