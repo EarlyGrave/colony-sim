@@ -41,6 +41,14 @@ func _init(p_sim: Simulation) -> void:
 	# region W1
 	SocietyConds.register(self)
 	# endregion
+	# region N3
+	register_cond("clues_held", func(n: Variant) -> bool:
+		var k := 0
+		for f: String in ["clue_manifest", "clue_survey_tag", "clue_warden_quota", "clue_buyer"]:
+			if flag(f):
+				k += 1
+		return k >= int(n))
+	# endregion
 
 
 func is_enabled() -> bool:
@@ -340,6 +348,11 @@ func _apply_effects(qid: String, effects: Array) -> void:
 					sim.threats._spawn(str(e["enemy"]), sim.threats._spawn_cell_near(sim.map_center()))
 			"ref_block", "standing", "mood_block":  # region W1: block verbs (society quests)
 				_w1_block_fx(qid, e)
+			"path":  # region N3: Q14 path choice
+				if sim.blocks != null:
+					sim.blocks.apply_path(str(e["id"]))
+				else:
+					set_flag("path_" + str(e["id"]))
 			"block_standing":  # region W3: target "strong"/"weak" = highest/lowest Standing block now
 				_w3_block_fx(e)
 			"letter":

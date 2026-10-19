@@ -14,6 +14,8 @@ func _init() -> void:
 	var off_total := 0
 	var on_total := 0
 	var spread_ok := 0
+	var sspread_ok := 0
+	var ult_total := 0
 	for sv in range(1, seeds + 1):
 		var off := _run(sv, days, false)
 		var on := _run(sv, days, true)
@@ -21,8 +23,12 @@ func _init() -> void:
 		on_total += int(on["events"])
 		if float(on["spread"]) > 0.0:
 			spread_ok += 1
+		if float(on["sspread"]) > 0.0:
+			sspread_ok += 1
+		ult_total += int(on["ults"])
 		print("seed %d: events off=%d on=%d spread=%.2f standing=%s" % [sv, off["events"], on["events"], on["spread"], on["standing"]])
 	print("TOTAL events off=%d on=%d (ratio %.2f); spread>0 in %d/%d" % [off_total, on_total, float(on_total) / maxf(1.0, off_total), spread_ok, seeds])
+	print("N3: Standing spread>0 in %d/%d; ultimatums per seed %.2f" % [sspread_ok, seeds, float(ult_total) / seeds])
 	quit()
 
 
@@ -33,6 +39,10 @@ func _run(sv: int, days: int, blocks_on: bool) -> Dictionary:
 	sim.start_new_game()
 	sim.blocks.cfg["enabled"] = blocks_on
 	var events := [0]
+	var ults := [0]  # N3
+	bus.letter_received.connect(func(t: String, _x: String) -> void:
+		if t == "Ultimatum":
+			ults[0] += 1)
 	bus.mood_break_started.connect(func(_id: int, _k: String) -> void: events[0] += 1)
 	bus.riot_started.connect(func(_id: int) -> void: events[0] += 1)
 	var f := sim.map_center() + Vector2i(3, 3)
@@ -66,6 +76,10 @@ func _run(sv: int, days: int, blocks_on: bool) -> Dictionary:
 	for k: String in sim.blocks.standing:
 		st.append(snappedf(sim.blocks.standing[k], 0.1))
 	sums["standing"] = st
+	var sp := 0.0  # N3: Standing spread
+	if not sim.blocks.standing.is_empty():
+		var vs: Array = sim.blocks.standing.values()
+		sp = float(vs.max()) - float(vs.min())
 	sim.dispose()
 	bus.free()
-	return {"events": events[0], "spread": spread, "standing": str(st)}
+	return {"events": events[0], "spread": spread, "standing": str(st), "sspread": sp, "ults": ults[0]}
