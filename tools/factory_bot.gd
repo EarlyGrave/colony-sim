@@ -36,6 +36,7 @@ var _step := 0  ## index into _plan (PLAN plus PG knob insertions)
 var _plan: Array = []
 var _hub := Vector2i.ZERO
 var _used_nodes: Dictionary = {}
+var _line_miners: Array[Vector2i] = []  # HM: miner anchors of the iron/copper lines, rebuilt if a raid destroys them
 var _routes: Array = []  ## pending belt jobs {from, to, dir}
 var _supplied_day := 0
 var phase_day: Array = [-1.0, -1.0, -1.0, -1.0]
@@ -90,6 +91,8 @@ func act() -> void:
 		_build()
 	elif sim.tick % 100 == 0 and sim.research.is_done("drilling") and _bp_count("refinery") == 0 and _step >= 2:
 		_hub_place("refinery", Vector2i(-4, 2))  # YX: a raid took the refinery; a player rebuilds it, the bot used to freeze
+	if _knob("rebuild_miners", 1) == 1 and sim.tick % 400 == 200:
+		_rebuild_miners()
 	if sim.tick % 200 == 120:
 		_rf_reserve()  # region RF
 	if sim.tick % 600 == 0:
@@ -538,6 +541,7 @@ func _line(res: String, smelt: bool) -> bool:
 			_used_nodes[miner_at + Vector2i(xx, yy)] = true  # PL: mark only after the line is really placed (a failed smelter spot used to burn the node)
 	_power(miner_at)
 	if smelt:
+		_line_miners.append(miner_at)
 		_put("smelter", proc_at)
 		_power(proc_at)
 	if not smelt:
@@ -551,6 +555,12 @@ func _line(res: String, smelt: bool) -> bool:
 		_routes.append({"from": mo, "to": di2, "into": store_at, "size": 1})
 	_retry_routes()
 	return true
+
+
+func _rebuild_miners() -> void:
+	for at in _line_miners:
+		if sim.buildings.placement_error("miner", at, false) == "" and sim.items.count_stored("plate") >= 4:
+			_put("miner", at)
 
 
 func _retry_routes() -> void:
