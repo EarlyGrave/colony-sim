@@ -17,7 +17,7 @@ func test_refining_recipes_have_waste() -> void:
 			assert_true(int(d.recipes[rid]["outputs"].get("waste", 0)) > 0, rid + " has no waste")
 		elif "smelter" in st:
 			assert_eq(int(d.recipes[rid]["outputs"].get("waste", 0)), 0, rid + " is clean (owner rule 2026-10-19)")
-	assert_eq(n, 1, "only essence refining pollutes")
+	assert_eq(n, 2, "only essence refining + EN1 tech-gated dirty fuel cell pollute")
 
 
 func test_machines_have_ports() -> void:

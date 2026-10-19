@@ -68,7 +68,12 @@ func test_machines_break_under_heavy_use() -> void:
 	sim.bus.building_broken.connect(func(_id: int) -> void: broke[0] += 1)
 	# Nobody repairs proactively: the threshold is 0 here, so it runs to failure.
 	sim.defs.balance["repair"]["threshold"] = 0.0
-	sim.run_ticks(3000)
+	# PW1 skill curve: L0 work speed is 0.3x, so a rookie needs ~3x longer to wear the refinery out.
+	sim.ledger.record_produced("essence_ore", 150, "test")
+	sim.items.drop(Vector2i(3, 10), "essence_ore", 150)  # 150 ore is only 15 batches = 90 wear
+	for i in 18:  # keep the lone rookie fed so starvation does not end the run early
+		sim.needs.add_food(sim.colonists.list[0], 100.0)
+		sim.run_ticks(500)
 	assert_gt(broke[0], 0, "refinery should eventually break (wear %s per batch)" % str(sim.defs.buildings["refinery"]["wear_per_batch"]))
 
 

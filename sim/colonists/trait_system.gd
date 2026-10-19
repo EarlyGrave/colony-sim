@@ -90,8 +90,9 @@ func _on_day(_d: int) -> void:
 		c.bio["calm_days"] = int(c.bio.get("calm_days", 0)) + 1
 		if int(c.bio["calm_days"]) >= int(a.get("calm_days", 30)):
 			grant(c, "settled")
-		if sim.debt != null:
-			if sim.debt.state_of(c).despair >= float(a.get("despair_level", 80)):
+		var ds: DebtState = sim.debt.state_of(c) if sim.debt != null else null
+		if ds != null:  # colonists without a debt state yet (e.g. spawned mid-tick) have no despair
+			if ds.despair >= float(a.get("despair_level", 80)):
 				c.bio["despair_days"] = int(c.bio.get("despair_days", 0)) + 1
 				if int(c.bio["despair_days"]) >= int(a.get("despair_days", 5)):
 					grant(c, "resigned")

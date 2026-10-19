@@ -22,6 +22,7 @@ func test_smelter_runs_it_only_after_tech() -> void:
 	var b := sim.buildings.place("smelter", Vector2i(10, 10), false)
 	assert_true(sim.endings.tech_ok("refine_essence"))
 	assert_false(sim.endings.tech_ok("fuel_cell_dirty"))
-	assert_true(b.station_recipes.has("fuel_cell_dirty"))
+	# EN1 puts tech-gated recipes in gated_recipes, not station_recipes
+	assert_true(b.gated_recipes.has("fuel_cell_dirty"))
 	sim.research.done.append("bulk_refining")
 	assert_true(sim.endings.tech_ok("fuel_cell_dirty"))
