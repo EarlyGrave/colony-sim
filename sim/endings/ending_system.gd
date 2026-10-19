@@ -64,4 +64,19 @@ func mark_won(id: String) -> bool:
 		return false
 	sim.quests.set_flag("ending_won_" + id)
 	sim.bus.ending_won.emit(id)
+	var ep := epilogue(id)  # region RV
+	if not ep.is_empty():
+		sim.bus.letter_received.emit(str(ep[0]), "\n".join(PackedStringArray(ep.slice(1))))
 	return true
+
+
+# region RV
+## Epilogue lines for an ending ([title, line, ...]) from data/flavor.json "epilogue"; empty if missing.
+static func epilogue(id: String) -> Array:
+	var j: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/flavor.json"))
+	if j is Dictionary:
+		var a: Variant = (j as Dictionary).get("epilogue", {}).get(id, [])
+		if a is Array:
+			return a
+	return []
+# endregion

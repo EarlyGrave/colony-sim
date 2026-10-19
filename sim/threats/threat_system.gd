@@ -84,6 +84,7 @@ func _init(p_sim: Simulation) -> void:
 	threat_v2 = bool(sim.defs.threat.get("enabled", false))  # region T1
 	wave_rng.seed = sim.seed_value ^ 0x57A7E
 	sim.listen(sim.bus.first_refine_done, awaken)
+	sim.listen(sim.bus.first_refine_done, _rv_on_first_refine)  # region RV
 	sim.listen(sim.bus.item_mined, _on_item_mined)
 	_k1_init()  # region K1
 	_sc_init()  # region SC
@@ -202,7 +203,7 @@ func tick() -> void:
 	if not held:  # region MT
 		metro().tick()
 	_k1_tick(held)  # region K1
-	if awakened and not wave_active and not held and sim.tick >= next_wave_tick and sim.tick >= _k1_calm_until and sim.tick >= dormant_until:  # region K1 + SC
+	if awakened and not wave_active and not held and sim.tick >= next_wave_tick and _rv_gate_ok() and sim.tick >= _k1_calm_until and sim.tick >= dormant_until:  # region K1 + SC
 		start_wave()
 	if awakened and not wave_active and not held and not _warned \
 			and next_wave_tick - sim.tick < int(cfg["warning_ticks"]) + sim.idle_work.warning_bonus():  # region idle-work
@@ -1115,4 +1116,20 @@ func scent_ticker() -> String:
 	if awakened and scent_now() >= float(sim.defs.balance["scent"]["high"]):
 		return "Scent high: wave in ~%.1f d" % (maxf(0.0, float(next_wave_tick - sim.tick)) / float(sim.ticks_per_day))
 	return ""
+# endregion
+
+
+# region RV: the first wave waits for the first refined batch (the pillar, felt), at most N extra days
+
+
+func _rv_on_first_refine() -> void:
+	set_meta("rv_refined", true)  # meta: keeps the golden state dump unchanged
+	sim.bus.letter_received.emit("Warden PA", "Shipment 1 departed. The planet has noticed.")
+
+
+func _rv_gate_ok() -> bool:
+	if wave_index > 0 or has_meta("rv_refined"):
+		return true
+	var extra := float(cfg.get("first_wave_gate_days", 0.0))
+	return sim.tick >= next_wave_tick + int(extra * sim.ticks_per_day)
 # endregion

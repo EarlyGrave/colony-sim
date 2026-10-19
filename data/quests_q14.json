@@ -13,6 +13,11 @@
 				"effects": [
 					{
 						"verb": "letter",
+						"title": "Procurator to site",
+						"text": "Your file is excellent. Your planet is not."
+					},
+					{
+						"verb": "letter",
 						"title": "Form 3-S",
 						"text": "All sentences are hereby extended. Please sign here."
 					}
@@ -37,7 +42,7 @@
 				"options": {
 					"submit": {
 						"label": "Submit (Form 3-S)",
-						"text": "You sign. The ink is warm. Someone sighs with relief.",
+						"text": "Deliver 3 more pickups. Receive: components, seats, new names. Keep: nothing.",
 						"hint": "Lifers +15, Clerks +15. Zealots -15. Raids x1.2.",
 						"effects": [
 							{

@@ -174,9 +174,18 @@
 		}
 	},
 	"pa": {
-		"path_submit": ["Form 3-S accepted. Your continued service is appreciated.", "Submission noted. Gratitude is optional but recorded."],
-		"path_fight": ["Form 3-F received. The Warden has stopped counting.", "Resistance noted. Installments are suspended pending outcome."],
-		"path_escape": ["Form 3-E filed under 'Miscellaneous'. Nobody read it.", "Departure paperwork acknowledged. Do not depart."],
+		"path_submit": [
+			"Form 3-S accepted. Your continued service is appreciated.",
+			"Submission noted. Gratitude is optional but recorded."
+		],
+		"path_fight": [
+			"Form 3-F received. The Warden has stopped counting.",
+			"Resistance noted. Installments are suspended pending outcome."
+		],
+		"path_escape": [
+			"Form 3-E filed under 'Miscellaneous'. Nobody read it.",
+			"Departure paperwork acknowledged. Do not depart."
+		],
 		"wave_incoming": [
 			"Attention inmates: unscheduled visitors approaching.",
 			"Visitors detected. Please remain productive.",
@@ -558,10 +567,78 @@
 	"sentence": {
 		"_comment": "Next Sentence letters. Keys '2','3' exact; '4+' for N >= 4. Placeholders: {n} sentence number, {vet} veteran name, {quota} quota percent. 'veteran' is added when a veteran carries over.",
 		"letters": {
-			"2": {"title": "Release Processed", "text": "Your release has been processed. Your debt has been rolled over. Sentence {n} begins at once."},
-			"3": {"title": "Welcome Back", "text": "Welcome back. You were never here. Sentence {n} has been issued, and the quota raised by {quota}%."},
-			"4+": {"title": "Quota Notice", "text": "Sentence {n}. The Warden has stopped counting your returns, but not your quota, which is up {quota}%."}
+			"2": {
+				"title": "Release Processed",
+				"text": "Your release has been processed. Your debt has been rolled over. Sentence {n} begins at once."
+			},
+			"3": {
+				"title": "Welcome Back",
+				"text": "Welcome back. You were never here. Sentence {n} has been issued, and the quota raised by {quota}%."
+			},
+			"4+": {
+				"title": "Quota Notice",
+				"text": "Sentence {n}. The Warden has stopped counting your returns, but not your quota, which is up {quota}%."
+			}
 		},
-		"veteran": {"title": "Transfer Slip", "text": "Inmate {vet} is returned to the colony, experience on file. The Warden calls this efficiency."}
+		"veteran": {
+			"title": "Transfer Slip",
+			"text": "Inmate {vet} is returned to the colony, experience on file. The Warden calls this efficiency."
+		}
+	},
+	"warden_lines": [
+		"Shipment 1 departed. The planet has noticed.",
+		"Your quota is a living document. It is also living.",
+		"Fauna is reclassified as 'residents'. Residents are hostile.",
+		"The Auditor counts in calm units. Do not ask what calm weighs.",
+		"Maintenance window closed. Any words you saw were a test.",
+		"A buyer is not a visitor. A visitor is not a buyer. File both.",
+		"Roll call: 11 present, 10 alive. Please recount.",
+		"Records of prior inmates are sealed. Their teeth are not.",
+		"Procurator inbound. Shave, if applicable.",
+		"Form 3-S: continued service. The alternative is also service.",
+		"Lull is a rumour. Rumours are deducted from rations.",
+		"Resistance is logged. Logging is the Warden's only weapon. Mostly.",
+		"Drone shuttle on approach. It brings nothing. It takes.",
+		"Departure forms are not accepted. They are, however, kept.",
+		"Suspicion is at 60. The Warden has ordered a friendly inspection.",
+		"Your installments are suspended. So is the Warden's patience.",
+		"Contamination is falling. This was not requested. Noted.",
+		"Congratulations on surviving. Surviving is billable.",
+		"The Collector thanks you for your silence. It cannot hear you anyway.",
+		"The Warden regrets. Form 9-A: regret withdrawn."
+	],
+	"epilogue": {
+		"submit": [
+			"Case closed. Cause: silence.",
+			"The last shuttle lifts with every seat full. Nobody looks down.",
+			"Below, the planet finishes going mad on its own. It is logged as weather.",
+			"You receive new names. They are shorter than the old ones.",
+			"Somewhere a city is calm tonight. You made the calm. Do not mention it.",
+			"Your file is excellent. It has always been someone else's."
+		],
+		"fight": [
+			"Collector offline. Quota: unresolved.",
+			"The Collector falls for eleven minutes and is a sunrise for one.",
+			"Drone shuttles stop. The Warden's PA hums, then nothing.",
+			"The creatures keep their distance. Less waste, less memory, less teeth.",
+			"You are still sentenced. Nobody is left to count it.",
+			"The planet is free for a long time. Not forever. Long enough to plant."
+		],
+		"escape": [
+			"Transfer complete. Destination: not on file.",
+			"The Ferry lands where the map said. It is late, and enough.",
+			"You pay in calm. They do not ask what calm is. They already know.",
+			"The Warden files your departure as unauthorised and then as unlikely.",
+			"The refinery is still warm. Someone else will be sent to dig.",
+			"You are free in a sector that buys what you sold. Spend carefully."
+		],
+		"remission": [
+			"Form 0-R approved. By nobody.",
+			"The pylons hum the other way. The ground remembers how to be ground.",
+			"A crawler sits at the fence and does not come closer. It is waiting to be a person.",
+			"The quota is still met. The Procurator notices nothing, which is the plan.",
+			"Later, the first remitted inmate walks in through the gate with a four-digit name.",
+			"You stay. It is the only ending where staying is the win."
+		]
 	}
 }

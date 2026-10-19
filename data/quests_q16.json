@@ -1,0 +1,53 @@
+{
+	"q16_lifer_receipt": {
+		"title": "Lifer's Receipt",
+		"_comment": "RV. C6 clue. Trigger min_day 25 + lifer standing > 60.",
+		"trigger": {
+			"min_day": 25,
+			"block_standing_above": {
+				"block": "lifer",
+				"v": 60
+			}
+		},
+		"start": "show",
+		"beats": {
+			"show": {
+				"text": "The old Lifer unfolds a receipt: prior sentence, Lull, 40 units, paid. Receipts outlive sentences.",
+				"options": {
+					"read": {
+						"label": "Read it aloud",
+						"text": "Forty units. The room does the arithmetic.",
+						"hint": "Unlocks the receipt clue. Lifers +5.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "clue_receipt"
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": 5
+							}
+						]
+					},
+					"keep": {
+						"label": "Keep it quiet",
+						"text": "You fold it into your file. It weighs more than paper.",
+						"hint": "Unlocks the receipt clue. Clerks +5.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "clue_receipt"
+							},
+							{
+								"verb": "standing",
+								"block": "clerk",
+								"delta": 5
+							}
+						]
+					}
+				}
+			}
+		}
+	}
+}

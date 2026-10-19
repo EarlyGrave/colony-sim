@@ -1,0 +1,87 @@
+{
+	"q15_roll_call": {
+		"title": "Roll Call",
+		"_comment": "RV. C5 clue + creatures-were-people. Cond rv_roll_call (flag rv_mimic_killed set on mimic death, needs clue_survey_tag or a colonist death).",
+		"trigger": {
+			"min_day": 8,
+			"rv_roll_call": true
+		},
+		"start": "face",
+		"beats": {
+			"face": {
+				"text": "A dead mimic wears a face you buried. It knew the door code.",
+				"effects": [
+					{
+						"verb": "flag",
+						"id": "clue_our_dead"
+					},
+					{
+						"verb": "letter",
+						"title": "Roll call",
+						"text": "Roll call: 11 present, 10 alive. It knew the door code."
+					}
+				],
+				"then": "count",
+				"delay_days": 0.5
+			},
+			"count": {
+				"text": "It had a number. The number is in our ledger. Nobody said it. Everyone counted again.",
+				"options": {
+					"bury": {
+						"label": "Bury it as an inmate",
+						"text": "A name goes on the stone. The Zealots stand watch.",
+						"hint": "Zealots +10, Lifers -5.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "buried_mimic"
+							},
+							{
+								"verb": "standing",
+								"block": "zealot",
+								"delta": 10
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": -5
+							}
+						]
+					},
+					"burn": {
+						"label": "Burn it with the waste",
+						"text": "The smoke goes up with the rest. The Informant takes notes.",
+						"hint": "Pollution +5%. Informants +5.",
+						"effects": [
+							{
+								"verb": "pollution",
+								"value": 0.05
+							},
+							{
+								"verb": "standing",
+								"block": "informant",
+								"delta": 5
+							}
+						]
+					},
+					"report": {
+						"label": "Send the tag to the Warden",
+						"text": "Record found. Record sealed.",
+						"hint": "Debt -2%.",
+						"effects": [
+							{
+								"verb": "debt_pct",
+								"pct": -2
+							},
+							{
+								"verb": "letter",
+								"title": "Warden",
+								"text": "Record found. Record sealed."
+							}
+						]
+					}
+				}
+			}
+		}
+	}
+}
