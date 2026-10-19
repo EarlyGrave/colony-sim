@@ -18,6 +18,8 @@
 			"coal": 1
 		},
 		"guaranteed_nodes": {
+			"copper_ore": 1,
+			"iron_ore": 1,
 			"nitrogen": 2
 		}
 	},

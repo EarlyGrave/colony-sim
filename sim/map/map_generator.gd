@@ -225,6 +225,9 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 		cnt[int(b[3])] = int(cnt.get(int(b[3]), 0)) + 1
 	var ids: Array = want.keys()
 	ids.sort()
+	var wi := {}  # resource index -> guaranteed count: a blob is never taken once it is down to that count
+	for id in ids:
+		wi[NodeData.res_index(String(id))] = int(want[id])
 	for id in ids:
 		var res := NodeData.res_index(String(id))
 		var n: int = int(want[id]) - int(cnt.get(res, 0))
@@ -236,9 +239,9 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 				for k in blobs.size():
 					var b: Array = blobs[k]
 					var r: int = int(b[3])
-					if r == res:
-						continue
-					if pass_i == 0 and (int(cnt[r]) < (3 if r == ess else 2)):
+					if r == res or (wi.has(r) and int(cnt[r]) <= int(wi[r])) or (r == ess and int(cnt[r]) <= 2):
+						continue  # essence keeps 2 far blobs for the start chains
+					if pass_i == 0 and int(cnt[r]) < 2:
 						continue
 					if best < 0:
 						best = k
