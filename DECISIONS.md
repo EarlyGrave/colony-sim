@@ -258,3 +258,8 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 ## Shuttle batch S (decided without owner, review)
 - Winning does not end the run (Continue keeps playing).
 - Shuttle needs 24 parts on standard (scaled by preset); siege waves every 1200 ticks (min 500 when polluted).
+
+## Economy batch Y (decided without owner, review)
+- Taint cap blocks only recipes that make waste; plate/part crafting always runs.
+- Home map guarantees iron, copper and 2 nitrogen nodes.
+- Debt pacing looks too harsh for a real economy (see PROGRESS); next batch revisits debt size/deadline.

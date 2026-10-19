@@ -269,3 +269,12 @@ HP); волны заканчиваются по таймеру и твари о�
 - U4 real factory bot (public commands only): never reaches audit tier 2 / petition / shuttle. Bottlenecks: (1) no nitrogen on any home map (P3 + fuel cells impossible without expeditions), (2) plates gate repairs, machines die without hand_plate, (3) thin economy (~1-1.5k ore / 60 d), iron never smelted, (4) despair escapes + HQ losses. Scripted bots hid this.
 - 768 green x2, web smoke PASS.
 - Open (small): Belt reachable only via a build tool (add to Build popup); HUD game-over box not ModalStyle'd; no scrim behind side sheets; Scenario.build_chain(true) returns {} on success.
+
+## Session 4 — Economy batch Y (real economy)
+- Y1 nitrogen at home; YX guarantees iron 1 / copper 1 / nitrogen 2 on the home map, never converts a resource's last blob.
+- Sim fixes: smelter no longer wedges on refine_essence when capped (picks first runnable recipe); taint cap gates only waste-making recipes (workbench/assembler keep working).
+- Data: refined/batch 6, smelting 4 ore -> 2 ingots + 1 waste, cheaper early buildings, lighter wear, softer early raids, despair 10/day; repair 1 plate; hand_plate 3 ore. Y3 opt-in preset removed.
+- Y5 UI: Belt in Build popup, game-over modal, sheet scrim.
+- Real factory_bot (60 d): refined 96-255 -> 334-420, plates 4-16 -> 9-89; still 0/5 audit tier 2, no petition/launch. Pillar holds (7.0 vs 4.2 vs 4.0 waves).
+- Next bottlenecks: parts never made (plates eaten by repairs/fuel cells, assembler only d29-45); waste pollution (~270 waste from 400 refined); debt 30-90 refined per colonist due in 12 d is unpayable -> despair escapes end runs.
+- 777 green x2, web smoke PASS.
