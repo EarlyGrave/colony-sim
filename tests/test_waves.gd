@@ -94,7 +94,12 @@ func test_colonists_hide_during_wave_and_come_out_after() -> void:
 	sim.run_ticks(2)
 	assert_true(sim.threats.wave_active)
 	assert_true(sim.alarm)
-	sim.run_ticks(80)
+	# TW3 local district lockdown: a raid far from the colony (> lockdown_radius) hides nobody...
+	for c in sim.colonists.list:
+		assert_false(sim.threats.in_lockdown(c.cell), "%s is outside the lockdown district" % c.display_name)
+	# ...and once the raid origin is on top of the colony everybody hides in the capsule.
+	sim.threats.set_meta("lockdown_origin", sim.map_center())
+	sim.run_ticks(20)
 	for c in sim.colonists.list:
 		assert_true(c.hidden, "%s should hide in the capsule" % c.display_name)
 	var guard := 0
