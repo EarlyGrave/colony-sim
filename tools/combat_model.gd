@@ -48,8 +48,13 @@ static func creature(defs_: Defs, id: String, variant := "") -> Dictionary:
 	return {"hp": hp, "damage": dmg, "cycle_s": cycle / TPS}
 
 
+## Same formula as CombatSystem.resolve (region E1): flat, then armour curve with pen_pct.
+static func resolve(raw: float, armor := 0.0, flat := 0.0, pen_pct := 0.0, flat_pen := 0.0) -> float:
+	return CombatSystem.resolve(raw, armor, flat, pen_pct, flat_pen)
+
+
 ## Seconds to deal `hp` damage. volley = [shots, mult] (auto-hit burst at the start of the fight) or [].
-static func ttk(defs_: Defs, weapon: String, hp: float, lvl: int, d: float, volley := []) -> float:
+static func ttk(defs_: Defs, weapon: String, hp: float, lvl: int, d: float, volley := [], armor := 0.0, flat := 0.0) -> float:
 	var w: Dictionary = defs_.weapons["weapons"][weapon]
 	var p := hit_chance(defs_, w, lvl, d)
 	var cd := float(w["cooldown_ticks"])
@@ -57,9 +62,9 @@ static func ttk(defs_: Defs, weapon: String, hp: float, lvl: int, d: float, voll
 	var shots := 0
 	while dealt < hp and shots < 100000:
 		if not volley.is_empty() and shots < int(volley[0]):
-			dealt += float(w["damage"]) * float(volley[1])
+			dealt += resolve(float(w["damage"]) * float(volley[1]), armor, flat)
 		else:
-			dealt += float(w["damage"]) * p
+			dealt += resolve(float(w["damage"]), armor, flat) * p
 		shots += 1
 	return float(shots) * cd / TPS
 

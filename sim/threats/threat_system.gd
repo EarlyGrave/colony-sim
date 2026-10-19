@@ -628,7 +628,7 @@ func _tick_enemy(e: Enemy) -> void:
 				# endregion
 				if _scripted("colonist_harmless"):  # region O1
 					return
-				sim.health.apply_damage(c, float(e.def["damage"]) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell), "", str(e.def.get("damage_kind", "bite")))  # region health
+				sim.health.apply_damage(c, sim.combat.resolve_hit(e.att_stats, sim.combat.def_of(c), float(e.def["damage"]) * e.damage_mult * sim.mutation.enemy_damage_mult(e.cell), str(e.def.get("dmg_type", "phys"))), "", str(e.def.get("damage_kind", "bite")))  # region health + E1
 		elif _approach_colonist(e, c) == GridMover.Move.FAILED:  # region perf-threat
 			e.retarget_at = sim.tick + 5
 
@@ -1002,7 +1002,7 @@ func _c3_wind(e: Enemy) -> void:
 		var dodge := sim.perks.mod(col, "dodge_chance")
 		if dodge > 0.0 and not e.def.get("ranged", false) and sim.rng.randf() < dodge:
 			continue
-		sim.health.apply_damage(col, dmg, "", str(e.def.get("damage_kind", "bite")))
+		sim.health.apply_damage(col, sim.combat.resolve_hit(e.att_stats, sim.combat.def_of(col), dmg, str(e.def.get("dmg_type", "phys"))), "", str(e.def.get("damage_kind", "bite")))  # region E1
 
 
 ## View: [{id, cells, frac}] for enemies winding up (frac 1 = just started, 0 = lands).

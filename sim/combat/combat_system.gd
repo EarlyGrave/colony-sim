@@ -23,7 +23,58 @@ func hit_chance(c: Colonist, w: Dictionary, dist: float) -> float:
 	if c.health != null:
 		p *= clampf(c.health.manipulation, 0.0, 1.0)
 	p += sim.perks.mod(c, "hit_chance")  # region perks
+	if c.combat != null:
+		p += att_of(c)[StatBlock.ACC]  # region E1
 	return clampf(p, float(cfg["hit_min"]), float(cfg["hit_max"]))
+
+
+# region E1
+## Cached stat vectors per colonist id (StatBlock layout). Kept here, not on CombatState: events print the colonist
+## object into the golden hash, so new CombatState fields would change goldens. Re-summed only via resum().
+var _att: Dictionary = {}
+var _def: Dictionary = {}
+var resum_count := 0
+
+
+func att_of(c: Colonist) -> PackedFloat64Array:
+	if not _att.has(c.id):
+		resum(c)
+	return _att[c.id]
+
+
+func def_of(c: Colonist) -> PackedFloat64Array:
+	if not _def.has(c.id):
+		resum(c)
+	return _def[c.id]
+
+
+## Rebuilds both vectors. Wave 1: no gear contributes yet (E2 adds sources), so they stay at defaults.
+func resum(c: Colonist) -> void:
+	_att[c.id] = StatBlock.make()
+	_def[c.id] = StatBlock.make()
+	resum_count += 1
+
+
+## Pure damage formula. Flat is removed first (reduced by flat_pen), then the armour curve; armour is reduced by pen_pct.
+## With zero armour and flat the raw value is returned untouched (min 1) so old numbers stay bit-identical.
+static func resolve(raw: float, armor: float, flat: float, pen_pct: float, flat_pen: float) -> float:
+	var a := maxf(0.0, armor * (1.0 - pen_pct))
+	var f := maxf(0.0, flat - flat_pen)
+	if a <= 0.0 and f <= 0.0:
+		return maxf(1.0, raw)
+	var after := maxf(0.0, raw - f)
+	return maxf(1.0, after * 100.0 / (100.0 + a))
+
+
+## One hit: att/def are StatBlock vectors, kind "phys"|"energy". Crit consumes sim.rng only when crit_chance > 0.
+func resolve_hit(att: PackedFloat64Array, def: PackedFloat64Array, dmg_base: float, kind := "phys") -> float:
+	var raw := dmg_base
+	if att[StatBlock.CRIT] > 0.0 and sim.rng.randf() < att[StatBlock.CRIT]:
+		raw *= att[StatBlock.CRIT_MULT]
+	if kind == "energy":
+		return resolve(raw, def[StatBlock.ARM_ENERGY], def[StatBlock.FLAT_ENERGY], att[StatBlock.PEN_ENERGY], att[StatBlock.FPEN_ENERGY])
+	return resolve(raw, def[StatBlock.ARM_PHYS], def[StatBlock.FLAT_PHYS], att[StatBlock.PEN_PHYS], att[StatBlock.FPEN_PHYS])
+# endregion
 
 
 func enemy_by_id(id: int) -> Enemy:
@@ -61,6 +112,7 @@ func try_attack(c: Colonist, e: Enemy) -> bool:
 	dmg *= vm
 	# endregion
 	if aimed or volley or sim.rng.randf() < hit_chance(c, w, dist):
+		dmg = resolve_hit(att_of(c), e.def_stats, dmg, str(w.get("damage_kind", "phys")))  # region E1
 		sim.threats.damage_enemy(e, dmg, "melee", c)  # region F2 + F3
 	sim.progression.award(c, skill, float(cfg["xp_per_attack"]), "attack", false)  # region progression
 	return true

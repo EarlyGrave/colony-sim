@@ -42,6 +42,10 @@ var pk_bld: Building  ## building the memoised result / sticky target depends on
 ## Mutant variant id ("" = plain), rolled from nest pollution (T5).
 var variant := ""  # region T5
 var damage_mult := 1.0  # region T5
+# region E1
+var att_stats := StatBlock.make()  ## attack side (crit/pen), defaults for now
+var def_stats := StatBlock.make()  ## armour/flat from def.armor / def.flat
+# endregion
 ## After the wave ends survivors walk back to the edge and vanish.
 var leaving := false
 
@@ -58,6 +62,14 @@ func _init(p_id: int, p_def_id: String, p_def: Dictionary, p_cell: Vector2i) -> 
 	attack_range = float(def["attack_range"])  # region perf-threat
 	structure_dmg = float(def.get("structure_dmg", 0.0))  # region W2d
 	cd_ticks = int(def.get("attack_cooldown_ticks", 0))
+	# region E1
+	var ar: Dictionary = def.get("armor", {})
+	var fl: Dictionary = def.get("flat", {})
+	def_stats[StatBlock.ARM_PHYS] = float(ar.get("phys", 0.0))
+	def_stats[StatBlock.ARM_ENERGY] = float(ar.get("energy", 0.0))
+	def_stats[StatBlock.FLAT_PHYS] = float(fl.get("phys", 0.0))
+	def_stats[StatBlock.FLAT_ENERGY] = float(fl.get("energy", 0.0))
+	# endregion
 
 
 ## GridMover.move_flow without the speed-bonus calls: enemies have none (move_gain is always 1.0), so the
