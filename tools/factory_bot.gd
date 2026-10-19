@@ -26,6 +26,7 @@ var plate_target := 45
 var compactors := 4  # PL: waste items bleed pollution; sinks stand right after the refinery
 var plate_reserve := 12  # D3: fuel cells / extra bills never take the stock below this once an assembler is planned
 var assume_nitrogen := false
+var _step_fails := 0
 var max_pending := 3
 var _stock_grown := false
 var _failed_step := -1
@@ -265,8 +266,16 @@ func _build() -> void:
 		if str(s[0]) == "assembler" and not log.any(func(l: String) -> bool: return l.ends_with("built [\"assembler\"]")):
 			log.append("assembler chain d%.1f" % _day_f())
 		_step += 1
+		_step_fails = 0
 		log.append("d%.1f built %s" % [float(sim.tick) / sim.ticks_per_day, str(s)])
-	elif _failed_step != _step:
+	else:
+		if str(s[0]) == "miner" or (str(s[0]) == "line" and sim.research.is_done("conveyance")):
+			_step_fails += 1
+		if _step_fails > 60 and str(s[0]) in ["miner", "line"]:  # PL: a step that cannot be placed for ~40 tries is skipped, not waited on forever
+			_step += 1
+			_step_fails = 0
+			return
+	if not ok and _failed_step != _step:
 		_failed_step = _step
 		log.append("d%.1f step %d %s waiting (placement/research)" % [float(sim.tick) / sim.ticks_per_day, _step, str(s)])
 
@@ -389,9 +398,6 @@ func _line(res: String, smelt: bool) -> bool:
 	if miner_at.x < 0:
 		log.append("no node for %s" % res)
 		return false
-	for yy in 2:
-		for xx in 2:
-			_used_nodes[miner_at + Vector2i(xx, yy)] = true
 	var proc_at := Vector2i(-1, -1)
 	if smelt:
 		proc_at = _spot("smelter", miner_at + Vector2i(4, 0), true)  # PL: smelter beside the miner, colonists haul the ingots (long belts kept failing)
@@ -400,6 +406,9 @@ func _line(res: String, smelt: bool) -> bool:
 		return false
 	if _put("miner", miner_at) == null:
 		return false
+	for yy in 2:
+		for xx in 2:
+			_used_nodes[miner_at + Vector2i(xx, yy)] = true  # PL: mark only after the line is really placed (a failed smelter spot used to burn the node)
 	_power(miner_at)
 	if smelt:
 		_put("smelter", proc_at)
