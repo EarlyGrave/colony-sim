@@ -12,6 +12,10 @@ var won := false
 var launches := 0
 var failures := 0
 var _next_siege := 0
+var manifest := -1  # region EN2: seats aboard (-1 = every living colonist)
+var freed := 0  # region EN2
+var stayed := 0  # region EN2
+var notices := 0  # region EN2: launch-window notices (C4)
 var _last_phase := ""
 
 
@@ -28,9 +32,56 @@ func _cfg() -> Dictionary:
 
 
 func parts_need() -> int:
+	if sim.path() == "submit":  # region EN2: one release part per seat
+		return maxi(1, seats() * int(_cfg().get("seat_parts", 1)))
 	var m: Dictionary = _cfg().get("preset_mult", {})
 	var mult := float(m.get(str(sim.opts.get("preset_id", "standard_term")), 1.0))
 	return maxi(1, roundi(float(_cfg().get("parts_need", 40)) * mult))
+
+
+# region EN2
+func seats() -> int:
+	var alive := sim.colonists.alive_count()
+	if manifest < 0:
+		return alive
+	return clampi(manifest, 1, maxi(1, alive))
+
+
+func set_manifest(n: int) -> bool:
+	if counting or won or n < 1:
+		return false
+	manifest = n
+	return true
+
+
+## Siege strength multiplier: Submit = peak madness x (1 + pollution_frac) x launch-window notices.
+func siege_mult() -> float:
+	if sim.path() != "submit":
+		return 1.0
+	return (1.0 + clampf(sim.contamination.fraction(), 0.0, 1.0)) * (1.0 + notice_bonus())
+
+
+func notice_bonus() -> float:
+	return minf(float(_cfg().get("notice_cap", 0.5)), notices * float(_cfg().get("notice_step", 0.1)))
+
+
+func _notice_tick() -> void:
+	if counting or won or sim.path() != "submit" or not sim.endings.is_locked():
+		return
+	var every := int(float(_cfg().get("notice_days", 8)) * sim.ticks_per_day)
+	if every > 0 and sim.tick > 0 and sim.tick % every == 0 and notice_bonus() < float(_cfg().get("notice_cap", 0.5)):
+		notices += 1
+		sim.bus.letter_received.emit("Launch window", str(_cfg().get("notice_text", "")))
+
+
+func _win_submit() -> void:
+	if sim.path() != "submit":
+		return
+	freed = seats()
+	stayed = maxi(0, sim.colonists.alive_count() - freed)
+	sim.quests.set_flag("ng_new_names")  # NG+ hook: the next run starts with new names, only the Dossier carries
+	sim.ending_won("submit")
+# endregion
 
 
 func unlocked() -> bool:
@@ -68,7 +119,7 @@ func state() -> Dictionary:
 	var g := gantry()
 	return {"phase": phase(), "parts": parts, "need": parts_need(), "t_left": t_left if counting else 0,
 		"hp": int(g.hp) if g != null else 0, "max_hp": int(g.max_hp) if g != null else 0,
-		"launches": launches, "failures": failures, "part_cost": (_cfg().get("part_cost", {}) as Dictionary).duplicate()}
+		"launches": launches, "failures": failures, "seats": seats(), "freed": freed, "stayed": stayed, "notices": notices, "part_cost": (_cfg().get("part_cost", {}) as Dictionary).duplicate()}
 
 
 ## Consumes stored materials for as many parts as are affordable (up to the need). Returns parts added.
@@ -119,6 +170,7 @@ func repair() -> bool:
 
 
 func tick() -> void:
+	_notice_tick()  # region EN2
 	if not counting:
 		return
 	if gantry() == null:
@@ -130,11 +182,12 @@ func tick() -> void:
 		won = true
 		_emit_phase()
 		sim.bus.letter_received.emit("Release Shuttle", str(_cfg().get("win_letter", "")))
+		_win_submit()  # region EN2: no-op flags unless Submit is chosen
 		sim.bus.shuttle_won.emit()
 		return
 	if sim.tick >= _next_siege:
 		if not sim.threats.wave_active:
-			sim.threats.start_wave()
+			sim.threats.start_wave(siege_mult())  # region EN2
 		var base := float(_cfg().get("siege_interval_ticks", 1500))
 		var f := 1.0 - float(_cfg().get("siege_pollution_speedup", 0.5)) * clampf(sim.contamination.fraction(), 0.0, 1.0)
 		_next_siege = sim.tick + maxi(int(_cfg().get("siege_interval_min_ticks", 600)), roundi(base * f))
@@ -157,8 +210,11 @@ func _emit_phase() -> void:
 
 
 func has_state() -> bool:
-	return parts > 0 or counting or won or launches > 0
+	return parts > 0 or counting or won or launches > 0 or manifest >= 0 or notices > 0
 
 
 func state_parts() -> Array:
-	return ["s1", parts, counting, t_left, won, launches, failures]
+	var a: Array = ["s1", parts, counting, t_left, won, launches, failures]
+	if manifest >= 0 or freed > 0 or stayed > 0 or notices > 0:  # region EN2: goldens keep the old shape
+		a.append_array([manifest, freed, stayed, notices])
+	return a

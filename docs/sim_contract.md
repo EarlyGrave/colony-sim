@@ -65,6 +65,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `deliver_petition` | phase: int (1..4) | bool | e1_enabled + audit tier 2 + warden_terminal; phases sequential; consumes only still-required items; completing pays the reward (debt cut %, items, tier 3 on P3) and emits petition_phase_done |
 | `deliver_shuttle_parts` | none | int | s1_enabled + petition P4 done + a Release Gantry; consumes part_cost per part from storage up to the need; returns parts added (S1) |
 | `launch_shuttle` | none | bool | phase ready (all parts, gantry powered); starts the countdown and siege waves (S1) |
+| `set_manifest` | n:int | bool | EN2: seats aboard on the Submit path (parts need = seats); refused during countdown / win |
 | `repair_gantry` | none | bool | pays repair_cost, restores gantry HP (S1) |
 | `deliver_audit` | tier: int | bool | warden_terminal exists; consumes only still-required parts of that tier's set from storage; completes -> research.unlock_tier(tier) + warden letter once |
 | `trigger_bell` | building_id: int | bool | Mourning Bell exists, not broken, no burst running, cooldown 0; starts burst (threat x`burst_mult` for `burst_ticks`, then `cooldown_ticks`); debits `essence_cost` refined essence from storage, shortfall -> ledger event `decoy_essence_debt` |

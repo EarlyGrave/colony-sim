@@ -1110,4 +1110,9 @@ func repair_gantry() -> bool:
 
 func get_shuttle_state() -> Dictionary:
 	return shuttle.state()
+
+
+func set_manifest(n: int) -> bool:  # region EN2
+	_record("set_manifest", [n])
+	return shuttle.set_manifest(n)
 # endregion

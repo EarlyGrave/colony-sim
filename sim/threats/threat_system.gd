@@ -271,7 +271,7 @@ func in_lockdown(cell: Vector2i) -> bool:
 # endregion
 
 
-func start_wave() -> void:
+func start_wave(strength_mult: float = 1.0) -> void:  # region EN2
 	wave_index += 1
 	wave_active = true
 	wave_end_tick = sim.tick + int(cfg["wave_duration_ticks"])
@@ -280,6 +280,7 @@ func start_wave() -> void:
 	if _k1_audit_now:
 		strength = _k1_audit_points
 	strength *= sim.contracts.take_raid_mult()  # region contracts
+	strength *= strength_mult  # region EN2
 	if wave_index == 1:
 		strength = minf(strength, float(cfg["first_wave_max_points"]))  # tutorial swarm
 	var origin := next_spawn_origin if next_spawn_origin.x >= 0 else _pick_spawn_origin()
