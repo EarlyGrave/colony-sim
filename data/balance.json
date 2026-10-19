@@ -139,5 +139,6 @@
 	"k5_enabled": true,
 	"e1_enabled": true,
 	"e2_enabled": true,
-	"s1_enabled": false
+	"s1_enabled": false,
+	"s2_enabled": false
 }

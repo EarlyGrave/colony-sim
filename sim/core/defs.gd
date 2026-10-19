@@ -64,6 +64,7 @@ var meta: Dictionary = {}  # region meta
 var milestones: Dictionary = {}  # region R2b
 var petitions: Dictionary = {}  # region E1
 var shuttle: Dictionary = {}  # region S1
+var beacons: Dictionary = {}  # region S2
 var presets: Dictionary = {}  # region O3
 # endregion
 # region needs
@@ -152,6 +153,7 @@ func load_from(dir: String) -> void:
 	milestones = _load_json(dir + "milestones.json")  # region R2b
 	petitions = _load_json(dir + "petitions.json")  # region E1
 	shuttle = _load_json(dir + "shuttle.json")  # region S1
+	beacons = _load_json(dir + "beacons.json")  # region S2
 	presets = _load_json(dir + "presets.json")  # region O3
 	# endregion
 	# region needs
@@ -239,6 +241,7 @@ func duplicate_defs() -> Defs:
 	d.milestones = milestones.duplicate(true)  # region R2b
 	d.petitions = petitions.duplicate(true)  # region E1
 	d.shuttle = shuttle.duplicate(true)  # region S1
+	d.beacons = beacons.duplicate(true)  # region S2
 	d.presets = presets.duplicate(true)  # region O3
 	# endregion
 	# region needs

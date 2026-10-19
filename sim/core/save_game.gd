@@ -116,6 +116,8 @@ static func state_hash(sim: Simulation) -> int:
 	parts.append(sim.logistics.state_parts())  # region A1d
 	parts.append(sim.research.state_parts())  # region R2a
 	parts.append(sim.milestones.state_parts())  # region R2b
+	if sim.beacons.has_state():  # region S2: absent until a beacon was launched
+		parts.append(sim.beacons.state_parts())
 	var pw: Array = sim.power.state_parts()  # region L3: only once a pole or generator exists
 	if not pw.is_empty():
 		parts.append(pw)

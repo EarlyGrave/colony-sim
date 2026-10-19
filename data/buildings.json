@@ -449,5 +449,10 @@
 		"name": "Release Gantry", "size": [4, 4], "color": "#9aa0b0", "max_hp": 800,
 		"cost": {"plate": 40, "parts": 10}, "build_work": 400, "buildable": true, "threat_priority": 6,
 		"power_use": 20, "deconstructible": false
+	},
+	"beacon_launcher": {
+		"name": "Beacon Launcher", "size": [2, 2], "color": "#c8a24a", "max_hp": 120,
+		"cost": {"essence_ore": 40, "plate": 10}, "build_work": 120, "buildable": true, "threat_priority": 2,
+		"threat": 5, "power_use": 5, "s2_beacon": true
 	}
 }

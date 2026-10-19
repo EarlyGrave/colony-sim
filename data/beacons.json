@@ -1,0 +1,11 @@
+{
+	"_comment": "S2 Penance Beacons (gated by balance s2_enabled). A powered Beacon Launcher burns plate + refined_essence into beacons; each live beacon cuts every prisoner's debt by cut_pct (of total) per day with diminishing returns, then decays.",
+	"building": "beacon_launcher",
+	"build_ticks": 600,
+	"cost": {"plate": 1, "refined_essence": 1},
+	"life_days": 3,
+	"cut_pct": 3.0,
+	"diminish": 0.8,
+	"cap_pct": 10.0,
+	"max_alive": 8
+}

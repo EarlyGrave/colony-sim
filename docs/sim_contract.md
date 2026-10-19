@@ -131,7 +131,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `event_chains.json` | random_enabled, chance, steps[], complication, inspection_quota_default |
 | `fuels.json` | L5 power fuels: threat_idle_mult, fuels{coal,nitrogen,uranium -> tier, generator, tech, energy_per_unit (= power_gen*burn_ticks/TPS), waste_per_unit, threat, spent_item/spent_per_burn, meltdown{}}, solar{}; buildings carry `power_use` (consumer), `power_gen` + `fuel{item,burn_ticks,waste_per_burn,spent_item?}` (generator, `fuel:null` = passive), `power_range` (pole); research `unlocks.belt_nodes`; `balance.json` keys `logistics2`, `power`, `map.extra_share` (biome `extra_resources` conversion, 0 = off); resources `appended: 2` = byte order after R4a |
 | `events.json` | id -> {weight, min_day, harmful, max_per_game, requires, text, ...} |
-| `events_prison.json` | same schema as events.json, prison-themed |
+| `events_prison.json` | same schema as events.json |
 | `fx.json` | view-only juice (bursts, splats, drips, AUDITED text); not read by sim |
 | `flavor.json` | view-only text bank (F1): dotted key paths -> arrays of lines; never read by sim |
 | `expedition.json` | campaign: travel_ticks, map_size, buffer_cap, rate_ticks, upkeep, collateral, raid_*, flush_radius (read by Campaign/Autopilot; upkeep item = `raw_food`; sling numbers live on the `sling` building def) |
@@ -144,6 +144,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter} (E1, gated by balance e1_enabled) |
 | `shuttle.json` | preset_mult, gantry, parts_need, part_cost, countdown_days, siege_* numbers, repair_cost, win_letter (S1, gated by balance s1_enabled) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
+| `beacons.json` | S2: building, build_ticks, cost, life_days, cut_pct, diminish, cap_pct, max_alive (gated by balance s2_enabled) |
 | `models.json` | art model descriptors (view only, not read by sim) |
 | `mood.json` | base, check_ticks, thresholds, chances, thoughts |
 | `mutation.json` | update_ticks, cap, diffusion, decay, bloom/illness chances |
