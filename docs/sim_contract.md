@@ -2,7 +2,6 @@
 What a re-implementation (other engine/language) must reproduce to be "the same game": same seed + same command log
 = same `state_hash` at every tick. Source of truth is the code; `tests/test_contract_doc.gd` keeps the command table and
 the data-file table below in sync with it. "(GD)" marks GDScript-specific behaviour a port must emulate or replace.
-
 ## 1. Tick order (`Simulation.step()`)
 `if game_over_reason != "": return`, then `tick += 1`, then in this exact order:
 1. `crafting.tick` (bills)  2. `needs.tick`  3. `farming.tick`  4. `colonists.tick` (jobs, movement)
@@ -14,7 +13,6 @@ Then: if no colonist is alive (list non-empty) `end_game("colonists_dead")`; if 
 Commands run between steps: a command recorded at tick T was issued after step number T and before step T+1.
 Construction: `Simulation.new(seed, bus, defs, opts)` then `start_new_game()` (map gen, `_init_systems()`, starting colony, `StartOpts.apply`).
 System construction order in `_init_systems()` fixes id allocation and listener order.
-
 ## 2. RNG rules
 - Algorithm: Godot `RandomNumberGenerator` (PCG32), `rng.seed = seed_value` in `_init`. Calls used: `randi_range(a,b)`, `randf()`, and `randf_range` in map gen.
   A port must implement the same generator or regenerate its goldens.
@@ -26,7 +24,6 @@ System construction order in `_init_systems()` fixes id allocation and listener 
   `colonist_system` name pick. `StartOpts.apply` reseeds `rng.seed = seed*31 + site*104729` when `opts.site` is set.
 - Independent streams that never touch `sim.rng`: `debt` seed `seed*7919+13`; `idle_work` `seed ^ 0x1D1E`; `mutation` `seed ^ 0x3A7B`; `ecology` `seed ^ 0xEC01` (nest placement at `start_new_game`, mutant-variant rolls); storyteller chain stream `_prng` `seed ^ 0x9E3779`.
 - Pick-from-list rolls index lists in deterministic order (id order or insertion order), never an unordered Dictionary walk.
-
 ## 3. Determinism and number rules
 - State is ints, bools, strings, floats, cells (`Vector2i`), arrays, and Dictionaries with string/int keys. No Callables, Nodes or signals in state.
   Cell-keyed Dictionaries are lookup-only in tick paths.
@@ -36,7 +33,6 @@ System construction order in `_init_systems()` fixes id allocation and listener 
   `int()` truncates toward zero; int `/` int is integer division in GDScript (`day() = tick / ticks_per_day`); `roundi` rounds half away from zero.
 - JSON numbers read back as floats; every consumer wraps with `int(...)` (saves too, see 7).
 - No gameplay number is hard-coded in systems; all live in `data/*.json`.
-
 ## 4. Commands (recorded in `command_log` as `[tick, name, args]`)
 Each command calls `_record(name, args)` as its FIRST line, even if validation later fails (a rejected command replays as rejected). `_record` is a no-op while `replaying`.
 Arg types: int, bool, string, cell (`Vector2i`), `[cell]`. Return value is not saved. A failed command changes no state.
