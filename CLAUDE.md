@@ -48,7 +48,12 @@ mode — the main session does NOT implement features itself:
    size); new content (map/biome/creature/machine) merges only with bot numbers; balance is
    tuned from a model/table (e.g. tools/combat_model.gd), not by eye; owner feedback is best as
    a phone screenshot + one blunt sentence — turn each into a task.
-9. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
+9. **Story writer** (owner rule 2026-10-19; subagent, Sonnet, docs only): designs quest
+   lines / narrative scenarios that fit the pillars (prison planet, debt, essence,
+   contamination, petition/shuttle escape) and writes `docs/story/*.md` (English, in-game
+   text style). The orchestrator consults it periodically (every few batches or before
+   planning content) and hands accepted ideas to the prompter, never straight to workers.
+10. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
 
 ## Stack
 - Godot **4.7.2-stable**, GDScript only (no C#: we need the web build).
@@ -132,5 +137,5 @@ Shared test scenarios: `tests/scenario.gd`.
   in world input.
 
 ## Out of scope for now
-Stress/breakdowns, factions, trade, roguelike meta, story, real art, sound.
+Stress/breakdowns, factions, trade, roguelike meta, real art, sound. (Story/quest lines are now designed by the story writer; build them only via planned batches.)
 Keep architecture open for them (new system dirs + bus signals), don't build them.
