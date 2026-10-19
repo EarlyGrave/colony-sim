@@ -741,6 +741,9 @@ func _threat_text() -> String:
 	var t: ThreatSystem = sim.threats
 	if t.wave_active:
 		return "WAVE %d: %d creatures (from the %s)" % [t.wave_index, t.enemies.size(), t.side_name(t.next_spawn_origin)]
+	var sc_txt := t.scent_ticker()  # region SC
+	if sc_txt != "":
+		return sc_txt
 	if not t.awakened:
 		return "Creatures asleep"
 	var ticks := t.next_wave_tick - sim.tick
