@@ -143,6 +143,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `meta.json` | legacy, next_batch, scout_cells, unlocks (cross-run meta, enters the sim via `opts`) |
 | `presets.json` | default, order, presets{id: name, sentence, wave_strength_mult, waste_mult, starting_debt_mult, crate, hint_density} (O3; become opts `wave_mult`, `waste_mult`, `debt_mult`, `crate`, `hint_density` via `StartOpts.preset_opts`; neutral values emit no key, so standard_term = `{}`) |
 | `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter} (E1, gated by balance e1_enabled) |
+| `quests_q2.json` | Q2 Pilgrims of the Slag: trigger pollution_min, zealot, beats/options (gated by balance q_enabled) |
 | `shuttle.json` | preset_mult, gantry, parts_need, part_cost, countdown_days, siege_* numbers, repair_cost, win_letter (S1, gated by balance s1_enabled) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
 | `beacons.json` | S2: building, build_ticks, cost, life_days, cut_pct, diminish, cap_pct, max_alive (gated by balance s2_enabled) |

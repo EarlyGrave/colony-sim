@@ -1,0 +1,20 @@
+{
+	"pilgrims_of_the_slag": {
+		"trigger": {"pollution_min": 0.40},
+		"zealot_name": "Brother Oto",
+		"wave_delay_seconds": 30,
+		"dump_building": "waste_compactor",
+		"letter": "Brother Oto says the dust is a verdict. Please file your own.",
+		"prayer": "He is singing to the slag. The slag is listening.",
+		"beats": {
+			"let": {"text": "Brother Oto prays at the dump. The next wave will be late and will be there. This is not a favor.", "death_chance": 0.5},
+			"silence": {"text": "The prayer was ended. Morale notes the ending.", "thought": "silenced_prayer"},
+			"join": {"text": "A second pilgrim has joined the singing. Output is reduced. The creatures are slightly confused.", "extra_colonists": 1, "refine_mult": 0.85, "refine_days": 2, "wave_mult": 0.8, "wave_days": 3}
+		},
+		"options": [
+			{"id": "let", "label": "Let him pray"},
+			{"id": "silence", "label": "Silence him"},
+			{"id": "join", "label": "Join the prayer"}
+		]
+	}
+}
