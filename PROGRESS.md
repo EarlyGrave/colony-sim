@@ -299,3 +299,10 @@ HP); волны заканчиваются по таймеру и твари о�
 - Quest batch Q0/Q6/Q2/Q1 merged with q_enabled off; QX reconcile pending.
 - Next: early ore (refinery eats loose ore), unhaulable deposit-anchored miners (sim bug), P3 coal/nitrogen timing; debt re-tune to "almost unpayable" (owner); NG+.
 - 810 green x2, web smoke PASS.
+
+## Session 4 — Quest reconcile (QX): quests ON
+- QuestLog with code modules (Q1 Clerk, Q2 Pilgrims) and data quest (Q6 Auditor); answers via Simulation.answer_quest; mid-quest replay hash test.
+- Mods live: refine_mult, audit_parts_mult, petition_fee_mult. Debt reductions clamped (2% colony / Q1 ≤10% one inmate). Brother Oto carries no debt.
+- 10 seeds/60 d: Q6 fired 5/10, Q2 9/10, Q1 10/10; audit tier 2 5/10 (6/10 with quests off), P1 2/10. Pillar 6.8 vs 4.2.
+- Open: quest sheet shows raw id and no option buttons on announce beat (UI polish); seed 2 colonists_dead with quests on.
+- 814 green x2, web smoke PASS.
