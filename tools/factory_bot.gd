@@ -1,0 +1,615 @@
+extends RefCounted
+## U4: "real production" bot. Builds a factory ONLY through public Simulation commands
+## (place_building blueprints that colonists haul+build, place_belt, add_bill, set_research, deliver_*):
+## no place_instant / buildings.place, no item spawning, no ledger writes. Deterministic (sim.rng only).
+## Base: the tutorial bot + bot_report upkeep (as petition_bot/shuttle_bot) run first; this adds the factory.
+## Lines: miner -> belt -> [smelter] -> belt -> storage_in at the hub (colonists haul the rest);
+## assemblers/workbench are hand-fed by colonists from the stockpile; coal generators + pole chains.
+## Experiment switch `assume_nitrogen` (OFF by default) scripts a nitrogen trickle because the home map has no vents.
+const Bot := preload("res://tests/qa_tutorial_bot.gd")
+const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+## Build order, one blueprint batch at a time: ["line", resource, smelt?] = miner(+smelter)+belts+storage_in at the hub,
+## ["miner"] = hand-hauled essence miner (no belt, works before Conveyance), plus single machines.
+const PLAN: Array = [
+	["workbench"], ["miner"], ["line", "essence_ore", true], ["line", "iron_ore", true], ["terminal"], ["refinery"], ["miner"], ["line", "copper_ore", true], ["assembler"],
+	["line", "coal", false], ["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
+	["line", "iron_ore", true], ["gen"], ["assembler"], ["line", "iron_ore", true],
+]
+## tech -> first PLAN step at which it is queued (bench time and essence are not wasted early).
+const RESEARCH: Dictionary = {"filters": 2, "assembly": 3, "electrification": 5}
+
+var sim: Simulation
+var base: Bot
+var cap_percent := 50
+var assume_nitrogen := false
+var _step := 0  ## index into PLAN
+var _hub := Vector2i.ZERO
+var _used_nodes: Dictionary = {}
+var _routes: Array = []  ## pending belt jobs {from, to, dir}
+var _supplied_day := 0
+var phase_day: Array = [-1.0, -1.0, -1.0, -1.0]
+var audit_day := -1.0
+var launch_day := -1.0
+var won_day := -1.0
+var min_hp := 100
+var gantry_started := false
+var log: Array[String] = []
+var _mine: Array[Vector2i] = []
+
+
+func _init(p_sim: Simulation) -> void:
+	sim = p_sim
+	base = Bot.new(sim)
+	_hub = sim.map_center() + Vector2i(-2, 9)
+
+
+## One bot step (call every Bot.STEP_TICKS ticks, then sim.run_ticks).
+func act() -> void:
+	base._act()
+	if sim.tick % 20 == 0:
+		_upkeep()
+	_research()
+	if sim.tick % 600 == 300:
+		_priorities()
+	if sim.tick % 200 == 0:
+		_bills()
+	_retry_routes()
+	if sim.buildings.count_of("refinery") > 0 and sim.research.is_done("drilling"):
+		_build()
+	if sim.tick % 600 == 0:
+		_deliveries()
+	if sim.tick % 100 == 0:
+		_shuttle()
+	if assume_nitrogen:
+		_nitrogen_trickle()
+
+
+func after() -> void:
+	base._poll()
+
+
+# --- attentive-player upkeep (bot_report's, minus its instant turret placement) ---------------------
+
+func _upkeep() -> void:
+	for p in sim.crises.pending.duplicate():
+		var id := str(p["id"])
+		sim.resolve_crisis(id, str(sim.crises.crises[id]["default_option"]))
+	# Turrets as blueprints (10 refined each, built by colonists): 3 + waves, max 10.
+	var have := sim.buildings.count_of("turret") + _bp_count("turret")
+	var want := mini(3 + sim.threats.wave_index, 10)
+	if have < want and sim.items.count_stored("refined_essence") >= 10 and _bp_count("turret") < 2:
+		var angle := TAU * float(have * 7 % 13) / 13.0
+		var near := sim.map_center() + Vector2i(roundi(cos(angle) * 5.0), roundi(sin(angle) * 5.0))
+		var tc := _spot("turret", near, false)
+		if tc.x >= 0:
+			sim.place_building("turret", tc)
+	var reserve := maxi(0, want - have) * 10
+	var stock := sim.items.count_stored("refined_essence") - reserve
+	var active_need := 0
+	for c in sim.contracts.open_contracts("active"):
+		active_need += int(c["essence"])
+	for c in sim.contracts.open_contracts("offered"):
+		if stock + 3 >= active_need + int(c["essence"]):
+			if sim.accept_contract(int(c["id"])):
+				active_need += int(c["essence"])
+	for c in sim.contracts.open_contracts("active"):
+		sim.deliver_contract(int(c["id"]))
+	# Debt first (unpaid debt -> despair -> escapes), from the refined surplus after turrets and contracts.
+	var research_hold := 25 if not sim.research.queue.is_empty() else 0  # techs are paid in refined essence
+	var surplus := sim.items.count_stored("refined_essence") - reserve - active_need - 5 - research_hold
+	var target: Colonist = null
+	for c in sim.colonists.list:
+		if not c.alive:
+			continue
+		var st := sim.debt.state_of(c)
+		if st == null:
+			continue
+		if st.pending_choice:
+			sim.choose_payoff(c.id, true)
+		elif st.remaining() > 0 and (target == null or st.due_day < sim.debt.state_of(target).due_day):
+			target = c
+	if target != null and surplus > 0:
+		sim.pay_debt(target.id, mini(surplus, sim.debt.state_of(target).remaining()))
+	if sim.tick % sim.ticks_per_day == 0:
+		for c in sim.colonists.list:
+			if c.alive:
+				for sk: String in c.skills.levels:
+					if sim.perks.points_available(c, sk) > 0:
+						for pid in sim.perks.perks_of_skill(sk):
+							if sim.learn_perk(c.id, pid):
+								break
+
+
+## Crew management: two researchers (the tutorial bot's choice), two farmers, the rest build, haul and mine.
+func _priorities() -> void:
+	var i := 0
+	for c in sim.colonists.list:
+		if not c.alive:
+			continue
+		if i == 2 or i == 3:  # farmers: food was the first thing to fail when everybody built
+			sim.set_work_priority(c.id, "growing", 1)
+			sim.set_work_priority(c.id, "cooking", 1)
+		elif i >= 4:
+			sim.set_work_priority(c.id, "construction", 1)
+			sim.set_work_priority(c.id, "hauling", 2)
+			sim.set_work_priority(c.id, "mining", 2)
+		i += 1
+
+
+## Machines break from wear and every repair costs plates (balance machine_repair_cost), so the workbench
+## hammers a small plate stock from essence ore (hand_plate) long before the assembler line exists.
+func _bills() -> void:
+	var wb := _first("workbench")
+	if wb == null or not sim.defs.recipes.has("hand_plate"):
+		return
+	if not _has_bill(wb, "hand_plate"):
+		sim.add_bill(wb.id, "hand_plate", "until", 8)
+
+
+func _has_bill(wb: Building, recipe_id: String) -> bool:
+	for bill: Bill in sim.crafting.bills_of(wb):
+		if bill.recipe_id == recipe_id:
+			return true
+	return false
+
+
+# --- research / taint cap ------------------------------------------------------------------------
+
+func _research() -> void:
+	if sim.buildings.count_of("research_bench") == 0:
+		return
+	for t: String in RESEARCH:
+		if _step >= int(RESEARCH[t]) and sim.research.is_done("conveyance") and not sim.research.is_done(t) and not sim.research.queue.has(t):
+			sim.queue_research(t, true)
+	if sim.research.is_done("filters") and not sim.is_rule_on("refine_cap"):
+		sim.defs.rules["refine_cap"]["max_contamination_percent"] = cap_percent  # the S5 cap level
+		sim.set_rule("refine_cap", true)
+
+
+# --- building ------------------------------------------------------------------------------------
+
+## place_building that remembers the cell (the gate below waits only for the bot's own blueprints).
+func _put(def_id: String, c: Vector2i) -> Blueprint:
+	var bp := sim.place_building(def_id, c)
+	if bp != null:
+		_mine.append(c)
+	return bp
+
+
+func _pending() -> bool:
+	var left: Array[Vector2i] = []
+	for c in _mine:
+		if sim.buildings.blueprint_at(c) != null:
+			left.append(c)
+	_mine = left
+	return not _mine.is_empty()
+
+
+## The tutorial bot's chain helper (Scenario.build_chain, blueprint mode) returns {} even on success, so the bot
+## keeps placing chains on every node: 7 miner/smelter/storage trios that only soak up ore. A player would cancel
+## the extras; keep the first (lowest id) blueprint of each type, cancel unstarted foreign ones.
+func _cancel_orphans() -> void:
+	var kept := {}
+	for bp in sim.buildings.blueprints.duplicate():
+		if not (bp.def_id in ["miner", "smelter", "storage_in"]) or _mine.has(bp.cell):
+			continue
+		if not kept.has(bp.def_id):
+			kept[bp.def_id] = true
+		elif bp.delivered_total() == 0:
+			sim.deconstruct(bp.cell)
+
+
+func _build() -> void:
+	_cancel_orphans()
+	if _pending() or _step >= PLAN.size() or not _routes.is_empty():
+		return
+	var s: Array = PLAN[_step]
+	var ok := false
+	match str(s[0]):
+		"miner":
+			ok = _ore_miner()
+		"line":
+			if not sim.research.is_done("conveyance"):
+				return
+			ok = _line(str(s[1]), bool(s[2]))
+		"terminal":
+			ok = _hub_place("warden_terminal", Vector2i(-3, 3))
+		"gen":
+			ok = sim.research.is_done("electrification") and _gen()
+		"assembler":
+			ok = sim.research.is_done("assembly") and _hub_place("assembler", Vector2i(0, 0))
+		"workbench":
+			ok = _hub_place("workbench", Vector2i(2, 4))
+		"refinery":
+			ok = _hub_place("refinery", Vector2i(-4, 2))
+	if ok:
+		_step += 1
+		log.append("d%.1f built %s" % [float(sim.tick) / sim.ticks_per_day, str(s)])
+
+
+## Nearest free spot of `def_id` around hub+off; machines also need their port cells free.
+func _spot(def_id: String, near: Vector2i, ports_free := true) -> Vector2i:
+	var blocked := _port_cells()
+	for r in range(0, 26):
+		for y in range(-r, r + 1):
+			for x in range(-r, r + 1):
+				if maxi(absi(x), absi(y)) != r:
+					continue
+				var c := near + Vector2i(x, y)
+				if sim.buildings.placement_error(def_id, c, false) != "":
+					continue
+				if ports_free and not _ports_ok(def_id, c, blocked):
+					continue
+				return c
+	return Vector2i(-1, -1)
+
+
+func _hub_place(def_id: String, off: Vector2i) -> bool:
+	var c := _spot(def_id, _hub + off, false)
+	if c.x < 0:
+		return false
+	var bp := _put(def_id, c)
+	if bp == null:
+		return false
+	_power(c)
+	return true
+
+
+func _ports(def_id: String, c: Vector2i) -> Array:
+	var out: Array = []
+	for p: Dictionary in sim.defs.buildings[def_id].get("ports", []):
+		out.append({"cell": c + Vector2i(int(p["dx"]), int(p["dy"])), "kind": str(p["kind"])})
+	return out
+
+
+func _port_cells() -> Dictionary:
+	var d := {}
+	for b in sim.buildings.list:
+		for p in _ports(b.def_id, b.cell):
+			d[p["cell"]] = true
+	for bp in sim.buildings.blueprints:
+		for p in _ports(bp.def_id, bp.cell):
+			d[p["cell"]] = true
+	return d
+
+
+func _ports_ok(def_id: String, c: Vector2i, blocked: Dictionary) -> bool:
+	var size: Array = sim.defs.buildings[def_id]["size"]
+	for p in _ports(def_id, c):
+		var pc: Vector2i = p["cell"]
+		if blocked.has(pc) or not _belt_free(pc):
+			return false
+		# the port belt must not sit inside this machine's own footprint
+		if pc.x >= c.x and pc.y >= c.y and pc.x < c.x + int(size[0]) and pc.y < c.y + int(size[1]):
+			return false
+	return true
+
+
+func _belt_free(c: Vector2i) -> bool:
+	return sim.map.in_bounds(c) and sim.can_belt_cell_error(c) == "" and sim.logistics.belt_dir(c) < 0
+
+
+## Essence miner without belts: colonists haul its output buffer to the stockpile (works from day 2).
+func _ore_miner() -> bool:
+	var cands: Array[Vector2i] = []
+	for n in sim.map.node_cells():
+		if sim.map.node_resource(n) == "essence_ore" and not _used_nodes.has(n):
+			cands.append(n)
+	cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return a.distance_squared_to(sim.map_center()) < b.distance_squared_to(sim.map_center()))
+	for n in cands:
+		for t: Vector2i in [n, n + Vector2i(-1, 0), n + Vector2i(0, -1), n + Vector2i(-1, -1)]:
+			if sim.buildings.placement_error("miner", t, false) != "":
+				continue
+			var pure := true
+			for yy in 2:
+				for xx in 2:
+					var p := t + Vector2i(xx, yy)
+					if sim.map.is_node(p) and sim.map.node_resource(p) != "essence_ore":
+						pure = false
+			if pure and _put("miner", t) != null:
+				for yy in 2:
+					for xx in 2:
+						_used_nodes[t + Vector2i(xx, yy)] = true
+				return true
+	return false
+
+
+## Miner (+ optional smelter) on the nearest unused node of `res`, belts to a storage_in at the hub.
+func _line(res: String, smelt: bool) -> bool:
+	if smelt and not sim.research.is_done("smelting"):
+		return false
+	var cands: Array[Vector2i] = []
+	for n in sim.map.node_cells():
+		if sim.map.node_resource(n) == res and not _used_nodes.has(n):
+			cands.append(n)
+	cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return a.distance_squared_to(_hub) < b.distance_squared_to(_hub))
+	var blocked := _port_cells()
+	var miner_at := Vector2i(-1, -1)
+	for n in cands:
+		for t: Vector2i in [n, n + Vector2i(-1, 0), n + Vector2i(0, -1), n + Vector2i(-1, -1)]:
+			if sim.buildings.placement_error("miner", t, false) != "" or not _ports_ok("miner", t, blocked):
+				continue
+			var pure := true
+			for yy in 2:
+				for xx in 2:
+					var p := t + Vector2i(xx, yy)
+					if sim.map.is_node(p) and sim.map.node_resource(p) != res:
+						pure = false
+			if pure:
+				miner_at = t
+				break
+		if miner_at.x >= 0:
+			break
+	if miner_at.x < 0:
+		log.append("no node for %s" % res)
+		return false
+	for yy in 2:
+		for xx in 2:
+			_used_nodes[miner_at + Vector2i(xx, yy)] = true
+	var proc_at := Vector2i(-1, -1)
+	if smelt:
+		proc_at = _spot("smelter", _hub + Vector2i(_step * 3 % 14 - 7, -2), true)
+	var store_at := _spot("storage_in", (proc_at + Vector2i(4, 0)) if smelt else (_hub + Vector2i(_step * 2 % 12 - 6, 5)), true)
+	if (smelt and proc_at.x < 0) or store_at.x < 0:
+		return false
+	if _put("miner", miner_at) == null:
+		return false
+	_power(miner_at)
+	if smelt:
+		_put("smelter", proc_at)
+		_power(proc_at)
+	_put("storage_in", store_at)
+	var mo: Vector2i = _ports("miner", miner_at)[0]["cell"]
+	if smelt:
+		var si: Vector2i = _ports("smelter", proc_at)[0]["cell"]
+		var so: Vector2i = _ports("smelter", proc_at)[1]["cell"]
+		var di: Vector2i = _ports("storage_in", store_at)[0]["cell"]
+		_routes.append({"from": mo, "to": si, "into": proc_at, "size": 2})
+		_routes.append({"from": so, "to": di, "into": store_at, "size": 1})
+	else:
+		var di2: Vector2i = _ports("storage_in", store_at)[0]["cell"]
+		_routes.append({"from": mo, "to": di2, "into": store_at, "size": 1})
+	_retry_routes()
+	return true
+
+
+func _retry_routes() -> void:
+	var left: Array = []
+	for r: Dictionary in _routes:
+		if not _lay(r):
+			r["tries"] = int(r.get("tries", 0)) + 1
+			if int(r["tries"]) < 30:  # keep trying: blueprints change what is free
+				left.append(r)
+			else:
+				log.append("route abandoned %s" % str(r["from"]))
+	_routes = left
+
+
+## BFS over free belt cells from `from` to `to`; last belt points into the building at `into`.
+func _lay(r: Dictionary) -> bool:
+	var src: Vector2i = r["from"]
+	var dst: Vector2i = r["to"]
+	if not _belt_free(src) or not _belt_free(dst):
+		return false
+	var blocked := _port_cells()
+	blocked.erase(src)
+	blocked.erase(dst)
+	var prev := {src: src}
+	var q: Array[Vector2i] = [src]
+	var head := 0
+	var found := false
+	while head < q.size() and q.size() < 6000:
+		var c := q[head]
+		head += 1
+		if c == dst:
+			found = true
+			break
+		for d in DIRS:
+			var n := c + d
+			if prev.has(n) or blocked.has(n) or not _belt_free(n):
+				continue
+			prev[n] = c
+			q.append(n)
+	if not found:
+		return false
+	var path: Array = [dst]
+	while path[0] != src:
+		path.push_front(prev[path[0]])
+	var into: Vector2i = r["into"]
+	var sz := int(r["size"])
+	var last := -1
+	for i in 4:
+		var t: Vector2i = dst + DIRS[i]
+		if t.x >= into.x and t.y >= into.y and t.x < into.x + sz and t.y < into.y + sz:
+			last = i
+	return last >= 0 and sim.place_belt(path, last)
+
+
+func _gen() -> bool:
+	var c := _spot("coal_generator", _hub + Vector2i(6 + 3 * sim.buildings.count_of("coal_generator"), 4), true)
+	if c.x < 0:
+		return false
+	if _put("coal_generator", c) == null:
+		return false
+	_power(c)
+	if sim.buildings.count_of("power_pole") + _bp_count("power_pole") == 0:
+		_hub_place("power_pole", Vector2i(4, 4))
+	return true
+
+
+func _bp_count(def_id: String) -> int:
+	var n := 0
+	for bp in sim.buildings.blueprints:
+		if bp.def_id == def_id:
+			n += 1
+	return n
+
+
+## Pole chain (a pole every ~5 cells) from the nearest pole/generator to a machine at `cell`.
+func _power(cell: Vector2i) -> void:
+	if not sim.research.is_done("electrification"):
+		return
+	var poles: Array[Vector2i] = []
+	for b in sim.buildings.list:
+		if b.def_id == "power_pole" or b.def_id == "coal_generator":
+			poles.append(b.cell)
+	for bp in sim.buildings.blueprints:
+		if bp.def_id == "power_pole" or bp.def_id == "coal_generator":
+			poles.append(bp.cell)
+	if poles.is_empty():
+		return
+	for guard in 12:
+		var best := poles[0]
+		for p in poles:
+			if (p - cell).length_squared() < (best - cell).length_squared():
+				best = p
+		var dist := (best - cell).length()
+		if dist <= 5.0:
+			return
+		var step := Vector2(cell - best).normalized() * 5.0
+		var want := best + Vector2i(roundi(step.x), roundi(step.y))
+		var spot := _spot("power_pole", want, false)
+		if spot.x < 0 or _put("power_pole", spot) == null:
+			return
+		poles.append(spot)
+
+
+# --- petitions / shuttle -------------------------------------------------------------------------
+
+func _deliveries() -> void:
+	var day := float(sim.tick) / sim.ticks_per_day
+	if not sim.milestones.is_tier_done(2):
+		if sim.milestones.has_terminal() and sim.deliver_audit(2):
+			audit_day = day
+		return
+	var p: int = sim.petition.next_phase()
+	if p > 0 and sim.deliver_petition(p):
+		phase_day[p - 1] = day
+
+
+func _shuttle() -> void:
+	var st: Dictionary = sim.get_shuttle_state()
+	var ph := str(st.get("phase", ""))
+	var day := float(sim.tick) / sim.ticks_per_day
+	if ph == "building" or ph == "ready":
+		if not gantry_started and sim.shuttle.gantry() == null and not _pending() and _step >= PLAN.size():
+			var c := _spot("release_gantry", sim.map_center() + Vector2i(-12, -8), false)
+			if c.x >= 0 and _put("release_gantry", c) != null:
+				gantry_started = true
+				_power(c)
+				for off in [Vector2i(-2, -2), Vector2i(5, -2), Vector2i(-2, 5), Vector2i(5, 5)]:
+					var tc := _spot("turret", c + off, false)
+					if tc.x >= 0:
+						_put("turret", tc)
+		if sim.shuttle.gantry() != null:
+			if sim.tick % 600 == 0:
+				sim.deliver_shuttle_parts()
+			var wb := _first("workbench")
+			if wb != null and not _has_bill(wb, "fuel_cell") and sim.defs.recipes.has("fuel_cell"):
+				sim.add_bill(wb.id, "fuel_cell", "until", 8)
+	if ph == "ready" and sim.launch_shuttle():
+		launch_day = day
+	if ph == "countdown":
+		min_hp = mini(min_hp, int(st["hp"]) * 100 / maxi(1, int(st["max_hp"])))
+		if int(st["hp"]) < int(st["max_hp"]) * 7 / 10:
+			sim.repair_gantry()
+	if ph == "won" and won_day < 0.0:
+		won_day = day
+
+
+func _first(def_id: String) -> Building:
+	for b in sim.buildings.list:
+		if b.def_id == def_id:
+			return b
+	return null
+
+
+## EXPERIMENT ONLY (assume_nitrogen): the home map has no vents node; 3/day from d10, like the old scripted bots.
+func _nitrogen_trickle() -> void:
+	var d := sim.day()
+	while _supplied_day < d:
+		_supplied_day += 1
+		if _supplied_day >= 10:
+			sim.ledger.record_produced("nitrogen", 3, "bot_supply")
+			sim.items.drop(sim.map_center() + Vector2i(5, 1), "nitrogen", 3)
+
+
+# --- reporting -----------------------------------------------------------------------------------
+
+## What stops the next milestone, e.g. "P3: nitrogen 0/20".
+func blocker() -> String:
+	if not sim.milestones.is_tier_done(2):
+		var rem: Dictionary = sim.milestones.remaining(2)
+		return "audit2: " + _fmt_missing(rem)
+	var p: int = sim.petition.next_phase()
+	if p > 0:
+		return "P%d: %s" % [p, _fmt_missing(sim.petition.remaining(p))]
+	var st: Dictionary = sim.get_shuttle_state()
+	return "shuttle %s parts %d/%d" % [str(st.get("phase", "")), int(st.get("parts", 0)), int(st.get("need", 0))]
+
+
+func _fmt_missing(rem: Dictionary) -> String:
+	var out: Array[String] = []
+	var keys := rem.keys()
+	keys.sort()
+	for k: String in keys:
+		if int(rem[k]) > 0:
+			out.append("%s -%d (stock %d)" % [k, int(rem[k]), sim.items.count_stored(k)])
+	return ", ".join(out)
+
+
+func _day_f() -> float:
+	return float(sim.tick) / sim.ticks_per_day
+
+
+## Plays one seed. opts: assume_nitrogen, cap. Returns the numbers the report prints.
+static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Dictionary:
+	var own_bus := bus == null
+	if own_bus:
+		bus = load("res://autoload/event_bus.gd").new()
+	var sim := Simulation.new(seed_value, bus, null, {"tutorial": true, "research_locked": true})
+	sim.start_new_game()
+	var bot: RefCounted = (load("res://tools/factory_bot.gd") as GDScript).new(sim)
+	bot.assume_nitrogen = bool(opts.get("assume_nitrogen", false))
+	bot.cap_percent = int(opts.get("cap", 50))
+	var died := 0
+	sim.bus.colonist_died.connect(func(_i: int) -> void: died += 1)
+	var limit := days * sim.ticks_per_day
+	while sim.tick < limit and sim.game_over_reason == "":
+		bot.act()
+		sim.run_ticks(Bot.STEP_TICKS)
+		bot.after()
+	var nit_nodes := 0
+	for n in sim.map.node_cells():
+		if sim.map.node_resource(n) == "nitrogen":
+			nit_nodes += 1
+	var st: Dictionary = sim.get_shuttle_state()
+	var r := {
+		"seed": seed_value, "phase_day": bot.phase_day.duplicate(), "audit_day": bot.audit_day,
+		"parts": int(st.get("parts", 0)), "need": int(st.get("need", 24)), "launch_day": bot.launch_day, "won_day": bot.won_day,
+		"phase": str(st.get("phase", "")), "min_hp": bot.min_hp,
+		"alive": sim.colonists.alive_count(), "died": died, "pollution": sim.contamination.fraction() * 100.0,
+		"food": sim.items.count_stored("raw_food") + sim.items.count_stored("meal"), "over": sim.game_over_reason,
+		"debt_pct": sim.milestones.debt_paid_pct(), "end_day": sim.day(), "blocker": bot.blocker(), "nitrogen_nodes": nit_nodes,
+		"built": {}, "steps": bot._step, "log": bot.log.duplicate(),
+	}
+	for b in sim.buildings.list:
+		r["built"][b.def_id] = int(r["built"].get(b.def_id, 0)) + 1
+	for item in ["plate", "parts", "ingot_iron", "ingot_copper", "coal", "refined_essence", "essence_ore", "fuel_cell"]:
+		r["built"]["stock_" + item] = sim.items.count_stored(item)
+	var led := {}
+	for item in ["essence_ore", "refined_essence", "iron_ore", "ingot_iron", "copper_ore", "ingot_copper", "coal", "plate", "parts"]:
+		led[item] = "%d/%d" % [int(sim.ledger.produced.get(item, 0)), int(sim.ledger.consumed.get(item, 0))]
+	r["ledger"] = led
+	var power_f := 1.0
+	if sim.power != null and sim.power.enabled:
+		var w: Dictionary = sim.power.worst_net()
+		if not w.is_empty():
+			power_f = float(w["factor"])
+	r["power_factor"] = power_f
+	sim.dispose()
+	if own_bus:
+		bus.free()
+	return r
