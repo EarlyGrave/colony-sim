@@ -1,9 +1,9 @@
 {
 	"item": "refined_essence",
-	"debt_min": 30,
-	"debt_max": 90,
-	"due_days": 12,
-	"despair_per_day": 10.0,
+	"debt_min": 14,
+	"debt_max": 42,
+	"due_days": 30,
+	"despair_per_day": 8.0,
 	"despair_decay_per_day": 10.0,
 	"despair_relief_per_unit": 0.5,
 	"despair_mid": 33.0,
