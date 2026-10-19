@@ -1,0 +1,25 @@
+{
+	"_comment": "E3 affixes. Affix id == StatBlock stat key. pos prefix|suffix; tiers [min,max] picked by ilvl bracket; tags_any matched against gear base tags; int=true rounds the value.",
+	"groups": {
+		"offense": ["dmg_pct", "crit_chance", "accuracy", "attack_speed", "pen_pct_phys", "pen_pct_energy"],
+		"defense": ["armor_phys", "armor_energy", "flat_phys", "flat_energy", "max_hp"],
+		"utility": ["move_speed", "ammo_eff", "durability_max"]
+	},
+	"affixes": {
+		"dmg_pct": {"name": "%s of Ruin", "pos": "suffix", "weight": 10, "tiers": [[0.05, 0.10], [0.10, 0.18], [0.18, 0.30]], "tags_any": ["weapon"]},
+		"crit_chance": {"name": "%s of Sharpness", "pos": "suffix", "weight": 8, "tiers": [[0.02, 0.04], [0.04, 0.08], [0.08, 0.12]], "tags_any": ["weapon"]},
+		"accuracy": {"name": "True %s", "pos": "prefix", "weight": 10, "tiers": [[0.03, 0.06], [0.06, 0.10], [0.10, 0.15]], "tags_any": ["weapon"]},
+		"attack_speed": {"name": "Swift %s", "pos": "prefix", "weight": 8, "tiers": [[0.04, 0.08], [0.08, 0.14], [0.14, 0.22]], "tags_any": ["weapon"]},
+		"pen_pct_phys": {"name": "%s of Piercing", "pos": "suffix", "weight": 6, "tiers": [[0.05, 0.10], [0.10, 0.20], [0.20, 0.30]], "tags_any": ["weapon"]},
+		"pen_pct_energy": {"name": "Arcing %s", "pos": "prefix", "weight": 6, "tiers": [[0.05, 0.10], [0.10, 0.20], [0.20, 0.30]], "tags_any": ["energy"]},
+		"armor_phys": {"name": "Plated %s", "pos": "prefix", "weight": 10, "tiers": [[5, 12], [12, 25], [25, 45]], "tags_any": ["armor"], "int": true},
+		"armor_energy": {"name": "Insulated %s", "pos": "prefix", "weight": 7, "tiers": [[3, 8], [8, 16], [16, 30]], "tags_any": ["armor"], "int": true},
+		"flat_phys": {"name": "Padded %s", "pos": "suffix", "weight": 8, "tiers": [[1, 1], [2, 2], [3, 3]], "tags_any": ["armor"], "int": true},
+		"flat_energy": {"name": "%s of Grounding", "pos": "suffix", "weight": 5, "tiers": [[1, 1], [1, 2], [2, 3]], "tags_any": ["armor"], "int": true},
+		"max_hp": {"name": "%s of Vigor", "pos": "suffix", "weight": 8, "tiers": [[3, 6], [6, 12], [12, 20]], "tags_any": ["armor"], "int": true},
+		"move_speed": {"name": "%s of Haste", "pos": "suffix", "weight": 6, "tiers": [[0.03, 0.06], [0.06, 0.10], [0.10, 0.15]], "tags_any": ["armor"]},
+		"ammo_eff": {"name": "Frugal %s", "pos": "prefix", "weight": 6, "tiers": [[0.05, 0.10], [0.10, 0.20], [0.20, 0.30]], "tags_any": ["ranged"]},
+		"durability_max": {"name": "Sturdy %s", "pos": "prefix", "weight": 6, "tiers": [[10, 20], [20, 40], [40, 70]], "tags_any": ["weapon", "armor"], "int": true}
+	},
+	"rules": {"max_prefix": 2, "max_suffix": 2, "max_per_group": {"offense": 4, "defense": 4, "utility": 2}, "tier_by_ilvl": [0, 5, 10]}
+}
