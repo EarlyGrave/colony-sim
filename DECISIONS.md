@@ -280,3 +280,8 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 - Escapes/riots therefore happen when a colony stops paying; clearing the debt is no longer the way out (petition/shuttle is).
 - haul_blocked_fix (balance, default off): hauling output of a miner anchored on a deposit cell; on it raids shift and survival drops, so it stays off until its own balance pass. Blueprints may take loose essence ore (refinery no longer starves them).
 - Factory bot pays installments first; extra goes to the inmate with the least paid this period.
+
+## Debt + NG+ (decided without owner, review)
+- Debt: almost unpayable via interest; pressure comes from 10-day installments (4 refined/inmate) with 10-day grace; despair scales with the unpaid share.
+- NG+: carry 25% of debt left, veteran (best skills) + first perk, ≤3 techs; preset steps up; run 2 survives ~6/10 vs 9/10 run 1 (accepted: next sentence should be harder).
+- Pollution dirty wave multiplier 0.35 (was 0.5) to keep throttling worth ≥2 waves.

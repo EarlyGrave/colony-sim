@@ -306,3 +306,13 @@ HP); волны заканчиваются по таймеру и твари о�
 - 10 seeds/60 d: Q6 fired 5/10, Q2 9/10, Q1 10/10; audit tier 2 5/10 (6/10 with quests off), P1 2/10. Pillar 6.8 vs 4.2.
 - Open: quest sheet shows raw id and no option buttons on announce beat (UI polish); seed 2 colonists_dead with quests on.
 - 814 green x2, web smoke PASS.
+
+## Session 4 — Debt redesign (DB+PX) + NG+ (N1-N3) + quest sheet UI
+- Debt almost unpayable (owner): 120-280 refined per inmate, 3% interest / 10 d, installment 4 per inmate per 10 d (first due d25), 10-day grace, despair proportional to unpaid share. Real bot pays ≤29% by d60.
+- Bot fixes: turret reserve before installments; died counter fixed. Blueprints may use loose ore. Deposit-miner haul fix exists behind `haul_blocked_fix` (off; needs balance pass).
+- Pillar restored: dirty_mult 0.35 → standard_term d21 baseline 6.2 vs throttle 4.0.
+- factory_eval 10 seeds/60 d: alive≥8 8/10, audit tier 2 7/10, P1 4/10, P3 4/10, P4 3/10, launch 0/10.
+- NG+ "Next Sentence": meta v2 (sentence, carry_debt 25%, veteran + perk, up to 3 techs, history), preset steps up; win screen + dossier + history UI; sentence 2/3/4+ letters. Two-run chain: run 1 9/10, run 2 6/10 survive.
+- Quest sheet UI: titles, Warden text, option hints, disabled requirements; Q6 actually offers choices now (start beat fixed).
+- 836 green, web smoke PASS.
+- Open: shuttle launch 0/10 for real bot; haul fix balance; quest sheet overlaps notification stack edge.
