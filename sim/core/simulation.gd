@@ -37,6 +37,7 @@ var health: HealthSystem
 # region mood
 var mood: MoodSystem
 # endregion
+var q1_clerk: QuestClerkNote  # region Q1
 # region debt
 var debt: DebtSystem
 # endregion
@@ -310,6 +311,7 @@ func _init_systems() -> void:
 	milestones = MilestoneSystem.new(self)  # region R2b
 	petition = PetitionSystem.new(self)  # region E1
 	quests = QuestLog.new(self)  # region Q0
+	q1_clerk = QuestClerkNote.new(self)  # region Q1
 	shuttle = ShuttleSystem.new(self)  # region S1
 	beacons = BeaconSystem.new(self)  # region S2
 	chips = ChipSystem.new(self)  # region T4

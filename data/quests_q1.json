@@ -1,0 +1,32 @@
+{
+	"q1": {
+		"_comment": "Clerk's Margin Note. Driven by sim/quests_q1/clerk_note.gd. Debt cut is capped by design (owner rule).",
+		"tag": "Clerk",
+		"tag_every_nth_id": 3,
+		"trigger": {"min_paid": 1, "tag": "Clerk"},
+		"start_delay_days": 1,
+		"notice_delay_days": 2,
+		"clue_delay_days": 5,
+		"cap_pct_inmate": 10.0,
+		"cap_pct_colony": 2.0,
+		"loophole": {"audit_parts_mult": 1.2, "audit_mult_days": 12, "remove_chance": 0.5},
+		"report": {"allowance": 10, "mood_thought": "clerk_reported", "escape_chance": 0.3},
+		"beats": {
+			"clause": {"title": "Margin note", "text": "Clause 14(c): interest accrues on the debtor. Not the debt."},
+			"offer": {
+				"text": "{clerk} has found a loophole. It involves a pencil and a short memory.",
+				"options": [
+					{"id": "loophole", "label": "Use the loophole"},
+					{"id": "report", "label": "Report the Clerk"},
+					{"id": "ignore", "label": "Ignore it"}
+				]
+			},
+			"notice_loophole": {"title": "Warden notice", "text": "A discrepancy has been located. It was not hidden well."},
+			"payoff_loophole": {"title": "Reassignment", "text": "{clerk} has been reassigned. The ledger has not."},
+			"payoff_loophole_kept": {"title": "Clerical note", "text": "{clerk} has been reminded of the pencil. The pencil remains."},
+			"payoff_report": {"title": "Allowance", "text": "The Warden thanks you for your vigilance. Refined essence enclosed."},
+			"payoff_report_escape": {"title": "Absence", "text": "{clerk} has left the premises. This was not approved."},
+			"clue": {"title": "Overheard", "text": "{clerk} mutters: 'Interest on the debtor. They never wrote who owns the debtor.'"}
+		}
+	}
+}

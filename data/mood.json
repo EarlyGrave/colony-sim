@@ -23,6 +23,7 @@
 		"letter_home": {"label": "Letter from home", "value": 10, "duration_days": 2.0},
 		"escape_rumors": {"label": "Escape rumors", "value": -5, "duration_days": 1.5},
 		"inspection_praise": {"label": "Inspector pleased", "value": 5, "duration_days": 2.0},
-		"freedman": {"label": "Free man", "value": 8, "duration_days": 0.0}
+		"freedman": {"label": "Free man", "value": 8, "duration_days": 0.0},
+		"clerk_reported": {"label": "Reported by the Warden's office", "value": -10, "duration_days": 3.0}
 	}
 }
