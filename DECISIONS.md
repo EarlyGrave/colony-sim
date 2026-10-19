@@ -299,3 +299,7 @@ factory_eval 10 seeds/60 d, off vs on: alive>=8 9/10 vs 4/10; audit tier2 7 vs 6
 - Built S1, S2, S3 from docs/story/society.md; S4/S5 deferred.
 - Contraband stays disabled until a high-despair scenario shows it works.
 - Q12 gamble now a true 50% (was ~25% due to double roll).
+
+## Owner 2026-10-19: only essence refining pollutes
+- Pollution comes ONLY from refining essence. Smelting and every other recipe are clean unless a recipe is explicitly marked polluting (future: uranium).
+- Consequence: smelters no longer emit taint and are not stopped by the taint cap (cap_margin irrelevant for clean recipes).
