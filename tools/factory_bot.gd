@@ -644,7 +644,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	sim.start_new_game()
 	var bot: RefCounted = (load("res://tools/factory_bot.gd") as GDScript).new(sim)
 	bot.assume_nitrogen = bool(opts.get("assume_nitrogen", false))
-	bot.cap_percent = int(opts.get("cap", 50))
+	bot.cap_percent = int(opts.get("cap", 35))
 	bot.plate_target = int(opts.get("plate", 45))
 	var died := 0
 	sim.bus.colonist_died.connect(func(_i: int) -> void: died += 1)

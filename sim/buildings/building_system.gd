@@ -520,6 +520,10 @@ func _tick_processor(b: Building) -> void:
 				continue
 			b.recipe = b.station_defs[rid]
 			b.recipe_id = rid
+			if _stock_capped(b.recipe):  # PL: buffer cap, e.g. parts stop at 25 so they do not eat every plate
+				b.recipe = {}
+				b.recipe_id = ""
+				continue
 			if b.can_run_recipe() and may_operate(b):  # YX: a capped/locked refine recipe must not wedge a smelter that could smelt
 				break
 			b.recipe = {}
@@ -529,6 +533,15 @@ func _tick_processor(b: Building) -> void:
 	if may_operate(b):
 		work(b, sim.power.scale_steps(b, sim.chips.steps(b)), null)  # region T4: chip speed / stopped chip; L3: brownout
 # endregion
+
+## PL: recipe field `stock_cap` {item: n}: the batch does not start while n or more of that item sit in storage.
+func _stock_capped(recipe: Dictionary) -> bool:
+	var cap: Dictionary = recipe.get("stock_cap", {})
+	for item: String in cap:
+		if sim.items.count_stored(item) >= int(cap[item]):
+			return true
+	return false
+
 
 # region T3
 ## Repair material cost: building def `repair_cost` or the balance default.
