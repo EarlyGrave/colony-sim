@@ -285,3 +285,6 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 - Debt: almost unpayable via interest; pressure comes from 10-day installments (4 refined/inmate) with 10-day grace; despair scales with the unpaid share.
 - NG+: carry 25% of debt left, veteran (best skills) + first perk, ≤3 techs; preset steps up; run 2 survives ~6/10 vs 9/10 run 1 (accepted: next sentence should be harder).
 - Pollution dirty wave multiplier 0.35 (was 0.5) to keep throttling worth ≥2 waves.
+
+## haul_blocked_fix stays OFF (I4, decided without owner, review)
+factory_eval 10 seeds/60 d, off vs on: alive>=8 9/10 vs 4/10; audit tier2 7 vs 6; P1 4 vs 5; hq_destroyed/colonists_dead 1 vs 5. Decision rule (alive>=8 >= 8/10) fails, so default stays false. Pillar baseline 6.2 vs throttle 4.0 (gap 2.2) unchanged.
