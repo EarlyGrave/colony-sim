@@ -99,7 +99,9 @@ func _act() -> void:
 			_stage = 4
 		4:
 			if sim.tick > 300 and sim.research.is_done("conveyance"):  # region B1
-				Scen.build_chain(sim, true)  # returns {} in blueprint mode
+				for _k in 7:  # the old helper kept placing a chain on every node; the tutorial pacing relies on that
+					if Scen.build_chain(sim, true).is_empty():
+						break
 				_chain = true
 				_stage = 5
 		5:
