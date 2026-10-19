@@ -163,7 +163,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
 | `tutorial.json` | R5 O1: settings{audit_step, audit_delay_ticks}, steps[12] -> {id,title,text,reason,target{kind,id},done{signal,count/min_cells/where/or/latch},nudge_ticks} |
-| `recipes.json` | id -> {name, inputs{}, outputs{}, work_ticks, station} |
+| `recipes.json` | id -> {name, inputs{}, outputs{}, work_ticks, station, pollutes?, cap_margin?, contam_mult?}. `pollutes:true` (default false; only refine_essence) = adds contamination per batch and obeys the refine cap; all other recipes are clean (owner rule 2026-10-19) |
 | `research.json` | techs id -> {name, tier, prereqs[], cost{essence}, bench_ticks, unlocks{buildings,recipes,rules}, waste_mult} |
 | `chips.json` | T4: item, tech, recipe, chip_speed 0.8, chip_threat_mult 2.0, chip_waste_mult 1.3, upkeep_item/upkeep_per_day, calibration_days 3, calibrate_ticks, calibrate_min_skill (operating) |
 | `resources.json` | id -> {item, tier, biomes, base_rate, purity_mult, appended?}; `appended` resources get node_res bytes after legacy ones (keeps start-map hashes) |

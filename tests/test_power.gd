@@ -176,7 +176,7 @@ func test_reactor_meltdown() -> void:
 		var before := sim.contamination.level
 		_run(sim, fed, 120)
 		assert_true(r.destroyed, "melted down")
-		assert_true(sim.contamination.level >= before + 30.0, "contamination burst")
+		assert_true(sim.contamination.level >= before + 25.0, "contamination burst (40, minus b2 decay; smelters no longer block decay)")
 		assert_true(neighbour.hp < neighbour.max_hp, "blast damage")
 		out.append(SaveGame.state_hash(sim))
 	assert_eq(out[0], out[1], "meltdown is deterministic")

@@ -196,26 +196,6 @@ func test_waste_multiplier_applies_to_batches() -> void:
 		outs.append(int(m.output.get("waste", 0)))
 	assert_eq(outs[0], 4, "base waste")
 	assert_eq(outs[1], 5, "waste with high_throughput")
-	# Smelter: 1 waste/batch * 1.5 (bulk_refining) averages 1.5 over many batches, deterministically.
-	var totals: Array = []
-	for t in 2:
-		var s := make_sim(1, false, 24, 24, peaceful_defs())
-		if t == 1:
-			s.research.done.append("bulk_refining")
-		var m := s.buildings.place("smelter", Vector2i(8, 8), false)
-		var waste := 0
-		for i in 60:
-			m.add_input("copper_ore", 4)
-			s.run_ticks(int(s.defs.recipes["smelt_copper"]["work_ticks"]) + 5)
-			waste += int(m.output.get("waste", 0))
-			m.output.clear()
-		totals.append([waste, s.buildings.refined_batches])
-	var b0: int = totals[0][1]
-	var b1: int = totals[1][1]
-	assert_true(b0 > 30 and b1 > 30, "enough batches ran")
-	assert_eq(totals[0][0], b0, "smelter base waste = 1/batch")
-	var ratio := float(totals[1][0]) / float(b1)
-	assert_true(ratio > 1.3 and ratio < 1.7, "smelter waste ~1.5x per batch, got %f" % ratio)
 
 
 func test_fresh_locked_game_has_t0_t1_content() -> void:

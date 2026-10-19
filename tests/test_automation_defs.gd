@@ -12,10 +12,12 @@ func test_refining_recipes_have_waste() -> void:
 	var n := 0
 	for rid: String in d.recipes:
 		var st: Array = d.recipes[rid].get("station", [])
-		if "smelter" in st or "refinery" in st:
+		if d.recipes[rid].get("pollutes", false):
 			n += 1
 			assert_true(int(d.recipes[rid]["outputs"].get("waste", 0)) > 0, rid + " has no waste")
-	assert_true(n >= 3, "expected refining recipes")
+		elif "smelter" in st:
+			assert_eq(int(d.recipes[rid]["outputs"].get("waste", 0)), 0, rid + " is clean (owner rule 2026-10-19)")
+	assert_eq(n, 1, "only essence refining pollutes")
 
 
 func test_machines_have_ports() -> void:
@@ -36,7 +38,7 @@ func test_machines_have_ports() -> void:
 
 func test_validate_catches_errors() -> void:
 	var d := Defs.get_default().duplicate_defs()
-	d.recipes["smelt_iron"]["outputs"].erase("waste")
+	d.recipes["refine_essence"]["outputs"].erase("waste")
 	d.buildings["smelter"]["ports"] = [{"dx": 2, "dy": 0, "dir": "E", "kind": "out"}]
 	d.recipes["make_plate"]["station"] = ["nope"]
 	assert_true(d.validate().size() >= 3, "validate should flag 3 errors")

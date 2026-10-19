@@ -296,8 +296,8 @@ func validate() -> Array[String]:
 		for st: String in stations:
 			if not buildings.has(st):
 				errs.append("recipe %s: unknown station %s" % [rid, st])
-		if ("smelter" in stations or "refinery" in stations) and int(r.get("outputs", {}).get("waste", 0)) <= 0:
-			errs.append("recipe %s: refining recipe without waste" % rid)
+		if bool(r.get("pollutes", false)) and int(r.get("outputs", {}).get("waste", 0)) <= 0:
+			errs.append("recipe %s: polluting recipe without waste" % rid)
 	for bid: String in buildings:
 		var b: Dictionary = buildings[bid]
 		var ports: Array = b.get("ports", [])

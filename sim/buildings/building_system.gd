@@ -126,15 +126,13 @@ func may_operate(b: Building) -> bool:
 		return false
 	# YX: the taint cap stops waste-making recipes only (refining, smelting). Plates, parts and bench crafts keep running,
 	# otherwise a capped colony could not even hammer the plates its machine repairs cost.
-	return b.can_run_recipe() and (b.progress > 0 or not _is_refining(b) or not refining_capped(float(b.recipe.get("cap_margin", 0.0))))  # PL: smelting stops 30 points above the cap
+	return b.can_run_recipe() and (b.progress > 0 or not _is_refining(b) or not refining_capped(float(b.recipe.get("cap_margin", 0.0))))
 
 
 # region crises
 func _is_refining(b: Building) -> bool:
-	for item: String in b.recipe.get("outputs", {}):
-		if sim.defs.items[item].get("contaminates", false):
-			return true
-	return false
+	# Owner rule 2026-10-19: only recipes marked "pollutes" (essence refining; later uranium) pollute and obey the taint cap.
+	return bool(b.recipe.get("pollutes", false))
 # endregion
 
 ## Returns true when a batch completed this tick.
