@@ -73,6 +73,14 @@ func _shard_set(names: Array[String], shard: Vector2i) -> Dictionary:
 	return mine
 
 
+## `--filter=a,b` runs tests whose "file::method" contains any of the comma-separated parts.
+func _matches(full: String, filter: String) -> bool:
+	for part in filter.split(","):
+		if part != "" and full.contains(part):
+			return true
+	return false
+
+
 func run_all(filter: String, shard := Vector2i(1, 1)) -> int:
 	var files: Array[String] = []
 	var dir := DirAccess.open("res://tests")
@@ -105,7 +113,7 @@ func run_all(filter: String, shard := Vector2i(1, 1)) -> int:
 			if not mname.begins_with("test_"):
 				continue
 			var full := "%s::%s" % [f.get_basename(), mname]
-			if filter != "" and not full.contains(filter):
+			if filter != "" and not _matches(full, filter):
 				continue
 			if shard.y > 1 and not mine.has(full):
 				continue

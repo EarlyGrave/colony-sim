@@ -33,27 +33,28 @@ mode — the main session does NOT implement features itself:
    game designer and the prompter, never straight to workers.
 5. Budget: one wave per batch, Sonnet for subagents, the orchestrator does not
    re-read files the agents already read; short reports.
-6. **Merge to `main`** (owner rule 2026-10-18): when a whole batch is merged into the
+6. **Test cadence** (owner rule 2026-10-19): after merging a worker branch into the dev branch run `tools/run_tests_quick.sh`; run the full `tools/run_tests_sharded.sh` once before every merge to `main` (repeat only if a perf/timing test flaked).
+7. **Merge to `main`** (owner rule 2026-10-18): when a whole batch is merged into the
    dev branch and the full suite is green, fast-forward/merge it into `main` and push
    (Pages deploys from `main`). Never merge a half-done batch. Every merge to `main` is a rollback point: append `date | main SHA | batch | tests` to `docs/rollback_points.md` (owner rule 2026-10-19; the cloud git proxy refuses tag pushes, so no tags). Roll back with `git checkout -b restore <sha>`.
-7. **Autonomous mode** (owner rule 2026-10-18): the orchestrator keeps a 5-minute
+8. **Autonomous mode** (owner rule 2026-10-18): the orchestrator keeps a 5-minute
    self check-in (`send_later`). On each check-in: if workers are still running,
    re-arm and wait; if everything is merged, nothing is pending and the owner has
    not written, call the mechanics scout -> hand its ideas to the prompter -> run
    the next wave. Undecided design questions: decide, log in DECISIONS.md as
    "decided without owner, review", keep it reversible. Never stop the loop just
    because a batch ended.
-8. **Ship checks** (from the "Birds With Guns" workflow; decided without owner, review):
+9. **Ship checks** (from the "Birds With Guns" workflow; decided without owner, review):
    before every merge to `main` run `tools/web_smoke.py` (real web build in Chromium at phone
    size); new content (map/biome/creature/machine) merges only with bot numbers; balance is
    tuned from a model/table (e.g. tools/combat_model.gd), not by eye; owner feedback is best as
    a phone screenshot + one blunt sentence — turn each into a task.
-9. **Story writer** (owner rule 2026-10-19; subagent, Sonnet, docs only): designs quest
+10. **Story writer** (owner rule 2026-10-19; subagent, Sonnet, docs only): designs quest
    lines / narrative scenarios that fit the pillars (prison planet, debt, essence,
    contamination, petition/shuttle escape) and writes `docs/story/*.md` (English, in-game
    text style). The orchestrator consults it periodically (every few batches or before
    planning content) and hands accepted ideas to the prompter, never straight to workers.
-10. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
+11. Visual checks: `xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn -- --out=<scratchpad>/shot.png`.
 
 ## Stack
 - Godot **4.7.2-stable**, GDScript only (no C#: we need the web build).
@@ -66,6 +67,7 @@ mode — the main session does NOT implement features itself:
 godot --headless --path . --import                       # build .godot cache (needed once / after adding class_name)
 godot --headless --path . res://tests/run_tests.tscn     # all tests
 godot --headless --path . res://tests/run_tests.tscn -- --filter=test_map   # subset
+tools/run_tests_quick.sh [base]                           # quick: tests touching changed files + goldens/contract/phone (~40 s); after merging a worker branch into dev
 tools/run_tests_sharded.sh 4                              # full suite as 4 parallel shards (~2 min; sets PERF_SKIP_WALL=1, run test_perf_budget single-process)
 godot --headless --path . --export-release "Web" build/web/index.html
 PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python3 tools/web_smoke.py   # web smoke: export+serve, 844x390 DPR3 touch, boot, console errors, toolbar taps, ?size=250, FPS/mem, screenshots (pip install playwright==1.56.0; NEVER `playwright install`)
