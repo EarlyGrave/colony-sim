@@ -29,6 +29,8 @@ func _init() -> void:
 		bot.act()
 		sim.run_ticks(Bot.STEP_TICKS)
 		bot.after()
+		if sim.day() >= 38 and sim.day() < 40 and sim.tick % 120 == 0:
+			print("STEP t=%d lvl=%.3f mr=%.2f cap=%s wu=%.1f" % [sim.tick, sim.contamination.level, sim.contamination.machine_rate_per_day(), str(sim.buildings.refining_capped()), sim.contamination.waste_units()])
 		if sim.day() != lastd:
 			lastd = sim.day()
 			var rd := ""
@@ -36,6 +38,8 @@ func _init() -> void:
 				if sim.research.is_done(t) and not seen.has(t):
 					seen[t] = true
 					print("RESEARCH ", t, " done d", lastd)
+			if lastd % 2 == 0 and lastd < 34:
+				print("RQ d%d queue=%s active=%s prog=%s refined=%d" % [lastd, str(sim.research.queue), sim.research.active(), str(sim.research.progress), sim.items.count_stored("refined_essence")])
 			var brk := 0
 			var names := {}
 			for b in sim.buildings.list:
@@ -49,7 +53,7 @@ func _init() -> void:
 				var parts: Array[String] = []
 				for b in sim.buildings.list:
 					if b.def_id in ["smelter", "miner", "assembler", "workbench", "refinery"]:
-						parts.append("%s@%d,%d[%s in=%s out=%s cond=%d]" % [b.def_id, b.cell.x, b.cell.y, b.recipe_id, str(b.input), str(b.output), int(b.condition)])
-				print("   ", " ".join(parts), " pf=", sim.power.worst_net())
+						parts.append("%s@%d,%d[%s p%d in=%s out=%s cond=%d]" % [b.def_id, b.cell.x, b.cell.y, b.recipe_id, b.progress, str(b.input), str(b.output), int(b.condition)])
+				print("   ", " ".join(parts), " rate=", sim.contamination.rate_per_day, " mrate=", sim.contamination.machine_rate_per_day(), " lvl=", sim.contamination.level, " wu=", sim.contamination.waste_units())
 	sim.dispose()
 	quit()

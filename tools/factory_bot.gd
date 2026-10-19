@@ -92,7 +92,7 @@ func _upkeep() -> void:
 	# D3: debt first (unpaid debt -> despair -> escapes): refined goes to the debt item before turrets/contracts/research,
 	# keeping a floor of one turret's cost; the earliest due tranche is paid every upkeep, long before the due day.
 	var floor_keep := 10 if have < want else 0
-	var debt_stock := sim.items.count_stored("refined_essence") - floor_keep - 3
+	var debt_stock := sim.items.count_stored("refined_essence") - floor_keep - 3 - _research_reserve()  # PL: research essence first, debt drained the stock to 3 for 18 days
 	var target: Colonist = null
 	for c in sim.colonists.list:
 		if not c.alive:
@@ -126,6 +126,16 @@ func _upkeep() -> void:
 						for pid in sim.perks.perks_of_skill(sk):
 							if sim.learn_perk(c.id, pid):
 								break
+
+
+## PL: essence still owed to the factory techs (filters / assembly / electrification) that are not queued-and-paid yet.
+func _research_reserve() -> int:
+	var n := 0
+	for t: String in RESEARCH:
+		if sim.research.is_done(t) or sim.research.paid.has(t) or not sim.defs.research.has(t) or t in ["fortification", "decoys_1"]:
+			continue
+		n += int(sim.defs.research[t]["cost"]["essence"])
+	return n
 
 
 ## Crew management: two researchers (the tutorial bot's choice), two farmers, the rest build, haul and mine.
