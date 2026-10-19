@@ -4,6 +4,29 @@
 	"xp_table": [100, 160, 250, 400, 650, 1000, 1600, 2500, 4000, 6500],
 	"efficiency": [0.30, 0.60, 0.80, 1.00, 1.10, 1.22, 1.36, 1.52, 1.70, 1.90, 2.20],
 	"milestones": {"3": "journeyman", "6": "expert", "10": "master"},
+	"branch_level": 5,
+	"branches": {
+		"shooting": {
+			"marksman": {"name": "Marksman", "desc": "Aimed shots: +12% hit chance, +10% crit chance.", "effects": {"hit_chance": 0.12, "crit_chance": 0.10}},
+			"gunner": {"name": "Gunner", "desc": "Longer bursts: +1 shot per burst.", "effects": {"burst_shots": 1}}
+		},
+		"melee": {
+			"warrior": {"name": "Warrior", "desc": "Weapon melee damage +20%.", "effects": {"melee_damage": 0.2}},
+			"monk": {"name": "Monk", "desc": "Bare-handed fighting: +60% damage with the starting weapon.", "effects": {"unarmed_damage": 0.6}}
+		},
+		"plants": {
+			"forester": {"name": "Forester", "desc": "Sowing and harvesting 25% faster.", "effects": {"plant_speed": 0.25}},
+			"farmer": {"name": "Farmer", "desc": "Harvest yield +25%.", "effects": {"harvest_yield": 0.25}}
+		},
+		"crafting": {
+			"smith": {"name": "Smith", "desc": "Better craft quality.", "effects": {"craft_quality": 1.0}},
+			"tinkerer": {"name": "Tinkerer", "desc": "Crafting uses 10% less input.", "effects": {"craft_input": -0.1}}
+		},
+		"mining": {
+			"prospector": {"name": "Prospector", "desc": "Ore yield +25%.", "effects": {"ore_yield": 0.25}},
+			"digger": {"name": "Digger", "desc": "Mining 25% faster.", "effects": {"mining_speed": 0.25}}
+		}
+	},
 	"xp_per_work_tick": 1.0,
 	"passion_xp": {"none": 1.0, "minor": 1.5, "major": 2.0},
 	"init": {"level_min": 1, "level_max": 4, "minor_chance": 0.25, "major_chance": 0.1},

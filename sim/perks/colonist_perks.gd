@@ -14,3 +14,6 @@ var buffs: Dictionary = {}
 
 func add_buff(id: String, stats: Dictionary, until: int) -> void:
 	buffs[id] = {"stats": stats, "until": until}
+
+## skill id -> chosen branch id (region PW4); empty by default.
+var branches: Dictionary = {}
