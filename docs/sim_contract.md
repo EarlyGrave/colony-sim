@@ -73,6 +73,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `form_squad` | ids: str (JSON int array), roles: str (JSON array, "" / "auto" / [] = by affinity) | int | C1: squad id or -1; 1..`roles.max_size` (4) living, unsquadded, unique members; members drafted, role weapon equipped |
 | `disband_squad` | sid: int | bool | C1: squad exists; members un-drafted, weapons restored |
 | `squad_hold` | sid: int, cell: cell | bool | C1: cell passable; members `order_move` to cell + role offset (nearest free reachable cell); clears focus |
+| `squad_shakedown` | sid: int | bool | I3: contraband enabled, squad alive + off cooldown (1 patrol day), stash > 0; recovers stash to map centre, +despair on top holder |
 | `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` |
 | `resolve_crisis` | crisis_id: str, option_id: str | bool | crisis active, option exists |
 | `answer_event` | event_uid: int, accept: bool | bool | pending storyteller choice with that uid |
@@ -146,6 +147,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quests_q1.json` | Q1 Clerk's Margin Note: tag, trigger, debt caps, loophole/report tuning, beat texts |
 | `mutation.json` | update_ticks, cap, diffusion, decay, bloom/illness chances |
 | `threat.json` | enabled (threat_v2), d0, k_poll, stick, pull_ratio, region_size/cap_per_region, recompute_ticks, base/state_mod/colonist_mod/species_bias; def fields `threat`, `threat_mods`; API `ThreatSystem.pick_target(e)`, `Building.threat_now(sim)`, `Building.threat_flags`; C2 `sim.abilities.flags_of(colonist_id)` {flag: [until_tick, mult, radius]} (kept off `Colonist`: its property list feeds golden dumps) multiplies `ThreatModel.colonist_value` (radius > 0: fades beyond it) |
+| `contraband.json` | I3: enabled (default false), despair_min, skim_cap_pct (<=3% of refined), blackmarket_stash, relief cap, wave_bump; `sim.contraband` skim/shakedown/black market, conservation skimmed = stash+recovered+leaked |
 | `names.json` | names[], backstories[] |
 | `needs.json` | start_food/rest, retry_ticks, food{}, rest{} |
 | `perks.json` | caps, respec_cost, perks id -> {skill, level, effect}, levels_per_point |
@@ -173,7 +175,6 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `work.json` | default_priority, max_priority, types{} |
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
 | `zones.json` | id -> {name, color, accepts[], waste_emission_factor} |
-
 ## 7. Save format v2 (`SaveGame`)
 Saves are command-log replays, not state snapshots:
 `{"version": 2, "seed": int, "defs_hash": int, "tick": int, "commands": [[tick, name, args], ...], "opts": {...}}`.
@@ -183,7 +184,6 @@ Saves are command-log replays, not state snapshots:
   stop when `sim.tick >= tick` or game over; else `step()`. Float args become ints; `opts` keys `scout`, `site`, `crate{}` are int-normalised. Then `replaying = false`.
 - `defs_hash`: hash of sorted-key JSON of every Dictionary property of `Defs` (GD `String.hash()`). Only equality with the same engine's defs matters; cross-engine saves are unsupported.
 - `opts`: `scout`, `site`, `crate` (item->count), `wave_mult` (raid points x), `waste_mult` (contamination x), `debt_mult` (starting debt x), `hint_density` (ignored by sim), `map_w`, `map_h`, meta unlock flags; consumed by `StartOpts.apply` and part of the replay input.
-
 ### 7b. Campaign save v3 (`SaveGame.campaign_to_dict`, R4 expeditions)
 Sim saves stay v2. A campaign save is `{version:3, campaign_seed, defs_hash, tick, active, log, maps, ledgers, in_flight}`;
 each map `{id, biome, kind, seed, opts, sim_commands, sim_tick, crew_n, dead_charged, sling_ready}` is replayed standalone to `sim_tick`

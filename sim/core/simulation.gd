@@ -98,6 +98,7 @@ var in_step := false
 var chips: ChipSystem  # region R4b
 var power: PowerSystem  # region L3
 var squads: SquadSystem  # region C1
+var contraband: Contraband  # region I3
 var abilities: Abilities  # region C2
 ## True for buildings whose recipes produce waste (refinery, smelter): refining class.
 func is_refining_building(def_id: String) -> bool:
@@ -325,6 +326,7 @@ func _init_systems() -> void:
 	power = PowerSystem.new(self)  # region L3
 	squads = SquadSystem.new(self)  # region C1
 	abilities = Abilities.new(self)  # region C2
+	contraband = Contraband.new(self)  # region I3
 	if bool(opts.get("tutorial", false)):  # region O1
 		tutorial = TutorialSystem.new(self)
 	militia = Militia.new(self)  # region C5
@@ -451,6 +453,7 @@ func step() -> void:
 		_lap("threats")
 	shuttle.tick()  # region S1
 	squads.tick()  # region C1
+	contraband.tick()  # region I3
 	if profiling:
 		_lap("squads")
 	contamination.tick()
@@ -843,6 +846,12 @@ func squad_hold(sid: int, cell: Vector2i) -> bool:
 func squad_focus(sid: int, enemy_id: int) -> bool:
 	_record("squad_focus", [sid, enemy_id])  # save-load
 	return squads.focus(sid, enemy_id)
+# endregion
+# region I3
+## Squad shakedown: recovers the contraband stash; costs the squad a patrol day.
+func squad_shakedown(sid: int) -> bool:
+	_record("squad_shakedown", [sid])  # save-load
+	return contraband.shakedown(sid)
 # endregion
 # region crises
 func resolve_crisis(crisis_id: String, option_id: String) -> bool:

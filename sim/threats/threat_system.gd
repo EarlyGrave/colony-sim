@@ -114,7 +114,7 @@ func colony_wealth() -> float:
 
 ## Raid points: the colony's wealth and growth is what calls the creatures.
 func raid_points(index: int) -> float:
-	return _o3_mult() * _b2_clean_mult() * _attract_mult() * sim.crises.mult("raid_points_mult") * (float(cfg["base_strength"]) \
+	return sim.contraband.wave_mult() * _o3_mult() * _b2_clean_mult() * _attract_mult() * sim.crises.mult("raid_points_mult") * (float(cfg["base_strength"]) \
 		+ float(cfg["per_wave"]) * (index - 1) \
 		+ float(cfg["per_wealth"]) * colony_wealth() \
 		+ float(cfg["per_refined"]) * sim.ledger.get_count("recipe:refined_essence") \

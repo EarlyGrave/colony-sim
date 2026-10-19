@@ -1,0 +1,21 @@
+{
+	"enabled": false,
+	"despair_min": 40,
+	"skim_per_inmate_day": 1,
+	"skim_cap_pct": 3.0,
+	"item": "refined_essence",
+	"shakedown_cooldown_days": 1,
+	"shakedown_despair": 25,
+	"blackmarket_stash": 4,
+	"blackmarket_cooldown_days": 3,
+	"installment_relief": 1,
+	"relief_cap_pct": 2.0,
+	"wave_bump": 0.15,
+	"wave_bump_per_contam": 0.002,
+	"wave_bump_days": 2,
+	"lines": {
+		"title": "Warden: Contraband",
+		"shakedown": "Shakedown done. %d units back on the books.",
+		"blackmarket": "The black market ate %d units. The creatures noticed."
+	}
+}
