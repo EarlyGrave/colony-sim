@@ -60,3 +60,12 @@ func test_nitrogen_reachable_from_hq() -> void:
 				elif m.tiles[m.idx(n)] != MapGrid.Tile.ROCK:
 					st.append(n)
 		assert_true(ok, "nitrogen adjacent to walkable region seed %d" % s)
+
+
+## YX: the chain needs copper (parts) and iron (plates); every home map has at least one blob of each.
+func test_iron_and_copper_exist_per_seed() -> void:
+	for s in range(1, 6):
+		var m := _gen(s)
+		assert_true(_blobs(m, NodeData.res_index("iron_ore")) >= 1, "seed %d iron" % s)
+		assert_true(_blobs(m, NodeData.res_index("copper_ore")) >= 1, "seed %d copper" % s)
+		assert_true(_blobs(m, NodeData.res_index("essence_ore")) >= 2, "seed %d essence" % s)
