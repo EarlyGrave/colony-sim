@@ -268,3 +268,8 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 - Debt intent: core pressure, but a decent factory pays it by ~d40-50 (debt 14-42 per colonist, 30 days).
 - Early waste compactor available without research (6 waste/day, small pollution cost).
 - Clean crafts (plates, parts) no longer add pollution; only recipes with a contaminating output do (decided without owner, review).
+
+## Owner answers 2026-10-19
+- Debt: almost unpayable ("that's the point of a prison"). Supersedes D1 intent (paid by d40-50). Progress/escape must come from petition/shuttle, not from clearing debt.
+- Clean crafts (plates/parts) don't pollute: approved.
+- After the shuttle win: Continue is fine, or an NG+ mechanic (next sentence with carry-over) — queue as a feature.
