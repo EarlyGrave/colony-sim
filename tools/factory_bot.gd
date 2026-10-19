@@ -54,6 +54,8 @@ func _init(p_sim: Simulation) -> void:
 	_hub = sim.map_center() + Vector2i(-2, 9)
 	max_pending = _knob("max_pending", max_pending)
 	_plan = PLAN.duplicate(true)
+	for i in _knob("extra_iron", 0):
+		_plan.insert(6, ["line", "iron_ore", true])  # OS: plates need ingots; one iron line gave ~40 ore / 60 d
 	for i in _knob("extra_miners", 0):
 		_plan.insert(5, ["miner"])  # PG: ore (stock 0 for most of the first 25 days) gates construction, refining and research
 

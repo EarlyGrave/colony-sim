@@ -227,7 +227,7 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 					if not seen.has(ni) and map.tiles[ni] == MapGrid.Tile.DEPOSIT and int(map.node_res[ni]) == rid:
 						seen[ni] = true
 						stack.append(ni)
-		if dmin >= min_d and rid != coal:
+		if dmin >= min_d:  # region OS: coal blobs are donors of last resort (pass 2) so iron/nitrogen always exist
 			blobs.append([dmin, k, cells, rid])
 	var ess := NodeData.res_index("essence_ore")
 	var cnt := {}  # blobs per resource
@@ -245,10 +245,12 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 			# YX: spare the LAST blob of iron/copper (and keep 2 essence blobs): pass 0 only takes from resources with spare
 			# blobs, pass 1 (nothing spare) falls back to any blob. Iron/copper first, then farthest from HQ.
 			var best := -1
-			for pass_i in 2:
+			for pass_i in (3 if not map.node_res.has(res) else 2):  # OS: coal is tapped only when the resource is absent from the whole map
 				for k in blobs.size():
 					var b: Array = blobs[k]
 					var r: int = int(b[3])
+					if r == coal and (pass_i < 2 or int(cnt[r]) <= 1):
+						continue
 					if r == res or (wi.has(r) and int(cnt[r]) <= int(wi[r])) or (r == ess and int(cnt[r]) <= 2):
 						continue  # essence keeps 2 far blobs for the start chains
 					if pass_i == 0 and int(cnt[r]) < 2:
