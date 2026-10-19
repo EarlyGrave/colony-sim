@@ -7,6 +7,7 @@
 		"per_prisoner_freed": 2,
 		"per_prisoner_stayed": 1,
 		"per_perk_learned": 1,
+		"per_milestone": 1,
 		"debt_points_weight": 1.0,
 		"min_days_for_award": 1
 	},
@@ -14,6 +15,10 @@
 		"contamination_keep": 0.5,
 		"min_days": 3
 	},
+	"milestones": {"levels": [3, 6, 10], "letters": {
+		"3": {"title": "Competent hands", "text": "%s has become competent at %s. The foreman noted it."},
+		"6": {"title": "A skilled inmate", "text": "%s is now skilled at %s. The other inmates ask for advice."},
+		"10": {"title": "A master of the trade", "text": "%s has mastered %s. Even the Warden took notice."}}},
 	"ng": {"debt_carry_frac": 0.25, "tech_carry": 4, "extra_wave_mult": 0.1},
 	"scout_cells": 12,
 	"unlocks": {

@@ -31,6 +31,7 @@ static func summarize(sim: Simulation, reason: String) -> Dictionary:
 	pts += freed * float(w["per_prisoner_freed"]) + stayed * float(w["per_prisoner_stayed"])
 	pts += perks * float(w["per_perk_learned"])
 	pts += sim.debt.legacy_points * float(w["debt_points_weight"])
+	pts += sim.progression.milestones * float(w.get("per_milestone", 0.0))  # region PW3
 	return {
 		"reason": reason, "seed": sim.seed_value, "days": days,
 		"contracts": fulfilled, "essence": delivered, "freed": freed, "stayed": stayed,
@@ -54,7 +55,8 @@ static func ng_snapshot(sim: Simulation, result: String, preset_id := "") -> Dic
 		if not c.alive:
 			continue
 		cols.append({"id": c.id, "name": c.display_name, "skills": c.skills.levels.duplicate(),
-			"perks": (c.perks.learned.duplicate() if c.perks != null else [])})
+			"perks": (c.perks.learned.duplicate() if c.perks != null else []),
+			"traits": (c.bio.get("traits", []) as Array).duplicate()})
 	return {"seed": sim.seed_value, "days": sim.day(), "result": result, "preset": preset_id,
 		"debt_left": left, "debt_paid": paid, "colonists": cols, "techs": sim.research.done.duplicate()}
 # endregion

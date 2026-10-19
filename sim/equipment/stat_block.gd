@@ -26,6 +26,10 @@ const FLAT_PHYS := 9
 const FLAT_ENERGY := 10
 const N := 11
 const DEFAULT_CRIT_MULT := 1.5
+const IDX := {  # region PW3 compat: key -> index (used by equipment)
+	"accuracy": 0, "crit_chance": 1, "crit_mult": 2, "pen_pct_phys": 3, "pen_pct_energy": 4,
+	"flat_pen_phys": 5, "flat_pen_energy": 6, "armor_phys": 7, "armor_energy": 8, "flat_phys": 9, "flat_energy": 10,
+}
 
 
 static func make() -> PackedFloat64Array:

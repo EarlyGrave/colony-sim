@@ -75,6 +75,17 @@ static func _apply_ng(sim: Simulation, opts: Dictionary) -> void:
 			if c.skills.levels.has(str(k)):
 				c.skills.levels[str(k)] = maxi(int(c.skills.levels[str(k)]), int(sk[k]))
 		c.skills.mark_joined()
+		# region PW3
+		for t: Variant in vet.get("traits", []):
+			var tid := sim.traits.resolve(str(t))
+			var td := sim.traits.def(tid)
+			var have: Array = c.bio.get("traits", [])
+			if td.is_empty() or have.has(tid):
+				continue
+			have.append(tid)
+			c.bio["traits"] = have
+			c.bio["work_speed"] = float(c.bio.get("work_speed", 1.0)) + float(td.get("effects", {}).get("work_speed", 0.0))
+		# endregion
 		var pid := str(vet.get("perk_id", ""))
 		if pid != "" and not sim.perks.perk_def(pid).is_empty():
 			var cp := sim.perks.state_of(c)

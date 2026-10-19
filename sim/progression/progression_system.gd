@@ -5,6 +5,7 @@ extends RefCounted
 
 var sim: Simulation
 var cfg: Dictionary = {}
+var milestones := 0  # region PW3: level milestones reached this run
 
 
 func _init(p_sim: Simulation) -> void:
@@ -15,6 +16,7 @@ func _init(p_sim: Simulation) -> void:
 	p_sim.listen(p_sim.bus.colonist_rescued, _on_rescued)
 	p_sim.listen(p_sim.bus.batch_refined, _on_batch)
 	p_sim.listen(p_sim.bus.event_choice_resolved, _on_choice)
+	p_sim.listen(p_sim.bus.skill_leveled, _on_leveled)  # region PW3
 
 
 ## Public hook (contracts etc.). Returns false if nothing was awarded.
@@ -90,3 +92,24 @@ func grant_event_xp(amount: float, reason: String) -> void:
 			var skill := _skill_for(c, "best_skill")
 			if skill != "":
 				award(c, skill, amount, reason)
+
+
+# region PW3
+## Level milestones (data/meta.json "milestones"): letter + leveled_up thought + legacy point.
+func _on_leveled(cid: int, skill: String, level: int) -> void:
+	var m: Dictionary = sim.defs.meta.get("milestones", {})
+	var hit := false
+	for v: Variant in m.get("levels", []):
+		hit = hit or int(v) == level
+	if not hit:
+		return
+	var c := sim.colonists.get_by_id(cid)
+	if c == null or not c.alive:
+		return
+	milestones += 1
+	if c.mood != null:
+		sim.mood.add_thought(c, "leveled_up")
+	var l: Dictionary = m.get("letters", {}).get(str(level), {})
+	var nm: String = str(sim.defs.skills["skills"].get(skill, {}).get("label", skill))
+	sim.bus.letter_received.emit(str(l.get("title", "")), str(l.get("text", "")) % [c.display_name, nm])
+# endregion
