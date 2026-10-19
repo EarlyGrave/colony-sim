@@ -96,7 +96,7 @@
 		"belt_repair_cost": {"plate": 1},
 		"machine_repair_cost": {"plate": 1}
 	},
-	"pacing": {"floor_pts_per_day": 0.7, "calm_after_hit_days": 2.0, "pollution_interval": {"lo": 0.45, "hi": 0.7, "clean_mult": 10.0, "dirty_mult": 0.5}},
+	"pacing": {"floor_pts_per_day": 0.7, "calm_after_hit_days": 2.0, "pollution_interval": {"lo": 0.45, "hi": 0.7, "clean_mult": 10.0, "dirty_mult": 0.35}},
 	"threat": {
 		"enabled": true,
 		"awaken_mined_total": 60,
