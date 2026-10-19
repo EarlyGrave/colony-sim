@@ -64,6 +64,7 @@ class Hot:
 	var bite_ok := true  ## belts exist and line damage is on (per tick; _attack_structure re-checks)
 	var line_on := true  ## balance line_damage.enabled, per tick
 	var kind := ""  ## region F2: def id of that enemy
+	var objective: RaidObjective = null  ## region RO: current raid objective (held here to keep the golden dump unchanged)
 	var cause := "generic"  ## region F2: what killed the enemy being announced (read by the view during enemy_killed only)
 var _hot := Hot.new()
 # endregion
@@ -204,6 +205,7 @@ func tick() -> void:
 		_warned = true
 		sim.bus.wave_incoming.emit(next_spawn_origin, next_wave_tick - sim.tick)
 	sim.pathfinder.advance_flows(int(cfg.get("flow_cells_per_tick", 6000)))  # region perf-threat
+	_ro_tick()  # region RO
 	_tick_turrets()
 	_hot.line_on = bool(sim.defs.balance["line_damage"]["enabled"])  # region W2d
 	_hot.bite_ok = _hot.line_on and sim.logistics.belts.belt_count > 0
@@ -217,7 +219,7 @@ func tick() -> void:
 			_tick_leaving(e)
 			if enemies.size() < n0:
 				ei -= 1
-		else:
+		elif not (_hot.objective != null and _hot.objective.gorge_step(sim, e)):  # region RO
 			_tick_enemy(e)
 		if e.cell != before and hash.has(e):  # region perf-threat
 			hash.update(e)
@@ -281,6 +283,7 @@ func start_wave() -> void:
 		else:
 			for id in units:
 				_spawn(id, _spawn_cell_near(origin))
+		_ro_roll(r)  # region RO
 		sim.bus.raid_started.emit(raid_id, strength, raid_total)
 	_alarm_before_wave = sim.alarm
 	sim.set_alarm(true)
@@ -314,11 +317,45 @@ func _check_morale() -> void:
 		return
 	var frac := float(sim.defs.raids[raid_id].get("retreat_fraction", cfg["retreat_fraction"]))
 	if float(raid_dead) / float(raid_total) > frac:
-		retreating = true
-		for e in enemies:
-			e.leaving = true
-			e.clear_path()
-		sim.bus.raid_retreat.emit(raid_id)
+		_begin_retreat()  # region RO
+
+
+# region RO
+## Raid objectives (sim/threats/raid_objective.gd). Off unless balance threat.raid_objectives.
+func get_objective() -> RaidObjective:
+	return _hot.objective
+
+
+func _begin_retreat() -> void:
+	retreating = true
+	for e in enemies:
+		e.leaving = true
+		e.clear_path()
+	sim.bus.raid_retreat.emit(raid_id)
+
+
+func _ro_roll(r: Dictionary) -> void:
+	_hot.objective = null
+	if not bool(cfg.get("raid_objectives", false)) or not r.has("objective") or r.has("fixed"):
+		return
+	_hot.objective = RaidObjective.make(sim, r, RaidObjective.roll(r, wave_rng))
+	if _hot.objective.kind == "wreck":
+		if not sim.bus.building_broken.is_connected(_ro_on_building):
+			sim.bus.building_broken.connect(_ro_on_building)
+			sim.bus.building_destroyed.connect(_ro_on_building)
+
+
+func _ro_on_building(id: int) -> void:
+	if _hot.objective != null and _hot.objective.kind == "wreck" and id == _hot.objective.target_id:
+		_hot.objective.met = true
+
+
+func _ro_tick() -> void:
+	if _hot.objective == null or not wave_active or retreating or not _hot.objective.met:
+		return
+	sim.bus.raid_objective_met.emit(raid_id, _hot.objective.kind)
+	_begin_retreat()
+# endregion
 
 
 func end_wave() -> void:
@@ -327,6 +364,7 @@ func end_wave() -> void:
 		repelled = true
 	wave_active = false
 	raid_id = ""
+	_hot.objective = null  # region RO
 	pending_drop = {}
 	for e in enemies:
 		e.leaving = true

@@ -102,6 +102,7 @@
 	"pacing": {"floor_pts_per_day": 0.7, "calm_after_hit_days": 2.0, "pollution_interval": {"lo": 0.45, "hi": 0.7, "clean_mult": 10.0, "dirty_mult": 0.35}},
 	"threat": {
 		"enabled": true,
+		"raid_objectives": false,
 		"awaken_mined_total": 60,
 		"first_wave_max_points": 3.0,
 		"first_wave_delay_days": 3.5,

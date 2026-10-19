@@ -176,3 +176,7 @@ signal block_standing_changed(block: String, standing: float)
 signal shuttle_phase(phase: String)
 signal shuttle_won
 # endregion
+
+# region RO
+signal raid_objective_met(raid_id: String, kind: String)
+# endregion
