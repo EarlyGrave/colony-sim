@@ -21,7 +21,14 @@ func _init(p_sim: Simulation) -> void:
 
 
 func _on_batch_refined(_building_id: int, _recipe_id: String) -> void:
-	var rmult := float(sim.defs.recipes.get(_recipe_id, {}).get("contam_mult", 1.0))  # PL: smelting pollutes less than refining
+	var rdef: Dictionary = sim.defs.recipes.get(_recipe_id, {})
+	var makes_waste := false
+	for out_item: String in rdef.get("outputs", {}):
+		if sim.defs.items.get(out_item, {}).get("contaminates", false):
+			makes_waste = true
+	if rdef.has("outputs") and not makes_waste:
+		return  # PL: plates, parts, fuel cells and other clean crafts do not pollute (every batch used to add per_batch)
+	var rmult := float(rdef.get("contam_mult", 1.0))  # PL: smelting pollutes less than refining
 	level += float(_cfg["per_batch"]) * rmult * maxf(0.0, 1.0 + sim.perks.mod(sim.buildings.batch_operator, "contamination_per_batch")) * sim.crises.mult("refine_contam_mult")  # region perks
 
 

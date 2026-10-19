@@ -523,7 +523,7 @@ func _power(cell: Vector2i) -> void:
 func _beacon() -> void:
 	if sim.tick % 120 == 60 and sim.buildings.count_of("refinery") > 0 and bool(sim.defs.balance.get("waste_sink_early", false)) and sim.defs.buildings.has("waste_compactor"):
 		var have := sim.buildings.count_of("waste_compactor") + _bp_count("waste_compactor")
-		if have < compactors and sim.items.count_stored("essence_ore") >= 10 and _bp_count("waste_compactor") == 0:
+		if have < compactors and _bp_count("waste_compactor") == 0:
 			var cc := _spot("waste_compactor", sim.map_center() + Vector2i(-3 + have * 2, 4), false)
 			if cc.x >= 0 and sim.place_building("waste_compactor", cc) != null:
 				log.append("d%.1f built waste_compactor" % _day_f())

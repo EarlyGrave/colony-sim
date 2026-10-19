@@ -23,13 +23,19 @@ func _init() -> void:
 	sim.start_new_game()
 	var bot = FactoryBot.new(sim)
 	bot.cap_percent = cap
+	var rc := {}
+	sim.bus.batch_refined.connect(func(bid, rid): if sim.day() >= 30 and sim.day() < 37: rc[rid] = int(rc.get(rid, 0)) + 1)
 	var lastd := -1
 	var seen := {}
+	var _prev := 0.0
 	while sim.tick < days * sim.ticks_per_day and sim.game_over_reason == "":
 		bot.act()
 		sim.run_ticks(Bot.STEP_TICKS)
 		bot.after()
-		if sim.day() >= 38 and sim.day() < 40 and sim.tick % 120 == 0:
+		if sim.day() >= 30 and sim.day() < 37 and sim.tick % 60 == 0 and sim.contamination.level - _prev > 0.3:
+			print("JUMP t=%d +%.2f wu=%.1f" % [sim.tick, sim.contamination.level - _prev, sim.contamination.waste_units()])
+		_prev = sim.contamination.level
+		if false:
 			print("STEP t=%d lvl=%.3f mr=%.2f cap=%s wu=%.1f" % [sim.tick, sim.contamination.level, sim.contamination.machine_rate_per_day(), str(sim.buildings.refining_capped()), sim.contamination.waste_units()])
 		if sim.day() != lastd:
 			lastd = sim.day()
@@ -56,5 +62,6 @@ func _init() -> void:
 					if b.def_id in ["smelter", "miner", "assembler", "workbench", "refinery"]:
 						parts.append("%s@%d,%d[%s p%d in=%s out=%s cond=%d]" % [b.def_id, b.cell.x, b.cell.y, b.recipe_id, b.progress, str(b.input), str(b.output), int(b.condition)])
 				print("   ", " ".join(parts), " rate=", sim.contamination.rate_per_day, " mrate=", sim.contamination.machine_rate_per_day(), " lvl=", sim.contamination.level, " wu=", sim.contamination.waste_units())
+	print("BATCHES d30-37 ", rc)
 	sim.dispose()
 	quit()
