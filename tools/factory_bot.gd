@@ -26,6 +26,7 @@ var plate_target := 45
 var compactors := 4  # PL: waste items bleed pollution; sinks stand right after the refinery
 var plate_reserve := 12  # D3: fuel cells / extra bills never take the stock below this once an assembler is planned
 var assume_nitrogen := false
+var max_pending := 3
 var _stock_grown := false
 var _failed_step := -1
 var _step := 0  ## index into PLAN
@@ -238,7 +239,8 @@ func _cancel_orphans() -> void:
 
 func _build() -> void:
 	_cancel_orphans()
-	if _pending() or _step >= PLAN.size() or not _routes.is_empty():
+	_pending()
+	if _mine.size() >= max_pending or _step >= PLAN.size() or not _routes.is_empty():  # PL: several blueprints at once (one at a time took 8-10 days per step)
 		return
 	var s: Array = PLAN[_step]
 	var ok := false
