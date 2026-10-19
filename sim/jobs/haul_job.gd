@@ -27,6 +27,8 @@ func tick(c: Colonist, sim: Simulation) -> int:
 			_picked = true
 		else:
 			var at := src_cell if src == Src.GROUND else _building_cell(sim, src_building)
+			if at.x >= 0 and src == Src.BUILDING_OUT and bool(sim.defs.balance.get("haul_blocked_fix", false)) and not sim.pathfinder.is_walkable(at):
+				at = sim.pathfinder.best_adjacent(c.cell, at)  # CU: a rock-bound miner is emptied from a neighbour cell
 			if at.x < 0:
 				return Status.FAILED
 			var m := c.move_toward(at, sim)

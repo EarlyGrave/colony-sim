@@ -55,6 +55,12 @@ func _init(p_sim: Simulation) -> void:
 	_hub = sim.map_center() + Vector2i(-2, 9)
 	max_pending = _knob("max_pending", max_pending)
 	_plan = PLAN.duplicate(true)
+	if _knob("cu_first", 0) == 1:  # region CU: parts need a copper ingot each; the copper smelter used to wait ~18 d behind the iron line's blueprints
+		var ii := _plan.find(["line", "iron_ore", true])
+		var ci := _plan.find(["line", "copper_ore", true])
+		if ii >= 0 and ci > ii:
+			_plan[ii] = ["line", "copper_ore", true]
+			_plan[ci] = ["line", "iron_ore", true]
 	for i in _knob("extra_iron", 0):
 		_plan.insert(6, ["line", "iron_ore", true])  # OS: plates need ingots; one iron line gave ~40 ore / 60 d
 	for i in _knob("extra_miners", 0):
