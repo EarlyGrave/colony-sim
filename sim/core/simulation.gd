@@ -74,6 +74,7 @@ var milestones: MilestoneSystem  # region R2b
 var quests: QuestLog  # region Q0
 var petition: PetitionSystem  # region E1
 var endings: EndingSystem  # region EN1
+var fight_escape: FightEscape  # region EN3
 var shuttle: ShuttleSystem  # region S1
 var beacons: BeaconSystem  # region S2
 var blocks: BlockSystem  # region I1
@@ -319,6 +320,7 @@ func _init_systems() -> void:
 	petition = PetitionSystem.new(self)  # region E1
 	quests = QuestLog.new(self)  # region Q0
 	endings = EndingSystem.new(self)  # region EN1
+	fight_escape = FightEscape.new(self)  # region EN3
 	q1_clerk = QuestClerkNote.new(self)  # region Q1
 	q2_pilgrims = Q2Pilgrims.new(self)  # region Q2
 	if quests.is_enabled():  # region QX: code quests are polled and hashed by QuestLog only
@@ -458,6 +460,7 @@ func step() -> void:
 	if profiling:
 		_lap("threats")
 	shuttle.tick()  # region S1
+	fight_escape.tick()  # region EN3
 	squads.tick()  # region C1
 	contraband.tick()  # region I3
 	if profiling:
@@ -1076,6 +1079,28 @@ func set_path(id: String) -> bool:
 func ending_won(id: String) -> bool:
 	_record("ending_won", [id])
 	return endings.mark_won(id)
+# endregion
+
+
+# region EN3: Fight / Escape endings
+func start_assault() -> bool:
+	_record("start_assault", [])
+	return fight_escape.start_assault()
+
+
+func contact_bandits() -> bool:
+	_record("contact_bandits", [])
+	return fight_escape.contact_bandits()
+
+
+func pay_bandit_fee() -> bool:
+	_record("pay_bandit_fee", [])
+	return fight_escape.pay_fee()
+
+
+func start_extraction() -> bool:
+	_record("start_extraction", [])
+	return fight_escape.start_extraction()
 # endregion
 
 

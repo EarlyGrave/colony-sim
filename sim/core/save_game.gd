@@ -146,6 +146,9 @@ static func state_hash(sim: Simulation) -> int:
 	var cv: Array = sim.contraband.covert_state_parts()  # region N2: only once suspicion/credit exists
 	if not cv.is_empty():
 		parts.append(cv)
+	var fe: Array = sim.fight_escape.state_parts()  # region EN3: only once an ending step happened
+	if not fe.is_empty():
+		parts.append(fe)
 	return var_to_str(parts).hash()
 
 

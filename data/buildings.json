@@ -479,5 +479,10 @@
 		"name": "Beacon Launcher", "size": [2, 2], "color": "#c8a24a", "max_hp": 120,
 		"cost": {"essence_ore": 40, "plate": 10}, "build_work": 120, "buildable": true, "threat_priority": 2,
 		"threat": 5, "power_use": 5, "s2_beacon": true
+	},
+	"uplink_array": {
+		"name": "Uplink Array", "size": [3, 3], "color": "#5ac8c0", "max_hp": 600,
+		"cost": {"parts": 60, "fuel_cell": 20}, "build_work": 600, "buildable": true, "unique": true, "threat_priority": 6,
+		"threat": 6, "power_use": 30, "deconstructible": false
 	}
 }

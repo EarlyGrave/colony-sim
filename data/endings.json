@@ -1,5 +1,47 @@
 {
-	"paths": ["submit", "fight", "escape", "remission"],
-	"ponr_flags": {"fight": "ponr_fight", "escape": "ponr_escape", "remission": "ponr_remission"},
-	"submit_ponr_petition_phase": 1
+	"paths": [
+		"submit",
+		"fight",
+		"escape",
+		"remission"
+	],
+	"ponr_flags": {
+		"fight": "ponr_fight",
+		"escape": "ponr_escape",
+		"remission": "ponr_remission"
+	},
+	"submit_ponr_petition_phase": 1,
+	"fight": {
+		"building": "uplink_array",
+		"min_power_factor": 0.5,
+		"raids": [
+			{
+				"day": 0.0,
+				"mult": 1.0
+			},
+			{
+				"day": 0.67,
+				"mult": 1.5
+			},
+			{
+				"day": 1.33,
+				"mult": 2.0
+			}
+		],
+		"lines": {
+			"lost": "The Uplink Array fell. The Collector is still out there.",
+			"won": "The Collector is gone. The planet is yours."
+		}
+	},
+	"escape": {
+		"contact_sales": 3,
+		"bandit_fee": 60,
+		"countdown_days": 1.0,
+		"pursuit_mult": 1.5,
+		"point_radius": 4,
+		"lines": {
+			"missed": "The bandits waited, saw nobody and left. Pay again.",
+			"won": "The bandits got you out. New sector, new debts."
+		}
+	}
 }

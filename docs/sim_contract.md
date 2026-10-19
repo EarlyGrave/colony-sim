@@ -61,6 +61,10 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `remove_chip` | building_id: int | bool | T4: chip drops on the building cell (ledger source `chip_remove`) |
 | `set_path` | id: submit/fight/escape/remission | bool | EN1: path flag; refused after the path's point of no return |
 | `ending_won` | id | bool | EN1: flag + bus ending_won, once per id |
+| `start_assault` | - | bool | EN3: Fight path + powered `uplink_array`; sets ponr_fight, launches 3 scripted raids over 2 days (data/endings.json `fight`); win = all dead -> ending_won("fight"); Uplink lost = assault fails |
+| `contact_bandits` | - | bool | EN3 Escape: >= `contact_sales` covert sales; sets ponr_escape + extraction point |
+| `pay_bandit_fee` | - | bool | EN3: `bandit_fee` from escape_credit |
+| `start_extraction` | - | bool | EN3: fee paid; pursuit wave + countdown; at 0 a colonist within `point_radius` of the point -> ending_won("escape"), else retry |
 | `deliver_petition` | phase: int (1..4) | bool | e1_enabled + audit tier 2 + warden_terminal; phases sequential; consumes only still-required items; completing pays the reward (debt cut %, items, tier 3 on P3) and emits petition_phase_done |
 | `deliver_shuttle_parts` | none | int | s1_enabled + petition P4 done + a Release Gantry; consumes part_cost per part from storage up to the need; returns parts added (S1) |
 | `launch_shuttle` | none | bool | phase ready (all parts, gantry powered); starts the countdown and siege waves (S1) |
@@ -220,11 +224,7 @@ Not covered by the hash today (known gaps): needs, mood, skills/xp, injuries, co
 Systems are modules (`core, map, colonists, jobs, items, buildings, contamination, threats, storyteller, ...`); systems read map/items, never the view.
 Reachability: grid A* plus connected components (O(1) reachable test); equal-cost tie-break by neighbour order N,E,S,W. Job reservations use string keys; flee overrides all jobs while the alarm is on.
 ## 10. AI chip operator (T4, `sim.chips`)
-A chip replaces the operator of a bench/smelter/assembler: bench adds `bench_rate * chip_speed` per tick without a colonist; a processor takes 4 of 5 work steps (accumulator, no rng).
-Waste of a chip building is scaled by `chip_waste_mult` (fraction rolled on `sim.rng`, only with a chip, so chipless games are unchanged). Upkeep: `upkeep_per_day` refined essence
-at each day start (retried every tick while unpaid; unpaid = chip stops). Calibration is due `calibration_days` after install/last calibration; then the chip stops until a colonist
-with `operating` >= `calibrate_min_skill` runs `CalibrateJob` (`calibrate_ticks` ticks on site). A broken or destroyed building drops its chip.
-Read-only API for the threat system: `chips.threat_mult(building)` (`chip_threat_mult` while the chip is busy, else 1.0) and `chips.colony_threat_mult()` (max over busy chips).
+A chip replaces the operator of a bench/smelter/assembler: bench adds `bench_rate * chip_speed` per tick without a colonist; a processor takes 4 of 5 work steps (accumulator, no rng). Waste of a chip building is scaled by `chip_waste_mult` (fraction rolled on `sim.rng`, only with a chip, so chipless games are unchanged). Upkeep: `upkeep_per_day` refined essence at each day start (retried every tick while unpaid; unpaid = chip stops). Calibration is due `calibration_days` after install/last calibration; then the chip stops until a colonist with `operating` >= `calibrate_min_skill` runs `CalibrateJob` (`calibrate_ticks` ticks on site). A broken or destroyed building drops its chip. Read-only API for the threat system: `chips.threat_mult(building)` (`chip_threat_mult` while the chip is busy, else 1.0) and `chips.colony_threat_mult()` (max over busy chips).
 `ai_chip` is accepted by the stockpile zone; recipe `make_ai_chip` (assembler) needs tech `ai_chips`. Chip state is not in `state_hash`; it is rebuilt by command replay.
 ## T5 ecology (summary)
 Nests (2-4, map edge, reachable) are placed from the ecology stream at `start_new_game`. Every `update_ticks` each nest banks
