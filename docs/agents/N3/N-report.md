@@ -1,0 +1,6 @@
+# N3 report: reconcile, chain balance, sentence flavor
+1. Reconcile: WinScreen(stats, ending, ng) shows "Debt left" and the real "Balance carried forward" via a throwaway MetaState.finish_sentence(Legacy.ng_snapshot(...)) preview; game.gd _ng_next_sentence uses the same; defensive get()/has_method removed (dialog, dossier card, game). Dialog row uses meta.has_ng_carry(); Start passes ng_seed/preset_id. Screenshots: docs/agents/N3/win.png, dialog.png (844x390, carry 450 = 900*0.5 fixture).
+2. tools/ng_chain_report.gd (+ tools/ng_chain_sweep.sh, 5 shards; factory_bot gained opts sim_opts/snapshot in # region N3). 60 d, 10 seeds.
+   Baseline (frac 0.5, techs 3): run1 9/10, run2 4/10. frac 0.2 + techs 6: run2 5/10 (3 deaths on day 7-9, noisy). Chosen frac 0.25, techs 4 (same as 3): run1 9/10, run2 6/10 (diff 3, target 2; the residual is the hard_time preset step in presets.json, not an ng number). data/meta.json ng: debt_carry_frac 0.25, tech_carry 4.
+3. Flavor: data/flavor.json "sentence" (letters 2, 3, 4+ with {n}/{quota}, veteran slip), sim/meta/ng_flavor.gd, posted in game.gd _ng_intro. Tests: test_ng_flavor, test_ng_balance (chain determinism), test_ng_ui real-carry test; test_ng_meta follows frac.
+Suite: sharded 835 tests 0 failed after the stats-index fix; web_smoke PASS.
