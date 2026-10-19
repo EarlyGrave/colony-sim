@@ -71,6 +71,10 @@ func get_by_id(id: int) -> Colonist:
 func kill(c: Colonist) -> void:
 	if not c.alive:
 		return
+	if c.job != null and c.job.type == "flee":  # region LD: killed while running for cover
+		var sh := sim.buildings.find_shelter(c.cell) if sim.buildings else null
+		if sh == null or Vector2(sh.cell).distance_to(Vector2(c.cell)) > 12.0:
+			sim.ledger.record_event("died:flee", 1)
 	sim.jobs.end_job(c, Job.Status.FAILED)
 	if c.carry_count > 0:
 		sim.items.drop(c.cell, c.carry_item, c.carry_count, c.carry_quality)

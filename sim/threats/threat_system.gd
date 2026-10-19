@@ -244,6 +244,31 @@ func schedule_scripted(delay: int) -> void:
 # endregion
 
 
+# region LD
+## Origin lives in object meta (not a script var) so state dumps/goldens stay unchanged.
+func _lockdown_origin() -> Vector2i:
+	return get_meta("lockdown_origin", Vector2i(-1, -1))
+
+
+## True when `cell` must hide: manual alarm = everybody; raid alarm = inside
+## `lockdown_radius` of the raid origin, or any live enemy within aggro range.
+func in_lockdown(cell: Vector2i) -> bool:
+	if not sim.alarm:
+		return false
+	var radius := float(sim.defs.threat.get("lockdown_radius", 0))
+	if sim.alarm_manual or radius <= 0.0 or _lockdown_origin().x < 0:
+		return true
+	var p := Vector2(cell)
+	if p.distance_to(Vector2(_lockdown_origin())) <= radius:
+		return true
+	var aggro := float(cfg["colonist_aggro_range"])
+	for e in enemies:
+		if Vector2(e.cell).distance_to(p) <= aggro + 1.0:
+			return true
+	return false
+# endregion
+
+
 func start_wave() -> void:
 	wave_index += 1
 	wave_active = true
@@ -283,7 +308,8 @@ func start_wave() -> void:
 				_spawn(id, _spawn_cell_near(origin))
 		sim.bus.raid_started.emit(raid_id, strength, raid_total)
 	_alarm_before_wave = sim.alarm
-	sim.set_alarm(true)
+	set_meta("lockdown_origin", origin)  # region LD
+	sim._alarm_raid(true)
 	sim.bus.wave_started.emit(wave_index, strength)
 
 
@@ -339,7 +365,7 @@ func end_wave() -> void:
 	else:
 		_k1_base_tick = sim.tick
 	_schedule_origin()
-	sim.set_alarm(_alarm_before_wave)
+	sim._alarm_raid(_alarm_before_wave)  # region LD
 	_k1_wave_over()  # region K1
 	sim.bus.wave_ended.emit(wave_index)
 	if repelled:

@@ -12,7 +12,7 @@ func _init(p_id: int) -> void:
 
 
 func tick(c: Colonist, sim: Simulation) -> int:
-	if not sim.alarm:
+	if not sim.alarm or not sim.threats.in_lockdown(c.cell):  # region LD
 		return Status.DONE
 	var b := sim.buildings.get_by_id(building_id)
 	if b == null:

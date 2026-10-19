@@ -162,6 +162,18 @@
 		"buildable": true,
 		"threat_priority": 0
 	},
+	"mine_hut": {
+		"name": "Mine Hut",
+		"size": [1, 1],
+		"color": "#7a6a4a",
+		"max_hp": 120,
+		"cost": {"plate": 4},
+		"build_work": 40,
+		"buildable": true,
+		"shelter": true,
+		"capacity": 2,
+		"threat_priority": 1
+	},
 	"miner": {
 		"name": "Miner",
 		"power_use": 20,
