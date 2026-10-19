@@ -13,7 +13,7 @@ func _build_chain(sim: Simulation) -> Dictionary:
 
 
 func _run(chains: int) -> Dictionary:
-	var sim := make_sim(7, true, 64, 64, peaceful_defs())
+	var sim := make_sim(3, true, 64, 64, peaceful_defs())
 	var built: Array = []
 	for i in chains:
 		var r := _build_chain(sim)

@@ -53,7 +53,7 @@ func _init() -> void:
 				if b.broken:
 					brk += 1
 					names[b.def_id] = int(names.get(b.def_id, 0)) + 1
-			print("waste=%d cmp=%d refP=%d " % [sim.items.count_stored("waste"), sim.buildings.count_of("waste_compactor"), int(sim.ledger.produced.get("refined_essence",0))], "pol=%d%% ingP=%d/%d cap=%s " % [sim.contamination.fraction()*100, int(sim.ledger.produced.get("ingot_iron",0)), int(sim.ledger.produced.get("ingot_copper",0)), str(sim.is_rule_on("refine_cap"))], "d%d step=%d plate=%d(p%d/c%d) ingFe=%d ingCu=%d parts=%d asm=%d done[asm=%s] broken=%d %s" % [lastd, bot._step, sim.items.count_stored("plate"),
+			print("oreP=%d miners=%d waste=%d cmp=%d refP=%d " % [int(sim.ledger.produced.get("essence_ore",0)), sim.buildings.count_of("miner"), sim.items.count_stored("waste"), sim.buildings.count_of("waste_compactor"), int(sim.ledger.produced.get("refined_essence",0))], "pol=%d%% ingP=%d/%d cap=%s " % [sim.contamination.fraction()*100, int(sim.ledger.produced.get("ingot_iron",0)), int(sim.ledger.produced.get("ingot_copper",0)), str(sim.is_rule_on("refine_cap"))], "d%d step=%d plate=%d(p%d/c%d) ingFe=%d ingCu=%d parts=%d asm=%d done[asm=%s] broken=%d %s" % [lastd, bot._step, sim.items.count_stored("plate"),
 				int(sim.ledger.produced.get("plate", 0)), int(sim.ledger.consumed.get("plate", 0)), sim.items.count_stored("ingot_iron"), sim.items.count_stored("ingot_copper"),
 				sim.items.count_stored("parts"), sim.buildings.count_of("assembler"), sim.research.is_done("assembly"), brk, str(names)])
 			if lastd % 5 == 0:

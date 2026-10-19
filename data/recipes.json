@@ -87,7 +87,7 @@
 	"make_plate": {
 		"name": "Make plate",
 		"inputs": {
-			"ingot_iron": 2
+			"ingot_iron": 1
 		},
 		"outputs": {
 			"plate": 1
