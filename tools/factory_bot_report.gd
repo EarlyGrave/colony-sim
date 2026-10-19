@@ -28,6 +28,8 @@ func _init() -> void:
 	for sv in range(first, first + seeds):
 		var r: Dictionary = FactoryBot.play(sv, days, opts)
 		print(format(r))
+		if "--json" in OS.get_cmdline_user_args():  # region D4
+			print(json_line(r))
 		if show_log:
 			for l: String in r["log"]:
 				print("   ", l)
@@ -62,3 +64,20 @@ static func apply_overrides(d: Defs, ov: Dictionary) -> void:
 				cur = cur[parts[i]]
 			if parts.size() > 0 and (cur.has(parts[-1]) or not cur.is_empty()):
 				cur[parts[-1]] = ov[prop][path]
+
+
+# region D4
+## One machine-readable line per seed for tools/factory_eval.sh.
+static func json_line(r: Dictionary) -> String:
+	var led: Dictionary = r["ledger"]
+	var pd: Array = r["phase_day"]
+	var built: Dictionary = r["built"]
+	var p: Array = []
+	for i in range(4):
+		p.append(i < pd.size() and float(pd[i]) >= 0.0)
+	return "EVALJSON " + JSON.stringify({
+		"seed": r["seed"], "over": r["over"], "alive": r["alive"], "audit": float(r["audit_day"]) >= 0.0,
+		"p": p, "parts": r["parts"], "need": r["need"], "launch": float(r["launch_day"]) >= 0.0, "pol": r["pollution"],
+		"debt": r["debt_pct"], "refined": int(str(led["refined_essence"]).get_slice("/", 0)),
+		"plates": int(built.get("stock_plate", 0)), "waste": r["waste_prod"]})
+# endregion
