@@ -278,3 +278,11 @@ HP); волны заканчиваются по таймеру и твари о�
 - Real factory_bot (60 d): refined 96-255 -> 334-420, plates 4-16 -> 9-89; still 0/5 audit tier 2, no petition/launch. Pillar holds (7.0 vs 4.2 vs 4.0 waves).
 - Next bottlenecks: parts never made (plates eaten by repairs/fuel cells, assembler only d29-45); waste pollution (~270 waste from 400 refined); debt 30-90 refined per colonist due in 12 d is unpayable -> despair escapes end runs.
 - 777 green x2, web smoke PASS.
+
+## Session 4 — Debt batch D
+- D1 debt: 14-42 refined per colonist (was 30-90), due in 30 d (was 12), despair 8/day; tools/debt_model.gd payoff ~d44. Idle colony still breaks by d35.
+- D2 waste_compactor (1x1, 10 ore, 6 waste/day, +0.01 pollution/unit), flag waste_sink_early now ON.
+- D3 factory_bot: metals first, assembler, plate reserve, debt-first payments, ash beacon + compactors.
+- D4 tools/factory_eval.sh: 10 seeds in parallel, ~4 min, PASS/FAIL table.
+- Real bot 10 seeds/60 d: 6/10 end with all 8 alive (was 2/10 with survivors), debt 100% on 9/10 (was 26-69%), planet_dead 2/10. Still 0/10 audit tier 2 / petition / parts: plates eaten by repairs, assembler only d28-40, research chain ~8100 bench ticks.
+- 782 green x2, web smoke PASS.

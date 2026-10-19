@@ -1,6 +1,6 @@
 {
 	"ticks_per_day": 600,
-	"waste_sink_early": false,
+	"waste_sink_early": true,
 	"automation": {"belt_ticks_per_cell": 5},
 	"map": {
 		"start_biome": "start",

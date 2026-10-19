@@ -263,3 +263,7 @@ Do belt splitters and mergers like Satisfactory with three separate splitter kin
 - Taint cap blocks only recipes that make waste; plate/part crafting always runs.
 - Home map guarantees iron, copper and 2 nitrogen nodes.
 - Debt pacing looks too harsh for a real economy (see PROGRESS); next batch revisits debt size/deadline.
+
+## Debt batch D (decided without owner, review)
+- Debt intent: core pressure, but a decent factory pays it by ~d40-50 (debt 14-42 per colonist, 30 days).
+- Early waste compactor available without research (6 waste/day, small pollution cost).
