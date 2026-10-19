@@ -6,4 +6,4 @@
 - Note: `essence_drop_mult` mod is set but no sim code reads it yet (follow-up consumer).
 - Tests: tests/test_r2_q8.gd (6 tests) green. Goldens untouched (q_enabled false by default).
 - Pillar table (21d, 5 seeds, standard_term): baseline mean_waves=6.2 [7,6,9,5,4]; throttle 4.0 [4,4,4,4,4]; gap 2.2 (>=2 kept; quest inert in bot runs).
-- Full tools/run_tests_sharded.sh: see handback summary.
+- Full sharded suite ran once before this fix: 841 pass, 1 fail (creature_sheets needed a sheet for mimic); fixed by skipping sprite-aliased defs; both files re-run green.

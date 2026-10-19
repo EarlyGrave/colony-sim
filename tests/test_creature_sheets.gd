@@ -3,8 +3,12 @@ extends TestCase
 
 func _enemy_ids() -> Array:
 	var f := FileAccess.open("res://data/enemies.json", FileAccess.READ)
-	var d: Variant = JSON.parse_string(f.get_as_text())
-	return (d as Dictionary).keys()
+	var d: Dictionary = JSON.parse_string(f.get_as_text())
+	var out: Array = []
+	for k: String in d:  # region R2: sprite-aliased defs (mimic) reuse another sheet
+		if not d[k].has("sprite"):
+			out.append(k)
+	return out
 
 
 func test_every_enemy_has_sheet_and_frames() -> void:
