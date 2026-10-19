@@ -18,6 +18,7 @@ func _init() -> void:
 			var r := Scenario.run_waves(sim, 8, mode[1])
 			print("seed %d: over=%s died_on_wave=%d waves=%d day=%d batches=%d cont=%.1f breakdowns=%d built=%d events=%s" % [
 				seed_value, r["game_over"], r["died_on_wave"], r["waves"], sim.day(), r["batches"], r["contamination"], r["breakdowns"], r["turrets_built"], str(sim.storyteller.fired)])
+			print("    objective_met=%d flee_deaths=%d hidden_starve=%d" % [sim.ledger.get_count("raid_objective_met"), sim.ledger.get_count("died:flee"), sim.ledger.get_count("starve:hidden")])  # region ST
 			for w in r["log"]:
 				print("    ", w)
 			sim.dispose()

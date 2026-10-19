@@ -36,3 +36,10 @@ for name, v, th in [("audit tier2", c(lambda r: r["audit"]), 6), ("P1", c(lambda
 ad = [r["audit_day"] for r in ok if r.get("audit_day", -1) >= 0]
 if ad:
     print(f"audit day: mean {sum(ad)/len(ad):.1f}  min {min(ad):.0f}  max {max(ad):.0f}   alive>=8: {c(lambda r: r['alive'] >= 8)}/{n}")
+# threat-pacing columns (design threats_pacing W4): all expected 0 flee/hidden deaths
+fd = [r.get("flee_deaths", 0) for r in ok]
+hs = [r.get("hidden_starve", 0) for r in ok]
+om = [r.get("objmet", 0) for r in ok]
+print(f"flee_deaths {sum(1 for x in fd if x)}/{n} seeds ({sum(fd)} total)  need 0   {'PASS' if not any(fd) else 'FAIL'}")
+print(f"hidden_starve {sum(1 for x in hs if x)}/{n} seeds ({sum(hs)} total)  need 0   {'PASS' if not any(hs) else 'FAIL'}")
+print(f"objmet {sum(om)} total over {n} seeds  per-seed: {om}")

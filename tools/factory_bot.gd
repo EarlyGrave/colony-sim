@@ -873,6 +873,11 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	for k: String in sim.ledger.by_source:
 		if k.ends_with(":refined_essence") or k.ends_with(":essence_ore"):
 			led[k] = str(sim.ledger.by_source[k])  # region LN: where the refined essence went
+	# region ST: threat-pacing columns (0 until the W1/W3 ledger keys exist)
+	led["died:flee"] = str(sim.ledger.get_count("died:flee"))
+	led["starve:hidden"] = str(sim.ledger.get_count("starve:hidden"))
+	led["raid_objective_met"] = str(sim.ledger.get_count("raid_objective_met"))
+	# endregion
 	r["ledger"] = led
 	# region D4
 	var qs: Array = []

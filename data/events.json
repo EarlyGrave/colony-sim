@@ -87,5 +87,25 @@
 			]
 		},
 		"text": "A cargo pod of supplies fell from orbit: {target}."
+	},
+	"scout_sighting": {
+		"name": "Scout sighting",
+		"weight": 3,
+		"min_day": 3,
+		"requires": ["wave_pending"],
+		"harmful": false,
+		"max_per_game": 6,
+		"effects": [{"op": "scout"}],
+		"text": "A lookout spotted the creatures massing at the {target}."
+	},
+	"molt": {
+		"name": "Molt",
+		"weight": 2,
+		"min_day": 4,
+		"requires": ["dormant"],
+		"harmful": false,
+		"max_per_game": 3,
+		"effects": [{"op": "molt"}],
+		"text": "The nests shed their skins and fall quiet a little longer - but what hatches next will be tougher."
 	}
 }
