@@ -136,6 +136,9 @@ static func state_hash(sim: Simulation) -> int:
 	var tgs: Array = sim.threats.telegraph_state()  # region C3: only while a wind-up is active
 	if not tgs.is_empty():
 		parts.append(tgs)
+	var cb: Array = sim.contraband.state_parts()  # region I3: only after something was skimmed
+	if not cb.is_empty():
+		parts.append(cb)
 	return var_to_str(parts).hash()
 
 

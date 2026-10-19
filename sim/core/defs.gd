@@ -47,6 +47,7 @@ var event_chains: Dictionary = {}
 var crises: Dictionary = {}
 # region debt
 var debt: Dictionary = {}
+var contraband: Dictionary = {}  # region I3
 # region idle-work
 var idle_work: Dictionary = {}
 var mutation: Dictionary = {}  # region mutation
@@ -154,6 +155,7 @@ func load_from(dir: String) -> void:
 	crises = _load_json(dir + "crises.json")
 	# region debt
 	debt = _load_json(dir + "debt.json")
+	contraband = _load_json(dir + "contraband.json")  # region I3
 	# region idle-work
 	idle_work = _load_json(dir + "idle_work.json")
 	mutation = _load_json(dir + "mutation.json")  # region mutation
@@ -242,6 +244,7 @@ func duplicate_defs() -> Defs:
 	# endregion
 	# region debt
 	d.debt = debt.duplicate(true)
+	d.contraband = contraband.duplicate(true)  # region I3
 	# region idle-work
 	d.idle_work = idle_work.duplicate(true)
 	d.mutation = mutation.duplicate(true)  # region mutation
