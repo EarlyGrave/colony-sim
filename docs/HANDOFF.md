@@ -37,6 +37,17 @@ Night sprint (on dev; see section 3 for main status), all from the owner's notes
 - Endings: `sim/endings/` path()/set_path/PoNR/ending_won; Submit = seats manifest + madness siege + "New Names" flag;
   Fight = Uplink Array + Collector assault; Escape = bandit fee + extraction; dirty fuel cell (pollutes); Ending panel.
 
+Late-night additions: Ending panel (EV), equip/unequip/socket UI + craft_gear recipes + drone drops (E5), Fight relay
+win + Remission (`endings.json remission.enabled=false`) (EN4), revelation quests Q15 "Roll Call" / Q16 "Lifer's
+Receipt" + epilogues + 20 Warden lines (RV; first-wave gate `threat.first_wave_gate_days` ships 0 = off), skill
+branches at level 5 via `choose_branch` (PW4), bot knobs for path/sales/endgame/equip/branches + eval columns (F1b,
+all default off). Next plan: **docs/design/next_batches.md** (Fable coherence review + batches F1-F4 + owner questions).
+
+Bot baseline on dev (60 d, 10 seeds, F1c): alive>=8 7/10, audit 5, P1 3, P3 2, launch 0. raid_objectives ON was
+worse (alive 5/10) → stays OFF. BL balance attempts (branch `worktree-agent-a9f274b41e4c31a6c`): survival vs pillar
+pull against each other — "dirty_mult .28 + old skills" = pillar gap 2.2 / alive 7/10; "skills 2-4 + XP×1.5" =
+alive 8/10 but gap 0.8 (rejected: breaks the core pillar). See PROGRESS for the final BL decision.
+
 ## 3. Open problems (do these first)
 1. **Balance regression from the night merges** (skill curve L0=0.3x, trait hunger, lockdown): pillar gap
    (`tools/kx_pillar_table.gd`) fell to ~1.6 (need ≥2) and factory_eval alive>=8 to ~6-7/10 (was 9/10). Worker BL was
@@ -46,8 +57,12 @@ Night sprint (on dev; see section 3 for main status), all from the owner's notes
 3. Flags/half-features: contraband data-disabled (S4a quest turns it on), metro off, scent/raid objectives off,
    Remission ending not built, Collector win condition (`collector_relay`) missing, escape credit not wired to legacy,
    manifest `freed/stayed` not read by legacy, informant panel reads a private field.
-4. Owner questions (GDD §15): 4th ending (Remission vs Broadcast); Fight path — does the quota shuttle still land?;
-   confirm "no evasion stat" + pre-summed affixes; NG+ after Submit keeps colonists or only the dossier.
+4. Owner questions (full list with defaults: docs/design/next_batches.md §3; GDD §15): 4th ending (Remission vs
+   Broadcast); Fight path — does the quota shuttle still land?; confirm "no evasion stat" + pre-summed affixes;
+   NG+ after Submit keeps colonists or only the dossier; lockdown_radius 36 OK?; first-wave gate on?; traits can
+   emerge as "scars" (decided without owner, review).
+   Design question from RV: contamination is one global number — "first monsters come from the dump side" needs
+   per-area pollution or a dump-zone marker.
 5. Owner TODO (keep reminding): delete stray `/b1.txt /b3.txt`.
 
 ## 4. Agents and roles (CLAUDE.md "Working mode" is binding)

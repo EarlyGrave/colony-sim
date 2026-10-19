@@ -303,3 +303,12 @@ factory_eval 10 seeds/60 d, off vs on: alive>=8 9/10 vs 4/10; audit tier2 7 vs 6
 ## Owner 2026-10-19: only essence refining pollutes
 - Pollution comes ONLY from refining essence. Smelting and every other recipe are clean unless a recipe is explicitly marked polluting (future: uranium).
 - Consequence: smelters no longer emit taint and are not stopped by the taint cap (cap_margin irrelevant for clean recipes).
+
+## Night sprint 2026-10-19/20 (decided without owner, review)
+- Owner notes are canon (docs/design/owner_notes_2026-10-19.md); story canon v2 in docs/story/bible.md.
+- Debt = Metropolis quota (text changes, mechanics kept); petition/shuttle = Submit/Ferry path; 3 endings + proposed Remission (flag off).
+- Combat: single accuracy stat, no evasion; affixes pre-summed on equip (phone perf). Durability 0 never destroys.
+- Skills: efficiency 0.30/0.60/0.80/1.00/1.10…2.20, XP table ×1.6; branches at level 5 (doc said 6).
+- Traits may emerge as "scars" (max 1 acquired).
+- lockdown_radius 36 (24 broke wave balance). First-wave gate shipped off. raid_objectives/scent/metro/contraband/remission off until bot numbers pass.
+- main frozen at 42247d1 until balance restored (pillar gap ≥2 and alive>=8 ≥8/10).
