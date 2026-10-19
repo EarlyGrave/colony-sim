@@ -157,7 +157,8 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `quests_q12.json` | Q12 Rolled Over (NG+, sentence_min 3 + carried debt) |
 | `quests_q10.json` | Q10 Maintenance Window quest defs (QuestLog-merged) |
 | `quests_q3.json` | Q3 Parole Board quest defs (QuestLog-merged) |
-| `quests_q13.json` | I2 Informant (code quest `sim/society/informant_mod.gd`, QuestLog module `q13_informant`, day >= 12): informant = `sim.blocks.informant_id()` (I1) else bio tag/block "Informant"; mod `petition_fee_mult` fee_start..fee_max (+step/day, +bonus if tolerated), restored to pre-quest value on false_info (needs Clerk, idles him 1 day) / transfer (`debt._remove`) / his death; state in hash only after start | <br> `quests_s1.json` S1: W1 Society S1 Cohesion Fee (day >= 15, any block Standing < 30): conds `block_standing_below/above {block,v}`, `contraband_stash_over n`, `informant_alive` in `sim/society/society_conds.gd`; QuestLog verbs `ref_block {as,block|lowest}`, `standing {block|@ref,delta}`, `mood_block {block|@ref|!id,thought}` (quest_log.gd region W1); options pay (-15 refined, Standing +10) / refuse (thought left_to_ledger, fee 1.05 3d) / redirect (Lifer debt +1%)
+| `quests_q13.json` | I2 Informant (code quest `sim/society/informant_mod.gd`, QuestLog module `q13_informant`, day >= 12): informant = `sim.blocks.informant_id()` (I1) else bio tag/block "Informant"; mod `petition_fee_mult` fee_start..fee_max (+step/day, +bonus if tolerated), restored to pre-quest value on false_info (needs Clerk, idles him 1 day) / transfer (`debt._remove`) / his death; state in hash only after start |
+| `quests_s1.json` | S1: W1 Society S1 Cohesion Fee (day >= 15, any block Standing < 30): conds `block_standing_below/above {block,v}`, `contraband_stash_over n`, `informant_alive` in `sim/society/society_conds.gd`; QuestLog verbs `ref_block {as,block|lowest}`, `standing {block|@ref,delta}`, `mood_block {block|@ref|!id,thought}` (quest_log.gd region W1); options pay (-15 refined, Standing +10) / refuse (thought left_to_ledger, fee 1.05 3d) / redirect (Lifer debt +1%)
 | `quests_q8.json` | Q8 What the Creatures Wear (QuestLog-merged, gated by q_enabled) |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
@@ -226,7 +227,6 @@ at each day start (retried every tick while unpaid; unpaid = chip stops). Calibr
 with `operating` >= `calibrate_min_skill` runs `CalibrateJob` (`calibrate_ticks` ticks on site). A broken or destroyed building drops its chip.
 Read-only API for the threat system: `chips.threat_mult(building)` (`chip_threat_mult` while the chip is busy, else 1.0) and `chips.colony_threat_mult()` (max over busy chips).
 `ai_chip` is accepted by the stockpile zone; recipe `make_ai_chip` (assembler) needs tech `ai_chips`. Chip state is not in `state_hash`; it is rebuilt by command replay.
-
 ## T5 ecology (summary)
 Nests (2-4, map edge, reachable) are placed from the ecology stream at `start_new_game`. Every `update_ticks` each nest banks
 `pollution_at(nest) * absorb_rate * dt * chip_pressure` (local mutation field + planet level), capped. A raid keeps `starved_max` units free and
