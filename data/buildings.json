@@ -260,7 +260,7 @@
 				"kind": "out"
 			}
 		],
-		"input_capacity": 20,
+		"input_capacity": 8,
 		"output_capacity": 30,
 		"wear_per_batch": 8
 	},
