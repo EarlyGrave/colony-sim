@@ -38,6 +38,9 @@ func _offered(seed_value: int, plates := 0) -> Simulation:
 	_stub_conds(sim)
 	for _d in 14:
 		_force(sim)
+		for c in sim.colonists.list:  # PW2 hunger traits starve the unfed test colony before min_day 8; keep it alive
+			if c.alive:
+				sim.needs.add_food(c, 100.0)
 		sim.run_ticks(sim.ticks_per_day)
 		if not sim.quests.pending_for(Q).is_empty():
 			return sim
