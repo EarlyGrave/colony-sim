@@ -10,6 +10,12 @@
 		"starve_interval_ticks": 50,
 		"starve_damage": 3.0
 	},
+	"ration": {
+		"threshold": 0.15,
+		"efficiency": 0.6,
+		"cooldown_ticks": 40,
+		"items": ["meal", "raw_food"]
+	},
 	"rest": {
 		"decay_per_tick": 0.0007,
 		"sleep_threshold_day": 0.2,

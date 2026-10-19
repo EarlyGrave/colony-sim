@@ -242,3 +242,29 @@ func test_needs_are_deterministic() -> void:
 			s.append_array([c.cell, snappedf(c.needs.food, 0.0001), snappedf(c.needs.rest, 0.0001)])
 		snaps.append(s)
 	assert_eq(str(snaps[0]), str(snaps[1]), "same seed, same game")
+
+
+func test_hidden_colonist_eats_shelter_ration_during_alarm() -> void:
+	var sim := _sim()
+	_stockpile(sim, Vector2i(10, 10), Vector2i(2, 2))
+	_give(sim, Vector2i(10, 10), "raw_food", 30)
+	var c := sim.colonists.spawn(Vector2i(3, 3))
+	c.hidden = true
+	sim.alarm = true
+	sim.needs.state_of(c).food = 0.1
+	sim.run_ticks(400)
+	assert_eq(c.needs.starve_t, 0, "no starvation clock while rationed")
+	assert_gt(sim.ledger.get_count("eaten:raw_food"), 0, "ration came from stock")
+	_conserved(sim)
+
+
+func test_downed_colonist_eats_ration_without_helper() -> void:
+	var sim := _sim()
+	_stockpile(sim, Vector2i(10, 10), Vector2i(2, 2))
+	_give(sim, Vector2i(10, 10), "meal", 3)
+	var c := sim.colonists.spawn(Vector2i(3, 3))
+	sim.health.state_of(c).downed = true
+	sim.needs.state_of(c).food = 0.05
+	sim.needs.tick()
+	assert_gt(c.needs.food, 0.3, "downed colonist fed from stock")
+	_conserved(sim)
