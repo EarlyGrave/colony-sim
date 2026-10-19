@@ -23,6 +23,8 @@ var _next_uid := 1
 ## custom trigger conditions: name -> Callable(arg) -> bool (other quest modules register theirs)
 var _conds: Dictionary = {}
 var _poll_ids: Array = []
+## code-driven quests: quest id -> object with poll(), resolve(option_id), state_parts()
+var _modules: Dictionary = {}
 
 
 func _init(p_sim: Simulation) -> void:
@@ -35,6 +37,10 @@ func _init(p_sim: Simulation) -> void:
 
 func is_enabled() -> bool:
 	return bool(sim.defs.balance.get("q_enabled", false))
+
+
+func is_started() -> bool:
+	return has_state()
 
 
 func has_state() -> bool:
@@ -60,6 +66,15 @@ func ref(quest_id: String, name: String) -> int:
 func set_ref(quest_id: String, name: String, colonist_id: int) -> void:
 	if quests.has(quest_id):
 		quests[quest_id]["refs"][name] = colonist_id
+
+
+## Registers a code quest. It is polled once per day; answers to its offers go to module.resolve(option_id).
+func register_module(quest_id: String, module: Object) -> void:
+	_modules[quest_id] = module
+
+
+func set_mod(name: String, value: float, days: float) -> void:
+	add_mod(name, value, days)
 
 
 func register_cond(name: String, fn: Callable) -> void:
@@ -121,6 +136,10 @@ func answer(uid: int, option_id: String) -> bool:
 		if chosen.is_empty() or not bool(chosen["enabled"]):
 			return false
 		pending.erase(p)
+		if _modules.has(p["quest"]):
+			sim.bus.quest_resolved.emit(str(p["quest"]), option_id)
+			_modules[p["quest"]].resolve(option_id)
+			return true
 		_resolve(str(p["quest"]), str(p["beat"]), option_id)
 		return true
 	return false
@@ -149,6 +168,8 @@ func _sorted(a: Array) -> Array:
 # --- engine ---
 
 func _on_day(_d: int) -> void:
+	for qid: String in _sorted(_modules.keys()):
+		_modules[qid].poll()
 	if _poll_ids.is_empty():
 		_poll_ids = _sorted(sim.defs.quests.keys())
 	for id: String in _poll_ids:
@@ -329,7 +350,12 @@ func _fx_debt(qid: String, e: Dictionary) -> void:
 
 func state_parts() -> Array:
 	var out: Array = []
-	if not has_state():
+	var mp: Array = []
+	for qid: String in _sorted(_modules.keys()):
+		var part: Array = _modules[qid].state_parts()
+		if not part.is_empty():
+			mp.append([qid, part])
+	if not has_state() and mp.is_empty():
 		return out
 	var qs: Array = []
 	for id: String in _sorted(quests.keys()):
@@ -347,4 +373,4 @@ func state_parts() -> Array:
 	var pd: Array = []
 	for p in pending:
 		pd.append([p["uid"], p["quest"], p["beat"]])
-	return ["quests", qs, _sorted(flags.keys()), ms, sc, pd]
+	return ["quests", qs, _sorted(flags.keys()), ms, sc, pd, mp]
