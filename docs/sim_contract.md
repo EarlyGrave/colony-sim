@@ -1,5 +1,4 @@
 # Sim contract (portable spec)
-
 What a re-implementation (other engine/language) must reproduce to be "the same game": same seed + same command log
 = same `state_hash` at every tick. Source of truth is the code; `tests/test_contract_doc.gd` keeps the command table and
 the data-file table below in sync with it. "(GD)" marks GDScript-specific behaviour a port must emulate or replace.
@@ -142,7 +141,6 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `meta.json` | legacy, next_batch, scout_cells, unlocks (cross-run meta, enters the sim via `opts`) |
 | `presets.json` | default, order, presets{id: name, sentence, wave_strength_mult, waste_mult, starting_debt_mult, crate, hint_density} (O3; become opts `wave_mult`, `waste_mult`, `debt_mult`, `crate`, `hint_density` via `StartOpts.preset_opts`; neutral values emit no key, so standard_term = `{}`) |
 | `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter} (E1, gated by balance e1_enabled) |
-| `quests_q6.json` | quest id -> {trigger{tier_done}, beats{beat: {text, then, options{opt: {label, text, requires, effects[]}}}}} (Q6 Auditor Visits, merged by QuestLog, gated by q_enabled) |
 | `shuttle.json` | preset_mult, gantry, parts_need, part_cost, countdown_days, siege_* numbers, repair_cost, win_letter (S1, gated by balance s1_enabled) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
 | `beacons.json` | S2: building, build_ticks, cost, life_days, cut_pct, diminish, cap_pct, max_alive (gated by balance s2_enabled) |
@@ -154,6 +152,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `needs.json` | start_food/rest, retry_ticks, food{}, rest{} |
 | `perks.json` | caps, respec_cost, perks id -> {skill, level, effect}, levels_per_point |
 | `plants.json` | id -> {item, yield, grow_ticks, sow_ticks, harvest_ticks, min_daylight} |
+| `quests_q6.json` | Q6 quest defs (QuestLog-merged, gated by q_enabled) |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
 | `tutorial.json` | R5 O1: settings{audit_step, audit_delay_ticks}, steps[12] -> {id,title,text,reason,target{kind,id},done{signal,count/min_cells/where/or/latch},nudge_ticks} |
