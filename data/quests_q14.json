@@ -1,0 +1,193 @@
+{
+	"q14_three_forms": {
+		"title": "Three Forms",
+		"_comment": "Narrative N1. Needs cond clues_held (>=2 clue flags), verb path (blocks.json leaning). Q14b amends once via verb path_change.",
+		"trigger": {
+			"min_day": 30,
+			"clues_held": 2
+		},
+		"start": "land",
+		"beats": {
+			"land": {
+				"text": "A Procurator lands. He carries one document: Form 3-S, continued service.",
+				"effects": [
+					{
+						"verb": "letter",
+						"title": "Form 3-S",
+						"text": "All sentences are hereby extended. Please sign here."
+					}
+				],
+				"then": "small_print",
+				"delay_days": 1.0
+			},
+			"small_print": {
+				"text": "A Clerk reads the small print aloud. The calm in the air was never weather. It is a product.",
+				"effects": [
+					{
+						"verb": "letter",
+						"title": "The small print",
+						"text": "The Lull is made here. So is the debt. Both are renewable."
+					}
+				],
+				"then": "choose",
+				"delay_days": 1.0
+			},
+			"choose": {
+				"text": "Three forms lie on the table. Each block has already picked a favourite.",
+				"options": {
+					"submit": {
+						"label": "Submit (Form 3-S)",
+						"text": "You sign. The ink is warm. Someone sighs with relief.",
+						"hint": "Lifers +15, Clerks +15. Zealots -15. Raids x1.2.",
+						"effects": [
+							{
+								"verb": "path",
+								"id": "submit"
+							},
+							{
+								"verb": "mod",
+								"name": "wave_mult",
+								"value": 1.2,
+								"days": 10
+							},
+							{
+								"verb": "letter",
+								"title": "Form 3-S accepted",
+								"text": "Your cooperation is noted. Your name is not."
+							}
+						]
+					},
+					"fight": {
+						"label": "Fight (Form 3-F)",
+						"text": "You burn the form. The Zealots cheer. The Clerks start counting exits.",
+						"hint": "Zealots +15. Clerks -15. Raids x1.25.",
+						"effects": [
+							{
+								"verb": "path",
+								"id": "fight"
+							},
+							{
+								"verb": "mod",
+								"name": "wave_mult",
+								"value": 1.25,
+								"days": 10
+							},
+							{
+								"verb": "letter",
+								"title": "Form 3-F received",
+								"text": "The Warden has stopped counting. The Warden has started loading."
+							}
+						]
+					},
+					"escape": {
+						"label": "Escape (Form 3-E)",
+						"text": "You fold the form into a paper boat. The Ferry takes bribes in this currency.",
+						"hint": "Lifers -15. Covert sales open. Petition fee x0.8.",
+						"effects": [
+							{
+								"verb": "path",
+								"id": "escape"
+							},
+							{
+								"verb": "mod",
+								"name": "petition_fee_mult",
+								"value": 0.8,
+								"days": 10
+							},
+							{
+								"verb": "letter",
+								"title": "Form 3-E noted",
+								"text": "Departure forms are not accepted. They are, however, kept."
+							}
+						]
+					}
+				}
+			}
+		}
+	},
+	"q14b_amended_form": {
+		"title": "Amended Form",
+		"_comment": "Narrative N1. One reversal of the Q14 path: 20 refined, -20 Standing for every block.",
+		"trigger": {
+			"quest_done": "q14_three_forms",
+			"min_day": 45
+		},
+		"start": "amend",
+		"beats": {
+			"amend": {
+				"text": "A clerk offers an amendment to your form. The fee is described as modest.",
+				"options": {
+					"keep": {
+						"label": "Keep the form",
+						"text": "You decline. The clerk writes down that you were offered.",
+						"hint": "Free. Nothing changes.",
+						"effects": []
+					},
+					"to_submit": {
+						"label": "Amend to Submit",
+						"text": "The old form is shredded. The blocks notice the sound.",
+						"hint": "Costs 20 refined. Every block -20 Standing.",
+						"effects": [
+							{
+								"verb": "items",
+								"item": "refined_essence",
+								"n": -20
+							},
+							{
+								"verb": "path_change",
+								"id": "submit"
+							}
+						],
+						"requires": {
+							"items": {
+								"refined_essence": 20
+							}
+						}
+					},
+					"to_fight": {
+						"label": "Amend to Fight",
+						"text": "The old form is shredded. The blocks notice the sound.",
+						"hint": "Costs 20 refined. Every block -20 Standing.",
+						"effects": [
+							{
+								"verb": "items",
+								"item": "refined_essence",
+								"n": -20
+							},
+							{
+								"verb": "path_change",
+								"id": "fight"
+							}
+						],
+						"requires": {
+							"items": {
+								"refined_essence": 20
+							}
+						}
+					},
+					"to_escape": {
+						"label": "Amend to Escape",
+						"text": "The old form is shredded. The blocks notice the sound.",
+						"hint": "Costs 20 refined. Every block -20 Standing.",
+						"effects": [
+							{
+								"verb": "items",
+								"item": "refined_essence",
+								"n": -20
+							},
+							{
+								"verb": "path_change",
+								"id": "escape"
+							}
+						],
+						"requires": {
+							"items": {
+								"refined_essence": 20
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

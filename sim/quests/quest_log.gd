@@ -353,6 +353,13 @@ func _apply_effects(qid: String, effects: Array) -> void:
 					sim.blocks.apply_path(str(e["id"]))
 				else:
 					set_flag("path_" + str(e["id"]))
+			"path_change":  # region N1: Q14b one-time reversal; -20 Standing all blocks, then new leaning
+				if sim.set_path(str(e["id"])) and sim.blocks != null:
+					var bids: Array = sim.blocks.standing.keys()
+					bids.sort()
+					for bid: String in bids:
+						sim.blocks._change(bid, -20.0, true)
+					sim.blocks.apply_path(str(e["id"]))
 			"block_standing":  # region W3: target "strong"/"weak" = highest/lowest Standing block now
 				_w3_block_fx(e)
 			"letter":

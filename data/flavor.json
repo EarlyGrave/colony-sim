@@ -174,6 +174,9 @@
 		}
 	},
 	"pa": {
+		"path_submit": ["Form 3-S accepted. Your continued service is appreciated.", "Submission noted. Gratitude is optional but recorded."],
+		"path_fight": ["Form 3-F received. The Warden has stopped counting.", "Resistance noted. Installments are suspended pending outcome."],
+		"path_escape": ["Form 3-E filed under 'Miscellaneous'. Nobody read it.", "Departure paperwork acknowledged. Do not depart."],
 		"wave_incoming": [
 			"Attention inmates: unscheduled visitors approaching.",
 			"Visitors detected. Please remain productive.",

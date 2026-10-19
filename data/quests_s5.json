@@ -1,0 +1,27 @@
+{
+	"s5_old_cells": {
+		"title": "Old Cells, New Faces",
+		"_comment": "Narrative N1. NG+ only (sentence >= 2). Veteran's block starts +10.",
+		"trigger": {
+			"sentence_min": 2
+		},
+		"start": "return",
+		"beats": {
+			"return": {
+				"text": "Cell 4 is occupied by someone who knew where the hooks were. You were renamed. It did not take.",
+				"effects": [
+					{
+						"verb": "standing",
+						"block": "lifer",
+						"delta": 10
+					},
+					{
+						"verb": "letter",
+						"title": "Old cells",
+						"text": "Returning inmates keep their habits. The Warden keeps the files."
+					}
+				]
+			}
+		}
+	}
+}

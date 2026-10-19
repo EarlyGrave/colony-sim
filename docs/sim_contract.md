@@ -248,3 +248,6 @@ View-side only: no sim state, no `sim.rng`, not in `state_hash`/saves, goldens u
 ## L3 Power (`sim.power`, `sim/power/`, API in `docs/power_api.md`)
 Off (factor 1, no hash part) until a pole/generator exists; networks = union-find, rebuilt on `buildings.version`; factor = clamp(supply/demand, 0.2, 1); no pole in range = 0.5; fuel from `data/fuels.json`; deterministic, no rng.
 | `quests_s3.json` | S3 Whisper Network (data quest, needs cond `informant_alive`): trigger q13 done + tier 2; options decoy (requires `tag_alive` Clerk, -5 parts, fee x0.9) / bait (gamble 0.5) / cut (verbs `informant_standing`, `remove_colonist how:transfer`); InformantMod emits Warden `pa.informant_report` letter every 3rd day unless `pa_silent` |
+| `quests_q14.json` | N1 Q14 Three Forms (cond `clues_held` >= 2, min_day 30): choose beat -> verb `path` (submit/fight/escape) + wave/fee mod; Q14b Amended Form (verb `path_change`: 20 refined, -20 Standing all blocks, one reversal) |
+| `quests_s4.json` | N1 S4a (flag `installment_missed` -> flag `contraband_on`), S4b stash inventory (cond `contraband_stash_over` 6): shakedown / ride (flag `clue_buyer`) / turn_in (flag `warden_favor`) |
+| `quests_s5.json` | N1 S5 Old Cells, New Faces (`sentence_min` 2): Lifers Standing +10, veteran letter |
