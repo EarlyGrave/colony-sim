@@ -1,0 +1,48 @@
+{
+	"q12_rolled_over": {
+		"title": "Rolled Over",
+		"trigger": {"sentence_min": 3, "quest_done": "q11_previous_tenant", "carry_debt": 1},
+		"start": "clause",
+		"beats": {
+			"clause": {
+				"text": "Balance carried forward. Balance also carried backward. Your carried debt has been booked twice.",
+				"options": {
+					"pay": {
+						"label": "Pay it down (40 refined)",
+						"text": "The second entry is struck. The first remains.",
+						"requires": {"items": {"refined_essence": 40}},
+						"effects": [
+							{"verb": "items", "item": "refined_essence", "count": -40, "n": -40},
+							{"verb": "debt_pct", "value": -10.0, "pct": -10.0, "kind": "cut"},
+							{"verb": "flag", "id": "clue_double"}
+						],
+						"hint": "Costs 40 refined. Debt -10%."
+					},
+					"contest": {
+						"label": "Contest the clause (30 plate fee)",
+						"text": "The form is stamped. Which way is up to the clerk.",
+						"requires": {"items": {"plate": 30}},
+						"effects": [
+							{"verb": "items", "item": "plate", "count": -30, "n": -30},
+							{
+								"verb": "gamble",
+								"chance": 0.5,
+								"win": [{"verb": "debt_pct", "value": -25.0, "pct": -25.0, "kind": "cut"}],
+								"lose": [{"verb": "debt_pct", "value": 5.0, "pct": 5.0, "kind": "fine"}]
+							}
+						],
+						"hint": "Costs 30 plate. 50%: debt -25%, else +5%."
+					},
+					"accept": {
+						"label": "Accept the quota",
+						"text": "The quota is noted. It will be remembered.",
+						"effects": [
+							{"verb": "flag", "id": "clue_quota"}
+						],
+						"hint": "Unlocks a quota clue."
+					}
+				}
+			}
+		}
+	}
+}

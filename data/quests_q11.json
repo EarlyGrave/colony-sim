@@ -1,0 +1,41 @@
+{
+	"q11_previous_tenant": {
+		"title": "The Previous Tenant",
+		"trigger": {"sentence_min": 2, "min_day": 6},
+		"start": "crate",
+		"beats": {
+			"crate": {
+				"text": "A stamped tool crate turns up in the rubble. Your own old ID is inside. This colony has been used before. By you.",
+				"options": {
+					"open": {
+						"label": "Open the crate",
+						"text": "The handwriting matches. The date does not.",
+						"effects": [
+							{"verb": "items", "item": "parts", "count": 10, "n": 10},
+							{"verb": "flag", "id": "clue_loop"},
+							{"verb": "letter", "title": "Inmate record", "text": "Inmate record: you. Status: pending."}
+						],
+						"hint": "+10 parts. Unlocks a loop clue."
+					},
+					"bury": {
+						"label": "Bury it",
+						"text": "Some crates stay shut. The colony breathes easier.",
+						"effects": [
+							{"verb": "mood", "thought": "quest_cheer"},
+							{"verb": "mod", "name": "refine_mult", "value": 1.1, "days": 5}
+						],
+						"hint": "Mood up. Refining x1.1 for 5 days."
+					},
+					"report": {
+						"label": "Report it to the Warden",
+						"text": "The Warden notes: prior knowledge.",
+						"effects": [
+							{"verb": "debt_pct", "value": -3.0, "pct": -3.0, "kind": "cut"}
+						],
+						"hint": "Debt -3%."
+					}
+				}
+			}
+		}
+	}
+}

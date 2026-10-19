@@ -216,6 +216,9 @@ func _trigger_ok(t: Dictionary) -> bool:
 			"reviews_done":
 				if sim.milestones.reviews_done.size() < int(v):
 					return false
+			"sentence_min", "carry_debt":  # region R3
+				if not _r3_cond(k, v):
+					return false
 			_:
 				if not _conds.has(k) or not bool(_conds[k].call(v)):
 					return false
@@ -313,6 +316,8 @@ func _apply_effects(qid: String, effects: Array) -> void:
 			"pollution":  # value = fraction of the planet's max (0.03 = +3%)
 				var mx := float(sim.defs.balance["contamination"]["max"])
 				sim.contamination.level = clampf(sim.contamination.level + float(e["value"]) * mx, 0.0, mx * 0.999)
+			"gamble":  # region R3: one sim.rng draw picks win/lose effect lists
+				_apply_effects(qid, e.get("win", []) if sim.rng.randf() < float(e.get("chance", 0.5)) else e.get("lose", []))
 			"letter":
 				sim.bus.letter_received.emit(str(e.get("title", "Dispatch")), str(e.get("text", "")))
 
@@ -385,3 +390,11 @@ func state_parts() -> Array:
 	for p in pending:
 		pd.append([p["uid"], p["quest"], p["beat"]])
 	return ["quests", qs, _sorted(flags.keys()), ms, sc, pd, mp]
+
+
+# region R3
+func _r3_cond(k: String, v: Variant) -> bool:
+	if k == "sentence_min":
+		return int(sim.opts.get("sentence", 1)) >= int(v)
+	return int(sim.opts.get("carry_debt", 0)) >= int(v)
+# endregion

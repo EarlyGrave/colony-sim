@@ -153,6 +153,8 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `perks.json` | caps, respec_cost, perks id -> {skill, level, effect}, levels_per_point |
 | `plants.json` | id -> {item, yield, grow_ticks, sow_ticks, harvest_ticks, min_daylight} |
 | `quests_q6.json` | Q6 quest defs (QuestLog-merged, gated by q_enabled) |
+| `quests_q11.json` | Q11 Previous Tenant (NG+, sentence_min 2) |
+| `quests_q12.json` | Q12 Rolled Over (NG+, sentence_min 3 + carried debt) |
 | `quality.json` | tracked, skill, levels, thresholds, base, per_level, noise |
 | `raids.json` | id -> {min_points, weight, spawn, retreat_fraction, units[]}; `scripted` raids (O1 `tutorial_audit`: fixed[], wave_ticks, hq_immune, colonist_harmless) are never rolled |
 | `tutorial.json` | R5 O1: settings{audit_step, audit_delay_ticks}, steps[12] -> {id,title,text,reason,target{kind,id},done{signal,count/min_cells/where/or/latch},nudge_ticks} |
