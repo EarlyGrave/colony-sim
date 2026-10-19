@@ -43,7 +43,8 @@ func _on_joined(id: int) -> void:
 
 func is_overdue(c: Colonist) -> bool:
 	var st := state_of(c)
-	return st != null and st.remaining() > 0 and sim.day() >= st.due_day
+	return st != null and st.remaining() > 0 and sim.day() >= st.due_day \
+			and st.period_paid < int(cfg["installment"])
 
 
 # --- Commands (called from Simulation) ---------------------------------------------
@@ -61,6 +62,7 @@ func _pay(c: Colonist, st: DebtState, n: int) -> bool:
 		return false
 	sim.ledger.record_consumed(item, n, "debt")
 	st.paid += n
+	st.period_paid += n
 	st.despair = maxf(0.0, st.despair - n * float(cfg["despair_relief_per_unit"]))
 	if st.remaining() == 0:
 		st.pending_choice = true
@@ -124,9 +126,16 @@ func _daily(c: Colonist, st: DebtState) -> void:
 		_pay(c, st, mini(st.quota, st.remaining()))
 		if st.remaining() == 0:
 			return
-	if sim.day() >= st.due_day:
+	var inst := int(cfg["installment"])
+	if sim.day() >= st.due_day and st.period_paid < inst:
 		st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]))
 	else:
+		if sim.day() >= st.due_day:  # installment met: roll the period, interest grows the debt
+			st.period_paid -= inst
+			st.due_day += int(cfg["period_days"])
+			var add := ceili(st.remaining() * float(cfg["interest_pct"]) / 100.0)
+			st.total += add
+			st.interest += add
 		st.despair = maxf(0.0, st.despair - float(cfg["despair_decay_per_day"]))
 
 
