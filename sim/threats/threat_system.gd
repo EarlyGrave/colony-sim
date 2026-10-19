@@ -730,6 +730,11 @@ func damage_enemy(e: Enemy, amount: float, cause := "generic", by: Colonist = nu
 			if extra > 0:
 				sim.ledger.record_produced("essence_ore", extra, "creature")
 				sim.items.drop(e.cell, "essence_ore", extra)
+		if sim.equipment != null:  # region E5: faction gear drops (data/equipment.json sources.drops)
+			var fac := str(sim.defs.enemies.get(e.def_id, {}).get("faction", ""))
+			if fac != "":
+				var taker := by if by != null else _first_alive()
+				sim.equipment.roll_drop(fac, taker.id if taker != null else -1)
 		sim.bus.enemy_killed.emit(e.id)
 		_hot.cause = "generic"  # region F2
 
@@ -1115,4 +1120,13 @@ func scent_ticker() -> String:
 	if awakened and scent_now() >= float(sim.defs.balance["scent"]["high"]):
 		return "Scent high: wave in ~%.1f d" % (maxf(0.0, float(next_wave_tick - sim.tick)) / float(sim.ticks_per_day))
 	return ""
+# endregion
+
+
+# region E5
+func _first_alive() -> Colonist:
+	for c in sim.colonists.list:
+		if c.alive:
+			return c
+	return null
 # endregion

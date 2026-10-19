@@ -12,7 +12,7 @@ func _init() -> void:
 
 func applies(sim: Simulation, target: Dictionary) -> bool:
 	var c: Colonist = target.get("colonist")
-	return c != null and sim.equipment != null and sim.equipment.has_state() and sim.equipment.equipped.has(c.id)
+	return c != null and sim.equipment != null and sim.equipment.has_state() and (sim.equipment.equipped.has(c.id) or not sim.equipment.stored_of(c.id).is_empty())  # region E5
 
 
 ## Pure data for the rows (also used by tests): [{slot, slot_name, item, rarity, color, stats}] in sorted slot order.
@@ -57,4 +57,69 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 			add_line(v, r["stats"], Color(0.75, 0.8, 0.85))
 		else:
 			add_line(v, "empty" if r["item"] == "" else "no bonuses", Color(0.5, 0.5, 0.55))
+		if r["item"] != "":  # region E5
+			v.add_child(_button("Unequip", func() -> void: sim.unequip(c.id, str(r["slot"]))))
 		box.add_child(row)
+	_build_stored(sim, c, box)  # region E5
+
+
+# region E5: interactive part. Buttons call the recorded Simulation commands (equip / unequip / socket).
+static func _button(text: String, cb: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.custom_minimum_size = Vector2(0, ROW_H)
+	b.pressed.connect(cb)
+	return b
+
+
+## Stored (unworn) gear rows: [{id, name, rarity, color, stats, slot_name, sockets_free}].
+static func stored_rows(sim: Simulation, cid: int) -> Array:
+	var out: Array = []
+	for id: int in sim.equipment.stored_of(cid):
+		var g: GearItem = sim.equipment.instances[id]
+		var free: int = int(sim.defs.equipment["upgrade_slots"].get(g.rarity, 0)) - g.upgrades.size()
+		out.append({"id": id, "name": str(sim.defs.gear[g.base].get("name", g.base)), "rarity": g.rarity,
+			"color": Color.html(str(sim.defs.equipment["rarity"][g.rarity].get("color", "#c0c0c8"))),
+			"stats": stat_line(g), "slot_name": str(sim.defs.equipment["slots"][g.slot].get("name", g.slot)), "sockets_free": free})
+	return out
+
+
+## Socket choices for an item: upgrade ids whose tags fit (sorted).
+static func socket_options(sim: Simulation, item_id: int) -> Array:
+	var g: GearItem = sim.equipment.instances[item_id]
+	var tags: Array = sim.defs.gear[g.base].get("tags", [])
+	var out: Array = []
+	var ids: Array = sim.defs.upgrades.keys()
+	ids.sort()
+	for u: String in ids:
+		if u.begins_with("_"):
+			continue
+		var need: Array = sim.defs.upgrades[u].get("tags_any", [])
+		var ok := need.is_empty()
+		for t in need:
+			ok = ok or tags.has(t)
+		if ok:
+			out.append(u)
+	return out
+
+
+func _build_stored(sim: Simulation, c: Colonist, box: VBoxContainer) -> void:
+	var rows := stored_rows(sim, c.id)
+	if rows.is_empty():
+		return
+	var head := add_line(box, "Stored gear", Color(0.75, 0.8, 0.85))
+	head.custom_minimum_size = Vector2(0, ROW_H * 0.5)
+	for r: Dictionary in rows:
+		var row := PanelContainer.new()
+		var v := VBoxContainer.new()
+		row.add_child(v)
+		add_line(v, "%s: %s (%s)" % [r["slot_name"], r["name"], r["rarity"]], r["color"])
+		if r["stats"] != "":
+			add_line(v, r["stats"], Color(0.75, 0.8, 0.85))
+		var id: int = r["id"]
+		v.add_child(_button("Equip", func() -> void: sim.equip(c.id, id)))
+		if int(r["sockets_free"]) > 0:
+			for u: String in socket_options(sim, id):
+				v.add_child(_button("Socket: %s" % str(sim.defs.upgrades[u].get("name", u)), func() -> void: sim.socket(id, u)))
+		box.add_child(row)
+# endregion

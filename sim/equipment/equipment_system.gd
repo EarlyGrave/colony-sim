@@ -146,3 +146,57 @@ func state_parts() -> Array:
 		for k in ks:
 			parts.append([c, k, s[k]])
 	return parts
+
+
+# region E5
+## Weighted rarity pick from {rarity: weight}; exactly one sim.rng draw, keys iterated sorted.
+func roll_rarity(weights: Dictionary) -> String:
+	var keys: Array = weights.keys()
+	keys.sort()
+	var total := 0.0
+	for k: String in keys:
+		total += float(weights[k])
+	if total <= 0.0:
+		return "common"
+	var x := sim.rng.randf() * total
+	for k: String in keys:
+		x -= float(weights[k])
+		if x < 0.0:
+			return k
+	return str(keys[keys.size() - 1])
+
+
+## Crafted gear for the operator (rarity rolled). Returns the item id or -1.
+func craft(cid: int, base: String) -> int:
+	var src: Dictionary = sim.defs.equipment.get("sources", {})
+	var rarity := roll_rarity(src.get("craft_rarity_weights", {"common": 1}))
+	return give(cid, base, rarity, int(src.get("craft_ilvl", 0)))
+
+
+## Drop from a killed enemy of `faction`; `cid` receives it. Draws rng only for configured factions.
+func roll_drop(faction: String, cid: int) -> int:
+	var cfg: Dictionary = sim.defs.equipment.get("sources", {}).get("drops", {})
+	if not bool(cfg.get("enabled", false)) or not cfg.has(faction) or cid < 0:
+		return -1
+	var f: Dictionary = cfg[faction]
+	if sim.rng.randf() >= float(f.get("chance", 0.0)):
+		return -1
+	var bases: Array = f.get("bases", [])
+	if bases.is_empty():
+		return -1
+	var base: String = bases[sim.rng.randi() % bases.size()]
+	var id := give(cid, base, roll_rarity(f.get("rarity_weights", {"common": 1})), int(f.get("ilvl", 0)))
+	return id
+
+
+## Items owned by cid but not in a slot, sorted by id.
+func stored_of(cid: int) -> Array:
+	var worn: Dictionary = equipped.get(cid, {})
+	var out: Array = []
+	for id: int in instances:
+		var g: GearItem = instances[id]
+		if g.owner == cid and worn.get(g.slot, -1) != id:
+			out.append(id)
+	out.sort()
+	return out
+# endregion
