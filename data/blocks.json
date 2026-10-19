@@ -1,13 +1,28 @@
 {
 	"enabled": true,
 	"blocks": {
-		"lifer": {"name": "Lifers"},
-		"clerk": {"name": "Clerks"},
-		"zealot": {"name": "Zealots"},
-		"informant": {"name": "The Informant"},
-		"fresh_fish": {"name": "Fresh Fish"}
+		"lifer": {
+			"name": "Lifers"
+		},
+		"clerk": {
+			"name": "Clerks"
+		},
+		"zealot": {
+			"name": "Zealots"
+		},
+		"informant": {
+			"name": "The Informant"
+		},
+		"fresh_fish": {
+			"name": "Fresh Fish"
+		}
 	},
-	"assign_order": ["lifer", "clerk", "fresh_fish", "zealot"],
+	"assign_order": [
+		"lifer",
+		"clerk",
+		"fresh_fish",
+		"zealot"
+	],
 	"informant_min_inmates": 6,
 	"standing_start": 50.0,
 	"standing_regress_per_day": 1.0,
@@ -22,5 +37,51 @@
 	"quiet_days": 6,
 	"quiet_min_standing": 55.0,
 	"cohesion_title": "Cohesion fee",
-	"cohesion_text": "Block {block} stayed quiet. The Warden bills the quiet: one cohesion fee, payable in goodwill."
+	"cohesion_text": "Block {block} stayed quiet. The Warden bills the quiet: one cohesion fee, payable in goodwill.",
+	"leaning_delta": 15.0,
+	"leaning": {
+		"lifer": {
+			"submit": 1,
+			"fight": 0,
+			"escape": -1
+		},
+		"clerk": {
+			"submit": 1,
+			"fight": -1,
+			"escape": 0
+		},
+		"zealot": {
+			"submit": -1,
+			"fight": 1,
+			"escape": 0
+		},
+		"informant": {
+			"submit": 1,
+			"fight": -1,
+			"escape": 0
+		},
+		"fresh_fish": {
+			"submit": -1,
+			"fight": 0,
+			"escape": 1
+		}
+	},
+	"debt_of_dead_pct": 1.0,
+	"debt_of_dead_title": "Debt of the dead",
+	"debt_of_dead_text": "Inmate {id} died. His installment did not.",
+	"succession_loss": 10.0,
+	"succession_title": "Promotion",
+	"succession_text": "Promotion: confidential.",
+	"walkout_standing": 15.0,
+	"walkout_days": 3,
+	"walkout_deadline_days": 2,
+	"walkout_gain": 20.0,
+	"walkout_breakers": 2,
+	"walkout_title": "Ultimatum",
+	"walkout_text": "Block {block}: pay your installments within 2 days, or we walk.",
+	"walkout_text_fight": "Block {block}: stop the refinery within 2 days, or we walk.",
+	"walkout_met_title": "Ultimatum withdrawn",
+	"walkout_met_text": "Block {block} has been heard. For now.",
+	"walkout_failed_title": "Walkout",
+	"walkout_failed_text": "Block {block} walks out toward the dock."
 }
