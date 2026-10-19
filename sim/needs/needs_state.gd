@@ -8,3 +8,5 @@ var rest := 1.0
 var next_check := 0
 ## Ticks spent at zero food since the last starvation injury.
 var starve_t := 0
+## No shelter ration before this tick.
+var ration_next := 0

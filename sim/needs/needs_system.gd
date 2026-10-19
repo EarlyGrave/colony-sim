@@ -29,6 +29,7 @@ func tick() -> void:
 		n.food = maxf(0.0, n.food - float(cfg["food"]["decay_per_tick"]))
 		if c.job == null or c.job.type != "sleep":
 			n.rest = maxf(0.0, n.rest - float(cfg["rest"]["decay_per_tick"]))
+		_ration(c, n)
 		_starve(c, n)
 		_decide(c, n)
 
@@ -49,6 +50,24 @@ func add_food(c: Colonist, nutrition: float) -> void:
 func sleep_threshold() -> float:
 	var r: Dictionary = cfg["rest"]
 	return float(r["sleep_threshold_night"]) if sim.clock.is_night() else float(r["sleep_threshold_day"])
+
+
+## Shelter ration: colonists who cannot reach the normal eat job (hidden, alarm,
+## downed, sick) eat from stock at a reduced efficiency, so long raids don't starve them.
+func _ration(c: Colonist, n: NeedsState) -> void:
+	var r: Dictionary = cfg.get("ration", {})
+	if r.is_empty() or n.food >= float(r["threshold"]) or sim.tick < n.ration_next:
+		return
+	var blocked: bool = c.hidden or sim.alarm or (c.health != null and c.health.downed) or c.is_sick(sim.tick)
+	if not blocked:
+		return
+	for item: String in r["items"]:
+		if sim.items.consume_stored(item, 1, c.cell):
+			add_food(c, float(sim.defs.items[item]["nutrition"]) * float(r["efficiency"]))
+			sim.ledger.record_consumed(item, 1, "eaten")
+			sim.bus.colonist_ate.emit(c.id, item)
+			n.ration_next = sim.tick + int(r["cooldown_ticks"])
+			return
 
 
 func _starve(c: Colonist, n: NeedsState) -> void:
