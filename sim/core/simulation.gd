@@ -79,6 +79,7 @@ var beacons: BeaconSystem  # region S2
 var blocks: BlockSystem  # region I1
 # endregion
 # region perks
+var traits: TraitSystem  # region PW2
 var perks: PerkSystem
 var quality: QualitySystem  # region quality
 var ammo: AmmoSystem  # region ammo
@@ -303,6 +304,7 @@ func _init_systems() -> void:
 	needs = NeedsSystem.new(self)
 	farming = FarmingSystem.new(self)
 	# endregion
+	traits = TraitSystem.new(self)  # region PW2
 	perks = PerkSystem.new(self)  # region perks
 	contracts = ContractSystem.new(self)  # region contracts
 	quality = QualitySystem.new(self)  # region quality

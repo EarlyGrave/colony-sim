@@ -152,7 +152,10 @@ func _daily(c: Colonist, st: DebtState) -> void:
 			var short := float(inst - st.period_paid) / float(maxi(1, inst))
 			var bm := sim.blocks.despair_mult(c) if sim.blocks != null else 1.0  # region I1
 			var dm := sim.quests.mod("despair_mult") if sim.quests != null else 1.0  # region CD
-			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short * bm * dm)
+			var tm := maxf(0.0, 1.0 + sim.traits.mod(c, "despair_mult"))  # region PW2
+			if sim.traits.has_tag(c, "despair_frozen"):
+				tm = 0.0
+			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short * bm * dm * tm)
 			if sim.blocks != null:  # region I1
 				sim.blocks.on_installment_missed(c)
 	else:
