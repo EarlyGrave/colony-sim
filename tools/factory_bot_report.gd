@@ -20,6 +20,8 @@ func _init() -> void:
 			opts["assume_nitrogen"] = int(a.get_slice("=", 1)) == 1
 		elif a.begins_with("--cap="):
 			opts["cap"] = int(a.get_slice("=", 1))
+	if "--y3=1" in OS.get_cmdline_user_args():  # region Y3
+		Defs.get_default().apply_y3()
 	for sv in range(first, first + seeds):
 		var r: Dictionary = FactoryBot.play(sv, days, opts)
 		print(format(r))

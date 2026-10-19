@@ -135,6 +135,13 @@
 		"free_tiers": 1,
 		"essence_item": "refined_essence"
 	},
+	"y3_enabled": false,
+	"y3": {
+		"balance": {"mining.yield": 10, "threat.first_wave_delay_days": 3.5, "threat.per_wealth": 0.0008, "threat.base_strength": 1.2, "threat.per_wave": 0.7, "colonist.max_hp": 140},
+		"recipes": {"refine_essence.work_ticks": 60, "refine_essence.outputs.refined_essence": 7},
+		"buildings": {"turret.cost.refined_essence": 5, "hq.max_hp": 2500},
+		"debt": {"despair_per_day": 7.0, "break_despair_min": 70.0, "escape_weight": 0.2}
+	},
 	"b4_enabled": true,
 	"k5_enabled": true,
 	"e1_enabled": true,

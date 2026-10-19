@@ -34,6 +34,8 @@ func _init() -> void:
 			d.balance["pacing"]["pollution_interval"]["hi"] = float(a.get_slice("=", 1))
 		elif a.begins_with("--pts="):
 			d.balance["pacing"]["floor_pts_per_day"] = float(a.get_slice("=", 1))
+	if "--y3=1" in OS.get_cmdline_user_args():  # region Y3
+		Defs.get_default().apply_y3()
 	BotReport.preset_id = preset
 	var bus: Node = load("res://autoload/event_bus.gd").new()
 	for p: String in profiles:

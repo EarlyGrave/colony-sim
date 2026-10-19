@@ -377,3 +377,25 @@ static func _load_json(path: String) -> Dictionary:
 	var d: Dictionary = parsed
 	d.erase("_comment")
 	return d
+
+
+# region Y3
+## Opt-in economy tuning (balance.json "y3": {defs_property: {"a.b.c": value}}). Default off, so
+## goldens stay byte-identical; bot tools call this on the default Defs when run with --y3=1.
+func apply_y3() -> void:
+	var ov: Dictionary = balance.get("y3", {})
+	for prop: String in ov:
+		var root: Variant = get(prop)
+		if not (root is Dictionary):
+			continue
+		for path: String in ov[prop]:
+			var parts := path.split(".")
+			var cur: Dictionary = root
+			for i in range(parts.size() - 1):
+				if not cur.has(parts[i]) or not (cur[parts[i]] is Dictionary):
+					cur = {}
+					break
+				cur = cur[parts[i]]
+			if parts.size() > 0 and (cur.has(parts[-1]) or not cur.is_empty()):
+				cur[parts[-1]] = ov[prop][path]
+# endregion
