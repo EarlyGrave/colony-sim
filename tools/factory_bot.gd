@@ -11,12 +11,12 @@ const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), 
 ## Build order, one blueprint batch at a time: ["line", resource, smelt?] = miner(+smelter)+belts+storage_in at the hub,
 ## ["miner"] = hand-hauled essence miner (no belt, works before Conveyance), plus single machines.
 const PLAN: Array = [
-	["workbench"], ["miner"], ["refinery"], ["line", "iron_ore", true], ["line", "copper_ore", true], ["assembler"], ["line", "essence_ore", false], ["terminal"],
+	["workbench"], ["miner"], ["refinery"], ["miner"], ["miner"], ["line", "iron_ore", true], ["line", "copper_ore", true], ["assembler"], ["line", "essence_ore", false], ["terminal"],
 	["line", "coal", false], ["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
 	["line", "iron_ore", true], ["gen"], ["assembler"], ["line", "iron_ore", true],
 ]
 ## tech -> first PLAN step at which it is queued (bench time and essence are not wasted early).
-const RESEARCH: Dictionary = {"filters": 0, "assembly": 1, "electrification": 3, "fortification": 7, "decoys_1": 7}  # D3: decoys_1 = ash beacon (burns waste)
+const RESEARCH: Dictionary = {"filters": 0, "assembly": 1, "electrification": 5, "fortification": 9, "decoys_1": 9}  # D3: decoys_1 = ash beacon (burns waste)
 
 var sim: Simulation
 var base: Bot
@@ -248,9 +248,9 @@ func _build() -> void:
 		"assembler":
 			ok = sim.research.is_done("assembly") and _hub_place("assembler", Vector2i(0, 0))
 		"workbench":
-			ok = _hub_place("workbench", Vector2i(2, 4))
+			ok = sim.buildings.count_of("workbench") + _bp_count("workbench") > (0 if _step < 3 else 1) or _hub_place("workbench", Vector2i(2, 4))
 		"refinery":
-			ok = _hub_place("refinery", Vector2i(-4, 2))
+			ok = sim.buildings.count_of("refinery") + _bp_count("refinery") > 0 or _hub_place("refinery", Vector2i(-4, 2))  # PL: the tutorial bot already built one; a second cost 15 ore and 10+ days
 	if ok:
 		if str(s[0]) == "assembler" and not log.any(func(l: String) -> bool: return l.ends_with("built [\"assembler\"]")):
 			log.append("assembler chain d%.1f" % _day_f())
@@ -384,9 +384,9 @@ func _line(res: String, smelt: bool) -> bool:
 			_used_nodes[miner_at + Vector2i(xx, yy)] = true
 	var proc_at := Vector2i(-1, -1)
 	if smelt:
-		proc_at = _spot("smelter", _hub + Vector2i(_step * 3 % 14 - 7, -2), true)
-	var store_at := _spot("storage_in", (proc_at + Vector2i(4, 0)) if smelt else (_hub + Vector2i(_step * 2 % 12 - 6, 5)), true)
-	if (smelt and proc_at.x < 0) or store_at.x < 0:
+		proc_at = _spot("smelter", miner_at + Vector2i(4, 0), true)  # PL: smelter beside the miner, colonists haul the ingots (long belts kept failing)
+	var store_at := Vector2i(-1, -1) if smelt else _spot("storage_in", _hub + Vector2i(_step * 2 % 12 - 6, 5), true)
+	if (smelt and proc_at.x < 0) or (not smelt and store_at.x < 0):
 		return false
 	if _put("miner", miner_at) == null:
 		return false
@@ -394,14 +394,12 @@ func _line(res: String, smelt: bool) -> bool:
 	if smelt:
 		_put("smelter", proc_at)
 		_power(proc_at)
-	_put("storage_in", store_at)
+	if not smelt:
+		_put("storage_in", store_at)
 	var mo: Vector2i = _ports("miner", miner_at)[0]["cell"]
 	if smelt:
 		var si: Vector2i = _ports("smelter", proc_at)[0]["cell"]
-		var so: Vector2i = _ports("smelter", proc_at)[1]["cell"]
-		var di: Vector2i = _ports("storage_in", store_at)[0]["cell"]
 		_routes.append({"from": mo, "to": si, "into": proc_at, "size": 2})
-		_routes.append({"from": so, "to": di, "into": store_at, "size": 1})
 	else:
 		var di2: Vector2i = _ports("storage_in", store_at)[0]["cell"]
 		_routes.append({"from": mo, "to": di2, "into": store_at, "size": 1})
