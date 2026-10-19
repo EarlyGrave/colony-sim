@@ -1777,4 +1777,7 @@ func _q0_bind(p_sim: Simulation) -> void:
 	_q0_sheet = qs
 	add_child(qs)
 	qs.bind(p_sim)
+	qs.choice_posted.connect(func(t: String) -> void:  # region QU: a choice needs an answer
+		if _u2_stack != null:
+			_u2_stack.push("Dispatch: " + t, "warn", 20.0))
 # endregion
