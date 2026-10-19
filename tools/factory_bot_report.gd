@@ -81,5 +81,7 @@ static func json_line(r: Dictionary) -> String:
 		"real": int(str(led.get("recipe:refined_essence", 0))), "debt": r["debt_pct"], "refined": int(str(led["refined_essence"]).get_slice("/", 0)),
 		"plates": int(built.get("stock_plate", 0)), "waste": r["waste_prod"], "audit_day": r["audit_day"], "quests": r.get("quests", []), "blocker": r["blocker"],
 		"flee_deaths": int(str(led.get("died:flee", 0))), "hidden_starve": int(str(led.get("starve:hidden", 0))),
-		"objmet": int(str(led.get("raid_objective_met", 0)))})
+		"objmet": int(str(led.get("raid_objective_met", 0))),
+		"path": r.get("path", ""), "ending_won": r.get("ending_won", ""), "gear_equipped": r.get("gear_equipped", 0),
+		"branches": r.get("branches", 0), "susp_peak": snappedf(float(r.get("suspicion_peak", 0.0)), 0.1)})
 # endregion

@@ -107,6 +107,86 @@ func act() -> void:
 		_shuttle()
 	if assume_nitrogen:
 		_nitrogen_trickle()
+	if sim.tick % 200 == 60:
+		_f1_act()  # region F1b
+
+
+# region F1b
+## Path / endgame / gear / branch knobs, all default 0 (= off, numbers unchanged). Set via balance.json pg_bot or --ov:
+##   path (0 none, 1 submit, 2 fight, 3 escape): answers Q14 with that path (and set_path if the quest never fires by path_day, default 45)
+##   sell_every (days, escape only; sell_n refined per sale, default 5), endgame (1: assault / contact / fee / extraction when eligible),
+##   manifest (n: set_manifest(n) once), equip (1: daily equip best owned gear per slot), branch_pick (1: first listed branch at branch level)
+var suspicion_peak := 0.0
+var gear_equipped := 0
+var branches_picked := 0
+var _last_sale_day := -999
+const PATH_IDS := ["", "submit", "fight", "escape"]
+
+
+func chosen_path() -> String:
+	return PATH_IDS[clampi(_knob("path", 0), 0, 3)]
+
+
+func _f1_act() -> void:
+	var want := chosen_path()
+	if want != "" and sim.path() == "" and sim.day() >= _knob("path_day", 45):
+		sim.set_path(want)
+	if sim.contraband != null:
+		suspicion_peak = maxf(suspicion_peak, sim.contraband.suspicion)
+	var every := _knob("sell_every", 0)
+	if every > 0 and sim.path() == "escape" and sim.day() - _last_sale_day >= every:
+		if sim.covert_sale(_knob("sell_n", 5)):
+			_last_sale_day = sim.day()
+	if _knob("endgame", 0) == 1:
+		match sim.path():
+			"fight":
+				sim.start_assault()
+			"escape":
+				sim.contact_bandits()
+				sim.pay_bandit_fee()
+				sim.start_extraction()
+	if _knob("manifest", 0) > 0 and sim.shuttle.manifest != _knob("manifest", 0):
+		sim.set_manifest(_knob("manifest", 0))
+	if _knob("equip", 0) == 1:
+		_equip_best()
+	if _knob("branch_pick", 0) == 1:
+		_pick_branches()
+
+
+func _equip_best() -> void:
+	var eq: EquipmentSystem = sim.equipment
+	if eq == null:
+		return
+	var rank: Array = sim.defs.equipment["rarity"].keys()
+	for c in sim.colonists.list:
+		if not c.alive:
+			continue
+		var best: Dictionary = {}
+		var ids: Array = eq.instances.keys()
+		ids.sort()
+		for id: int in ids:
+			var g: GearItem = eq.instances[id]
+			if g.owner != c.id:
+				continue
+			var cur: GearItem = best.get(g.slot)
+			if cur == null or g.ilvl * 10 + rank.find(g.rarity) > cur.ilvl * 10 + rank.find(cur.rarity):
+				best[g.slot] = g
+		for slot: String in best:
+			var g2: GearItem = best[slot]
+			if eq.equipped.get(c.id, {}).get(slot, -1) != g2.id and eq.equip(c.id, g2.id):
+				gear_equipped += 1
+
+
+func _pick_branches() -> void:
+	var skills: Array = sim.defs.skills.get("branches", {}).keys()
+	skills.sort()
+	for c in sim.colonists.list:
+		for sk: String in skills:
+			if sim.perks.branch_pending(c, sk):
+				var opts: Array = sim.perks.branches_of(sk).keys()
+				if not opts.is_empty() and sim.choose_branch(c.id, sk, str(opts[0])):
+					branches_picked += 1
+# endregion
 
 
 # region RF
@@ -849,6 +929,8 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		bot.act()
 		for qp in sim.quests.pending.duplicate():  # region QX: the bot takes its preferred option (cheap, no plates), else the first enabled one
 			var pref: String = {"q6_auditor": "tour", "pilgrims_of_the_slag": "silence", "q1": "ignore"}.get(str(qp["quest"]), "")
+			if str(qp["quest"]) == "q14_three_forms" and bot.chosen_path() != "":  # region F1b
+				pref = bot.chosen_path()
 			for qo: Dictionary in qp["options"]:
 				if bool(qo["enabled"]) and (pref == "" or qo["id"] == pref):
 					sim.answer_quest(int(qp["uid"]), str(qo["id"]))
@@ -868,6 +950,8 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		"food": sim.items.count_stored("raw_food") + sim.items.count_stored("meal"), "over": sim.game_over_reason,
 		"debt_pct": sim.milestones.debt_paid_pct(), "end_day": sim.day(), "blocker": bot.blocker(), "nitrogen_nodes": nit_nodes,
 		"built": {}, "steps": bot._step, "log": bot.log.duplicate(),
+		"path": sim.path(), "suspicion_peak": bot.suspicion_peak, "gear_equipped": bot.gear_equipped, "branches": bot.branches_picked,  # region F1b
+		"ending_won": ",".join(PackedStringArray(sim.endings.path_ids().filter(func(i: String) -> bool: return sim.endings.won(i)))),
 	}
 	for b in sim.buildings.list:
 		r["built"][b.def_id] = int(r["built"].get(b.def_id, 0)) + 1

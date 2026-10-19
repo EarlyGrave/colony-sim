@@ -43,3 +43,7 @@ om = [r.get("objmet", 0) for r in ok]
 print(f"flee_deaths {sum(1 for x in fd if x)}/{n} seeds ({sum(fd)} total)  need 0   {'PASS' if not any(fd) else 'FAIL'}")
 print(f"hidden_starve {sum(1 for x in hs if x)}/{n} seeds ({sum(hs)} total)  need 0   {'PASS' if not any(hs) else 'FAIL'}")
 print(f"objmet {sum(om)} total over {n} seeds  per-seed: {om}")
+# F1b: path / ending / gear / branch columns (all blank or 0 while the pg_bot knobs are off)
+print("seed path    ending_won  gear_eq branches susp_peak")
+for r in ok:
+    print(f"{r['seed']:>4} {(r.get('path') or '-'):<7} {(r.get('ending_won') or '-'):<11} {r.get('gear_equipped', 0):>7} {r.get('branches', 0):>8} {r.get('susp_peak', 0):>9}")
