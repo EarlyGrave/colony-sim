@@ -5,7 +5,9 @@ const Scenario := preload("res://tests/scenario.gd")
 
 
 func test_blocked_building_output_is_hauled() -> void:
-	var sim := make_sim(3, true, 64, 64, peaceful_defs())
+	var d := peaceful_defs()
+	d.balance["haul_blocked_fix"] = true
+	var sim := make_sim(3, true, 64, 64, d)
 	var r := Scenario.build_chain(sim, false, true)
 	assert_false(r.is_empty())
 	var miner: Building = r["miner"]
