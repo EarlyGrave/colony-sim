@@ -99,6 +99,7 @@
 		"belt_repair_cost": {"plate": 1},
 		"machine_repair_cost": {"plate": 1}
 	},
+	"scent": {"enabled": true, "per_refine": 0.15, "decay_per_day": 1.5, "free": 0.0, "s0": 3.0, "high": 1.0, "dormant_clean_days": 2.0, "dormant_polluted_days": 0.25},
 	"pacing": {"floor_pts_per_day": 0.7, "calm_after_hit_days": 2.0, "pollution_interval": {"lo": 0.45, "hi": 0.7, "clean_mult": 10.0, "dirty_mult": 0.35}},
 	"threat": {
 		"enabled": true,

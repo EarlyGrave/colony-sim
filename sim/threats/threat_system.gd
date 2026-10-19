@@ -85,6 +85,7 @@ func _init(p_sim: Simulation) -> void:
 	sim.listen(sim.bus.first_refine_done, awaken)
 	sim.listen(sim.bus.item_mined, _on_item_mined)
 	_k1_init()  # region K1
+	_sc_init()  # region SC
 
 
 func _on_item_mined(_c: Vector2i, _item: String, _n: int) -> void:
@@ -197,7 +198,7 @@ func compose_raid(id: String, points: float) -> Array[String]:
 func tick() -> void:
 	var held := sim.tutorial != null and sim.tutorial.waves_held()  # region O1
 	_k1_tick(held)  # region K1
-	if awakened and not wave_active and not held and sim.tick >= next_wave_tick and sim.tick >= _k1_calm_until:  # region K1
+	if awakened and not wave_active and not held and sim.tick >= next_wave_tick and sim.tick >= _k1_calm_until and sim.tick >= dormant_until:  # region K1 + SC
 		start_wave()
 	if awakened and not wave_active and not held and not _warned \
 			and next_wave_tick - sim.tick < int(cfg["warning_ticks"]) + sim.idle_work.warning_bonus():  # region idle-work
@@ -323,6 +324,7 @@ func _check_morale() -> void:
 
 func end_wave() -> void:
 	var repelled := wave_active and _attackers() == 0 and pending_drop.is_empty()
+	var sc_audit := _k1_audit_now_wave  # region SC
 	if wave_active and _scripted("scripted"):  # region O1: the audit always counts as repelled
 		repelled = true
 	wave_active = false
@@ -333,7 +335,7 @@ func end_wave() -> void:
 		e.clear_path()
 	var k1_keep := next_wave_tick if _k1_audit_now_wave else -1  # region K1: an audit does not reset the pollution timer
 	_k1_audit_now_wave = false
-	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * _k1_interval_mult * _k1_pollution_mult() * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
+	next_wave_tick = sim.tick + int(float(cfg["wave_interval_days"]) * _k1_interval_mult * _k1_pollution_mult() * sc_mult() * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
 	if k1_keep >= 0:  # region K1
 		next_wave_tick = maxi(k1_keep, sim.tick + 1)
 	else:
@@ -342,6 +344,8 @@ func end_wave() -> void:
 	sim.set_alarm(_alarm_before_wave)
 	_k1_wave_over()  # region K1
 	sim.bus.wave_ended.emit(wave_index)
+	if repelled and not sc_audit:
+		_sc_dormancy()  # region SC
 	if repelled:
 		sim.bus.wave_repelled.emit(wave_index)  # region progression
 
@@ -398,7 +402,7 @@ func _k1_tick(held: bool) -> void:
 	if _k1_audit_at < 0 or not bool(cfg.get("enabled", true)):
 		return
 	if _k1_base_tick >= 0 and awakened and not wave_active and not held and sim.tick % 30 == 0:
-		var iv := int(float(cfg["wave_interval_days"]) * _k1_interval_mult * _k1_pollution_mult() * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
+		var iv := int(float(cfg["wave_interval_days"]) * _k1_interval_mult * _k1_pollution_mult() * sc_mult() * sim.crises.mult("raid_interval_mult") * sim.ticks_per_day)
 		next_wave_tick = maxi(_k1_base_tick + iv, sim.tick + 1)
 	if sim.tick >= _k1_audit_at and not wave_active and not held and not _k1_audit_now:
 		var pc: Dictionary = sim.defs.balance.get("pacing", {})
@@ -968,4 +972,68 @@ func _b2_clean_mult() -> float:
 	if bool(c.get("enabled", false)) and sim.contamination.fraction() <= float(c["max_pollution_frac"]):
 		return float(c["raid_mult"])
 	return 1.0
+# endregion
+
+
+# region SC
+## Scent clock + dormancy (balance.json "scent"): refining raises scent, scent shortens the pollution-wave
+## countdown (needs preset pacing); a repelled wave puts the nests to sleep (audits still come).
+var scent := 0.0
+var dormant_until := 0
+var _sc_tick := 0
+
+
+func _sc_init() -> void:
+	sim.listen(sim.bus.batch_refined, func(_b: int, _r: String) -> void:
+		if _sc_on():
+			_sc_decay()
+			scent += float(sim.defs.balance["scent"]["per_refine"]))
+
+
+func _sc_on() -> bool:
+	return bool(sim.defs.balance.get("scent", {}).get("enabled", false))
+
+
+func _sc_decay() -> void:
+	var dt := sim.tick - _sc_tick
+	_sc_tick = sim.tick
+	if dt > 0:
+		scent = maxf(0.0, scent - float(sim.defs.balance["scent"]["decay_per_day"]) * float(dt) / float(sim.ticks_per_day))
+
+
+## Current scent (decayed to now).
+func scent_now() -> float:
+	if _sc_on():
+		_sc_decay()
+	return scent
+
+
+## Pollution countdown multiplier 1/(1+scent/s0); 1.0 when off.
+func sc_mult() -> float:
+	if not _sc_on():
+		return 1.0
+	return 1.0 / (1.0 + maxf(0.0, scent_now() - float(sim.defs.balance["scent"].get("free", 0.0))) / float(sim.defs.balance["scent"]["s0"]))
+
+
+func _sc_dormancy() -> void:
+	if not _sc_on():
+		return
+	var c: Dictionary = sim.defs.balance["scent"]
+	var days := lerpf(float(c["dormant_clean_days"]), float(c["dormant_polluted_days"]), clampf(sim.contamination.fraction(), 0.0, 1.0))
+	dormant_until = sim.tick + int(days * sim.ticks_per_day)
+
+
+func dormant_days_left() -> float:
+	return maxf(0.0, float(dormant_until - sim.tick) / float(sim.ticks_per_day))
+
+
+## HUD ticker text ("" when nothing to say).
+func scent_ticker() -> String:
+	if not _sc_on() or wave_active:
+		return ""
+	if dormant_days_left() > 0.0:
+		return "Nests dormant: %.1f d" % dormant_days_left()
+	if awakened and scent_now() >= float(sim.defs.balance["scent"]["high"]):
+		return "Scent high: wave in ~%.1f d" % (maxf(0.0, float(next_wave_tick - sim.tick)) / float(sim.ticks_per_day))
+	return ""
 # endregion
