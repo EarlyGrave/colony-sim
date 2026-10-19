@@ -3,12 +3,12 @@
 	"debt_min": 120,
 	"debt_max": 280,
 	"due_days": 25,
-	"despair_per_day": 8.0,
+	"despair_per_day": 4.0,
 	"despair_decay_per_day": 10.0,
 	"despair_relief_per_unit": 0.5,
 	"despair_mid": 33.0,
 	"despair_high": 66.0,
-	"break_despair_min": 40.0,
+	"break_despair_min": 50.0,
 	"escape_weight": 0.5,
 	"caught_relief": 30.0,
 	"riot_ticks": 200,
@@ -23,7 +23,7 @@
 	"stay_thought": "freedman",
 	"leave_reward": 15,
 	"leave_legacy_points": 1,
-	"installment": 6,
+	"installment": 4,
 	"period_days": 10,
 	"interest_pct": 3.0
 }
