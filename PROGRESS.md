@@ -366,3 +366,10 @@ HP); волны заканчиваются по таймеру и твари о�
 - HM: miner haul priority hurt survival (reverted); bot rebuilds destroyed line miners (no effect yet).
 - Bot 60 d: alive>=8 9/10, audit 8, P1 5, P3 3, plates>=60 5/10, launch 0. Next lever: repair the broken remote iron miner (plates for repairs).
 - Full suite green (912 after the threshold fix), web smoke PASS.
+
+## First shuttle launch by the bot (2026-10-19)
+- RP: sim bug — repair jobs skipped miners on rock ore-node cells (unreachable cell); fix behind `repair_rock_fix` (OFF: hurts bot outcomes). tools/rp_diag.gd shuttle-gap probe.
+- FC (bot only): gantry no longer waits for the whole plan; fuel-cell bill no longer gated on parts (circular), target 24.
+- Bot 60 d: launch 1/10 (seed 5), alive>=8 9/10, audit 8, P1 5, P3 3. 90 d: launch 1/10, P1 8, P3 4, alive>=8 6/10.
+- Next: copper ore stuck in rock-bound miners (no copper ingots -> no parts) on seeds 3/4/7/10.
+- Full suite 912 green, web smoke PASS.
