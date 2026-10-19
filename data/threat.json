@@ -1,6 +1,6 @@
 {
 	"enabled": true,
-	"lockdown_radius": 24,
+	"lockdown_radius": 36,
 	"d0": 12.0,
 	"k_poll": 0.05,
 	"stick": 0.7,
