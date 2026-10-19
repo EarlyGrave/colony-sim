@@ -17,6 +17,7 @@
 		"planet_doomed": {"label": "The planet is dying", "value": -5, "duration_days": 0.0},
 		"slept_on_floor": {"label": "Slept on the floor", "value": -4, "duration_days": 1.0},
 		"ate_raw": {"label": "Ate raw food", "value": -3, "duration_days": 1.0},
+		"left_to_ledger": {"label": "Left to the Ledger", "value": -6, "duration_days": 2.0},
 		"despair_1": {"label": "Debt weighs", "value": -6, "duration_days": 0.2},
 		"despair_2": {"label": "Despair", "value": -14, "duration_days": 0.2},
 		"riot_witness": {"label": "Riot in the colony", "value": -8, "duration_days": 2.0},

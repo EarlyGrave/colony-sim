@@ -38,6 +38,9 @@ func _init(p_sim: Simulation) -> void:
 	if inf.enabled():
 		register_module(InformantMod.ID, inf)
 	# endregion
+	# region W1
+	SocietyConds.register(self)
+	# endregion
 
 
 func is_enabled() -> bool:
@@ -326,6 +329,8 @@ func _apply_effects(qid: String, effects: Array) -> void:
 			"spawn_enemy":  # region R2: quest-only creatures (never in raid tables)
 				for _i in int(e.get("n", 1)):
 					sim.threats._spawn(str(e["enemy"]), sim.threats._spawn_cell_near(sim.map_center()))
+			"ref_block", "standing", "mood_block":  # region W1: block verbs (society quests)
+				_w1_block_fx(qid, e)
 			"letter":
 				if mod("pa_silent") > 0.0:  # region R1
 					continue
@@ -407,4 +412,44 @@ func _r3_cond(k: String, v: Variant) -> bool:
 	if k == "sentence_min":
 		return int(sim.opts.get("sentence", 1)) >= int(v)
 	return int(sim.opts.get("carry_debt", 0)) >= int(v)
+# endregion
+
+
+# region W1
+## Block verbs. ref_block {as, block: id|"lowest"}: remembers the block (flag "<qid>.blk.<as>.<block>") and, for a
+## named single member (e.g. the Lifer), the first living member as ref. Block names elsewhere: id, "@<as>" (that
+## remembered block), "!@<as>" (all but it; mood_block only).
+func _w1_block_fx(qid: String, e: Dictionary) -> void:
+	if sim.blocks == null:
+		return
+	match str(e["verb"]):
+		"ref_block":
+			var b := SocietyConds.lowest_block(sim) if str(e["block"]) == "lowest" else str(e["block"])
+			if b == "":
+				return
+			flags["%s.blk.%s.%s" % [qid, e["as"], b]] = true
+			var ms := sim.blocks._members(b)
+			if not ms.is_empty():
+				set_ref(qid, str(e["as"]), ms[0].id)
+		"standing":
+			var b := _w1_resolve(qid, str(e["block"]))
+			if b != "":
+				sim.blocks._change(b, float(e["delta"]), float(e["delta"]) < 0.0)
+		"mood_block":
+			var want := str(e["block"])
+			var inv := want.begins_with("!")
+			var b := _w1_resolve(qid, want.trim_prefix("!"))
+			for c in sim.colonists.list:
+				if c.alive and (sim.blocks.block_of(c) == b) != inv:
+					sim.mood.add_thought(c, str(e["thought"]))
+
+
+func _w1_resolve(qid: String, name: String) -> String:
+	if not name.begins_with("@"):
+		return name
+	var pre := "%s.blk.%s." % [qid, name.substr(1)]
+	for f: String in _sorted(flags.keys()):
+		if f.begins_with(pre):
+			return f.trim_prefix(pre)
+	return ""
 # endregion

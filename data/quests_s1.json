@@ -1,0 +1,56 @@
+{
+	"s1_cohesion_fee": {
+		"title": "Cohesion Fee",
+		"_comment": "Society S1. Conds in sim/society/society_conds.gd; block verbs in quest_log.gd region W1. Debt change stays tiny (+1% on one inmate).",
+		"trigger": {"min_day": 15, "block_standing_below": {"block": "any", "v": 30}},
+		"start": "invoice",
+		"beats": {
+			"invoice": {
+				"text": "Block C has been unusually peaceful. A fee has been applied.",
+				"effects": [
+					{"verb": "ref_block", "as": "target", "block": "lowest"},
+					{"verb": "ref_block", "as": "lifer", "block": "lifer"},
+					{"verb": "letter", "title": "Cohesion fee", "text": "Your quiet inmates have been noted. Quiet is not an exemption."}
+				],
+				"then": "ask",
+				"delay_days": 1.0
+			},
+			"ask": {
+				"text": "The block's elder asks you to cover the fee. Cohesion is a service. Services are billed.",
+				"options": {
+					"pay": {
+						"label": "Pay the fee (15 refined)",
+						"text": "The fee is settled. The block remembers who paid.",
+						"requires": {"items": {"refined_essence": 15}},
+						"effects": [
+							{"verb": "items", "item": "refined_essence", "n": -15},
+							{"verb": "flag", "id": "block_covered"},
+							{"verb": "standing", "block": "@target", "delta": 10},
+							{"verb": "mod", "name": "despair_mult", "value": 0.9, "days": 5}
+						],
+						"hint": "Costs 15 refined. That block's Standing +10."
+					},
+					"refuse": {
+						"label": "Refuse",
+						"text": "The ledger is patient. The block is not.",
+						"effects": [
+							{"verb": "mood_block", "block": "@target", "thought": "left_to_ledger"},
+							{"verb": "mod", "name": "petition_fee_mult", "value": 1.05, "days": 3}
+						],
+						"hint": "Free. That block is upset. Petition fee +5% for 3 days."
+					},
+					"redirect": {
+						"label": "Redirect it onto the Lifer",
+						"text": "The Lifer volunteered. Nobody asked how.",
+						"effects": [
+							{"verb": "debt_pct", "who": "lifer", "pct": 1.0},
+							{"verb": "standing", "block": "lifer", "delta": 5},
+							{"verb": "mood_block", "block": "!lifer", "thought": "escape_rumors"}
+						],
+						"hint": "One Lifer's debt +1%. Other blocks uneasy."
+					}
+				}
+			}
+		}
+	}
+}
