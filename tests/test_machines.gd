@@ -40,14 +40,14 @@ func test_smelter_idle_without_input_and_smelts() -> void:
 	sim.run_ticks(200)
 	assert_eq(s.output_total(), 0)
 	assert_eq(s.progress, 0)
-	assert_eq(s.add_input("copper_ore", 4), 4)
+	assert_eq(s.add_input("copper_ore", 8), 8)
 	assert_eq(s.add_input("ingot_iron", 4), 0, "not a smelter input")
 	sim.run_ticks(138)  # unoperated machines run at 0.6 speed (R3X)
-	assert_eq(int(s.output.get("ingot_copper", 0)), 1)
+	assert_eq(int(s.output.get("ingot_copper", 0)), 2)  # YX: 4 ore -> 2 ingots + 1 waste
 	assert_eq(int(s.output.get("waste", 0)), 1)
-	assert_eq(int(s.input.get("copper_ore", 0)), 2)
+	assert_eq(int(s.input.get("copper_ore", 0)), 4)
 	sim.run_ticks(138)  # unoperated machines run at 0.6 speed (R3X)
-	assert_eq(int(s.output.get("ingot_copper", 0)), 2)
+	assert_eq(int(s.output.get("ingot_copper", 0)), 4)
 	assert_eq(sim.buildings.refined_batches, 2)
 
 

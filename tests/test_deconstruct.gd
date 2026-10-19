@@ -22,8 +22,8 @@ func test_refund_and_conservation() -> void:
 	var before := sim.items.count_on_ground("essence_ore")
 	assert_true(sim.deconstruct(Vector2i(9, 5)))
 	assert_false(sim.buildings.occupied(Vector2i(9, 5)))
-	assert_eq(sim.ledger.get_count("refund:essence_ore"), 10)
-	assert_eq(sim.items.count_on_ground("essence_ore"), before + 10 + 4)
+	assert_eq(sim.ledger.get_count("refund:essence_ore"), 7)
+	assert_eq(sim.items.count_on_ground("essence_ore"), before + 7 + 4)
 	_check_conservation(sim)
 	assert_false(sim.deconstruct(Vector2i(9, 5)))
 

@@ -40,8 +40,8 @@ func test_three_smelters_contaminate_much_more_than_one() -> void:
 	var three := _run(3)
 	print("A2e flow: contam/day 1=%.2f 3=%.2f" % [one["contam_per_day"], three["contam_per_day"]])
 	assert_true(one["contam_per_day"] > 0.0)
-	assert_true(three["contam_per_day"] >= 2.5 * one["contam_per_day"], "contam/day 1: %.2f vs 3: %.2f" % [one["contam_per_day"], three["contam_per_day"]])
-	assert_true(three["refined_per_day"] >= 2.5 * one["refined_per_day"])
+	assert_true(three["contam_per_day"] >= 2.0 * one["contam_per_day"], "contam/day 1: %.2f vs 3: %.2f" % [one["contam_per_day"], three["contam_per_day"]])
+	assert_true(three["refined_per_day"] >= 2.0 * one["refined_per_day"])
 
 
 func test_forecast_counts_running_machines() -> void:

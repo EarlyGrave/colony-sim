@@ -219,8 +219,16 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 						stack.append(ni)
 		if dmin >= min_d and rid != coal:
 			blobs.append([dmin, k, cells, rid])
+	var ess := NodeData.res_index("essence_ore")
+	blobs.sort_custom(func(a, b):  # iron/copper blobs first (essence stays for chains), then farthest first
+		var ea: int = 1 if int(a[3]) == ess else 0
+		var eb: int = 1 if int(b[3]) == ess else 0
+		if ea != eb:
+			return ea < eb
+		return a[0] > b[0] or (a[0] == b[0] and a[1] < b[1]))
 	var ids: Array = want.keys()
 	ids.sort()
+	var bi := 0
 	for id in ids:
 		var res := NodeData.res_index(String(id))
 		var have := 0
@@ -228,29 +236,12 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 			if int(b[3]) == res:
 				have += 1
 		var n: int = int(want[id]) - have
-		while n > 0:
-			# YX: take from the resource with the MOST blobs left (a 1-blob iron/copper/essence never turns into
-			# nitrogen while another resource has spare), farthest blob first.
-			var per := {}
-			for b in blobs:
-				per[int(b[3])] = int(per.get(int(b[3]), 0)) + 1
-			var best := -1
-			for i in blobs.size():
-				var b: Array = blobs[i]
-				if int(b[3]) == res:
-					continue
-				if best < 0:
-					best = i
-					continue
-				var o: Array = blobs[best]
-				var pb: int = per[int(b[3])]
-				var po: int = per[int(o[3])]
-				if pb > po or (pb == po and (b[0] > o[0] or (b[0] == o[0] and b[1] < o[1]))):
-					best = i
-			if best < 0:
-				break
-			for q in blobs[best][2]:
+		while n > 0 and bi < blobs.size():
+			var b: Array = blobs[bi]
+			bi += 1
+			if int(b[3]) == res:
+				continue
+			for q in b[2]:
 				map.node_res[q] = res
-			blobs[best][3] = res
 			n -= 1
 # endregion

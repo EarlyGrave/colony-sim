@@ -145,10 +145,13 @@ func test_processor_speed_chip_beats_unoperated() -> void:
 	var plain := make_sim(7, false, 24, 24, _defs())
 	var p := plain.buildings.place("smelter", Vector2i(8, 8), false)
 	sim.install_chip(s.id)
-	s.add_input("copper_ore", 60)
-	p.add_input("copper_ore", 60)
-	sim.run_ticks(640)
-	plain.run_ticks(640)
+	for half in 2:  # input buffer holds 20 ore = 5 batches of 4 ore, so refill midway
+		s.add_input("copper_ore", 20)
+		p.add_input("copper_ore", 20)
+		sim.run_ticks(320)
+		plain.run_ticks(320)
+		s.output.clear()  # keep the output buffer from stalling the smelter
+		p.output.clear()
 	assert_near(float(sim.buildings.refined_batches), 8.0, 1.0, "chip: 640 * 1.0 / 80")
 	assert_near(float(plain.buildings.refined_batches), 4.8, 1.0, "unoperated: 640 * 0.6 / 80")
 

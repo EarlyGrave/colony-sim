@@ -188,7 +188,7 @@
 			}
 		],
 		"input_capacity": 0,
-		"output_capacity": 60,
+		"output_capacity": 20,
 		"wear_per_batch": 2,
 		"batch_items": 10
 	},

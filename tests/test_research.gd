@@ -205,7 +205,7 @@ func test_waste_multiplier_applies_to_batches() -> void:
 		var m := s.buildings.place("smelter", Vector2i(8, 8), false)
 		var waste := 0
 		for i in 60:
-			m.add_input("copper_ore", 2)
+			m.add_input("copper_ore", 4)
 			s.run_ticks(int(s.defs.recipes["smelt_copper"]["work_ticks"]) + 5)
 			waste += int(m.output.get("waste", 0))
 			m.output.clear()

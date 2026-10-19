@@ -54,7 +54,7 @@ func test_built_after_hauling_and_work() -> void:
 func test_progress_needs_all_materials() -> void:
 	var sim := make_sim(49, false, 20, 20, peaceful_defs())
 	var bp := sim.place_building("refinery", Vector2i(8, 5))
-	bp.delivered["essence_ore"] = 19
+	bp.delivered["essence_ore"] = int(sim.defs.buildings["refinery"]["cost"]["essence_ore"]) - 1
 	assert_false(bp.has_all_materials())
 	sim.colonists.spawn(Vector2i(8, 6))
 	sim.run_ticks(300)
