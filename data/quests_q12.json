@@ -16,7 +16,7 @@
 							{"verb": "debt_pct", "value": -10.0, "pct": -10.0, "kind": "cut"},
 							{"verb": "flag", "id": "clue_double"}
 						],
-						"hint": "Costs 40 refined. Debt -10%."
+						"hint": "Costs 40 refined. Debt -2% (cap)."
 					},
 					"contest": {
 						"label": "Contest the clause (30 plate fee)",
@@ -31,7 +31,7 @@
 								"lose": [{"verb": "debt_pct", "value": 5.0, "pct": 5.0, "kind": "fine"}]
 							}
 						],
-						"hint": "Costs 30 plate. 50%: debt -25%, else +5%."
+						"hint": "Costs 30 plate. 50%: debt -2% (cap), else +5%."
 					},
 					"accept": {
 						"label": "Accept the quota",
