@@ -12,12 +12,12 @@ const DIRS: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), 
 ## Build order, one blueprint batch at a time: ["line", resource, smelt?] = miner(+smelter)+belts+storage_in at the hub,
 ## ["miner"] = hand-hauled essence miner (no belt, works before Conveyance), plus single machines.
 const PLAN: Array = [
-	["workbench"], ["miner"], ["refinery"], ["miner"], ["miner"], ["line", "iron_ore", true], ["line", "copper_ore", true], ["assembler"], ["line", "essence_ore", false], ["terminal"],
-	["line", "coal", false], ["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
+	["workbench"], ["miner"], ["refinery"], ["miner"], ["miner"], ["line", "iron_ore", true], ["line", "copper_ore", true], ["assembler"], ["terminal"], ["miner", "coal"], ["miner", "nitrogen"], ["line", "essence_ore", false],
+	["gen"], ["line", "iron_ore", true], ["assembler"], ["workbench"], ["line", "copper_ore", true],
 	["line", "iron_ore", true], ["gen"], ["assembler"], ["line", "iron_ore", true],
 ]
 ## tech -> first PLAN step at which it is queued (bench time and essence are not wasted early).
-const RESEARCH: Dictionary = {"filters": 0, "assembly": 1, "electrification": 5, "fortification": 9, "decoys_1": 9}  # D3: decoys_1 = ash beacon (burns waste)
+const RESEARCH: Dictionary = {"conveyance": 0, "assembly": 0, "filters": 0, "electrification": 5, "fortification": 9, "decoys_1": 9}  # D3: decoys_1 = ash beacon (burns waste)
 
 var sim: Simulation
 var base: Bot
@@ -27,10 +27,13 @@ var compactors := 4  # PL: waste items bleed pollution; sinks stand right after 
 var plate_reserve := 12  # D3: fuel cells / extra bills never take the stock below this once an assembler is planned
 var assume_nitrogen := false
 var _step_fails := 0
-var max_pending := 3
+var _stock_extra := 0
+var _held := false
+var max_pending := 3  # PG: knob pg_bot.max_pending overrides in _init
 var _stock_grown := false
 var _failed_step := -1
-var _step := 0  ## index into PLAN
+var _step := 0  ## index into _plan (PLAN plus PG knob insertions)
+var _plan: Array = []
 var _hub := Vector2i.ZERO
 var _used_nodes: Dictionary = {}
 var _routes: Array = []  ## pending belt jobs {from, to, dir}
@@ -49,10 +52,15 @@ func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	base = Bot.new(sim)
 	_hub = sim.map_center() + Vector2i(-2, 9)
+	max_pending = _knob("max_pending", max_pending)
+	_plan = PLAN.duplicate(true)
+	for i in _knob("extra_miners", 0):
+		_plan.insert(5, ["miner"])  # PG: ore (stock 0 for most of the first 25 days) gates construction, refining and research
 
 
 ## One bot step (call every Bot.STEP_TICKS ticks, then sim.run_ticks).
 func act() -> void:
+	_research()  # PG: before the tutorial bot, which otherwise starts the 3300-tick decoys chain ahead of conveyance
 	base._act()
 	if not _stock_grown and sim.tick >= 600:  # PL: the tutorial stockpile is 2x2 = 4 stacks; ore, ingots, plates, coal... filled it and haulers idled
 		_stock_grown = true
@@ -60,6 +68,12 @@ func act() -> void:
 		for y in 4:
 			for x in 6:
 				sim.set_zone(spot + Vector2i(x, y), "stockpile")
+	if _stock_extra < _knob("stock_blocks", 2) and sim.day() >= 14 + 14 * _stock_extra and sim.tick % sim.ticks_per_day == 0:
+		_stock_extra += 1  # PG: ore stacks filled the 6x4 stockpile, so coal / nitrogen / plates / parts from new machines had no cell to go to
+		var spot2 := Scen.find_zone_spot(sim, sim.map_center() + Vector2i(-8 + 7 * _stock_extra, 11), Vector2i(6, 4))
+		for y in 4:
+			for x in 6:
+				sim.set_zone(spot2 + Vector2i(x, y), "depot")
 	if sim.tick % 20 == 0:
 		_upkeep()
 	_research()
@@ -93,7 +107,8 @@ func _upkeep() -> void:
 	# Turrets as blueprints (10 refined each, built by colonists): 3 + waves, max 10.
 	var have := sim.buildings.count_of("turret") + _bp_count("turret")
 	var want := mini(3 + sim.threats.wave_index, 10)
-	if have < want and sim.items.count_stored("refined_essence") >= 10 and _bp_count("turret") < 2:
+	var turret_floor := 10 + (_research_reserve() if (have >= _knob("turret_min", 3) and _knob("turret_after_research", 1) == 1) else 0)  # PG: research essence before the 4th+ turret
+	if have < want and sim.items.count_stored("refined_essence") >= turret_floor and _bp_count("turret") < 2:
 		var angle := TAU * float(have * 7 % 13) / 13.0
 		var near := sim.map_center() + Vector2i(roundi(cos(angle) * 5.0), roundi(sin(angle) * 5.0))
 		var tc := _spot("turret", near, false)
@@ -142,7 +157,7 @@ func _upkeep() -> void:
 func _research_reserve() -> int:
 	var n := 0
 	for t: String in RESEARCH:
-		if sim.research.is_done(t) or sim.research.paid.has(t) or not sim.defs.research.has(t) or t in ["fortification", "decoys_1"]:
+		if sim.research.is_done(t) or sim.research.paid.has(t) or not sim.defs.research.has(t) or t in ["fortification", "decoys_1"] or (t == "electrification" and _knob("gens", 1) == 0):
 			continue
 		n += int(sim.defs.research[t]["cost"]["essence"])
 	return n
@@ -174,7 +189,9 @@ func _bills() -> void:
 		return
 	# YX: a small plate stock for repairs early; the audit-2 stockpile (plate_target) only once the assembler/power chain stands,
 	# so the early essence ore goes to miners and smelters instead of 120 ore of hammered plates.
-	var want := plate_target if sim.buildings.count_of("coal_generator") > 0 else mini(plate_target, 8)
+	var want := plate_target if (sim.buildings.count_of("coal_generator") > 0 or _knob("gens", 1) == 0 and _step >= _knob("plate_step", 6)) else mini(plate_target, 8)  # PG: without generators the old test never opened the big plate bill
+	if sim.milestones.is_tier_done(2):
+		want = maxi(want, _knob("plate_p1", 90))  # P1 needs 60 plates + 20 parts (= 20 more plates)
 	if _step >= 3:
 		want = maxi(want, plate_reserve)  # D3: repair reserve once the assembler chain is planned
 	for bill: Bill in sim.crafting.bills_of(wb):
@@ -198,8 +215,36 @@ func _research() -> void:
 	if sim.buildings.count_of("research_bench") == 0:
 		return
 	for t: String in RESEARCH:
-		if _step >= int(RESEARCH[t]) and sim.research.is_done("conveyance") and not sim.research.is_done(t) and not sim.research.queue.has(t):
+		if t == "filters" and _knob("asm_first", 1) == 1 and not (sim.research.is_done("assembly") or sim.research.queue.has("assembly")):
+			continue  # PG: assembly (20 essence) gates parts/audit; filters (10) used to grab the first essence and delay it by 4 days
+		if t == "electrification" and _knob("gens", 1) == 0:
+			continue  # PG: no generators -> no power research (2400 bench ticks) and no 50% unpowered penalty
+		if _step >= int(RESEARCH[t]) and (t == "conveyance" or sim.research.is_done("conveyance")) and not sim.research.is_done(t) and not sim.research.queue.has(t):
 			sim.queue_research(t, true)
+	# PG: the tutorial bot's free decoys chain (3300 bench ticks) sits at the queue front and delays conveyance -> assembly by ~4 days;
+	# move whatever precedes the next factory tech behind it (progress is kept).
+	for t in ["conveyance", "assembly", "filters"]:
+		var qi: int = sim.research.queue.find(t)
+		if qi > 0 and sim.research.lock_reason(t) == "":
+			var ahead: Array = sim.research.queue.slice(0, qi)
+			for a: String in ahead:
+				sim.queue_research(a, false)
+			for a: String in ahead:
+				sim.queue_research(a, true)
+			break
+	# PG: the refinery eats every loose ore stack, so blueprints (which take ore from STORAGE only) waited for days with colonists asleep.
+	# Keep exactly what the open blueprints still miss (+ a small base) in the stockpile; the rest flows on to the refinery.
+	var base_res := _knob("ore_reserve", 0)
+	var early := sim.buildings.count_of("miner") < _knob("reserve_miners", 3) and sim.day() < _knob("reserve_day", 14)
+	if base_res > 0 and not early and sim.is_rule_on("ore_reserve"):
+		sim.set_rule("ore_reserve", false)  # first miners stand: ore flows to the refinery again
+	if base_res > 0 and early:
+		var need := base_res
+		for bp in sim.buildings.blueprints:
+			need += bp.missing("essence_ore")
+		sim.defs.rules["ore_reserve"]["amount"] = mini(need, _knob("ore_reserve_max", 120))
+		if not sim.is_rule_on("ore_reserve"):
+			sim.set_rule("ore_reserve", true)
 	if sim.research.is_done("filters") and not sim.is_rule_on("refine_cap"):
 		sim.defs.rules["refine_cap"]["max_contamination_percent"] = cap_percent  # the S5 cap level
 		sim.set_rule("refine_cap", true)
@@ -241,13 +286,13 @@ func _cancel_orphans() -> void:
 func _build() -> void:
 	_cancel_orphans()
 	_pending()
-	if _mine.size() >= max_pending or _step >= PLAN.size() or not _routes.is_empty():  # PL: several blueprints at once (one at a time took 8-10 days per step)
+	if _mine.size() >= max_pending or _step >= _plan.size() or not _routes.is_empty():  # PL: several blueprints at once (one at a time took 8-10 days per step)
 		return
-	var s: Array = PLAN[_step]
+	var s: Array = _plan[_step]
 	var ok := false
 	match str(s[0]):
 		"miner":
-			ok = _ore_miner()
+			ok = _ore_miner(str(s[1]) if s.size() > 1 else "essence_ore")
 		"line":
 			if not sim.research.is_done("conveyance"):
 				return
@@ -255,7 +300,7 @@ func _build() -> void:
 		"terminal":
 			ok = _hub_place("warden_terminal", Vector2i(-3, 3))
 		"gen":
-			ok = sim.research.is_done("electrification") and _gen()
+			ok = true if _knob("gens", 1) == 0 else (sim.research.is_done("electrification") and _gen())  # PG: poles/generators switch the power system on (unpowered = 50%)
 		"assembler":
 			ok = sim.research.is_done("assembly") and _hub_place("assembler", Vector2i(0, 0))
 		"workbench":
@@ -271,7 +316,7 @@ func _build() -> void:
 	else:
 		if str(s[0]) == "miner" or (str(s[0]) == "line" and sim.research.is_done("conveyance")):
 			_step_fails += 1
-		if _step_fails > 60 and str(s[0]) in ["miner", "line"]:  # PL: a step that cannot be placed for ~40 tries is skipped, not waited on forever
+		if _step_fails > (_knob("miner_fails", 5) if str(s[0]) == "miner" else _knob("line_fails", 60)) and str(s[0]) in ["miner", "line"]:  # PL: a step that cannot be placed for ~40 tries is skipped, not waited on forever
 			_step += 1
 			_step_fails = 0
 			return
@@ -343,29 +388,62 @@ func _belt_free(c: Vector2i) -> bool:
 
 
 ## Essence miner without belts: colonists haul its output buffer to the stockpile (works from day 2).
-func _ore_miner() -> bool:
+func _ore_miner(res := "essence_ore") -> bool:
 	var cands: Array[Vector2i] = []
 	for n in sim.map.node_cells():
-		if sim.map.node_resource(n) == "essence_ore" and not _used_nodes.has(n):
+		if sim.map.node_resource(n) == res and not _used_nodes.has(n):
 			cands.append(n)
 	cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		return a.distance_squared_to(sim.map_center()) < b.distance_squared_to(sim.map_center()))
+	# PG: spots whose anchor cell is plain ground first: a machine anchored on a deposit cell is "unreachable" for the hauler, its output never leaves
+	var spots: Array[Vector2i] = []
 	for n in cands:
 		for t: Vector2i in [n, n + Vector2i(-1, 0), n + Vector2i(0, -1), n + Vector2i(-1, -1)]:
-			if sim.buildings.placement_error("miner", t, false) != "":
-				continue
-			var pure := true
+			spots.append(t)
+	var ground: Array[Vector2i] = spots.filter(func(t: Vector2i) -> bool: return sim.map.is_passable(t))
+	var rest: Array[Vector2i] = spots.filter(func(t: Vector2i) -> bool: return not sim.map.is_passable(t))
+	for t: Vector2i in (ground + rest if res != "essence_ore" else spots):  # essence miners keep the old order (changing it shifted every raid timeline)
+		if sim.buildings.placement_error("miner", t, false) != "":
+			continue
+		var pure := true
+		for yy in 2:
+			for xx in 2:
+				var p := t + Vector2i(xx, yy)
+				if sim.map.is_node(p) and sim.map.node_resource(p) != res:
+					pure = false
+		if pure and _put("miner", t) != null:
 			for yy in 2:
 				for xx in 2:
-					var p := t + Vector2i(xx, yy)
-					if sim.map.is_node(p) and sim.map.node_resource(p) != "essence_ore":
-						pure = false
-			if pure and _put("miner", t) != null:
-				for yy in 2:
-					for xx in 2:
-						_used_nodes[t + Vector2i(xx, yy)] = true
-				return true
+					_used_nodes[t + Vector2i(xx, yy)] = true
+			return true
 	return false
+
+
+## PG: a deposit inside rock (seeds 4/6/9) has no placeable 2x2 miner spot (rock cannot be dug). Colonists can still hand-mine
+## the nodes: designate them, and a smelter at the hub gets the ore hauled in (hauler feed) and the ingots hauled out.
+func _hand_mine(res: String, smelt: bool) -> bool:
+	var cells: Array[Vector2i] = []
+	for n in sim.map.node_cells():
+		if sim.map.node_resource(n) == res and not _used_nodes.has(n):
+			cells.append(n)
+	if cells.is_empty():
+		return false
+	cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return a.distance_squared_to(_hub) < b.distance_squared_to(_hub))
+	var first := cells[0]
+	var n_marked := 0
+	for c in cells:
+		if c.distance_squared_to(first) <= 100 and n_marked < 4:
+			sim.designate_mine(c, true)
+			_used_nodes[c] = true
+			n_marked += 1
+	if smelt:
+		var sc := _spot("smelter", _hub + Vector2i(-3, -2), false)
+		if sc.x < 0 or _put("smelter", sc) == null:
+			return false
+		_power(sc)
+	log.append("d%.1f hand-mining %d %s nodes (no free 2x2 spot)" % [_day_f(), n_marked, res])
+	return true
 
 
 ## Miner (+ optional smelter) on the nearest unused node of `res`, belts to a storage_in at the hub.
@@ -396,6 +474,8 @@ func _line(res: String, smelt: bool) -> bool:
 		if miner_at.x >= 0:
 			break
 	if miner_at.x < 0:
+		if _hand_mine(res, smelt):
+			return true
 		log.append("no node for %s" % res)
 		return false
 	var proc_at := Vector2i(-1, -1)
@@ -490,6 +570,11 @@ func _gen() -> bool:
 	return true
 
 
+## PG: experiment knobs from balance.json "pg_bot" (so factory_eval --ov can A/B them without code edits).
+func _knob(k: String, dflt: int) -> int:
+	return int(sim.defs.balance.get("pg_bot", {}).get(k, dflt))
+
+
 func _bp_count(def_id: String) -> int:
 	var n := 0
 	for bp in sim.buildings.blueprints:
@@ -530,6 +615,8 @@ func _power(cell: Vector2i) -> void:
 ## D3: one ash beacon to burn waste (existing sink) once decoys_1 is researched; if D2's `waste_sink_early` flag exists, it is read
 ## (the bot works the same with the flag off: the 50% taint cap rule is already on).
 func _beacon() -> void:
+	if sim.buildings.count_of("miner") < _knob("sink_after_miners", 3) and sim.day() < 14:
+		return  # PG: compactors/beacons (ore each) competed with the first miners for the scarce ore; pollution is still ~0 then
 	if sim.tick % 120 == 60 and sim.buildings.count_of("refinery") > 0 and bool(sim.defs.balance.get("waste_sink_early", false)) and sim.defs.buildings.has("waste_compactor"):
 		var have := sim.buildings.count_of("waste_compactor") + _bp_count("waste_compactor")
 		if have < compactors and _bp_count("waste_compactor") == 0:
@@ -556,8 +643,24 @@ func _deliveries() -> void:
 			audit_day = day
 		return
 	var p: int = sim.petition.next_phase()
+	_hold_ingots(p == 2)
 	if p > 0 and sim.deliver_petition(p):
 		phase_day[p - 1] = day
+
+
+## PG: petition II needs 20 iron + 20 copper INGOTS in storage, but the assemblers turn every ingot into plates/parts
+## (stock stayed 0 on every seed). While phase II is open the recipes' stock caps stop them (a player pauses the bills).
+func _hold_ingots(on: bool) -> void:
+	if on == _held:
+		return
+	_held = on
+	if sim.defs.recipes.has("make_plate"):
+		if on:
+			sim.defs.recipes["make_plate"]["stock_cap"] = {"plate": 1}
+		else:
+			sim.defs.recipes["make_plate"].erase("stock_cap")
+	if sim.defs.recipes.has("make_parts"):
+		sim.defs.recipes["make_parts"]["stock_cap"] = {"parts": 1} if on else {"parts": 25}
 
 
 func _shuttle() -> void:
@@ -565,7 +668,7 @@ func _shuttle() -> void:
 	var ph := str(st.get("phase", ""))
 	var day := float(sim.tick) / sim.ticks_per_day
 	if ph == "building" or ph == "ready":
-		if not gantry_started and sim.shuttle.gantry() == null and not _pending() and _step >= PLAN.size():
+		if not gantry_started and sim.shuttle.gantry() == null and not _pending() and _step >= _plan.size():
 			var c := _spot("release_gantry", sim.map_center() + Vector2i(-12, -8), false)
 			if c.x >= 0 and _put("release_gantry", c) != null:
 				gantry_started = true

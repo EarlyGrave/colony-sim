@@ -58,7 +58,17 @@ static func generate(map: MapGrid, rng: RandomNumberGenerator, cfg: Dictionary) 
 
 	_open_enclosed_pockets(map, center)
 	_convert_extra_nodes(map, rng.seed, biome, cfg)  # region L5
+	if (biome.get("guaranteed_nodes", {}) as Dictionary).has("nitrogen"):  # region PG: start biome only
+		_ensure_essence(map, center)
 	_guarantee_nodes(map, biome, cfg)  # region Y1
+	if bool(cfg.get("deposit_rings", true)):
+		_open_deposit_rings(map, center)  # region PG
+	if bool(cfg.get("deposit_rings", true)) and (biome.get("guaranteed_nodes", {}) as Dictionary).has("nitrogen"):  # region PG
+		var nit := NodeData.res_index("nitrogen")
+		if not map.node_res.has(nit):  # seeds 9/13: every far blob was gone -> petition III (nitrogen) was impossible; retry nearer
+			var near_cfg: Dictionary = cfg.duplicate()
+			near_cfg["extra_min_distance"] = int(cfg.get("min_deposit_distance", 7))
+			_guarantee_nodes(map, biome, near_cfg)
 
 
 ## Compact blob of up to `size` cells grown from `start` (each step extends
@@ -268,4 +278,111 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 			cnt[res] = int(cnt.get(res, 0)) + 1
 			blobs[best][3] = res
 			n -= 1
+# endregion
+
+
+# region PG
+## Seed 16 generated no essence deposit at all (unwinnable): turn the two nearest deposit blobs into essence ore.
+static func _ensure_essence(map: MapGrid, center: Vector2i) -> void:
+	var ess := NodeData.res_index("essence_ore")
+	if map.node_res.has(ess):
+		return
+	var blobs: Array = []  # [dist, first_cell, cells]
+	var done := {}
+	for k in map.node_res.size():
+		if map.tiles[k] != MapGrid.Tile.DEPOSIT or map.node_res[k] == 0 or done.has(k):
+			continue
+		var rid := int(map.node_res[k])
+		var cells: Array[int] = []
+		var stack: Array[int] = [k]
+		var dmin := 1.0e9
+		done[k] = true
+		while not stack.is_empty():
+			var q: int = stack.pop_back()
+			cells.append(q)
+			var qc := Vector2i(q % map.width, q / map.width)
+			dmin = minf(dmin, Vector2(qc - center).length())
+			for d in MapGrid.NEIGHBORS_4:
+				var n: Vector2i = qc + d
+				if map.in_bounds(n):
+					var ni := map.idx(n)
+					if not done.has(ni) and map.tiles[ni] == MapGrid.Tile.DEPOSIT and int(map.node_res[ni]) == rid:
+						done[ni] = true
+						stack.append(ni)
+		blobs.append([dmin, k, cells])
+	blobs.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	for i in mini(2, blobs.size()):
+		for q in blobs[i][2]:
+			map.node_res[q] = ess
+
+
+## Iron / copper / coal / nitrogen blobs that were generated inside a rock mass have no 2x2 miner spot and no reachable
+## neighbour (rock is not diggable): seeds 4/6/9 never got a copper or iron line. Carve the 8-neighbour ring of every such
+## node to ground and, if the ring is cut off from the landing site, tunnel the shortest rock path to open ground.
+## No rng; iteration order is fixed (cell index, NEIGHBORS_4 order), so maps stay deterministic.
+static func _open_deposit_rings(map: MapGrid, center: Vector2i) -> void:
+	var ring: Dictionary = {}  # cell index -> true, carved cells
+	for k in map.node_res.size():
+		if map.tiles[k] != MapGrid.Tile.DEPOSIT or map.node_res[k] == 0 or int(map.node_res[k]) == NodeData.res_index("essence_ore"):
+			continue
+		var c := Vector2i(k % map.width, k / map.width)
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				var n := c + Vector2i(dx, dy)
+				if map.in_bounds(n) and map.tiles[map.idx(n)] == MapGrid.Tile.ROCK:
+					map.tiles[map.idx(n)] = MapGrid.Tile.GROUND
+					ring[map.idx(n)] = true
+	if ring.is_empty():
+		return
+	var reach := _reach_from(map, center)
+	var ks: Array = ring.keys()
+	ks.sort()
+	for k in ks:
+		if reach[k] == 1:
+			continue
+		# BFS through any tile from the cut-off cell to the nearest reachable ground; carve the rock on the way
+		var prev := {k: -1}
+		var q: Array[int] = [k]
+		var head := 0
+		var hit := -1
+		while head < q.size() and hit < 0:
+			var cur: int = q[head]
+			head += 1
+			var cc := Vector2i(cur % map.width, cur / map.width)
+			for d in MapGrid.NEIGHBORS_4:
+				var n: Vector2i = cc + d
+				if not map.in_bounds(n):
+					continue
+				var ni := map.idx(n)
+				if prev.has(ni):
+					continue
+				prev[ni] = cur
+				if reach[ni] == 1 and map.tiles[ni] == MapGrid.Tile.GROUND:
+					hit = cur
+					break
+				q.append(ni)
+		var at: int = hit
+		while at >= 0:
+			if map.tiles[at] == MapGrid.Tile.ROCK:
+				map.tiles[at] = MapGrid.Tile.GROUND
+			at = int(prev[at])
+		reach = _reach_from(map, center)
+
+
+static func _reach_from(map: MapGrid, center: Vector2i) -> PackedByteArray:
+	var reach := PackedByteArray()
+	reach.resize(map.width * map.height)
+	reach.fill(0)
+	var queue: Array[Vector2i] = [center]
+	reach[map.idx(center)] = 1
+	var head := 0
+	while head < queue.size():
+		var c := queue[head]
+		head += 1
+		for d in MapGrid.NEIGHBORS_4:
+			var n := c + d
+			if map.is_passable(n) and reach[map.idx(n)] == 0:
+				reach[map.idx(n)] = 1
+				queue.append(n)
+	return reach
 # endregion

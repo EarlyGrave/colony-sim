@@ -106,6 +106,7 @@ func test_power_model_gates() -> void:
 func _gen(seed_value: int, share: float) -> MapGrid:
 	var cfg: Dictionary = Defs.get_default().balance["map"].duplicate(true)
 	cfg["extra_share"] = share
+	cfg["deposit_rings"] = false  # PG: ring carving follows the converted resources, this test is about the conversion only
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var map := MapGrid.new(int(cfg["width"]), int(cfg["height"]), make_bus())

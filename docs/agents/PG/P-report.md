@@ -1,0 +1,10 @@
+# PG report: factory bot / progression (targets NOT fully met)
+Eval (factory_eval, standard, 60 d): 20 seeds before 11/20 audit (mean d51.5), P1 0, alive8 15/20 -> after 13/20 audit (mean d47.5), P1 4/20, P3 0, launch 0, alive8 17/20. 10 seeds after: audit 6/10, P1 1/10 (noise +-2). Pillar d21: 7.2 / 4.2 / 4.0 holds. 782 green x2, web_smoke PASS, goldens unchanged (0 hashes).
+## Changes
+- Map (sim/map/map_generator.gd, balance map.deposit_rings): ring of rock around non-essence deposits carved to ground + tunnel to open ground (seeds 4/6/9 had copper/iron sealed in rock, no miner fit); _ensure_essence (seed 16 had no essence); nitrogen retry nearer. Test seed/cfg adjusted (test_automation_flow seed 3, test_logistics2 rings off).
+- Data: make_plate 1 ingot -> 1 plate (P1 0->~4/20); new zone "depot" (no ore) so coal/plates are not blocked by an ore-full stockpile. Debt data untouched (owner rule).
+- Bot (tools/factory_bot.gd, knobs in balance pg_bot): no generators/poles (power system only costs 50% unpowered; P3 needs coal ITEMS), conveyance/assembly research first (decoys chain moved behind), turret after research essence, +2 early essence miners, hand_plate bill opened without generator, unplaceable miner steps skipped after 5 tries (was ~60: 18 days lost), hand-mine fallback, coal/nitrogen hand miners (anchor on ground), extra depot blocks, plate/parts caps during petition II to keep ingots, blocker column in eval.
+## Rejected (measured)
+ore_reserve rule (refinery starves -> deaths), early-sink gating, max_pending 4/5 (more deaths), repair cost to ore, miner batch 15, hauler near-cell fix (worse), gens on/off (no gain).
+## Next bottleneck
+Early ore: refinery eats every loose ore stack, blueprints take ore only from storage, first miners d10-12, lines d25, audit ~d45. Miners anchored on deposit cells are unhaulable (sim bug: haul_giver uses b.cell as near; fixing it shifted raids, needs its own balance pass). P3 coal/nitrogen reach stock late. Tools: tools/pg_log.gd, pg_dbg.gd.

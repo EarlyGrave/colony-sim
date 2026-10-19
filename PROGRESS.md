@@ -293,3 +293,9 @@ HP); волны заканчиваются по таймеру и твари о�
 - Real bot 10 seeds/60 d: audit tier 2 0/10 -> 7/10 (d44-55), alive 10/10. P1/P3/launch still 0/10.
 - Next: 2+ iron/copper lines + generator by ~d25; seeds 4/9 no copper line, 6 no iron (bot placement); plate-free miner repair?; nitrogen/fuel-cell chain.
 - 782 green x2, web smoke PASS, pillar 7.2 / 4.2 / 4.0.
+
+## Session 4 — Petition progression pass (PG) + quest batch Q (flag off)
+- PG: map gen carves rings around sealed deposits (copper/iron were unreachable on seeds 4/6/9); make_plate 1 ingot -> 1 plate; "depot" zone; bot fixes. Real bot 20 seeds/60 d: audit tier 2 13/20 (was 11), P1 ~4/20 (was 0), P3/launch 0; all alive 17/20.
+- Quest batch Q0/Q6/Q2/Q1 merged with q_enabled off; QX reconcile pending.
+- Next: early ore (refinery eats loose ore), unhaulable deposit-anchored miners (sim bug), P3 coal/nitrogen timing; debt re-tune to "almost unpayable" (owner); NG+.
+- 810 green x2, web smoke PASS.
