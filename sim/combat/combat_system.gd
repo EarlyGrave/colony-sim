@@ -62,8 +62,7 @@ func try_attack(c: Colonist, e: Enemy) -> bool:
 	# endregion
 	if aimed or volley or sim.rng.randf() < hit_chance(c, w, dist):
 		sim.threats.damage_enemy(e, dmg, "melee", c)  # region F2 + F3
-	if c.skills.add_xp(sim.defs, skill, float(cfg["xp_per_attack"])):
-		sim.bus.skill_leveled.emit(c.id, skill, c.skills.level(skill))
+	sim.progression.award(c, skill, float(cfg["xp_per_attack"]), "attack", false)  # region progression
 	return true
 
 

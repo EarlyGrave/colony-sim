@@ -1,12 +1,12 @@
 {
-	"_comment": "Skill levels 0..max_level. Work speed multiplier = 1 + speed_per_level * level. XP to go from level L to L+1 = xp_base + xp_step * L. Passion multiplies XP gain.",
+	"_comment": "Skill levels 0..max_level. Work speed multiplier = efficiency[level]. XP to go L -> L+1 = xp_table[L]. Passion multiplies XP gain.",
 	"max_level": 10,
-	"xp_base": 100,
-	"xp_step": 40,
+	"xp_table": [100, 160, 250, 400, 650, 1000, 1600, 2500, 4000, 6500],
+	"efficiency": [0.30, 0.60, 0.80, 1.00, 1.10, 1.22, 1.36, 1.52, 1.70, 1.90, 2.20],
+	"milestones": {"3": "journeyman", "6": "expert", "10": "master"},
 	"xp_per_work_tick": 1.0,
-	"speed_per_level": 0.10,
 	"passion_xp": {"none": 1.0, "minor": 1.5, "major": 2.0},
-	"init": {"level_min": 0, "level_max": 4, "minor_chance": 0.25, "major_chance": 0.1},
+	"init": {"level_min": 1, "level_max": 4, "minor_chance": 0.25, "major_chance": 0.1},
 	"skills": {
 		"mining": {"label": "Mining"},
 		"construction": {"label": "Construction"},

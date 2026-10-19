@@ -191,5 +191,4 @@ func train_tick(c: Colonist, skill: String) -> void:
 		rec = [sim.day(), 0.0]
 	rec[1] = float(rec[1]) + xp
 	_trained[c.id] = rec
-	if c.skills.add_xp(sim.defs, skill, xp):
-		sim.bus.skill_leveled.emit(c.id, skill, c.skills.level(skill))
+	sim.progression.award(c, skill, xp, "training", false)  # region progression

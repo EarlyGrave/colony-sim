@@ -192,8 +192,7 @@ func work_tick(c: Colonist, work_type: String) -> float:
 		return generic
 	var mult := c.skills.speed_mult(sim.defs, skill)
 	mult *= float(c.bio.get("work_speed", 1.0))  # region arrivals
-	if c.skills.add_xp(sim.defs, skill, float(sim.defs.skills["xp_per_work_tick"])):
-		sim.bus.skill_leveled.emit(c.id, skill, c.skills.level(skill))
+	sim.progression.award(c, skill, float(sim.defs.skills["xp_per_work_tick"]), "work", false)  # region progression
 	return mult * generic
 
 

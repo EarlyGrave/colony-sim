@@ -246,8 +246,7 @@ func test_respec() -> void:
 func _fast_defs() -> Defs:
 	var d := peaceful_defs()
 	d.skills["init"]["level_max"] = 0
-	d.skills["xp_base"] = 1
-	d.skills["xp_step"] = 0
+	d.skills["xp_table"] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 	return d
 
 

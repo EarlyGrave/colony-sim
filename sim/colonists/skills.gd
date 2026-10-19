@@ -48,7 +48,7 @@ func join_level(skill: String) -> int:
 func xp_total(defs: Defs, skill: String) -> float:
 	var t := float(xp.get(skill, 0.0))
 	for l in level(skill):
-		t += float(defs.skills["xp_base"]) + float(defs.skills["xp_step"]) * l
+		t += _cost(defs, l)
 	return t
 
 
@@ -64,11 +64,27 @@ func priority(work_type: String) -> int:
 func speed_mult(defs: Defs, skill: String) -> float:
 	if skill == "" or not levels.has(skill):
 		return 1.0
-	return 1.0 + float(defs.skills["speed_per_level"]) * level(skill)
+	return efficiency(defs, level(skill))
+
+
+## Efficiency multiplier at a level (data/skills.json "efficiency"; falls back to the old linear curve).
+static func efficiency(defs: Defs, lvl: int) -> float:
+	var eff: Array = defs.skills.get("efficiency", [])
+	if eff.is_empty():
+		return 1.0 + float(defs.skills.get("speed_per_level", 0.1)) * lvl
+	return float(eff[clampi(lvl, 0, eff.size() - 1)])
+
+
+## XP to go from level `l` to `l+1` (data "xp_table"; falls back to xp_base + xp_step * l).
+static func _cost(defs: Defs, l: int) -> float:
+	var tbl: Array = defs.skills.get("xp_table", [])
+	if tbl.is_empty():
+		return float(defs.skills["xp_base"]) + float(defs.skills["xp_step"]) * l
+	return float(tbl[clampi(l, 0, tbl.size() - 1)])
 
 
 func xp_needed(defs: Defs, skill: String) -> float:
-	return float(defs.skills["xp_base"]) + float(defs.skills["xp_step"]) * level(skill)
+	return _cost(defs, level(skill))
 
 
 ## Adds `amount` xp (before passion). Returns true if the level changed.

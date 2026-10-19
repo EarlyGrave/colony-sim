@@ -20,8 +20,7 @@ func tick(c: Colonist, sim: Simulation) -> int:
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
 	ResearchOperator.add_progress(sim, ResearchOperator.speed(sim, b, c))
-	if c.skills.add_xp(sim.defs, "crafting", float(sim.defs.skills["xp_per_work_tick"])):
-		sim.bus.skill_leveled.emit(c.id, "crafting", c.skills.level("crafting"))
+	sim.progression.award(c, "crafting", float(sim.defs.skills["xp_per_work_tick"]), "research", false)  # region progression
 	return Status.RUNNING
 
 

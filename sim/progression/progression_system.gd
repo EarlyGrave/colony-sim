@@ -18,14 +18,18 @@ func _init(p_sim: Simulation) -> void:
 
 
 ## Public hook (contracts etc.). Returns false if nothing was awarded.
-func award(c: Colonist, skill: String, amount: float, reason: String) -> bool:
+## The single level-up path: emits skill_leveled once per level gained. `report` = also emit xp_awarded
+## (off for per-tick work/attack xp).
+func award(c: Colonist, skill: String, amount: float, reason: String, report: bool = true) -> bool:
 	if c == null or not c.alive or c.skills == null or amount <= 0.0 or not c.skills.levels.has(skill):
 		return false
 	var before := c.skills.xp_total(sim.defs, skill)
-	var leveled := c.skills.add_xp(sim.defs, skill, amount)
-	sim.bus.xp_awarded.emit(c.id, skill, c.skills.xp_total(sim.defs, skill) - before, reason)
-	if leveled:
-		sim.bus.skill_leveled.emit(c.id, skill, c.skills.level(skill))
+	var lvl_before := c.skills.level(skill)
+	c.skills.add_xp(sim.defs, skill, amount)
+	if report:
+		sim.bus.xp_awarded.emit(c.id, skill, c.skills.xp_total(sim.defs, skill) - before, reason)
+	for l in range(lvl_before + 1, c.skills.level(skill) + 1):
+		sim.bus.skill_leveled.emit(c.id, skill, l)
 	return true
 
 
