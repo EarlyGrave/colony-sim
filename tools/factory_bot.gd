@@ -27,7 +27,9 @@ var compactors := 4  # PL: waste items bleed pollution; sinks stand right after 
 var plate_reserve := 12  # D3: fuel cells / extra bills never take the stock below this once an assembler is planned
 var assume_nitrogen := false
 var _step_fails := 0
-var max_pending := 3
+var _stock_extra := 0
+var _held := false
+var max_pending := 3  # PG: knob pg_bot.max_pending overrides in _init
 var _stock_grown := false
 var _failed_step := -1
 var _step := 0  ## index into _plan (PLAN plus PG knob insertions)
@@ -50,6 +52,7 @@ func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	base = Bot.new(sim)
 	_hub = sim.map_center() + Vector2i(-2, 9)
+	max_pending = _knob("max_pending", max_pending)
 	_plan = PLAN.duplicate(true)
 	for i in _knob("extra_miners", 0):
 		_plan.insert(5, ["miner"])  # PG: ore (stock 0 for most of the first 25 days) gates construction, refining and research
@@ -65,6 +68,12 @@ func act() -> void:
 		for y in 4:
 			for x in 6:
 				sim.set_zone(spot + Vector2i(x, y), "stockpile")
+	if _stock_extra < _knob("stock_blocks", 2) and sim.day() >= 14 + 14 * _stock_extra and sim.tick % sim.ticks_per_day == 0:
+		_stock_extra += 1  # PG: ore stacks filled the 6x4 stockpile, so coal / nitrogen / plates / parts from new machines had no cell to go to
+		var spot2 := Scen.find_zone_spot(sim, sim.map_center() + Vector2i(-8 + 7 * _stock_extra, 11), Vector2i(6, 4))
+		for y in 4:
+			for x in 6:
+				sim.set_zone(spot2 + Vector2i(x, y), "depot")
 	if sim.tick % 20 == 0:
 		_upkeep()
 	_research()
@@ -307,7 +316,7 @@ func _build() -> void:
 	else:
 		if str(s[0]) == "miner" or (str(s[0]) == "line" and sim.research.is_done("conveyance")):
 			_step_fails += 1
-		if _step_fails > (_knob("miner_fails", 5) if str(s[0]) == "miner" else 60) and str(s[0]) in ["miner", "line"]:  # PL: a step that cannot be placed for ~40 tries is skipped, not waited on forever
+		if _step_fails > (_knob("miner_fails", 5) if str(s[0]) == "miner" else _knob("line_fails", 60)) and str(s[0]) in ["miner", "line"]:  # PL: a step that cannot be placed for ~40 tries is skipped, not waited on forever
 			_step += 1
 			_step_fails = 0
 			return
@@ -386,21 +395,27 @@ func _ore_miner(res := "essence_ore") -> bool:
 			cands.append(n)
 	cands.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		return a.distance_squared_to(sim.map_center()) < b.distance_squared_to(sim.map_center()))
+	# PG: spots whose anchor cell is plain ground first: a machine anchored on a deposit cell is "unreachable" for the hauler, its output never leaves
+	var spots: Array[Vector2i] = []
 	for n in cands:
 		for t: Vector2i in [n, n + Vector2i(-1, 0), n + Vector2i(0, -1), n + Vector2i(-1, -1)]:
-			if sim.buildings.placement_error("miner", t, false) != "":
-				continue
-			var pure := true
+			spots.append(t)
+	var ground: Array[Vector2i] = spots.filter(func(t: Vector2i) -> bool: return sim.map.is_passable(t))
+	var rest: Array[Vector2i] = spots.filter(func(t: Vector2i) -> bool: return not sim.map.is_passable(t))
+	for t: Vector2i in (ground + rest if res != "essence_ore" else spots):  # essence miners keep the old order (changing it shifted every raid timeline)
+		if sim.buildings.placement_error("miner", t, false) != "":
+			continue
+		var pure := true
+		for yy in 2:
+			for xx in 2:
+				var p := t + Vector2i(xx, yy)
+				if sim.map.is_node(p) and sim.map.node_resource(p) != res:
+					pure = false
+		if pure and _put("miner", t) != null:
 			for yy in 2:
 				for xx in 2:
-					var p := t + Vector2i(xx, yy)
-					if sim.map.is_node(p) and sim.map.node_resource(p) != res:
-						pure = false
-			if pure and _put("miner", t) != null:
-				for yy in 2:
-					for xx in 2:
-						_used_nodes[t + Vector2i(xx, yy)] = true
-				return true
+					_used_nodes[t + Vector2i(xx, yy)] = true
+			return true
 	return false
 
 
@@ -628,8 +643,24 @@ func _deliveries() -> void:
 			audit_day = day
 		return
 	var p: int = sim.petition.next_phase()
+	_hold_ingots(p == 2)
 	if p > 0 and sim.deliver_petition(p):
 		phase_day[p - 1] = day
+
+
+## PG: petition II needs 20 iron + 20 copper INGOTS in storage, but the assemblers turn every ingot into plates/parts
+## (stock stayed 0 on every seed). While phase II is open the recipes' stock caps stop them (a player pauses the bills).
+func _hold_ingots(on: bool) -> void:
+	if on == _held:
+		return
+	_held = on
+	if sim.defs.recipes.has("make_plate"):
+		if on:
+			sim.defs.recipes["make_plate"]["stock_cap"] = {"plate": 1}
+		else:
+			sim.defs.recipes["make_plate"].erase("stock_cap")
+	if sim.defs.recipes.has("make_parts"):
+		sim.defs.recipes["make_parts"]["stock_cap"] = {"parts": 1} if on else {"parts": 25}
 
 
 func _shuttle() -> void:

@@ -24,6 +24,23 @@
 		],
 		"waste_emission_factor": 1.0
 	},
+	"depot": {
+		"name": "Depot",
+		"color": "#3fa0bf",
+		"accepts": [
+			"refined_essence",
+			"ingot_copper",
+			"ingot_iron",
+			"plate",
+			"parts",
+			"fuel_cell",
+			"ai_chip",
+			"coal",
+			"nitrogen",
+			"uranium"
+		],
+		"waste_emission_factor": 1.0
+	},
 	"waste_dump": {
 		"name": "Waste Dump",
 		"color": "#6f8f2f",

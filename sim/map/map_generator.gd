@@ -58,16 +58,17 @@ static func generate(map: MapGrid, rng: RandomNumberGenerator, cfg: Dictionary) 
 
 	_open_enclosed_pockets(map, center)
 	_convert_extra_nodes(map, rng.seed, biome, cfg)  # region L5
-	_ensure_essence(map, center)  # region PG
+	if (biome.get("guaranteed_nodes", {}) as Dictionary).has("nitrogen"):  # region PG: start biome only
+		_ensure_essence(map, center)
 	_guarantee_nodes(map, biome, cfg)  # region Y1
+	if bool(cfg.get("deposit_rings", true)):
+		_open_deposit_rings(map, center)  # region PG
 	if bool(cfg.get("deposit_rings", true)) and (biome.get("guaranteed_nodes", {}) as Dictionary).has("nitrogen"):  # region PG
 		var nit := NodeData.res_index("nitrogen")
 		if not map.node_res.has(nit):  # seeds 9/13: every far blob was gone -> petition III (nitrogen) was impossible; retry nearer
 			var near_cfg: Dictionary = cfg.duplicate()
 			near_cfg["extra_min_distance"] = int(cfg.get("min_deposit_distance", 7))
 			_guarantee_nodes(map, biome, near_cfg)
-	if bool(cfg.get("deposit_rings", true)):
-		_open_deposit_rings(map, center)  # region PG
 
 
 ## Compact blob of up to `size` cells grown from `start` (each step extends
@@ -226,7 +227,7 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 					if not seen.has(ni) and map.tiles[ni] == MapGrid.Tile.DEPOSIT and int(map.node_res[ni]) == rid:
 						seen[ni] = true
 						stack.append(ni)
-		if dmin >= min_d:  # PG: coal blobs are counted (so a coal guarantee works) but never taken as a victim below
+		if dmin >= min_d and rid != coal:
 			blobs.append([dmin, k, cells, rid])
 	var ess := NodeData.res_index("essence_ore")
 	var cnt := {}  # blobs per resource
@@ -248,7 +249,7 @@ static func _guarantee_nodes(map: MapGrid, biome: Dictionary, cfg: Dictionary) -
 				for k in blobs.size():
 					var b: Array = blobs[k]
 					var r: int = int(b[3])
-					if r == res or r == coal or (wi.has(r) and int(cnt[r]) <= int(wi[r])) or (r == ess and int(cnt[r]) <= 2):
+					if r == res or (wi.has(r) and int(cnt[r]) <= int(wi[r])) or (r == ess and int(cnt[r]) <= 2):
 						continue  # essence keeps 2 far blobs for the start chains
 					if pass_i == 0 and int(cnt[r]) < 2:
 						continue
@@ -320,10 +321,9 @@ static func _ensure_essence(map: MapGrid, center: Vector2i) -> void:
 ## node to ground and, if the ring is cut off from the landing site, tunnel the shortest rock path to open ground.
 ## No rng; iteration order is fixed (cell index, NEIGHBORS_4 order), so maps stay deterministic.
 static func _open_deposit_rings(map: MapGrid, center: Vector2i) -> void:
-	var essence := NodeData.res_index("essence_ore")
 	var ring: Dictionary = {}  # cell index -> true, carved cells
 	for k in map.node_res.size():
-		if map.tiles[k] != MapGrid.Tile.DEPOSIT or map.node_res[k] == 0 or int(map.node_res[k]) == essence:
+		if map.tiles[k] != MapGrid.Tile.DEPOSIT or map.node_res[k] == 0 or int(map.node_res[k]) == NodeData.res_index("essence_ore"):
 			continue
 		var c := Vector2i(k % map.width, k / map.width)
 		for dy in range(-1, 2):
