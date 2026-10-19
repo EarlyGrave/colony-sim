@@ -145,7 +145,10 @@ func _daily(c: Colonist, st: DebtState) -> void:
 			return
 	var inst := int(cfg["installment"])
 	if sim.day() >= st.due_day and st.period_paid < inst:
-		st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]))
+		# Grace period, then despair grows in proportion to the unpaid share.
+		if sim.day() >= st.due_day + int(cfg.get("grace_days", 0)):
+			var short := float(inst - st.period_paid) / float(maxi(1, inst))
+			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short)
 	else:
 		if sim.day() >= st.due_day:  # installment met: roll the period, interest grows the debt
 			st.period_paid -= inst

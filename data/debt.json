@@ -24,6 +24,7 @@
 	"leave_reward": 15,
 	"leave_legacy_points": 1,
 	"installment": 4,
+	"grace_days": 10,
 	"period_days": 10,
 	"interest_pct": 3.0
 }

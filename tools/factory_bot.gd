@@ -134,7 +134,7 @@ func _upkeep() -> void:
 	for c in sim.colonists.list:
 		var ist := sim.debt.state_of(c) if c.alive else null
 		if ist != null and ist.remaining() > 0 and ist.period_paid < inst and sim.day() >= ist.due_day - 6:
-			var avail := sim.items.count_stored("refined_essence") - 2
+			var avail := sim.items.count_stored("refined_essence") - 2 - floor_keep  # PX: turrets outrank an installment (grace period covers a miss)
 			if avail > 0:
 				sim.pay_debt(c.id, mini(mini(avail, inst - ist.period_paid), ist.remaining()))
 	debt_stock = sim.items.count_stored("refined_essence") - floor_keep - 3 - _research_reserve()
@@ -760,8 +760,8 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	bot.assume_nitrogen = bool(opts.get("assume_nitrogen", false))
 	bot.cap_percent = int(opts.get("cap", 35))
 	bot.plate_target = int(opts.get("plate", 45))
-	var died := 0
-	sim.bus.colonist_died.connect(func(_i: int) -> void: died += 1)
+	var died_a: Array = [0]
+	sim.bus.colonist_died.connect(func(_i: int) -> void: died_a[0] += 1)
 	var limit := days * sim.ticks_per_day
 	while sim.tick < limit and sim.game_over_reason == "":
 		bot.act()
@@ -782,7 +782,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		"seed": seed_value, "phase_day": bot.phase_day.duplicate(), "audit_day": bot.audit_day,
 		"parts": int(st.get("parts", 0)), "need": int(st.get("need", 24)), "launch_day": bot.launch_day, "won_day": bot.won_day,
 		"phase": str(st.get("phase", "")), "min_hp": bot.min_hp,
-		"alive": sim.colonists.alive_count(), "died": died, "pollution": sim.contamination.fraction() * 100.0,
+		"gone": sim.debt.gone.size(), "alive": sim.colonists.alive_count(), "died": died_a[0], "pollution": sim.contamination.fraction() * 100.0,
 		"food": sim.items.count_stored("raw_food") + sim.items.count_stored("meal"), "over": sim.game_over_reason,
 		"debt_pct": sim.milestones.debt_paid_pct(), "end_day": sim.day(), "blocker": bot.blocker(), "nitrogen_nodes": nit_nodes,
 		"built": {}, "steps": bot._step, "log": bot.log.duplicate(),

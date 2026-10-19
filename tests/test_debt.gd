@@ -7,6 +7,7 @@ func _sim(seed_value := 5) -> Simulation:
 	var d := peaceful_defs()
 	d.mood["minor_chance"] = 1.0
 	d.mood["extreme_chance"] = 1.0
+	d.debt["grace_days"] = 0  # tests of despair ramps assume no grace (see test_px_grace)
 	var sim := make_sim(seed_value, true, 24, 24, d)
 	for i in 3:  # food, so long runs don't end in starvation
 		var f := sim.map_center() + Vector2i(3 + i, 3)
@@ -186,6 +187,7 @@ func test_break_kinds_vary_by_seed() -> void:
 
 func test_save_load_and_determinism() -> void:
 	var d := peaceful_defs()
+	d.debt["grace_days"] = 0
 	d.debt["due_days"] = 1  # overdue quickly; the test needs no food/stock outside the command log
 	var sim := make_sim(9, true, 24, 24, d)
 	var c: Colonist = sim.colonists.list[0]
@@ -253,10 +255,12 @@ func test_d1_schedule_and_zero_payment_still_breaks() -> void:
 	var d: Dictionary = Defs.get_default().debt
 	assert_true(int(d["debt_min"]) >= 100, "debt is a heavy sentence (DB)")
 	var days_to_break := ceili(float(d["break_despair_min"]) / float(d["despair_per_day"]))
-	assert_true(int(d["due_days"]) + days_to_break <= 40, "idle colony reaches break despair by d40")
+	var grace := int(d.get("grace_days", 0))
+	assert_true(int(d["due_days"]) + grace + days_to_break <= 50, "idle colony reaches break despair by d50")
 	var sim := _sim()
+	sim.defs.debt["grace_days"] = grace
 	var c: Colonist = sim.colonists.list[0]
-	sim.run_ticks(sim.ticks_per_day * (int(d["due_days"]) + days_to_break + 1))
+	sim.run_ticks(sim.ticks_per_day * (int(d["due_days"]) + grace + days_to_break + 1))
 	assert_true(sim.debt.state_of(c).despair >= float(d["break_despair_min"]), "zero payment -> despair")
 
 
@@ -275,3 +279,16 @@ func test_db_installments_keep_despair_down_and_interest_grows() -> void:
 	assert_gt(st.total, total0)
 	assert_gt(st.remaining(), total0 - 8 * inst)
 # endregion D1
+
+
+func test_px_grace_makes_a_missed_installment_survivable() -> void:
+	var sim := _sim()
+	sim.defs.debt["grace_days"] = 10
+	var c: Colonist = sim.colonists.list[0]
+	var st := sim.debt.state_of(c)
+	sim.run_ticks(sim.ticks_per_day * (st.due_day - sim.day() + 9))
+	assert_eq(st.despair, 0.0, "no despair inside the grace period")
+	# a half-paid installment ramps despair at half speed
+	st.period_paid = int(sim.defs.debt["installment"]) / 2
+	sim.run_ticks(sim.ticks_per_day * 4)
+	assert_true(st.despair > 0.0 and st.despair <= 4.0 * 0.5 * 4.0 + 0.01, "partial payment slows despair")
