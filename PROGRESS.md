@@ -261,3 +261,11 @@ HP); волны заканчиваются по таймеру и твари о�
 - Bot (scripted supply, 6 turrets): launch 4/5 seeds (d29-37), 4/4 sieges won; debt paid 81-100% by d60.
 - 757 green x2, web smoke PASS.
 - Open: on the phone the HUD covers most of the world (siege shot shows little of the gantry); win screen overlay is low-contrast; siege easy with 6 turrets; supply in bots is scripted, not a real factory.
+
+## Session 4 — HUD batch U (phone)
+- U1 declutter: world visible 61.4% at 844x390 (test asserts >=55%); automation strip only with a build/belt tool; map chips + contract folded into "Maps" drawer; legend fades after 5 s. Hooks: notification_anchor, modal_layer.
+- U2 notification stack top-right (max 2, +N chip, tap to dismiss, dedupe); wave report + toasts routed into it.
+- U3 ModalStyle: opaque cards, scrim, filled primary buttons; win screen + 4 sheets restyled, contrast test.
+- U4 real factory bot (public commands only): never reaches audit tier 2 / petition / shuttle. Bottlenecks: (1) no nitrogen on any home map (P3 + fuel cells impossible without expeditions), (2) plates gate repairs, machines die without hand_plate, (3) thin economy (~1-1.5k ore / 60 d), iron never smelted, (4) despair escapes + HQ losses. Scripted bots hid this.
+- 768 green x2, web smoke PASS.
+- Open (small): Belt reachable only via a build tool (add to Build popup); HUD game-over box not ModalStyle'd; no scrim behind side sheets; Scenario.build_chain(true) returns {} on success.
