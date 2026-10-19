@@ -223,13 +223,19 @@ func _research() -> void:
 			for a: String in ahead:
 				sim.queue_research(a, true)
 			break
-	var reserve := _knob("ore_reserve", 0)
-	var until := _knob("ore_reserve_until", 24)
-	if reserve > 0 and sim.is_rule_on("ore_reserve") and sim.day() >= until:
-		sim.set_rule("ore_reserve", false)  # debt tranches fall due from ~d30: the refinery gets all the ore again
-	elif reserve > 0 and not sim.is_rule_on("ore_reserve") and sim.day() < until:  # PG: the refinery ate every ore (stock 0 for 25 days) while blueprints and hand_plate waited
-		sim.defs.rules["ore_reserve"]["amount"] = reserve
-		sim.set_rule("ore_reserve", true)
+	# PG: the refinery eats every loose ore stack, so blueprints (which take ore from STORAGE only) waited for days with colonists asleep.
+	# Keep exactly what the open blueprints still miss (+ a small base) in the stockpile; the rest flows on to the refinery.
+	var base_res := _knob("ore_reserve", 0)
+	var early := sim.buildings.count_of("miner") < _knob("reserve_miners", 3) and sim.day() < _knob("reserve_day", 14)
+	if base_res > 0 and not early and sim.is_rule_on("ore_reserve"):
+		sim.set_rule("ore_reserve", false)  # first miners stand: ore flows to the refinery again
+	if base_res > 0 and early:
+		var need := base_res
+		for bp in sim.buildings.blueprints:
+			need += bp.missing("essence_ore")
+		sim.defs.rules["ore_reserve"]["amount"] = mini(need, _knob("ore_reserve_max", 120))
+		if not sim.is_rule_on("ore_reserve"):
+			sim.set_rule("ore_reserve", true)
 	if sim.research.is_done("filters") and not sim.is_rule_on("refine_cap"):
 		sim.defs.rules["refine_cap"]["max_contamination_percent"] = cap_percent  # the S5 cap level
 		sim.set_rule("refine_cap", true)
@@ -594,6 +600,8 @@ func _power(cell: Vector2i) -> void:
 ## D3: one ash beacon to burn waste (existing sink) once decoys_1 is researched; if D2's `waste_sink_early` flag exists, it is read
 ## (the bot works the same with the flag off: the 50% taint cap rule is already on).
 func _beacon() -> void:
+	if sim.buildings.count_of("miner") < _knob("sink_after_miners", 3) and sim.day() < 14:
+		return  # PG: compactors/beacons (ore each) competed with the first miners for the scarce ore; pollution is still ~0 then
 	if sim.tick % 120 == 60 and sim.buildings.count_of("refinery") > 0 and bool(sim.defs.balance.get("waste_sink_early", false)) and sim.defs.buildings.has("waste_compactor"):
 		var have := sim.buildings.count_of("waste_compactor") + _bp_count("waste_compactor")
 		if have < compactors and _bp_count("waste_compactor") == 0:
