@@ -36,6 +36,22 @@ var _alarm_before_wave := false
 ## Own stream for raid type/composition/origin (D24): the same seed brings the same
 ## waves whatever the player does, so play-style comparisons are not luck.
 var wave_rng := RandomNumberGenerator.new()
+# region Q2
+## One-shot spawn override for the Pilgrims quest. Held in an object so the golden state dump is unchanged.
+class Q2Spawn:
+	extends RefCounted
+	var cell := Vector2i(-1, -1)  ## pending override origin (x < 0 = none)
+
+var q2 := Q2Spawn.new()
+
+
+## Arms the next wave to spawn at `cell`, `delay_ticks` later than planned. Clears itself when that wave starts.
+func q2_arm(cell: Vector2i, delay_ticks: int) -> void:
+	q2.cell = cell
+	next_spawn_origin = cell
+	if next_wave_tick >= 0:
+		next_wave_tick += delay_ticks
+# endregion
 # region perf-threat
 ## Enemies by cell bucket, for turret / combat range queries.
 var hash: SpatialHash
@@ -240,6 +256,9 @@ func start_wave() -> void:
 	if wave_index == 1:
 		strength = minf(strength, float(cfg["first_wave_max_points"]))  # tutorial swarm
 	var origin := next_spawn_origin if next_spawn_origin.x >= 0 else _pick_spawn_origin()
+	if q2.cell.x >= 0:  # region Q2: the prayer wave comes to the dump, once
+		origin = q2.cell
+		q2.cell = Vector2i(-1, -1)
 	sim.ecology.wave_nest = sim.ecology.nest_at(origin) if sim.ecology.active() else -1  # region T5
 	raid_id = (force_raid_id if force_raid_id != "" else pick_raid_type(strength)) if origin.x >= 0 else ""
 	raid_total = 0
