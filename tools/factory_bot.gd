@@ -138,7 +138,8 @@ func _upkeep() -> void:
 			if avail > 0:
 				sim.pay_debt(c.id, mini(mini(avail, inst - ist.period_paid), ist.remaining()))
 	debt_stock = sim.items.count_stored("refined_essence") - floor_keep - 3 - _research_reserve()
-	if target != null and debt_stock > 0:
+	var hoard := _hoarding()  # region R4
+	if target != null and debt_stock > 0 and not hoard:
 		sim.pay_debt(target.id, mini(debt_stock, sim.debt.state_of(target).remaining()))
 	var reserve := maxi(0, want - have) * 10
 	var stock := sim.items.count_stored("refined_essence") - reserve
@@ -146,7 +147,7 @@ func _upkeep() -> void:
 	for c in sim.contracts.open_contracts("active"):
 		active_need += int(c["essence"])
 	for c in sim.contracts.open_contracts("offered"):
-		if stock + 3 >= active_need + int(c["essence"]):
+		if not hoard and stock + 3 >= active_need + int(c["essence"]):
 			if sim.accept_contract(int(c["id"])):
 				active_need += int(c["essence"])
 	for c in sim.contracts.open_contracts("active"):
@@ -670,6 +671,16 @@ func _hold_ingots(on: bool) -> void:
 			sim.defs.recipes["make_plate"].erase("stock_cap")
 	if sim.defs.recipes.has("make_parts"):
 		sim.defs.recipes["make_parts"]["stock_cap"] = {"parts": 1} if on else {"parts": 25}
+
+
+# region R4
+## R4: from petition IV on the refined essence goes to the petition and the shuttle parts, not to extra debt / contracts
+## (installments and turrets still come first, they keep the colony alive).
+func _hoarding() -> bool:
+	if _knob("hoard", 1) == 0:
+		return false
+	return sim.milestones.is_tier_done(2) and sim.petition.next_phase() >= 3 or sim.shuttle.unlocked()
+# endregion
 
 
 func _shuttle() -> void:
