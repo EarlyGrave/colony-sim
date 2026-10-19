@@ -611,16 +611,16 @@
 		"submit": [
 			"Case closed. Cause: silence.",
 			"The last shuttle lifts with every seat full. Nobody looks down.",
-			"Below, the planet finishes going mad on its own. It is logged as weather.",
+			"Below, the planet goes mad alone. It is logged as weather.",
 			"You receive new names. They are shorter than the old ones.",
-			"Somewhere a city is calm tonight. You made the calm. Do not mention it.",
+			"A city is calm tonight. You made the calm. Do not mention it.",
 			"Your file is excellent. It has always been someone else's."
 		],
 		"fight": [
 			"Collector offline. Quota: unresolved.",
 			"The Collector falls for eleven minutes and is a sunrise for one.",
 			"Drone shuttles stop. The Warden's PA hums, then nothing.",
-			"The creatures keep their distance. Less waste, less memory, less teeth.",
+			"The creatures keep their distance. Less waste, less memory.",
 			"You are still sentenced. Nobody is left to count it.",
 			"The planet is free for a long time. Not forever. Long enough to plant."
 		],
@@ -635,9 +635,9 @@
 		"remission": [
 			"Form 0-R approved. By nobody.",
 			"The pylons hum the other way. The ground remembers how to be ground.",
-			"A crawler sits at the fence and does not come closer. It is waiting to be a person.",
-			"The quota is still met. The Procurator notices nothing, which is the plan.",
-			"Later, the first remitted inmate walks in through the gate with a four-digit name.",
+			"A crawler sits at the fence, no closer. It waits to be a person.",
+			"The quota is met. The Procurator notices nothing. As planned.",
+			"Later, a remitted inmate walks in with a four-digit name.",
 			"You stay. It is the only ending where staying is the win."
 		]
 	}
