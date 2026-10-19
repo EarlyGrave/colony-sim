@@ -651,6 +651,11 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	var limit := days * sim.ticks_per_day
 	while sim.tick < limit and sim.game_over_reason == "":
 		bot.act()
+		for qp in sim.quests.pending.duplicate():  # region QX: the bot always takes the first enabled option
+			for qo: Dictionary in qp["options"]:
+				if bool(qo["enabled"]):
+					sim.answer_quest(int(qp["uid"]), str(qo["id"]))
+					break
 		sim.run_ticks(Bot.STEP_TICKS)
 		bot.after()
 	var nit_nodes := 0
@@ -676,6 +681,11 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		led[item] = "%d/%d" % [int(sim.ledger.produced.get(item, 0)), int(sim.ledger.consumed.get(item, 0))]
 	r["ledger"] = led
 	# region D4
+	var qs: Array = []
+	for qid: String in sim.quests.quests:
+		qs.append(qid)
+	qs.sort()
+	r["quests"] = qs  # region QX
 	r["waste_prod"] = int(sim.ledger.produced.get("waste", 0))
 	# endregion
 	var power_f := 1.0

@@ -21,6 +21,11 @@ for r in rows:
     print(f"{r['seed']:>4} {(r['over'] or 'ok'):<15} {r['alive']:>5} {b(r['audit']):>3} "
           + " ".join(f"{b(x):>2}" for x in r["p"])
           + f" {r['parts']:>3}/{r['need']:<2} {b(r['launch']):>5} {r['pol']:>4.0f} {r['debt']:>5.0f} {r['refined']:>7} {r['plates']:>6} {r['waste']:>5}")
+qc = {}
+for r in rows:
+    for q in r.get("quests", []):
+        qc[q] = qc.get(q, 0) + 1
+print("quests fired:", qc)
 n = len(rows)
 ok = [r for r in rows if "alive" in r]
 c = lambda fn: sum(1 for r in ok if fn(r))
