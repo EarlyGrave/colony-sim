@@ -25,6 +25,12 @@ signal building_broken(building_id: int)
 signal building_repaired(building_id: int)
 signal batch_refined(building_id: int, recipe_id: String)
 signal first_refine_done()
+# region Q0
+signal quest_started(quest_id: String)
+signal quest_beat(quest_id: String, beat_id: String, text: String)
+signal quest_choice_posted(uid: int, quest_id: String, options: Array)
+signal quest_resolved(quest_id: String, option_id: String)
+# endregion
 # region L3
 signal power_changed(net_id: int)  # a network's brownout factor moved to another 0.05 bucket
 signal power_meltdown(building_id: int)

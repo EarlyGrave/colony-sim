@@ -69,6 +69,7 @@ var idle_work: IdleWorkSystem
 var mutation: MutationSystem  # region mutation
 var ecology: EcologySystem  # region T5
 var milestones: MilestoneSystem  # region R2b
+var quests: QuestLog  # region Q0
 var petition: PetitionSystem  # region E1
 var shuttle: ShuttleSystem  # region S1
 var beacons: BeaconSystem  # region S2
@@ -308,6 +309,7 @@ func _init_systems() -> void:
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	petition = PetitionSystem.new(self)  # region E1
+	quests = QuestLog.new(self)  # region Q0
 	shuttle = ShuttleSystem.new(self)  # region S1
 	beacons = BeaconSystem.new(self)  # region S2
 	chips = ChipSystem.new(self)  # region T4
@@ -968,6 +970,14 @@ func install_chip(building_id: int) -> bool:
 func remove_chip(building_id: int) -> bool:
 	_record("remove_chip", [building_id])  # save-load
 	return chips.remove(building_id)
+# endregion
+
+
+# region Q0
+## Answers a pending quest choice (N-way). False for an unknown uid or a disabled option.
+func answer_quest(uid: int, option_id: String) -> bool:
+	_record("answer_quest", [uid, option_id])  # save-load
+	return quests.answer(uid, option_id)
 # endregion
 
 

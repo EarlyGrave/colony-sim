@@ -519,6 +519,7 @@ func bind(p_sim: Simulation) -> void:
 	_alerts.bind(p_sim)
 	_patrol_bar.visible = false
 	_o2_bind(p_sim)  # region O2
+	_q0_bind(p_sim)  # region Q0
 	_c5_bind(p_sim)  # region C5
 	_l4_bind(p_sim)  # region L4
 	_f2_bind(p_sim)  # region F2
@@ -1757,4 +1758,14 @@ func _y5_add_sheet(p: GamePanel) -> void:
 	_y5_scrim.visible = true
 	modal_root.add_child(p)
 	modal_root.move_child(_game_over, -1)
+# endregion
+
+
+# region Q0
+func _q0_bind(p_sim: Simulation) -> void:
+	if not p_sim.quests.is_enabled():
+		return
+	var qs := QuestSheet.new()
+	add_child(qs)
+	qs.bind(p_sim)
 # endregion

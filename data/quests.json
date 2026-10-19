@@ -1,0 +1,3 @@
+{
+	"_comment": "Quest lines: id -> {trigger:{conds}, start, beats:{beat:{text, then, delay_days, effects[], options:{opt:{label, text, requires, effects[], then}}}}}. Effect verbs: flag, mod, items, mood, debt_pct (cuts clamped to 2% of colony debt), spawn_colonist, remove_colonist, letter; optional 'chance' uses sim.rng. Quest lines live in data/quests_q1/q2/q6.json (merged by Defs); tests inject q_selftest."
+}

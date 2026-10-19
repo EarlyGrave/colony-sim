@@ -14,6 +14,7 @@ var jobs: Dictionary = {}
 var balance: Dictionary = {}
 var events: Dictionary = {}
 var rules: Dictionary = {}
+var quests: Dictionary = {}  # region Q0
 # region jobs-core
 var work: Dictionary = {}
 var skills: Dictionary = {}
@@ -104,6 +105,12 @@ func load_from(dir: String) -> void:
 	jobs = _load_json(dir + "jobs.json")
 	balance = _load_json(dir + "balance.json")
 	events = _load_json(dir + "events.json")
+	# region Q0: quests.json + optional per-quest-line files merged by id
+	quests = _load_json(dir + "quests.json")
+	for extra in ["quests_q1.json", "quests_q2.json", "quests_q6.json"]:
+		if FileAccess.file_exists(dir + extra):
+			quests.merge(_load_json(dir + extra), true)
+	# endregion
 	rules = _load_json(dir + "rules.json")
 	# region jobs-core
 	work = _load_json(dir + "work.json")
@@ -255,6 +262,7 @@ func duplicate_defs() -> Defs:
 	d.chips = chips.duplicate(true)  # region T4
 	d.fuels = fuels.duplicate(true)  # region L3
 	d.roles = roles.duplicate(true)  # region C1
+	d.quests = quests.duplicate(true)  # region Q0
 	return d
 
 
