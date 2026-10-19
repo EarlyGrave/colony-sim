@@ -618,10 +618,25 @@ func tutorial_skip_all() -> void:
 
 func set_alarm(on: bool) -> void:
 	_record("set_alarm", [on])  # save-load
+	alarm_manual = on  # region LD: a player call means all-hands
 	if alarm == on:
 		return
 	alarm = on
 	bus.alarm_changed.emit(on)
+
+
+# region LD
+## True when the player (not a raid) raised the alarm: everybody hides.
+var alarm_manual := false
+
+
+## Raid-driven alarm: not recorded (replays re-run the raid) and never "manual".
+func _alarm_raid(on: bool) -> void:
+	if alarm == on:
+		return
+	alarm = on
+	bus.alarm_changed.emit(on)
+# endregion
 
 
 # region A1d

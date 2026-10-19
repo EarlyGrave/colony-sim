@@ -58,7 +58,7 @@ func _ration(c: Colonist, n: NeedsState) -> void:
 	var r: Dictionary = cfg.get("ration", {})
 	if r.is_empty() or n.food >= float(r["threshold"]) or sim.tick < n.ration_next:
 		return
-	var blocked: bool = c.hidden or sim.alarm or (c.health != null and c.health.downed) or c.is_sick(sim.tick)
+	var blocked: bool = c.hidden or sim.threats.in_lockdown(c.cell) or (c.health != null and c.health.downed) or c.is_sick(sim.tick)
 	if not blocked:
 		return
 	for item: String in r["items"]:
@@ -82,7 +82,7 @@ func _starve(c: Colonist, n: NeedsState) -> void:
 
 
 func _decide(c: Colonist, n: NeedsState) -> void:
-	if n.next_check > sim.tick or c.hidden or sim.alarm or not c.alive:
+	if n.next_check > sim.tick or c.hidden or sim.threats.in_lockdown(c.cell) or not c.alive:
 		return
 	if (c.health != null and c.health.downed) or c.is_sick(sim.tick):
 		return
