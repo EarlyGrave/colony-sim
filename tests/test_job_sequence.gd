@@ -3,7 +3,7 @@ extends TestCase
 
 const Scenario := preload("res://tests/scenario.gd")
 # Re-baselined 2026-10-19 after PW1 skill curve (L0 = 0.3x) + PW2 traits + TW3 lockdown changed job timing intentionally.
-const EXPECT := {1: "5cce1c248ae9779ba8831ee050234972735e3f53f54d79c78e77b91f99309549", 2: "4a841d3045d72fbd8fbc07ce4f031a026a9cfedfa7e69c87e18f2866fef4e421"}
+const EXPECT := {1: "5cce1c248ae9779ba8831ee050234972735e3f53f54d79c78e77b91f99309549", 2: "2e436d3cad5d9aa7c1326021d566c3ac7802248f5371f35cc0ced57360822a26"}
 
 
 func _record(seed_value: int, ticks: int) -> String:
