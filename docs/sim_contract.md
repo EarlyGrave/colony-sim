@@ -75,6 +75,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `disband_squad` | sid: int | bool | C1: squad exists; members un-drafted, weapons restored |
 | `squad_hold` | sid: int, cell: cell | bool | C1: cell passable; members `order_move` to cell + role offset (nearest free reachable cell); clears focus |
 | `squad_shakedown` | sid: int | bool | I3: contraband enabled, squad alive + off cooldown (1 patrol day), stash > 0; recovers stash to map centre, +despair on top holder |
+| `covert_sale` | n: int | bool | N2: Escape path + contraband_on; consumes n refined -> escape_credit, +suspicion (x2 while Informant alive) |
 | `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` | `give_gear` | cid, base, rarity, ilvl | int | E2: gear id or -1 | `equip` | cid, item_id | bool | E2: owner only, replaces slot, one resum | `unequip` | cid, slot | bool | E2 | `socket` | item_id, upgrade_id | bool | E2: free slot by rarity + tags |
 | `resolve_crisis` | crisis_id: str, option_id: str | bool | crisis active, option exists |
 | `answer_event` | event_uid: int, accept: bool | bool | pending storyteller choice with that uid |
@@ -203,7 +204,6 @@ Map ids are stable (a recalled outpost leaves a gap); use `entry(id)` / `Expedit
 `sling_send(0, items)` (fires from the ACTIVE outpost; its sling + stored items), `switch_map(id)`. Active-map arrivals go through sim commands (`receive_cargo`/`receive_party`); otherwise they wait in the
 target ledger (`inbox`, `returning_crew`) and `switch_map` flushes them. `state_hash()` canonicalises dictionaries (sorted keys), so it survives a JSON save round trip.
 Collateral debt is a counter (`ledgers["campaign"].collateral_debt`) because `sim/debt` has no add-debt API (it is per-colonist, drawn at join).
-
 ## 8. `state_hash` (`SaveGame.state_hash(sim)`)
 An `int` hash of observable state. Parts in order: `[tick, game_over_reason, alarm]`; each `items.stacks` entry `[cell, stack]` (insertion order);
 each colonist in `colonists.list` `[id, cell, hp, alive, carry_item, carry_count, carry_quality, learned_perks]`; each building in `buildings.list`
