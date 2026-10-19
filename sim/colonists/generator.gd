@@ -39,7 +39,20 @@ static func generate(sim: Simulation, cell: Vector2i) -> Colonist:
 				c.skills.levels[s] = clampi(c.skills.level(s) + int(bonus[s]), 0, max_level)
 	c.skills.mark_joined()
 	c.bio = {"age": age, "backstory": story, "traits": chosen, "work_speed": speed}
+	_q1_tag(sim, c)  # region Q1
 	return c
+
+
+# region Q1
+## Tags some newcomers "Clerk" (data only, no rng) when quests are enabled.
+static func _q1_tag(sim: Simulation, c: Colonist) -> void:
+	if not bool(sim.defs.balance.get("q_enabled", false)):
+		return
+	var cfg: Dictionary = QuestClerkNote.load_cfg()
+	var n := int(cfg.get("tag_every_nth_id", 0))
+	if n > 0 and c.id % n == 0:
+		c.bio["tag"] = str(cfg["tag"])
+# endregion
 
 
 static func trait_names(sim: Simulation, c: Colonist) -> Array[String]:
