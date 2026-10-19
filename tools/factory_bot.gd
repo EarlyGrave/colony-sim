@@ -749,7 +749,7 @@ func _shuttle() -> void:
 	var ph := str(st.get("phase", ""))
 	var day := float(sim.tick) / sim.ticks_per_day
 	if ph == "building" or ph == "ready":
-		if not gantry_started and sim.shuttle.gantry() == null and not _pending() and _step >= _plan.size():
+		if not gantry_started and sim.shuttle.gantry() == null and (_knob("fc_gantry", 1) == 1 or (not _pending() and _step >= _plan.size())):  # region FC: do not wait for the build plan / unrelated blueprints once P4 is done
 			var c := _spot("release_gantry", sim.map_center() + Vector2i(-12, -8), false)
 			if c.x >= 0 and _put("release_gantry", c) != null:
 				gantry_started = true
@@ -762,12 +762,12 @@ func _shuttle() -> void:
 			if sim.tick % 600 == 0:
 				sim.deliver_shuttle_parts()
 			var wb := _first("workbench")
-			if wb != null and not _has_bill(wb, "fuel_cell") and sim.defs.recipes.has("fuel_cell") and int(st.get("parts", 0)) >= int(st.get("need", 24)) and sim.items.count_stored("plate") >= plate_reserve + 4:  # D3: parts first, plates keep a repair reserve
-				sim.add_bill(wb.id, "fuel_cell", "until", 8)
+			if wb != null and not _has_bill(wb, "fuel_cell") and sim.defs.recipes.has("fuel_cell") and sim.items.count_stored("plate") >= plate_reserve + 4:  # D3: parts first, plates keep a repair reserve
+				sim.add_bill(wb.id, "fuel_cell", "until", _knob("fc_bill", 24))
 	if _knob("prebuild", 1) == 1 and sim.petition.done_phases.size() >= 3 and sim.tick % 200 == 0:  # region LN: fuel cells in parallel with P3/P4
 		var wb2 := _first("workbench")
 		if wb2 != null and not _has_bill(wb2, "fuel_cell") and sim.defs.recipes.has("fuel_cell") and sim.items.count_stored("plate") >= plate_reserve + 8:
-			sim.add_bill(wb2.id, "fuel_cell", "until", 8)
+			sim.add_bill(wb2.id, "fuel_cell", "until", _knob("fc_bill", 24))
 	if ph == "ready" and sim.launch_shuttle():
 		launch_day = day
 	if ph == "countdown":
