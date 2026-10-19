@@ -2,7 +2,7 @@ extends Node
 ## N2 screenshots (844x390): win screen with Next Sentence + new-game dialog with dossier row.
 ##   xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/n2_shot.tscn -- --dir=<dir>
 
-const NG := {"sentence": 2, "carry_debt": 450,
+const NG := {"sentence": 2, "carry_debt": 450, "prev_seed": 0, "last_preset": "",
 	"dossier": {"name": "Vex", "skills": {"mining": 6, "build": 2, "cook": 4}, "perk_id": "iron_back"},
 	"techs": ["drill", "belt"], "history": []}
 
@@ -20,12 +20,12 @@ func _ready() -> void:
 		if a.begins_with("--dir="):
 			dir = a.substr(6)
 	get_window().size = Vector2i(844, 390)
-	var w := WinScreen.new({"days": 40, "colonists": 5, "debt_paid": 300, "pollution": 0.3}, "", 120, NG)
+	var w := WinScreen.new({"days": 40, "colonists": 5, "debt_paid": 300, "debt_left": 900, "pollution": 0.3}, "", NG)
 	add_child(w)
 	await _shot(dir + "/win.png")
 	w.queue_free()
 	var m := MetaState.new()
-	m.set("ng", NG)  # no-op until N1 adds the var
+	m.ng = NG.duplicate(true)
 	var dlg := NewGameDialog.new(m)
 	add_child(dlg)
 	await _shot(dir + "/dialog.png")

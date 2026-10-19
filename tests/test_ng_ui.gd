@@ -34,7 +34,7 @@ func test_visibility_rules() -> void:
 
 
 func test_real_carry_from_snapshot() -> void:
-	var sim := make_sim()
+	var sim := make_sim(7)
 	var snap := Legacy.ng_snapshot(sim, "shuttle", "standard_term")
 	var m := MetaState.new()
 	m.finish_sentence(snap)

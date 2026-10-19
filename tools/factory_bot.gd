@@ -752,7 +752,9 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	var own_bus := bus == null
 	if own_bus:
 		bus = load("res://autoload/event_bus.gd").new()
-	var sim := Simulation.new(seed_value, bus, null, {"tutorial": true, "research_locked": true})
+	var sim_opts := {"tutorial": true, "research_locked": true}
+	sim_opts.merge(opts.get("sim_opts", {}), true)  # region N3: Next Sentence chain passes StartOpts here
+	var sim := Simulation.new(seed_value, bus, null, sim_opts)
 	sim.start_new_game()
 	var bot: RefCounted = (load("res://tools/factory_bot.gd") as GDScript).new(sim)
 	bot.assume_nitrogen = bool(opts.get("assume_nitrogen", false))
@@ -807,6 +809,8 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		if not w.is_empty():
 			power_f = float(w["factor"])
 	r["power_factor"] = power_f
+	if bool(opts.get("snapshot", false)):  # region N3
+		r["snapshot"] = Legacy.ng_snapshot(sim, "survived" if sim.game_over_reason == "" else "failed", str(opts.get("preset_id", "")))
 	sim.dispose()
 	if own_bus:
 		bus.free()

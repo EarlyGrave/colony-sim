@@ -35,7 +35,7 @@ func test_round_trip_and_v1_migration() -> void:
 func test_finish_sentence_values() -> void:
 	var m := MetaState.new()
 	m.finish_sentence(_summary())
-	assert_eq(int(m.ng["carry_debt"]), 501)  # round(1001 * 0.5)
+	assert_eq(int(m.ng["carry_debt"]), roundi(1001 * float(m.ng_cfg()["debt_carry_frac"])))
 	assert_eq(int(m.ng["sentence"]), 2)
 	assert_eq(m.ng["dossier"]["name"], "B")  # sum 10 ties with C: lowest id wins
 	assert_eq(m.ng["dossier"]["perk_id"], "miner_pace")
