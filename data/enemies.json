@@ -149,5 +149,71 @@
 			"phys": 0,
 			"energy": 0
 		}
+	},
+	"drone_scout": {
+		"name": "Scout Drone",
+		"color": "#7fb8ff",
+		"faction": "metropolis",
+		"max_hp": 20,
+		"move_ticks": 3,
+		"damage": 4,
+		"dmg_type": "energy",
+		"damage_kind": "burn",
+		"attack_cooldown_ticks": 10,
+		"attack_range": 5.5,
+		"structure_dmg": 4,
+		"threat_cost": 1.0,
+		"armor": {
+			"phys": 30,
+			"energy": 10
+		},
+		"flat": {
+			"phys": 0,
+			"energy": 0
+		}
+	},
+	"drone_gunner": {
+		"name": "Gunner Drone",
+		"color": "#4f8cff",
+		"faction": "metropolis",
+		"max_hp": 45,
+		"move_ticks": 5,
+		"damage": 8,
+		"dmg_type": "energy",
+		"damage_kind": "burn",
+		"attack_cooldown_ticks": 14,
+		"attack_range": 6.0,
+		"structure_dmg": 4,
+		"threat_cost": 2.5,
+		"armor": {
+			"phys": 60,
+			"energy": 20
+		},
+		"flat": {
+			"phys": 1,
+			"energy": 0
+		}
+	},
+	"drone_enforcer": {
+		"name": "Enforcer Drone",
+		"color": "#2c5fd1",
+		"faction": "metropolis",
+		"max_hp": 140,
+		"move_ticks": 7,
+		"damage": 18,
+		"dmg_type": "energy",
+		"damage_kind": "burn",
+		"attack_cooldown_ticks": 18,
+		"attack_range": 1.5,
+		"structure_dmg": 4,
+		"threat_cost": 6.0,
+		"armor": {
+			"phys": 120,
+			"energy": 40
+		},
+		"flat": {
+			"phys": 2,
+			"energy": 1
+		}
 	}
 }
