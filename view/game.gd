@@ -66,6 +66,7 @@ func _ready() -> void:
 	_r4e_connect()  # region R4e
 	hud.o2_cell_rect = _r5x_cell_rect  # region R5X
 	EventBus.game_over.connect(_on_game_over_meta)  # region meta
+	EventBus.shuttle_won.connect(_sx_on_shuttle_won)  # region SX
 	new_game(_initial_seed(), _web_size_opts(MetaStore.load_state().make_opts()))  # region meta
 	_setup_save_load()  # save-load
 	if not MetaStore.load_state().launched:  # region R5X: first ever launch shows the new-game dialog
@@ -150,6 +151,52 @@ func _close_meta() -> void:
 	if _meta_layer != null:
 		_meta_layer.queue_free()
 		_meta_layer = null
+# endregion
+
+
+# region SX
+var _sx_layer: CanvasLayer
+
+
+## Debt paid, summed over every prisoner state of the active sim.
+func _sx_debt_paid() -> int:
+	var n := 0
+	for id in sim.debt.states:
+		n += int(sim.debt.states[id].paid)
+	return n
+
+
+func _sx_ending_text() -> String:
+	var j: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/flavor.json"))
+	if j is Dictionary:
+		var t: Variant = (j as Dictionary).get("shuttle_ending", {}).get("text", [])
+		if t is Array and not (t as Array).is_empty():
+			return " ".join(PackedStringArray(t))
+	return ""
+
+
+func _sx_on_shuttle_won() -> void:
+	if sim == null or _sx_layer != null:
+		return
+	var st := WinScreen.stats_from(sim)
+	st["days"] = sim.day()
+	st["debt_paid"] = _sx_debt_paid()
+	st["pollution"] = sim.contamination.fraction()
+	_sx_layer = CanvasLayer.new()
+	_sx_layer.layer = 62
+	add_child(_sx_layer)
+	var w := WinScreen.new(st, _sx_ending_text())
+	w.continue_pressed.connect(_sx_close)
+	w.new_run_pressed.connect(func() -> void:
+		_sx_close()
+		_o3_open_dialog())
+	_sx_layer.add_child(w)
+
+
+func _sx_close() -> void:
+	if _sx_layer != null:
+		_sx_layer.queue_free()
+		_sx_layer = null
 # endregion
 
 

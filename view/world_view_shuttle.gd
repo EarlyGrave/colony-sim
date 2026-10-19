@@ -1,13 +1,13 @@
 class_name ShuttleView3D
 extends Node3D
 ## S3: voxel Release Gantry (3 build stages by parts), shuttle + launch pose, beacon + glow, siege HP bar.
-## Reads sim only; every sim name is guarded with has_method.
-## Assumed sim API: get_shuttle_state() {phase, parts, need, t_left, hp, hp_max}, get_beacon_state() {alive},
+## Reads sim only; uses the real S1/S2 state APIs.
+## Assumed sim API: get_shuttle_state() {phase, parts, need, t_left, hp, max_hp}, get_beacon_state() {alive},
 ## building def ids "release_gantry" / "beacon_launcher" in sim.buildings.list.
 
 const GANTRY_ID := "release_gantry"
 const LAUNCHER_ID := "beacon_launcher"
-const STAGE_COLORS := [Color(0.45, 0.47, 0.5), Color(0.62, 0.64, 0.68), Color(0.8, 0.82, 0.86)]
+const STAGE_COLORS := [Color(0.62, 0.66, 0.74), Color(0.78, 0.82, 0.9), Color(0.95, 0.96, 1.0)]
 
 var sim: Simulation
 var _gantry: Node3D
@@ -46,36 +46,47 @@ static func _box(parent: Node3D, o: Vector3, s: Vector3, c: Color, glow := false
 	return mi
 
 
-## Gantry (4x4 footprint, origin = top-left) for stage 0..2.
+## Gantry (4x4 footprint, origin = top-left) for stage 0..2. Chunky and high-contrast so it reads at the game camera.
 static func build_gantry(stage: int) -> Node3D:
 	var n := Node3D.new()
 	var c: Color = STAGE_COLORS[clampi(stage, 0, 2)]
-	_box(n, Vector3(0, 0, 0), Vector3(4, 0.15, 4), Color(0.3, 0.3, 0.33))
-	_box(n, Vector3(0.2, 0.15, 0.2), Vector3(0.4, 1.2, 0.4), c)
-	_box(n, Vector3(0.2, 0.15, 3.4), Vector3(0.4, 1.2, 0.4), c)
+	var dark := Color(0.12, 0.12, 0.15)
+	var hazard := Color(0.95, 0.75, 0.1)
+	_box(n, Vector3(0, 0, 0), Vector3(4, 0.3, 4), dark)
+	_box(n, Vector3(0, 0.3, 0), Vector3(4, 0.08, 0.3), hazard)
+	_box(n, Vector3(0, 0.3, 3.7), Vector3(4, 0.08, 0.3), hazard)
+	for x in [0.1, 3.1]:
+		_box(n, Vector3(x, 0.3, 0.1), Vector3(0.8, 2.2, 0.8), c)
+		_box(n, Vector3(x, 0.3, 3.1), Vector3(0.8, 2.2, 0.8), c)
 	if stage >= 1:
-		_box(n, Vector3(0.2, 1.35, 0.2), Vector3(0.4, 1.0, 0.4), c)
-		_box(n, Vector3(0.2, 1.35, 3.4), Vector3(0.4, 1.0, 0.4), c)
-		_box(n, Vector3(0.2, 1.9, 0.2), Vector3(0.4, 0.2, 3.6), c.darkened(0.2))
+		for x in [0.1, 3.1]:
+			_box(n, Vector3(x, 2.5, 0.1), Vector3(0.8, 1.8, 0.8), c)
+			_box(n, Vector3(x, 2.5, 3.1), Vector3(0.8, 1.8, 0.8), c)
+		_box(n, Vector3(0.1, 4.3, 0.1), Vector3(0.8, 0.5, 3.8), c.darkened(0.25))
+		_box(n, Vector3(3.1, 4.3, 0.1), Vector3(0.8, 0.5, 3.8), c.darkened(0.25))
+		_box(n, Vector3(0.9, 3.4, 0.1), Vector3(2.2, 0.35, 0.8), hazard)
 	if stage >= 2:
-		_box(n, Vector3(0.6, 2.2, 0.6), Vector3(0.4, 0.2, 0.4), Color(1, 0.3, 0.2), true)
-		_box(n, Vector3(3.2, 0.15, 1.5), Vector3(0.6, 0.5, 1.0), Color(0.9, 0.7, 0.2))
+		_box(n, Vector3(0.2, 4.8, 0.2), Vector3(0.6, 0.6, 0.6), Color(1, 0.25, 0.15), true)
+		_box(n, Vector3(3.2, 4.8, 3.2), Vector3(0.6, 0.6, 0.6), Color(1, 0.25, 0.15), true)
+		_box(n, Vector3(1.4, 0.3, 3.0), Vector3(1.2, 0.9, 0.9), hazard)
 	return n
 
 
 static func build_shuttle() -> Node3D:
 	var n := Node3D.new()
-	_box(n, Vector3(-0.4, 0, -0.4), Vector3(0.8, 1.4, 0.8), Color(0.88, 0.9, 0.94))
-	_box(n, Vector3(-0.25, 1.4, -0.25), Vector3(0.5, 0.5, 0.5), Color(0.9, 0.35, 0.25))
-	_box(n, Vector3(-0.8, 0, -0.1), Vector3(0.4, 0.6, 0.2), Color(0.6, 0.62, 0.68))
-	_box(n, Vector3(0.4, 0, -0.1), Vector3(0.4, 0.6, 0.2), Color(0.6, 0.62, 0.68))
+	_box(n, Vector3(-0.6, 0, -0.6), Vector3(1.2, 2.6, 1.2), Color(0.95, 0.96, 1.0))
+	_box(n, Vector3(-0.4, 2.6, -0.4), Vector3(0.8, 0.9, 0.8), Color(0.95, 0.3, 0.2))
+	_box(n, Vector3(-0.2, 3.5, -0.2), Vector3(0.4, 0.4, 0.4), Color(1.0, 0.85, 0.3), true)
+	_box(n, Vector3(-1.3, 0, -0.15), Vector3(0.7, 1.2, 0.3), Color(0.35, 0.4, 0.55))
+	_box(n, Vector3(0.6, 0, -0.15), Vector3(0.7, 1.2, 0.3), Color(0.35, 0.4, 0.55))
+	_box(n, Vector3(-0.15, 0, -1.3), Vector3(0.3, 1.2, 0.7), Color(0.35, 0.4, 0.55))
 	return n
 
 
 static func build_beacon() -> Node3D:
 	var n := Node3D.new()
-	_box(n, Vector3(-0.15, 0, -0.15), Vector3(0.3, 0.7, 0.3), Color(0.5, 0.45, 0.4))
-	_box(n, Vector3(-0.22, 0.7, -0.22), Vector3(0.44, 0.3, 0.44), Color(0.4, 0.9, 1.0), true)
+	_box(n, Vector3(-0.25, 0, -0.25), Vector3(0.5, 1.1, 0.5), Color(0.25, 0.22, 0.2))
+	_box(n, Vector3(-0.4, 1.1, -0.4), Vector3(0.8, 0.5, 0.8), Color(0.4, 0.95, 1.0), true)
 	return n
 
 
@@ -112,7 +123,7 @@ func _find(def_id: String) -> Array:
 func sync(delta: float = 0.0) -> void:
 	if sim == null:
 		return
-	var st: Dictionary = sim.get_shuttle_state() if sim.has_method("get_shuttle_state") else {}
+	var st: Dictionary = sim.get_shuttle_state()
 	_update_beacons()
 	var g := _find(GANTRY_ID)
 	if g.is_empty():
@@ -132,7 +143,7 @@ func sync(delta: float = 0.0) -> void:
 		_gantry.position = Vector3(b.cell.x, 0, b.cell.y)
 		add_child(_gantry)
 		_stage = stage
-	var base := _gantry.position + Vector3(2, 0.15, 2)
+	var base := _gantry.position + Vector3(2, 0.38, 2)
 	if armed and _shuttle == null:
 		_shuttle = build_shuttle()
 		add_child(_shuttle)
@@ -146,23 +157,22 @@ func sync(delta: float = 0.0) -> void:
 
 
 func _update_bar(st: Dictionary, phase: String) -> void:
-	if phase != "countdown" or float(st.get("hp_max", 0.0)) <= 0.0:
+	if phase != "countdown" or float(st.get("max_hp", 0.0)) <= 0.0:
 		if _bar != null:
 			_bar.queue_free()
 			_bar = null
 		return
 	if _bar == null:
-		_bar = _box(self, Vector3.ZERO, Vector3(1, 0.12, 0.12), Color(0.9, 0.2, 0.2), true)
-	var f := clampf(float(st.get("hp", 0.0)) / float(st["hp_max"]), 0.0, 1.0)
-	(_bar.mesh as BoxMesh).size = Vector3(maxf(0.01, 3.6 * f), 0.12, 0.12)
-	_bar.position = _gantry.position + Vector3(2, 3.0, 0.3)
+		_bar = _box(self, Vector3.ZERO, Vector3(1, 0.3, 0.3), Color(0.9, 0.2, 0.2), true)
+	var f := clampf(float(st.get("hp", 0.0)) / float(st["max_hp"]), 0.0, 1.0)
+	(_bar.mesh as BoxMesh).size = Vector3(maxf(0.01, 3.6 * f), 0.3, 0.3)
+	_bar.position = _gantry.position + Vector3(2, 5.6, 0.3)
 
 
 func _update_beacons() -> void:
 	var l := _find(LAUNCHER_ID)
 	var alive := 0
-	if sim.has_method("get_beacon_state"):
-		alive = int(sim.get_beacon_state().get("alive", 0))
+	alive = int(sim.get_beacon_state().get("alive", 0))
 	var want := mini(alive, 6) if not l.is_empty() else 0
 	while _beacons.get_child_count() > want:
 		var last := _beacons.get_child(_beacons.get_child_count() - 1)
@@ -171,5 +181,5 @@ func _update_beacons() -> void:
 	while _beacons.get_child_count() < want:
 		var i := _beacons.get_child_count()
 		var bn := build_beacon()
-		bn.position = Vector3(l[0].cell.x + 0.5 + i * 0.7, 0, l[0].cell.y - 0.6)
+		bn.position = Vector3(l[0].cell.x + 0.5 + i * 1.0, 0, l[0].cell.y - 0.8)
 		_beacons.add_child(bn)

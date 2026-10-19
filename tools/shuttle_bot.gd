@@ -10,7 +10,27 @@ const BotReport := preload("res://tools/bot_report.gd")
 const Scenario := preload("res://tests/scenario.gd")
 ## item -> [first_day, per_day]
 const SUPPLY := {"plate": [1, 9], "parts": [1, 3], "ingot_iron": [6, 4], "ingot_copper": [6, 4],
-	"release_part": [12, 4], "coal": [10, 4], "nitrogen": [10, 3], "refined_essence": [20, 5]}
+	"fuel_cell": [20, 3], "coal": [10, 4], "nitrogen": [10, 3], "refined_essence": [20, 7]}  # fuel_cell = scripted output of nitrogen + plate at the workbench
+
+
+## Free instant placement at the nearest valid spot (the bot has no builders for these).
+func _place_near(sim: Simulation, id: String, near: Vector2i) -> Building:
+	return sim.buildings.place(id, Scenario.find_spot(sim, id, near, 0), false)
+
+
+## Gantry + power (2 solar arrays and a pole) + defensive turrets around it.
+func _build_site(sim: Simulation, center: Vector2i) -> void:
+	var g := _place_near(sim, "release_gantry", center + Vector2i(-12, -8))
+	if g == null:
+		return
+	var o := g.cell
+	_place_near(sim, "power_pole", o + Vector2i(4, 1))
+	for i in 3:
+		_place_near(sim, "solar_array", o + Vector2i(5 + i * 2, 3))
+	if "--turrets=0" in OS.get_cmdline_user_args():
+		return
+	for off in [Vector2i(-2, -2), Vector2i(5, -2), Vector2i(-2, 5), Vector2i(5, 5), Vector2i(2, -3), Vector2i(2, 6)]:
+		_place_near(sim, "turret", o + off)
 
 
 func _init() -> void:
@@ -31,7 +51,11 @@ func _init() -> void:
 	var reach := [0, 0, 0, 0]
 	var launches := 0
 	var wins := 0
-	for sv in range(1, seeds + 1):
+	var first := 1
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--first="):
+			first = int(a.get_slice("=", 1))
+	for sv in range(first, first + seeds):
 		var bus: Node = load("res://autoload/event_bus.gd").new()
 		var defs := Defs.get_default().duplicate_defs()
 		defs.balance["e1_enabled"] = true
@@ -55,6 +79,8 @@ func _init() -> void:
 		var outcome := "-"
 		var when: Array = ["-", "-", "-", "-"]
 		var supplied_day := 0
+		var fails_seen := 0
+		var min_hp := 100
 		var limit := days * sim.ticks_per_day
 		while sim.tick < limit and sim.game_over_reason == "":
 			bot._act()
@@ -77,18 +103,37 @@ func _init() -> void:
 					if p > 0 and sim.deliver_petition(p):
 						when[p - 1] = "%.1f" % (float(sim.tick) / float(sim.ticks_per_day))
 						reach[p - 1] += 1
-			if sim.tick % 600 == 0 and sim.has_method("get_shuttle_state"):
+			if sim.tick % 100 == 0:
 				var st: Dictionary = sim.get_shuttle_state()
 				var ph := str(st.get("phase", ""))
+				if ph == "building" or ph == "ready":
+					if sim.shuttle.gantry() == null:
+						_build_site(sim, center)
+					if sim.tick % 600 == 0:
+						sim.deliver_shuttle_parts()
 				if ph == "ready" and sim.launch_shuttle():
 					launch_day = "%.1f" % (float(sim.tick) / float(sim.ticks_per_day))
 					launches += 1
-				elif ph == "won" and outcome != "won":
+					if sim.shuttle.launches > 1:
+						launch_day += "(retry)"
+				if ph == "countdown":
+					min_hp = mini(min_hp, int(st["hp"]) * 100 / maxi(1, int(st["max_hp"])))
+				if ph == "countdown" and int(st["hp"]) < int(st["max_hp"]) * 7 / 10:
+					sim.repair_gantry()
+				if ph == "won" and outcome != "won":
 					outcome = "won"
 					wins += 1
+				if int(st.get("failures", 0)) > fails_seen:
+					fails_seen = int(st["failures"])
+					outcome = "fail x%d" % fails_seen
+				if sim.beacons.enabled() and sim.tick % 600 == 0 and ph != "locked" and sim.buildings.count_of("beacon_launcher") == 0:
+					_place_near(sim, "beacon_launcher", center + Vector2i(-8, 8))
+					_place_near(sim, "power_pole", center + Vector2i(-6, 8))
+					_place_near(sim, "solar_array", center + Vector2i(-4, 10))
 			sim.run_ticks(Bot.STEP_TICKS)
 			bot._poll()
-		print("seed %d P1..P4 day=%s tier=%d launch=%s outcome=%s pol%%=%.0f over=%s end_day=%d debt%%=%.0f" % [sv, ",".join(when), sim.milestones.tier(), launch_day, outcome, sim.contamination.fraction() * 100.0, sim.game_over_reason, sim.day(), sim.milestones.debt_paid_pct()])
+		var bs: Dictionary = sim.get_beacon_state()
+		print("seed %d P1..P4 day=%s tier=%d launch=%s outcome=%s pol%%=%.0f over=%s end_day=%d debt%%=%.0f beacons launched=%d cut=%d cols=%d min_hp%%=%d" % [sv, ",".join(when), sim.milestones.tier(), launch_day, outcome, sim.contamination.fraction() * 100.0, sim.game_over_reason, sim.day(), sim.milestones.debt_paid_pct(), int(bs["launched"]), int(bs["total_cut"]), sim.colonists.alive_count(), min_hp])
 		sim.dispose()
 		bus.free()
 	print("reach P1..P4 over %d seeds: %s" % [seeds, str(reach)] + " launches=%d wins=%d" % [launches, wins])

@@ -311,7 +311,7 @@ func _draw_buildings() -> void:
 		var r := Rect2(cell_to_world(b.cell), Vector2(b.size) * TILE)
 		var mod := Color(0.55, 0.5, 0.5) if b.broken else Color.WHITE
 		var center := r.get_center()
-		var kind := "-" if flat and Building3D.is_3d(b.def_id) else b.def_id  # region G1b
+		var kind := "-" if flat and Building3D.has_model(b.def_id) else b.def_id  # region G1b
 		match kind:
 			"-":
 				pass
@@ -1171,7 +1171,7 @@ func _c_over(cv: ChunkCanvas, idx: int, ch: Vector2i) -> void:
 		var br := Rect2(cell_to_world(b.cell), Vector2(b.size) * TILE)
 		var mod := Color(0.55, 0.5, 0.5) if b.broken else Color.WHITE
 		var center := br.get_center()
-		var kind := "-" if Building3D.is_3d(b.def_id) else b.def_id
+		var kind := "-" if Building3D.has_model(b.def_id) else b.def_id
 		match kind:
 			"-":
 				pass

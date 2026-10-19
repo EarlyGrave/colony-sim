@@ -1,8 +1,8 @@
 class_name ShuttlePanel
 extends GamePanel
 ## Release Shuttle sheet (S1 sim): parts progress, Launch button, countdown, gantry HP.
-## Reads Simulation.get_shuttle_state(); the only command is Simulation.launch_shuttle().
-## Assumed state keys: phase (locked/building/ready/countdown/won), parts, need, t_left (ticks), hp, hp_max.
+## Reads Simulation.get_shuttle_state() {phase, parts, need, t_left (ticks), hp, max_hp, ...}.
+## Commands: deliver_shuttle_parts(), launch_shuttle(), repair_gantry().
 
 const BTN := Vector2(64, 64)
 var _sig := ""
@@ -10,7 +10,7 @@ var api: Object  ## test seam: overrides sim for state and commands
 
 
 static func state_of(s: Object) -> Dictionary:
-	if s != null and s.has_method("get_shuttle_state"):
+	if s != null:
 		return s.get_shuttle_state()
 	return {}
 
@@ -55,29 +55,43 @@ func refresh() -> void:
 	var need := maxi(int(st.get("need", 1)), 1)
 	add_line("Shuttle parts %d/%d" % [parts, need])
 	_bar(need, parts)
-	if st.has("hp"):
-		var hpm := maxf(float(st.get("hp_max", 100.0)), 1.0)
+	if int(st.get("max_hp", 0)) > 0:
+		var hpm := maxf(float(st.get("max_hp", 100.0)), 1.0)
 		add_line("Gantry HP %d/%d" % [int(st.get("hp", 0)), int(hpm)], Color(0.9, 0.7, 0.6))
 		_bar(hpm, float(st.get("hp", 0)))
+	var cost: Dictionary = st.get("part_cost", {})
+	if not cost.is_empty():
+		var bits: Array[String] = []
+		for k: String in cost:
+			bits.append("%d %s" % [int(cost[k]), k.replace("_", " ")])
+		add_line("Part: " + ", ".join(bits), Color(0.7, 0.7, 0.8))
+	if ph == "building" or ph == "ready":
+		content.add_child(_button("Deliver parts", func() -> void: _a().deliver_shuttle_parts()))
+	if ph == "building" or ph == "ready" or ph == "countdown":
+		if int(st.get("hp", 0)) < int(st.get("max_hp", 0)):
+			content.add_child(_button("Repair gantry", func() -> void: _a().repair_gantry()))
 	match ph:
 		"building":
 			add_line("Deliver parts to the Release Gantry.", Color(0.7, 0.7, 0.8))
 		"ready":
 			add_line("All parts in place. Launch starts a siege.", Color(1.0, 0.85, 0.4))
-			var b := Button.new()
-			b.text = "Launch"
-			b.custom_minimum_size = BTN
-			b.focus_mode = Control.FOCUS_NONE
-			b.pressed.connect(func() -> void:
-				if _a() != null and _a().has_method("launch_shuttle"):
-					_a().launch_shuttle()
-				_sig = ""
-				refresh())
-			content.add_child(b)
+			content.add_child(_button("Launch", func() -> void: _a().launch_shuttle()))
 		"countdown":
 			add_line("Launch in " + time_text(int(st.get("t_left", 0)), per_day) + " - defend the gantry!", Color(1.0, 0.6, 0.4))
 		"won":
 			add_line("The shuttle has left the planet.", Color(0.6, 0.9, 0.6))
+
+
+func _button(text: String, cb: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.custom_minimum_size = BTN
+	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(func() -> void:
+		cb.call()
+		_sig = ""
+		refresh())
+	return b
 
 
 func _bar(mx: float, v: float) -> void:

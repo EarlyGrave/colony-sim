@@ -7,7 +7,7 @@ func _defs() -> Dictionary:
 
 func test_every_building_has_3d_or_flat_fallback() -> void:
 	for id: String in _defs().keys():
-		assert_true(Building3D.is_3d(id) or Building3D.FLAT_FALLBACK.has(id), "no 3D/flat entry for " + id)
+		assert_true(Building3D.has_model(id) or Building3D.FLAT_FALLBACK.has(id), "no 3D/flat entry for " + id)
 
 
 func test_footprint_transform_matches_sim() -> void:

@@ -12,8 +12,10 @@ const HEIGHTS := {
 	"ash_beacon": 1.0, "penitent_wall": 1.0, "mourning_bell": 1.0,  # region T2
 	"power_pole": 1.5, "coal_generator": 1.6, "nitrogen_extractor": 1.3, "nitrogen_turbine": 1.4, "nuclear_reactor": 2.1, "solar_array": 0.6,  # region L4
 }
+## Buildings drawn by ShuttleView3D's procedural models (nothing flat underneath).
+const PROCEDURAL: Array[String] = ["release_gantry", "beacon_launcher"]
 ## Explicit flat fallbacks (drawn by WorldView on the ground layer).
-const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt", "warden_terminal", "sling", "release_gantry", "beacon_launcher"]  # S1/S2: flat until S3 models  # belts: BeltLayer; warden_terminal: region R2b
+const FLAT_FALLBACK: Array[String] = ["wall", "training_dummy", "belt", "warden_terminal", "sling"]  # belts: BeltLayer; warden_terminal: region R2b
 const TOP_ART := {"hq": "capsule", "refinery": "refinery", "turret": "turret_base", "stove": "stove", "bed": "bed", "door": "door",
 	"miner": "machine_miner", "smelter": "machine_smelter", "assembler": "machine_assembler",
 	"storage_in": "machine_storage_in", "storage_out": "machine_storage_out"}  # region A2c
@@ -43,6 +45,11 @@ var _tex := {}
 
 static func is_3d(def_id: String) -> bool:
 	return HEIGHTS.has(def_id)
+
+
+## True when no flat ground art should be drawn (block model or ShuttleView3D model).
+static func has_model(def_id: String) -> bool:
+	return HEIGHTS.has(def_id) or PROCEDURAL.has(def_id)
 
 
 static func height_of(def_id: String) -> float:
