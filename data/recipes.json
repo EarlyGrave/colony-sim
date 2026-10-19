@@ -125,12 +125,12 @@
 		"name": "Hammer plate",
 		"b4": true,
 		"inputs": {
-			"essence_ore": 6
+			"essence_ore": 3
 		},
 		"outputs": {
 			"plate": 1
 		},
-		"work_ticks": 90,
+		"work_ticks": 60,
 		"benches": [
 			"workbench"
 		]
