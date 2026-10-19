@@ -4,6 +4,7 @@ extends CanvasLayer
 ## Reads sim state every frame; sends player intent to GameController via signals.
 
 signal tool_selected(tool: String)
+signal belt_requested  # region Y5
 signal speed_selected(speed: int)
 signal alarm_toggled(on: bool)
 signal rule_toggled(rule_id: String, on: bool)
@@ -268,6 +269,7 @@ func _ready() -> void:
 
 	_o2_build(root)  # region O2
 	_u1_build(root)  # region U1
+	_y5_build(root)  # region Y5
 	root.move_child(_alerts, -1)
 	select_tool("inspect")
 	get_viewport().size_changed.connect(_check_layout)
@@ -474,6 +476,9 @@ func _toggle_cat(cid: String) -> void:
 			elif _tool_buttons.has(tid):
 				_reparent_to(_tool_buttons[tid], _cat_popup_row)
 				_tool_buttons[tid].custom_minimum_size = Vector2(96, 72)
+		if cid == "build":  # region Y5
+			_reparent_to(_y5_belt_btn, _cat_popup_row)
+			_cat_popup_row.move_child(_y5_belt_btn, 0)  # first, so it is visible without scrolling
 	_cat_popup.offset_bottom = -(BAR_H + 22)
 	_cat_popup.visible = true
 	_cat_buttons[cid].modulate = Color(0.8, 0.6, 1.0)
@@ -620,7 +625,7 @@ func _open_side(p: GamePanel, id: String) -> void:
 	p.offset_right = -8
 	p.offset_bottom = -_bottom_inset
 	p.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_root.add_child(p)
+	_y5_add_sheet(p)  # region Y5 (was _root.add_child)
 	_place_side()
 	p.open(sim)
 	if id == "letters":
@@ -631,9 +636,10 @@ func _open_side(p: GamePanel, id: String) -> void:
 func close_side() -> void:
 	if _side != null and is_instance_valid(_side):
 		if _side == _inspector:
-			_root.remove_child(_side)
+			_side.get_parent().remove_child(_side)  # region Y5: parent may be modal_root
 		else:
 			_side.queue_free()
+	_y5_scrim.visible = false  # region Y5
 	_side = null
 	_side_id = ""
 	_sync_panel_buttons()
@@ -1082,7 +1088,7 @@ func _o4_build() -> void:
 		b.add_theme_font_size_override("font_size", 16)
 	_c5_build()  # region C5
 	_root.move_child(_alerts, -1)
-	_root.move_child(_game_over, -1)
+	_game_over.get_parent().move_child(_game_over, -1)  # region Y5: parent may be modal_root
 
 
 func _o4_threat_short() -> String:
@@ -1701,4 +1707,54 @@ func _u2_update() -> void:
 		_u2_stack.tick(get_process_delta_time())
 		if _b5_card != null and _b5_card.text_now().begins_with("Wave ") and " over:" in _b5_card.text_now():
 			_b5_card.visible = false  # the report strip is gone: the stack shows it instead
+# endregion
+
+
+# region Y5
+## Belt entry in the Build popup, game-over card through ModalStyle, scrim behind side sheets.
+var _y5_belt_btn: Button
+var _y5_scrim: ColorRect
+var _y5_go_scrim: ColorRect
+
+
+func _y5_build(root: Control) -> void:
+	_y5_belt_btn = Button.new()
+	_y5_belt_btn.text = "Belt"
+	_y5_belt_btn.name = "BeltEntry"
+	_y5_belt_btn.focus_mode = Control.FOCUS_NONE
+	_y5_belt_btn.custom_minimum_size = Vector2(96, 72)
+	_y5_belt_btn.add_theme_font_size_override("font_size", 16)
+	_stash.add_child(_y5_belt_btn)
+	_y5_belt_btn.pressed.connect(func() -> void:
+		_close_cat()
+		belt_requested.emit())
+	# Game-over card: opaque ModalStyle card + scrim, both in the ModalLayer.
+	_y5_go_scrim = ModalStyle.make_scrim()
+	_y5_go_scrim.visible = false
+	modal_root.add_child(_y5_go_scrim)
+	root.remove_child(_game_over)
+	modal_root.add_child(_game_over)
+	ModalStyle.apply(_game_over)
+	ModalStyle.style_label(_game_over_label, true)
+	ModalStyle.style_button(_game_over.get_child(0).get_child(1) as Button, true)
+	_game_over.visibility_changed.connect(func() -> void: _y5_go_scrim.visible = _game_over.visible)
+	# Side-sheet scrim (tap closes). Stops above the bottom bar so the toolbar stays usable.
+	_y5_scrim = ColorRect.new()
+	_y5_scrim.name = "SheetScrim"
+	_y5_scrim.color = Color(0, 0, 0, 0.45)
+	_y5_scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_y5_scrim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_y5_scrim.visible = false
+	_y5_scrim.gui_input.connect(func(ev: InputEvent) -> void:
+		if (ev is InputEventMouseButton or ev is InputEventScreenTouch) and ev.is_pressed():
+			close_side())
+	modal_root.add_child(_y5_scrim)
+	modal_root.move_child(_game_over, -1)
+
+
+func _y5_add_sheet(p: GamePanel) -> void:
+	_y5_scrim.offset_bottom = -_bottom_inset
+	_y5_scrim.visible = true
+	modal_root.add_child(p)
+	modal_root.move_child(_game_over, -1)
 # endregion

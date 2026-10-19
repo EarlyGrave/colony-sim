@@ -39,6 +39,7 @@ func _ready() -> void:
 	_setup_automation()  # region A2d
 	_o5_setup()  # region O5
 	hud.tool_selected.connect(_on_tool_selected)
+	hud.belt_requested.connect(func() -> void: _on_auto_tool("belt"))  # region Y5
 	hud.speed_selected.connect(set_speed)
 	hud.alarm_toggled.connect(func(on: bool) -> void: sim.set_alarm(on))
 	hud.rule_toggled.connect(func(id: String, on: bool) -> void:
