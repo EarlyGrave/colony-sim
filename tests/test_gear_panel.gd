@@ -20,7 +20,7 @@ func test_rows_follow_equipment_json_slots() -> void:
 		assert_eq(r["slot_name"], sim.defs.equipment["slots"][r["slot"]]["name"])
 	var armour: Array = rows.filter(func(r: Dictionary) -> bool: return r["slot"] == "torso_outer")
 	assert_eq(armour[0]["item"], "Kevlar Vest")
-	assert_true(str(armour[0]["stats"]).contains("armor_phys"))
+	assert_true(str(armour[0]["stats"]).contains("Armour"))  # F8: human stat names
 
 
 func test_applies_only_with_gear_and_builds_tall_rows() -> void:

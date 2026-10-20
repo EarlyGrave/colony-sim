@@ -182,7 +182,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `time.json` | start_hour, dawn/dusk hours, night_daylight |
 | `roles.json` | C1: max_size, hold_search_radius, slot_spread, affinity{skill_weight,trait_weight}, order[], roles id -> {name, weapon, dmg_taken_mult, threat_mult, formation_offset, affinity_skill, ability} |
 | `traits.json` | traits id -> {effects, role_affinity? {role: bonus}} |
-| `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...}, C2 `abilities` id -> {role, cooldown_ticks, essence_cost, contam_puff, noise_burst{mult,ticks}, taunt/volley/radius} | `equipment.json` | slots, rarity, upgrade_slots, durability | `gear.json` | bases id -> {slot, stats, tags} | `upgrades.json` | id -> {stats, tags_any} | `affixes.json` | groups, affixes id -> {pos, tiers, tags_any, weight}, rules {max_prefix, max_suffix, max_per_group, tier_by_ilvl} |
+| `weapons.json` | combat{}, weapons id -> {damage, range, cooldown, ...}, C2 `abilities` id -> {role, cooldown_ticks, essence_cost, contam_puff, noise_burst{mult,ticks}, taunt/volley/radius} | `equipment.json` | slots, rarity, upgrade_slots, durability | `gear.json` | bases id -> {slot, stats, tags} | `upgrades.json` | id -> {stats, tags_any} | `affixes.json` | groups, affixes id -> {pos, tiers, tags_any, weight}, rules {max_prefix, max_suffix, max_per_group, tier_by_ilvl} | `stat_names.json` | F8 view-only: stat key or affix id -> {name, pct} (human labels for gear UI) |
 | `work.json` | default_priority, max_priority, types{} |
 | `xp.json` | day_survived, wave_repelled, colonist_rescued, first_refine, event_choice |
 | `zones.json` | id -> {name, color, accepts[], waste_emission_factor} |
