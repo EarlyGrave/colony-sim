@@ -25,3 +25,4 @@ Restore: `git checkout -b restore <sha>` (or reset a branch to it).
 | 2026-10-19 | bff5903 | OS map guarantees + SR shelter ration + HM bot | 912 green, smoke PASS |
 | 2026-10-19 | 42247d1 | RP + FC: first bot shuttle launch | 912 green, smoke PASS |
 | 2026-10-20 | 6671d79 | F2 (fight loop, metro live, gear loot, ending screens) + night sprint 10-19 + LA | 1050 green, smoke PASS, bot alive>=8 6/10 |
+| 2026-10-20 | 50fd7cb | F3 (start shiv + wave reward + bot equip, craft-gear economy, traits read, branch tests) | 1077 green, smoke PASS, bot alive>=8 6/10 |
