@@ -40,3 +40,31 @@ func test_win_screen() -> void:
 	for b: Button in btns:
 		assert_true(b.custom_minimum_size.y >= 64.0)
 	w.free()
+
+
+# region F2
+func test_win_screen_epilogue_per_ending() -> void:
+	for id: String in ["submit", "fight", "escape", "remission"]:
+		var ep := WinScreen.epilogue_lines(id)
+		assert_true(ep.size() >= 5, id)
+		var w := WinScreen.new({"days": 1, "ending": id})
+		assert_true(w.epilogue_title != null, id)
+		assert_eq(w.epilogue_title.text, str(ep[0]))
+		assert_eq(w.epilogue_box.get_child_count(), ep.size() - 1)
+		assert_eq((w.epilogue_box.get_child(0) as Label).text, str(ep[1]))
+		assert_eq(w.find_children("*", "Button", true, false).size(), 3)
+		w.free()
+	var none := WinScreen.new({"days": 1})
+	assert_true(none.epilogue_title == null)
+	none.free()
+
+
+func test_win_screen_ending_id_from_sim() -> void:
+	var sim := make_sim(5, false, 30, 30)
+	assert_eq(WinScreen.ending_id(sim), "")
+	assert_eq(WinScreen.stats_from(sim)["ending"], "")
+	sim.set_path("fight")
+	assert_eq(WinScreen.ending_id(sim), "fight")
+	sim.endings.mark_won("fight")
+	assert_eq(WinScreen.stats_from(sim)["ending"], "fight")
+# endregion

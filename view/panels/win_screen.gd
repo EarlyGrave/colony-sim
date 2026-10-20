@@ -11,6 +11,9 @@ const FALLBACK_TEXT := "The gantry lights burn through the night. You rise above
 
 var stats: Dictionary
 var next_button: Button  # region N2
+var epilogue_title: Label  # region F2
+var _scroll: ScrollContainer  # region F2
+var epilogue_box: VBoxContainer  # region F2
 
 
 ## 'Balance carried forward' (round(debt_left * debt_carry_frac)) + veteran lines from MetaState.ng after finish_sentence.
@@ -29,7 +32,28 @@ static func stats_from(sim: Simulation) -> Dictionary:
 	if sim == null:
 		return s
 	s["colonists"] = sim.colonists.alive_count()
+	s["ending"] = ending_id(sim)  # region F2
 	return s
+
+
+# region F2
+## Ending shown on the win screen: the chosen path if it was won, else any won path, else the path, else "".
+static func ending_id(sim: Simulation) -> String:
+	if sim == null or sim.endings == null:
+		return ""
+	var p := sim.path()
+	if p != "" and sim.endings.won(p):
+		return p
+	for id: Variant in sim.endings.path_ids():
+		if sim.endings.won(str(id)):
+			return str(id)
+	return p
+
+
+## Epilogue lines (title first) for an ending id; empty when none.
+static func epilogue_lines(id: String) -> Array:
+	return EndingSystem.epilogue(id) if id != "" else []
+# endregion
 
 
 static func stats_lines(st: Dictionary) -> Array[String]:
@@ -54,10 +78,16 @@ func _init(p_stats: Dictionary = {}, ending_text: String = "", p_ng: Dictionary 
 	var card := PanelContainer.new()
 	ModalStyle.apply(card)
 	c.add_child(card)
+	var outer := VBoxContainer.new()  # region F2: text scrolls on short (phone) screens, buttons stay visible
+	outer.add_theme_constant_override("separation", 8)
+	card.add_child(outer)
+	_scroll = ScrollContainer.new()
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	outer.add_child(_scroll)
 	var box := VBoxContainer.new()
 	box.custom_minimum_size = Vector2(640, 0)
 	box.add_theme_constant_override("separation", 4)
-	card.add_child(box)
+	_scroll.add_child(box)
 	var t := Label.new()
 	t.text = "SENTENCE ENDED"
 	ModalStyle.style_label(t, true)
@@ -68,6 +98,21 @@ func _init(p_stats: Dictionary = {}, ending_text: String = "", p_ng: Dictionary 
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ModalStyle.style_label(body)
 	box.add_child(body)
+	var ep := epilogue_lines(str(stats.get("ending", "")))  # region F2
+	if not ep.is_empty():
+		epilogue_title = Label.new()
+		epilogue_title.text = str(ep[0])
+		ModalStyle.style_label(epilogue_title, true)
+		box.add_child(epilogue_title)
+		epilogue_box = VBoxContainer.new()
+		epilogue_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_child(epilogue_box)
+		for line: Variant in ep.slice(1):
+			var el := Label.new()
+			el.text = str(line)
+			el.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			ModalStyle.style_label(el)
+			epilogue_box.add_child(el)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 24)
@@ -85,7 +130,7 @@ func _init(p_stats: Dictionary = {}, ending_text: String = "", p_ng: Dictionary 
 		box.add_child(cll)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	box.add_child(row)
+	outer.add_child(row)
 	var cont := _btn("Continue", func(): continue_pressed.emit())
 	ModalStyle.style_button(cont, false)
 	row.add_child(cont)
@@ -104,3 +149,18 @@ func _btn(text: String, cb: Callable) -> Button:
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.pressed.connect(cb)
 	return b
+
+
+# region F2
+func _ready() -> void:
+	resized.connect(_fit_scroll)
+	_fit_scroll()
+
+
+## Caps the text area so the card plus the 64 px buttons fit the screen height.
+func _fit_scroll() -> void:
+	if _scroll == null or size.y <= 0.0:
+		return
+	var content_h: float = (_scroll.get_child(0) as Control).get_combined_minimum_size().y
+	_scroll.custom_minimum_size.y = minf(content_h, maxf(60.0, size.y - 64.0 - 100.0))
+# endregion
