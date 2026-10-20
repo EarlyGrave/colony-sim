@@ -70,7 +70,7 @@ func despair_mult(c: Colonist) -> float:
 
 
 func on_installment_paid(c: Colonist) -> void:
-	_change(block_of(c), float(cfg["paid_gain"]), false)
+	_change(block_of(c), float(cfg["paid_gain"]) * maxf(0.0, 1.0 + sim.traits.mod(c, "standing_gain")), false)  # region traits
 
 
 func on_installment_missed(c: Colonist) -> void:

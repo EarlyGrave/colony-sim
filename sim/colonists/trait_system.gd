@@ -42,6 +42,28 @@ func has_tag(c: Colonist, tag: String) -> bool:
 	return false
 
 
+# region traits F3c: one-line consumers for the stats that used to be text-only
+## Carry capacity with the "carry" stat (+25% rounds to whole items, never below the base).
+func carry_cap(c: Colonist, base: int) -> int:
+	return maxi(base, roundi(float(base) * (1.0 + mod(c, "carry"))))
+
+
+## Multiplier on xp gained in `skill`: xp_mult_all + xp_mult_<skill>.
+func xp_mult(c: Colonist, skill: String) -> float:
+	return maxf(0.0, 1.0 + mod(c, "xp_mult_all") + mod(c, "xp_mult_" + skill))
+
+
+## Work-speed multiplier from night_owl / early_bird (work_night / work_day).
+func shift_mult(c: Colonist) -> float:
+	return maxf(0.1, 1.0 + mod(c, "work_night" if sim.clock.is_night() else "work_day"))
+
+
+## Multiplier on the tainted-ground illness chance (essence_nose: mutation_risk).
+func mutation_mult(c: Colonist) -> float:
+	return maxf(0.0, 1.0 + mod(c, "mutation_risk"))
+# endregion
+
+
 func has(c: Colonist, id: String) -> bool:
 	return c != null and (c.bio.get("traits", []) as Array).has(id)
 

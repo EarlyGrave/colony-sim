@@ -426,5 +426,5 @@ func _expose_colonists(n: int) -> void:
 		_exposure[col.id] = int(_exposure.get(col.id, 0)) + n
 		if int(_exposure[col.id]) >= int(_cfg["exposure_ticks"]):
 			_exposure[col.id] = 0
-			if _rng.randf() < float(_cfg["illness_chance"]):
+			if _rng.randf() < float(_cfg["illness_chance"]) * sim.traits.mutation_mult(col):  # region traits
 				sim.health.add_illness(col, str(_cfg["illness_id"]), float(_cfg["illness_severity"]), int(_cfg["illness_ticks"]))
