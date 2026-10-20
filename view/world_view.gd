@@ -232,6 +232,7 @@ func _draw() -> void:
 	if sim == null or flat:  # flat mode paints through the chunk canvases (region W2a)
 		return
 	_draw_zones()
+	_f7w1_draw_dump(self, Rect2i(0, 0, sim.map.width, sim.map.height))  # region F7W1
 	_draw_contamination_field()  # region mutation
 	_draw_designations()
 	_draw_plants()  # region needs
@@ -1119,6 +1120,7 @@ func _c_under(cv: ChunkCanvas, idx: int, r: Rect2i) -> void:
 				cv.draw_line(p, p + Vector2(0, TILE), edge, 2.0)
 			if not cells.has(c + Vector2i(1, 0)):
 				cv.draw_line(p + Vector2(TILE, 0), p + Vector2(TILE, TILE), edge, 2.0)
+	_f7w1_draw_dump(cv, r)  # region F7W1
 	# Contamination overlay: this chunk's slice of the map-sized texture.
 	if show_field and _field_tex != null:
 		cv.draw_texture_rect_region(_field_tex, Rect2(Vector2(r.position) * TILE, Vector2(r.size) * TILE), Rect2(r), Color.WHITE)
@@ -1283,4 +1285,47 @@ func _c_selection(cv: CanvasItem, ch: Vector2i) -> void:
 		cv.draw_rect(Rect2(cell_to_world(pending_corner), Vector2(TILE, TILE)), Color(1, 1, 1, 0.9), false, 3.0)
 	if selected_cell.x >= 0 and ChunkLayer.chunk_of(selected_cell) == ch:
 		cv.draw_rect(Rect2(cell_to_world(selected_cell), Vector2(TILE, TILE)), Color(0.4, 0.9, 1.0, 0.9), false, 2.0)
+# endregion
+
+
+# region F7W1: dump-zone tint + peak marker, only while the contamination overlay is on
+const F7W1_TINT_ALPHA := 0.14  ## capped well below the field colours so green/purple stay readable
+
+
+## Cells of the waste_dump zone (sorted, read-only copy of sim.items.zone_cells).
+func f7w1_dump_cells() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if sim == null or not sim.items.zone_cells.has("waste_dump"):
+		return out
+	for c: Vector2i in sim.items.zone_cells["waste_dump"]:
+		out.append(c)
+	out.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
+	return out
+
+
+## Peak cell as the threat system sees it; (-1, -1) when there is neither a dump nor a processor.
+func f7w1_dump_peak() -> Vector2i:
+	if sim == null or sim.threats == null:
+		return Vector2i(-1, -1)
+	return sim.threats.f4d_pollution_peak()
+
+
+func _f7w1_draw_dump(cv: CanvasItem, r: Rect2i) -> void:
+	if not show_field or sim == null or not sim.defs.zones.has("waste_dump"):
+		return
+	var cells: Dictionary = sim.items.zone_cells.get("waste_dump", {})
+	var col := Color(sim.defs.zones["waste_dump"]["color"])
+	var tint := col.lightened(0.15)
+	tint.a = F7W1_TINT_ALPHA
+	for c in _cells_in(cells, r):
+		cv.draw_rect(Rect2(cell_to_world(c), Vector2(TILE, TILE)), tint)
+	var peak := f7w1_dump_peak()
+	if peak.x < 0 or not r.has_point(peak):
+		return
+	var mid := cell_to_world(peak) + Vector2(TILE, TILE) * 0.5
+	var mk := col.lightened(0.5)
+	mk.a = 0.9
+	cv.draw_arc(mid, TILE * 0.35, 0.0, TAU, 16, mk, 1.5)
+	cv.draw_line(mid + Vector2(-TILE * 0.5, 0), mid + Vector2(TILE * 0.5, 0), mk, 1.0)
+	cv.draw_line(mid + Vector2(0, -TILE * 0.5), mid + Vector2(0, TILE * 0.5), mk, 1.0)
 # endregion

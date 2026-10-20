@@ -308,7 +308,7 @@ func _build_batch3_widgets(root: Control) -> void:
 	var lrow := HBoxContainer.new()
 	lrow.add_theme_constant_override("separation", 6)
 	_legend.add_child(lrow)
-	for e: Array in [[Color(0.35, 0.8, 0.25, 0.8), "tainted"], [Color(0.6, 0.25, 0.8, 0.9), "mutated"]]:
+	for e: Array in [[Color(0.35, 0.8, 0.25, 0.8), "tainted"], [Color(0.6, 0.25, 0.8, 0.9), "mutated"], F7W1_LEGEND_DUMP]:  # region F7W1
 		var sw := ColorRect.new()
 		sw.color = e[0]
 		sw.custom_minimum_size = Vector2(18, 18)
@@ -335,6 +335,7 @@ func _update_batch3() -> void:
 			next_name = str(sim.defs.crises["crises"][id]["name"])
 	if next_name != "":
 		_forecast.text += " · to \"%s\" %.1f%%" % [next_name, next_m * 100.0]
+	_forecast.text += f7w1_forecast_suffix(sim)  # region F7W1
 	_alerts.top_inset = _stack.size.y
 	_alerts.refresh()
 	# Contract indicator: the active contract with the nearest deadline, else an open offer.
@@ -1837,4 +1838,15 @@ func _n4_on_standing(b: String, v: float) -> void:
 	_n4_standing[b] = v
 	if _u2_stack != null:
 		_u2_stack.push(t, "info", 8.0)
+# endregion
+
+
+# region F7W1: legend entry "dump" + forecast hint when the first wave comes from the dump side
+const F7W1_LEGEND_DUMP := [Color(0.62, 0.8, 0.3, 0.5), "dump"]
+
+
+static func f7w1_forecast_suffix(p_sim: Simulation) -> String:
+	if p_sim != null and p_sim.threats != null and bool(p_sim.threats.cfg.get("spawn_at_pollution_peak", false)):
+		return " · first wave: dump side"
+	return ""
 # endregion
