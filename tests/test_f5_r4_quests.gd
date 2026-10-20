@@ -16,8 +16,10 @@ func _sim(seed_value: int) -> Simulation:
 
 
 ## Runs days until the quest has a pending choice, answers it with `pick`; returns the beat answered ("" = none).
-func _step(sim: Simulation, q: String, pick: String, max_days := 14) -> String:
+func _step(sim: Simulation, q: String, pick: String, max_days := 14, hot := false) -> String:
 	for _d in max_days:
+		if hot:
+			sim.contraband.suspicion = 80.0  # F6: r4 line C beats wait for suspicion
 		var p := sim.quests.pending_for(q)
 		if p.is_empty():
 			sim.run_ticks(sim.ticks_per_day)
@@ -76,7 +78,7 @@ func test_trigger_gates() -> void:
 	sim.tick = 31 * sim.ticks_per_day
 	sim.run_ticks(sim.ticks_per_day)
 	assert_eq(sim.quests.state(B), "idle", "needs a repelled raid")
-	sim.threats.metro().raids_repelled = 1
+	sim.threats.metro().raids_repelled = 3
 	sim.run_ticks(sim.ticks_per_day)
 	assert_eq(sim.quests.state(B), "active")
 
@@ -176,8 +178,8 @@ func test_line_b_end_to_end() -> void:
 	for picks in [["strip", "interrogate", "stop", "wear"], ["burn", "recruit", "refuse", "cover"], ["strip", "send_back", "stop", "wear"]]:
 		var sim := _sim(8)
 		sim.quests.set_flag("path_fight")
-		sim.threats.metro().raids_repelled = 1
-		sim.tick = 30 * sim.ticks_per_day
+		sim.threats.metro().raids_repelled = 3
+		sim.tick = 46 * sim.ticks_per_day
 		_stock(sim, "plate", 20)
 		var beats: Array = []
 		for pick: String in picks:
@@ -186,16 +188,16 @@ func test_line_b_end_to_end() -> void:
 		assert_eq(sim.quests.state(B), "done", str(picks))
 	var sim2 := _sim(8)
 	sim2.quests.set_flag("path_fight")
-	sim2.threats.metro().raids_repelled = 1
-	sim2.tick = 30 * sim2.ticks_per_day
+	sim2.threats.metro().raids_repelled = 3
+	sim2.tick = 46 * sim2.ticks_per_day
 	_step(sim2, B, "strip", 6)
 	_step(sim2, B, "send_back", 8)
 	assert_true(sim2.threats.metro().defiance >= 8.0, "defiance verb applied")
 	assert_true(sim2.quests.flag("r4_letter"))
 	var sim3 := _sim(8)
 	sim3.quests.set_flag("path_fight")
-	sim3.threats.metro().raids_repelled = 1
-	sim3.tick = 30 * sim3.ticks_per_day
+	sim3.threats.metro().raids_repelled = 3
+	sim3.tick = 46 * sim3.ticks_per_day
 	for pick in ["strip", "send_back", "stop"]:
 		_step(sim3, B, pick, 12)
 	assert_true(sim3.quests.mod("refine_mult") <= 0.1, "refining crawls")
@@ -212,7 +214,7 @@ func test_line_c_end_to_end() -> void:
 		_stock(sim, "refined_essence", 20)
 		var beats: Array = []
 		for pick: String in picks:
-			beats.append(_step(sim, C, pick, 20))
+			beats.append(_step(sim, C, pick, 20, true))
 		assert_eq(beats, ["manifest", "inspection", "courier", "drone_tail"])
 		assert_eq(sim.quests.state(C), "done", str(picks))
 

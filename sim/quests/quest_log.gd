@@ -139,7 +139,11 @@ func schedule(quest_id: String, beat_id: String, delay_days: float) -> void:
 	var i := _schedule.size()
 	while i > 0 and int(_schedule[i - 1]["due"]) > due:
 		i -= 1
-	_schedule.insert(i, {"quest": quest_id, "beat": beat_id, "due": due})
+	var entry := {"quest": quest_id, "beat": beat_id, "due": due}
+	var lim := _f6a_limit(quest_id, beat_id, due)  # region F6W1
+	if lim >= 0:
+		entry["limit"] = lim
+	_schedule.insert(i, entry)
 
 
 ## Posts an N-way choice. options: [{id, label, enabled?}]. Returns the uid.
@@ -209,6 +213,10 @@ func _on_day(_d: int) -> void:
 func _on_tick(_t: int) -> void:
 	while not _schedule.is_empty() and int(_schedule[0]["due"]) <= sim.tick:
 		var s: Dictionary = _schedule.pop_front()
+		if s.has("limit") and sim.tick < int(s["limit"]) and state(str(s["quest"])) == "active" and not _f6a_wait_ok(str(s["quest"]), str(s["beat"])):  # region F6W1
+			s["due"] = (sim.tick / sim.ticks_per_day + 1) * sim.ticks_per_day
+			_f6a_reinsert(s)
+			continue
 		if state(str(s["quest"])) == "active":
 			_enter(str(s["quest"]), str(s["beat"]))
 
@@ -441,7 +449,7 @@ func state_parts() -> Array:
 		ms.append([m, _mods[m]["value"], _mods[m]["until"]])
 	var sc: Array = []
 	for s in _schedule:
-		sc.append([s["quest"], s["beat"], s["due"]])
+		sc.append([s["quest"], s["beat"], s["due"]] if not s.has("limit") else [s["quest"], s["beat"], s["due"], s["limit"]])  # region F6W1
 	var pd: Array = []
 	for p in pending:
 		pd.append([p["uid"], p["quest"], p["beat"]])
@@ -603,4 +611,32 @@ func _w4_fx(_qid: String, e: Dictionary) -> void:
 				sim.contraband.suspicion = clampf(sim.contraband.suspicion + float(e["n"]), 0.0, float(sim.contraband.cfg.get("suspicion_cap", 100.0)))
 		"defiance":
 			sim.threats.metro().add_defiance(float(e["n"]))
+# endregion
+
+
+# region F6W1
+## Beat gating: a beat may carry "wait" (cond dict = AND, or array of dicts = OR) and "wait_max_days" (default 10).
+func _f6a_limit(qid: String, beat_id: String, due: int) -> int:
+	var q: Dictionary = sim.defs.quests.get(qid, {})
+	var b: Dictionary = q.get("beats", {}).get(beat_id, {})
+	if not b.has("wait"):
+		return -1
+	return due + roundi(float(b.get("wait_max_days", 10)) * sim.ticks_per_day)
+
+
+func _f6a_wait_ok(qid: String, beat_id: String) -> bool:
+	var w: Variant = sim.defs.quests[qid]["beats"][beat_id]["wait"]
+	if w is Array:
+		for c: Dictionary in w:
+			if _trigger_ok(c):
+				return true
+		return false
+	return _trigger_ok(w as Dictionary)
+
+
+func _f6a_reinsert(s: Dictionary) -> void:
+	var i := _schedule.size()
+	while i > 0 and int(_schedule[i - 1]["due"]) > int(s["due"]):
+		i -= 1
+	_schedule.insert(i, s)
 # endregion
