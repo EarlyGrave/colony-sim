@@ -200,3 +200,75 @@ func stored_of(cid: int) -> Array:
 	out.sort()
 	return out
 # endregion
+
+
+# region F9W3
+## Wear and repair. Wear is behind durability.wear_enabled (default off: durability never changes).
+func wear_enabled() -> bool:
+	return bool(sim.defs.equipment["durability"].get("wear_enabled", false))
+
+
+## A colonist took a hit: every worn non-weapon piece loses `loss_per_hit_taken`.
+func wear_hit_taken(cid: int) -> void:
+	if not wear_enabled():
+		return
+	var cfg: Dictionary = sim.defs.equipment["durability"]
+	var loss := float(cfg.get("loss_per_hit_taken", 0.0))
+	var slots: Dictionary = equipped.get(cid, {})
+	var keys: Array = slots.keys()
+	keys.sort()
+	for s in keys:
+		if s != "weapon":
+			var g: GearItem = instances[slots[s]]
+			set_durability(g.id, g.durability - loss)
+
+
+## A colonist attacked: the worn weapon loses `loss_per_attack`.
+func wear_attack(cid: int) -> void:
+	if not wear_enabled():
+		return
+	var wid: int = equipped.get(cid, {}).get("weapon", -1)
+	if wid >= 0:
+		var g: GearItem = instances[wid]
+		set_durability(wid, g.durability - float(sim.defs.equipment["durability"].get("loss_per_attack", 0.0)))
+
+
+## Plates needed to restore `item_id` to max: ceil(missing / max * repair_plates_full). 0 when undamaged or unknown.
+func repair_cost(item_id: int) -> int:
+	var g: GearItem = instances.get(item_id)
+	if g == null or g.max_durability <= 0.0 or g.durability >= g.max_durability:
+		return 0
+	var full := float(sim.defs.equipment["durability"].get("repair_plates_full", 3))
+	return maxi(1, ceili((g.max_durability - g.durability) / g.max_durability * full - 0.000001))
+
+
+func has_repair_bench() -> bool:
+	for b in sim.buildings.list:
+		if b.def_id == "workbench" and not b.broken and not b.destroyed:
+			return true
+	return false
+
+
+## Why repair is refused: "" = possible, else a short hint.
+func repair_block(item_id: int) -> String:
+	var cost := repair_cost(item_id)
+	if cost <= 0:
+		return "Nothing to repair."
+	if not has_repair_bench():
+		return "Needs a working workbench."
+	if sim.items.count_stored("plate") < cost:
+		return "Need %d plate." % cost
+	return ""
+
+
+func repair(item_id: int) -> bool:
+	if repair_block(item_id) != "":
+		return false
+	var cost := repair_cost(item_id)
+	if not sim.items.consume_stored("plate", cost, sim.map_center()):
+		return false
+	sim.ledger.record_consumed("plate", cost, "repair_gear")
+	var g: GearItem = instances[item_id]
+	set_durability(item_id, g.max_durability)
+	return true
+# endregion

@@ -78,7 +78,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `squad_hold` | sid: int, cell: cell | bool | C1: cell passable; members `order_move` to cell + role offset (nearest free reachable cell); clears focus |
 | `squad_shakedown` | sid: int | bool | I3: contraband enabled, squad alive + off cooldown (1 patrol day), stash > 0; recovers stash to map centre, +despair on top holder |
 | `covert_sale` | n: int | bool | N2: Escape path + contraband_on; consumes n refined -> escape_credit, +suspicion (x2 while Informant alive) |
-| `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` | `give_gear` | cid, base, rarity, ilvl | int | E2: gear id or -1 | `equip` | cid, item_id | bool | E2: owner only, replaces slot, one resum | `unequip` | cid, slot | bool | E2 | `socket` | item_id, upgrade_id | bool | E2: free slot by rarity + tags |
+| `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` | `give_gear` | cid, base, rarity, ilvl | int | E2: gear id or -1 | `equip` | cid, item_id | bool | E2: owner only, replaces slot, one resum | `unequip` | cid, slot | bool | E2 | `socket` | item_id, upgrade_id | bool | E2: free slot by rarity + tags | | `repair_gear` | item_id | bool | F9W3: damaged gear, working workbench, pays ceil(missing/max x `repair_plates_full`) plates, durability to max |
 | `resolve_crisis` | crisis_id: str, option_id: str | bool | crisis active, option exists |
 | `choose_regulation` | slot: int, id: String | bool | W1: reg_enabled, slot open, option known, not excluded; unanswered slot auto-picks default after 2 d |
 | `answer_event` | event_uid: int, accept: bool | bool | pending storyteller choice with that uid |

@@ -132,6 +132,7 @@ func _w3_fixation() -> void:
 ##   manifest (n: set_manifest(n) once), equip (1: daily equip best owned gear per slot), branch_pick (1: first listed branch at branch level)
 var suspicion_peak := 0.0
 var gear_equipped := 0
+var gear_repaired := 0  # region F9W3
 var branches_picked := 0
 var _last_sale_day := -999
 var _gather_day := -1.0  # region F4a
@@ -166,6 +167,7 @@ func _f1_act() -> void:
 		sim.set_manifest(_knob("manifest", 0))
 	if _knob("equip", 1) == 1:  # region F3a: default ON (eval: alive>=8 6/10 both ways)
 		_equip_best()
+		_repair_gear()  # region F9W3
 	if _knob("branch_pick", 0) == 1:
 		_pick_branches()
 
@@ -207,6 +209,21 @@ func _f4a_rally() -> void:
 	var alive := sim.colonists.alive_count()
 	if fe.colonists_at_point().size() * 4 >= alive * 3 or _day_f() - _gather_day > 2.0:
 		sim.start_extraction()
+# endregion
+
+
+# region F9W3
+## Repairs gear below 30% durability when plates and a workbench allow it (only matters with durability.wear_enabled).
+func _repair_gear() -> void:
+	var eq: EquipmentSystem = sim.equipment
+	if eq == null or not eq.wear_enabled():
+		return
+	var ids: Array = eq.instances.keys()
+	ids.sort()
+	for id: int in ids:
+		var g: GearItem = eq.instances[id]
+		if g.durability < g.max_durability * 0.3 and sim.repair_gear(id):
+			gear_repaired += 1
 # endregion
 
 
@@ -1062,7 +1079,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		"food": sim.items.count_stored("raw_food") + sim.items.count_stored("meal"), "over": sim.game_over_reason,
 		"debt_pct": sim.milestones.debt_paid_pct(), "end_day": sim.day(), "blocker": bot.blocker(), "nitrogen_nodes": nit_nodes,
 		"built": {}, "steps": bot._step, "log": bot.log.duplicate(),
-		"path": sim.path(), "suspicion_peak": bot.suspicion_peak, "metro_raids": sim.threats.metro().raids_started, "defiance": snappedf(sim.threats.metro().defiance, 0.1), "gear_equipped": bot.gear_equipped, "branches": bot.branches_picked,  # region F1b
+		"path": sim.path(), "suspicion_peak": bot.suspicion_peak, "metro_raids": sim.threats.metro().raids_started, "defiance": snappedf(sim.threats.metro().defiance, 0.1), "gear_equipped": bot.gear_equipped, "gear_repaired": bot.gear_repaired, "branches": bot.branches_picked,  # region F1b
 		"esc": [sim.fight_escape.paid, sim.fight_escape.extracted, sim.contraband.escape_credit, sim.contraband.sales, sim.contraband.inspections, sim.contraband.raids, sim.fight_escape.contacted],  # region F4a
 		"ending_won": ",".join(PackedStringArray(sim.endings.path_ids().filter(func(i: String) -> bool: return sim.endings.won(i)))),
 	}

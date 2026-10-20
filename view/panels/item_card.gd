@@ -44,6 +44,8 @@ func set_item(sim: Simulation, item_id: int) -> void:
 		_label(s, Color(0.8, 0.8, 0.6))
 	var low: bool = L["durability_low"]
 	_label(L["durability"], Color(1.0, 0.4, 0.4) if low else Color(0.7, 0.72, 0.75))
+	if L.get("repair", "") != "":  # region F9W3
+		_label(str(L["repair"]), Color(0.95, 0.8, 0.3))
 
 
 func _label(text: String, color: Color) -> void:
@@ -56,7 +58,7 @@ func _label(text: String, color: Color) -> void:
 	_box.add_child(l)
 
 
-## {name, rarity, color, ilvl, slot_name, base:[String], affixes:[String], sockets:[String], durability:String, durability_low:bool}; {} for an unknown id.
+## {name, rarity, color, ilvl, slot_name, base:[String], affixes:[String], sockets:[String], durability:String, durability_low:bool, repair:String ("" at full durability)}; {} for an unknown id.
 static func lines(sim: Simulation, item_id: int) -> Dictionary:
 	var g: GearItem = null
 	if sim != null and sim.equipment != null:
@@ -94,7 +96,9 @@ static func lines(sim: Simulation, item_id: int) -> Dictionary:
 	if g.durability <= 0.0:
 		var m := float(eq["durability"].get("zero_stat_mult", 0.5))
 		dtxt += " - Broken: stats %s" % ("halved" if is_equal_approx(m, 0.5) else "x" + str(m))
+	var rcost := sim.equipment.repair_cost(item_id)  # region F9W3
 	return {
+		"repair": "Repair: %d plate" % rcost if rcost > 0 else "",
 		"name": str(bdef.get("name", g.base)), "rarity": g.rarity, "ilvl": g.ilvl,
 		"color": Color.html(str(eq["rarity"][g.rarity].get("color", "#c0c0c8"))),
 		"slot_name": str(eq["slots"].get(g.slot, {}).get("name", g.slot)),

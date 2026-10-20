@@ -878,6 +878,11 @@ func unequip(cid: int, slot: String) -> bool:
 func socket(item_id: int, upgrade_id: String) -> bool:
 	_record("socket", [item_id, upgrade_id])  # save-load
 	return equipment.socket(item_id, upgrade_id)
+
+
+func repair_gear(item_id: int) -> bool:  # region F9W3
+	_record("repair_gear", [item_id])  # save-load
+	return equipment.repair(item_id)
 # endregion
 
 
