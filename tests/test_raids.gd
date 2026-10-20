@@ -46,7 +46,7 @@ func test_raid_type_follows_points() -> void:
 	for i in 200:
 		seen[sim.threats.pick_raid_type(60.0)] = true
 	for id: String in sim.defs.raids:
-		assert_true(seen.has(id) or sim.defs.raids[id].get("scripted", false), "%s should be reachable at high points" % id)  # O1: scripted raids are never rolled
+		assert_true(seen.has(id) or sim.defs.raids[id].get("scripted", false) or sim.defs.raids[id].get("faction", "creature") != "creature", "%s should be reachable at high points" % id)  # O1: scripted raids are never rolled; F2e: drone raids (faction metropolis) come only from the metro track
 
 
 func test_swarm_spawns_crawlers_at_edge() -> void:

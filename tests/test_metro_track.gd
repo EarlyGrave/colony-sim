@@ -5,9 +5,6 @@ extends TestCase
 func _defs(on := true) -> Defs:
 	var d := Defs.get_default().duplicate_defs()
 	d.balance["metro"]["enabled"] = on
-	if not on:  # the shared default defs may already carry injected drone rows (metro ships enabled)
-		for id: String in d.metro.get("raids", {}):
-			d.raids.erase(id)
 	d.balance["metro"]["first_raid_day"] = 0.0
 	d.balance["threat"]["first_wave_max_points"] = 1000.0
 	return d
@@ -133,7 +130,6 @@ func test_disabled_is_inert() -> void:
 	m.note_covert_sale(10)
 	assert_eq(m.defiance, 0.0)
 	assert_false(m.tick())
-	assert_false(sim.defs.raids.has("drone_sweep"))
 	for _i in sim.ticks_per_day * 2:
 		sim.step()
 	assert_eq(m.raids_started, 0)

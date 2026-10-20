@@ -31,7 +31,7 @@ static func forecast(sim: Simulation) -> Dictionary:
 	var total := 0.0
 	for id: String in sim.defs.raids:
 		var r: Dictionary = sim.defs.raids[id]
-		if float(r["min_points"]) <= pts and not r.get("scripted", false):
+		if float(r["min_points"]) <= pts and not r.get("scripted", false) and r.get("faction", "creature") == "creature":  # F2e: no drone rows
 			ids.append(id)
 			total += float(r["weight"])
 	var lo := 1 << 30

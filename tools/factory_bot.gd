@@ -208,7 +208,7 @@ func _f2b_building() -> bool:
 func _f2b_act() -> void:
 	if sim.path() == "fight" and sim.tick % 1200 == 60:
 		log.append("d%.1f F2b alive %d turrets %d waves %d metro %d def %.0f uplink %s asl %d/%d" % [_day_f(), sim.colonists.alive_count(), sim.buildings.count_of("turret"), sim.threats.wave_index, sim.threats.metro().raids_started, sim.threats.metro().defiance, str(sim.fight_escape.uplink() != null), sim.fight_escape.assault_step, sim.fight_escape.assault_failed])
-	if sim.path() == "fight" and sim.tutorial != null and not sim.tutorial.finished():
+	if sim.tutorial != null and not sim.tutorial.finished() and (sim.path() == "fight" or sim.tick >= int(_knob("tut_skip_day", 6)) * sim.ticks_per_day):  # region F2e: bot runs are never held by the tutorial wave hold
 		sim.tutorial.skip_all()  # a player has long finished the tutorial by the path choice; its wave hold also froze the Metropolis track
 	if sim.path() != "fight" or not (sim.milestones.is_tier_done(3) or sim.petition.done_phases.size() >= 3):  # petition replaces the tier-3 audit wall
 		return
