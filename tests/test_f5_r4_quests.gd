@@ -52,8 +52,12 @@ func test_data_loaded_and_text_short() -> void:
 		assert_true(m.get_string(1).length() <= 70, m.get_string(1))
 	var pa: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/flavor.json"))["pa"]
 	for k in ["r4_good_behaviour", "r4_drone_toll", "r4_quiet_freight", "r4_midgame"]:
-		assert_true((pa[k] as Array).size() >= 2, k)
-		for l: String in pa[k]:
+		# F6W2 re-keyed these per beat: {beat: [lines]}
+		var lines: Array = []
+		for b: String in (pa[k] as Dictionary):
+			lines.append_array(pa[k][b])
+		assert_true(lines.size() >= 2, k)
+		for l: String in lines:
 			assert_true(l.length() <= 70, l)
 
 
