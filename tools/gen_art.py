@@ -813,6 +813,239 @@ def machine_art():
 # endregion
 
 
+# region F8 gear icons
+GPAL = dict(PAL)
+GPAL.update({
+    "c": "#6ae6ff", "C": "#2a9ab8", "z": "#e8f4ff",  # plasma glow
+    "n": "#8a5a32", "N": "#5a3a20",  # wood / leather handle
+    "e": "#6a7a5a", "E": "#46543c",  # olive fabric
+    "j": "#4a5a70", "J": "#2e3a4c",  # vest / kevlar
+    "u": "#c8a060", "U": "#8a6a3a",  # work glove leather
+    "f": "#d8c8a8", "F": "#a89878",  # underlay cloth
+})
+
+GEAR_ICONS = {
+    "prison_shiv": [
+        "................",
+        "..............ll",
+        ".............lwl",
+        "............lwl.",
+        "...........lwl..",
+        "..........lwl...",
+        ".........lwl....",
+        "........lwl.....",
+        ".......lml......",
+        "......mMM.......",
+        ".....nmM........",
+        "....nN..........",
+        "...nN...........",
+        "..nN............",
+        ".MM.............",
+        "................",
+    ],
+    "rifle": [
+        "................",
+        "................",
+        "................",
+        "......mm........",
+        "...mmmmmmmmmMMM.",
+        "mlmmMMMMMMMMmmMM",
+        "mmMMMMMMMMMmmnnN",
+        "..MM.mM.MmmnnnnN",
+        "......MMMM.nnnN.",
+        ".......MM..nnN..",
+        ".......MM.......",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
+    "smg": [
+        "................",
+        "................",
+        "................",
+        "................",
+        "..mm............",
+        ".mmmmmmmmmmmm...",
+        "mlmMMMMMMMmmMMM.",
+        "mmmmmmmmmMMMMMM.",
+        "....MM.mMM.mMM..",
+        "....MM.....MM...",
+        ".........mmMM...",
+        ".........mm.....",
+        ".........mm.....",
+        "................",
+        "................",
+        "................",
+    ],
+    "kevlar_vest": [
+        "................",
+        "..jjj......jjj..",
+        ".jjjjj....jjjjj.",
+        ".jjjjjjjjjjjjjj.",
+        ".jjjjjjjjjjjjjj.",
+        ".jJjjjjjjjjjjJj.",
+        "..jjJjjjjjjJjj..",
+        "..jjjJjjjjJjjj..",
+        "..jjjJJjjJJjjj..",
+        "..jmmJJJJJJmmj..",
+        "..jmmjjjjjjmmj..",
+        "..jjjjjjjjjjjj..",
+        "..jJJJJJJJJJJj..",
+        "..JJJJJJJJJJJJ..",
+        "................",
+        "................",
+    ],
+    "helmet": [
+        "................",
+        "................",
+        "....mmmmmmmm....",
+        "...mllmmmmmmM...",
+        "..mlmmmmmmmmmM..",
+        "..mlmmmmmmmmmM..",
+        "..mmmmmmmmmmMM..",
+        "..mmmmmmmmmmMM..",
+        "..mmkkkkkkkkMM..",
+        "..mmMkbbbbkMMM..",
+        "..mM.kkkkkk.MM..",
+        "..MM........MM..",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
+    "plasma_blade": [
+        "................",
+        "............zzc.",
+        "...........zcCC.",
+        "..........zcCC..",
+        ".........zcCC...",
+        "........zcCC....",
+        ".......zcCC.....",
+        "......zcCC......",
+        ".....zcC........",
+        "...mmmMM........",
+        "..mMmnM.........",
+        ".nMMn...........",
+        "nNnN............",
+        "NN..............",
+        "................",
+        "................",
+    ],
+    "work_gloves": [
+        "................",
+        "....u.u.u.......",
+        "...uuuuuuu......",
+        "...uuuuuuuu.....",
+        "...uUuuuuuuu....",
+        "...uuuuuuuuu....",
+        "..uuuuuuuuuU....",
+        "..uuuuuuuuUU....",
+        "...uuuuuuUU.....",
+        "....uuuuUU......",
+        "....UUUUUU......",
+        "....UEEEEU......",
+        "....EEEEEE......",
+        "................",
+        "................",
+        "................",
+    ],
+    "greaves": [
+        "................",
+        "................",
+        "...mmmm..mmmm...",
+        "...mllM..mllM...",
+        "...mlmM..mlmM...",
+        "...mmmM..mmmM...",
+        "...mlmM..mlmM...",
+        "...mmmM..mmmM...",
+        "...mmMM..mmMM...",
+        "...MMMM..MMMM...",
+        "..mmmmm..mmmmm..",
+        "..mmmMM..mmmMM..",
+        "..MMMMM..MMMMM..",
+        "................",
+        "................",
+        "................",
+    ],
+    "underlay": [
+        "................",
+        "................",
+        "..ff........ff..",
+        ".ffff.ffff.ffff.",
+        ".fffffffffffffF.",
+        ".fffffffffffffF.",
+        "..fffFfffffFfF..",
+        "...ffFfffffFf...",
+        "....fFfffffF....",
+        "....fFfffffF....",
+        "....fFfffffF....",
+        "....FFffffFF....",
+        "................",
+        "................",
+        "................",
+        "................",
+    ],
+    "socket": [
+        "................",
+        "................",
+        ".....kkkkkk.....",
+        "....kttttttk....",
+        "...kttzzzzttk...",
+        "..kttzllllzttk..",
+        "..ktzlkkkklztk..",
+        "..ktzlk..klztk..",
+        "..ktzlk..klztk..",
+        "..ktzlkkkklztk..",
+        "..kttzllllzttk..",
+        "...kttzzzzttk...",
+        "....kttttttk....",
+        ".....kkkkkk.....",
+        "................",
+        "................",
+    ],
+}
+GEAR_FRAME_COLORS = {
+    "common": "#c0c0c8", "uncommon": "#5fd36b", "rare": "#4a90ff",
+    "epic": "#b35cff", "legendary": "#ffb347",
+}
+
+
+def outline(img, color="#1a1420"):
+    """Add a 1px dark outline around opaque pixels that sit next to transparency."""
+    w, h = img.size
+    src = img.copy()
+    for y in range(h):
+        for x in range(w):
+            if src.getpixel((x, y))[3]:
+                continue
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and src.getpixel((nx, ny))[3] \
+                        and src.getpixel((nx, ny)) != rgba(color):
+                    img.putpixel((x, y), rgba(color))
+                    break
+    return img
+
+
+def gear_art():
+    for name, rows in GEAR_ICONS.items():
+        img = grid(rows, GPAL)
+        if name != "socket":
+            img = outline(img)
+        save(img, "gear_" + name)
+    for rarity, col in GEAR_FRAME_COLORS.items():
+        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, 0, 15, 15], outline=rgba(col))
+        d.rectangle([1, 1, 14, 14], outline=rgba(col, 90))
+        for cx, cy in ((0, 0), (15, 0), (0, 15), (15, 15)):  # round the corners
+            img.putpixel((cx, cy), (0, 0, 0, 0))
+        save(img, "gear_frame_" + rarity)
+# endregion
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     colonists()
@@ -830,6 +1063,7 @@ def main():
     atmosphere_art()  # region G1c
     belt_art()  # region A2c
     machine_art()  # region A2c
+    gear_art()  # region F8
     print("sprites written to", os.path.normpath(OUT))
 
 
