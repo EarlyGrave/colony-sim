@@ -6,7 +6,7 @@ var _shown: Array = []
 
 
 func _setup_flags() -> void:
-	SeenFlags.path = "user://test_seen_flags.json"
+	SeenFlags.path = "user://test_seen_flags_%d.json" % OS.get_process_id()
 	SeenFlags.reset()
 
 

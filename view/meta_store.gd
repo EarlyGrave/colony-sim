@@ -36,10 +36,14 @@ static func save_state(m: MetaState, path := PATH) -> bool:
 # region O2
 const HINT_PATH := "user://hints.json"
 const HINT_MODES: Array = ["Full", "New", "Off"]
+## Tests point this at a per-process scratch file so parallel runs never share user://hints.json.
+static var hint_path := HINT_PATH
 
 
 ## Tutorial hint density: "Full" | "New" | "Off" (default "Full").
-static func load_hint_density(path := HINT_PATH) -> String:
+static func load_hint_density(path := "") -> String:
+	if path == "":
+		path = hint_path
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
 		return "Full"
@@ -49,7 +53,9 @@ static func load_hint_density(path := HINT_PATH) -> String:
 	return "Full"
 
 
-static func save_hint_density(mode: String, path := HINT_PATH) -> bool:
+static func save_hint_density(mode: String, path := "") -> bool:
+	if path == "":
+		path = hint_path
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
 		return false

@@ -369,7 +369,7 @@ func test_gear_screen_fits() -> void:
 # region F10W3
 func test_new_badges_do_not_overlap_or_grow_buttons() -> void:
 	var old_path := SeenFlags.path
-	SeenFlags.path = "user://test_phone_badges_seen.json"
+	SeenFlags.path = "user://test_phone_badges_seen_%d.json" % OS.get_process_id()
 	SeenFlags.reset()
 	var game := _make_game()
 	game.sim.run_ticks(60)
