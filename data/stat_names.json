@@ -1,0 +1,21 @@
+{
+	"_comment": "F8: human names for StatBlock keys and affix ids. pct=true -> value is a fraction shown as a percent.",
+	"accuracy": {"name": "Accuracy", "pct": true},
+	"crit_chance": {"name": "Crit chance", "pct": true},
+	"crit_mult": {"name": "Crit multiplier", "pct": false},
+	"pen_pct_phys": {"name": "Physical penetration", "pct": true},
+	"pen_pct_energy": {"name": "Energy penetration", "pct": true},
+	"flat_pen_phys": {"name": "Flat physical penetration", "pct": false},
+	"flat_pen_energy": {"name": "Flat energy penetration", "pct": false},
+	"armor_phys": {"name": "Armour", "pct": false},
+	"armor_energy": {"name": "Energy armour", "pct": false},
+	"flat_phys": {"name": "Physical block", "pct": false},
+	"flat_energy": {"name": "Energy block", "pct": false},
+	"damage": {"name": "Damage", "pct": false},
+	"dmg_pct": {"name": "Damage", "pct": true},
+	"attack_speed": {"name": "Attack speed", "pct": true},
+	"max_hp": {"name": "Max HP", "pct": false},
+	"move_speed": {"name": "Move speed", "pct": true},
+	"ammo_eff": {"name": "Ammo efficiency", "pct": true},
+	"durability_max": {"name": "Durability", "pct": false}
+}

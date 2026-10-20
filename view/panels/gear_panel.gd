@@ -32,15 +32,14 @@ static func rows(sim: Simulation, cid: int) -> Array:
 	return out
 
 
-static func stat_line(g: GearItem) -> String:
+static func stat_line(g: GearItem) -> String:  # region F8: human stat names
 	var parts: Array[String] = []
 	var keys: Array = g.stats.keys()
 	keys.sort()
 	for k: String in keys:
 		var v := float(g.stats[k])
-		if v == 0.0:
-			continue
-		parts.append(("%s %d%%" % [k, roundi(v * 100.0)]) if absf(v) < 1.0 else ("%s %s" % [k, str(snappedf(v, 0.1))]))
+		if v != 0.0:
+			parts.append(StatNames.fmt(k, v))
 	return ", ".join(parts)
 
 
