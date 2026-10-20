@@ -27,13 +27,25 @@ static func summarize(sim: Simulation, reason: String) -> Dictionary:
 	pts += perks * float(w["per_perk_learned"])
 	pts += sim.debt.legacy_points * float(w["debt_points_weight"])
 	pts += sim.progression.milestones * float(w.get("per_milestone", 0.0))  # region PW3
+	var esc := escape_points(sim)  # region F4
+	pts += esc
 	pts *= ending_legacy_mult(sim)  # region F4b
 	return {
 		"reason": reason, "seed": sim.seed_value, "days": days,
 		"contracts": fulfilled, "essence": delivered, "freed": freed, "stayed": stayed,
 		"perks": perks, "debt_points": sim.debt.legacy_points,
 		"contamination": sim.contamination.level, "legacy": int(floor(pts)),
+		"extracted": sim.fight_escape.extracted, "escape_credit": sim.contraband.escape_credit, "escape_points": esc,  # region F4
 	}
+
+
+# region F4
+## Escape path payout: every colonist who made the pickup, plus unspent credit (data/contraband.json "legacy").
+static func escape_points(sim: Simulation) -> float:
+	var lw: Dictionary = sim.defs.contraband.get("legacy", {})
+	var credit := minf(float(sim.contraband.escape_credit), float(lw.get("credit_cap", 0.0)))
+	return sim.fight_escape.extracted * float(lw.get("per_extracted", 0.0)) + credit * float(lw.get("per_credit", 0.0))
+# endregion
 
 
 # region NG

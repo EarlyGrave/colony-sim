@@ -23,12 +23,14 @@
 	"shakedown_suspicion": 10,
 	"suspicion_per_unit": 2.0,
 	"informant_suspicion_mult": 2.0,
-	"suspicion_decay_day": 1.0,
+	"suspicion_decay_day": 4.0,
+	"suspicion_cap": 95,
 	"inspection_at": 60,
 	"raid_at": 90,
-	"inspection_confiscate": 10,
-	"raid_confiscate": 20,
+	"inspection_confiscate": 5,
+	"raid_confiscate": 10,
 	"inspection_audit_mult": 1.3,
 	"inspection_days": 5,
-	"inspection_cooldown_days": 3
+	"inspection_cooldown_days": 3,
+	"legacy": {"per_extracted": 25, "per_credit": 0.5, "credit_cap": 40}
 }

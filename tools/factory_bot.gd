@@ -121,6 +121,7 @@ var suspicion_peak := 0.0
 var gear_equipped := 0
 var branches_picked := 0
 var _last_sale_day := -999
+var _gather_day := -1.0  # region F4a
 const PATH_IDS := ["", "submit", "fight", "escape"]
 
 
@@ -130,13 +131,13 @@ func chosen_path() -> String:
 
 func _f1_act() -> void:
 	var want := chosen_path()
-	if want != "" and sim.path() == "" and sim.day() >= _knob("path_day", 45):
+	if want != "" and sim.path() == "" and sim.day() >= _knob("path_day", 30 if want == "escape" else 45):  # region F4a: escape needs time for sales + pickup
 		sim.set_path(want)
 	if sim.contraband != null:
 		suspicion_peak = maxf(suspicion_peak, sim.contraband.suspicion)
 	var every := _knob("sell_every", 0)
 	if every > 0 and sim.path() == "escape" and sim.day() - _last_sale_day >= every:
-		if sim.covert_sale(_knob("sell_n", 5)):
+		if sim.covert_sale(mini(_knob("sell_n", 10), sim.items.count_stored("refined_essence"))):  # region F4a: default 10, sells what is there
 			_last_sale_day = sim.day()
 	if _knob("endgame", 0) == 1:
 		match sim.path():
@@ -146,13 +147,39 @@ func _f1_act() -> void:
 			"escape":
 				sim.contact_bandits()
 				sim.pay_bandit_fee()
-				sim.start_extraction()
+				_f4a_rally()  # region F4a: gather first, then call the pickup
+## Escape path: optional extra debt payments wait until the bandit fee is covered (installments are still paid).
+func _f4a_saving() -> bool:
+	return sim.path() == "escape" and _knob("sell_every", 0) > 0 and not sim.fight_escape.paid and sim.contraband.escape_credit < sim.fight_escape.bandit_fee()
+
+
 	if _knob("manifest", 0) > 0 and sim.shuttle.manifest != _knob("manifest", 0):
 		sim.set_manifest(_knob("manifest", 0))
 	if _knob("equip", 1) == 1:  # region F3a: default ON (eval: alive>=8 6/10 both ways)
 		_equip_best()
 	if _knob("branch_pick", 0) == 1:
 		_pick_branches()
+
+
+# region F4a
+## Escape endgame: once the fee is paid everybody walks to the extraction point; the pickup is called when 3/4 of the
+## living colonists stand there (or after 2 days of gathering), and everybody keeps walking while the countdown runs.
+func _f4a_rally() -> void:
+	var fe: FightEscape = sim.fight_escape
+	if not fe.paid or sim.endings.won("escape"):
+		return
+	if _gather_day < 0.0:
+		_gather_day = _day_f()
+	for c in sim.colonists.list:
+		if c.alive:
+			sim.set_drafted(c.id, true)
+			sim.order_move(c.id, fe.extract_cell)
+	if fe.counting:
+		return
+	var alive := sim.colonists.alive_count()
+	if fe.colonists_at_point().size() * 4 >= alive * 3 or _day_f() - _gather_day > 2.0:
+		sim.start_extraction()
+# endregion
 
 
 func _equip_best() -> void:
@@ -300,7 +327,7 @@ func _upkeep() -> void:
 				sim.pay_debt(c.id, mini(mini(avail, inst - ist.period_paid), ist.remaining()))
 	debt_stock = sim.items.count_stored("refined_essence") - floor_keep - 3 - _research_reserve()
 	var hoard := _hoarding()  # region R4
-	if target != null and debt_stock > 0 and not hoard:
+	if target != null and debt_stock > 0 and not hoard and not _f4a_saving():
 		sim.pay_debt(target.id, mini(debt_stock, sim.debt.state_of(target).remaining()))
 	var reserve := maxi(0, want - have) * 10
 	var stock := sim.items.count_stored("refined_essence") - reserve
@@ -1005,6 +1032,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		"debt_pct": sim.milestones.debt_paid_pct(), "end_day": sim.day(), "blocker": bot.blocker(), "nitrogen_nodes": nit_nodes,
 		"built": {}, "steps": bot._step, "log": bot.log.duplicate(),
 		"path": sim.path(), "suspicion_peak": bot.suspicion_peak, "metro_raids": sim.threats.metro().raids_started, "defiance": snappedf(sim.threats.metro().defiance, 0.1), "gear_equipped": bot.gear_equipped, "branches": bot.branches_picked,  # region F1b
+		"esc": [sim.fight_escape.paid, sim.fight_escape.extracted, sim.contraband.escape_credit, sim.contraband.sales, sim.contraband.inspections, sim.contraband.raids, sim.fight_escape.contacted],  # region F4a
 		"ending_won": ",".join(PackedStringArray(sim.endings.path_ids().filter(func(i: String) -> bool: return sim.endings.won(i)))),
 	}
 	for b in sim.buildings.list:
