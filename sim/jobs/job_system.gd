@@ -187,7 +187,7 @@ func work_order(c: Colonist) -> Array[String]:
 ## work-speed multiplier (1.0 for unskilled work).
 func work_tick(c: Colonist, work_type: String) -> float:
 	var skill: String = sim.defs.work["types"][work_type]["skill"]
-	var generic := maxf(0.0, 1.0 + sim.perks.mod(c, "work_speed"))  # region perks
+	var generic := maxf(0.0, 1.0 + sim.perks.mod(c, "work_speed")) * sim.traits.shift_mult(c)  # region perks + traits (night/day)
 	if skill == "":
 		return generic
 	var mult := c.skills.speed_mult(sim.defs, skill)

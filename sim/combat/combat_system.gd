@@ -27,7 +27,7 @@ func hit_chance(c: Colonist, w: Dictionary, dist: float) -> float:
 		p -= float(cfg["range_penalty"]) * maxf(0.0, dist - 1.0)
 	if c.health != null:
 		p *= clampf(c.health.manipulation, 0.0, 1.0)
-	p += sim.perks.mod(c, "hit_chance")  # region perks
+	p += sim.perks.mod(c, "hit_chance") + sim.traits.mod(c, "hit")  # region perks + traits
 	if c.combat != null:
 		p += att_of(c)[StatBlock.ACC]  # region E1
 	return clampf(p, float(cfg["hit_min"]), float(cfg["hit_max"]))
@@ -101,10 +101,12 @@ func resum(c: Colonist) -> void:
 	if sim.equipment != null and sim.equipment.totals.has(c.id):  # region E4: gear totals feed both vectors
 		_att[c.id] = (sim.equipment.totals[c.id] as PackedFloat64Array).duplicate()
 		_def[c.id] = (sim.equipment.totals[c.id] as PackedFloat64Array).duplicate()
+		_def[c.id][StatBlock.FLAT_PHYS] += sim.traits.mod(c, "armor_flat")  # region traits
 		resum_count += 1
 		return
 	_att[c.id] = StatBlock.make()
 	_def[c.id] = StatBlock.make()
+	_def[c.id][StatBlock.FLAT_PHYS] += sim.traits.mod(c, "armor_flat")  # region traits
 	resum_count += 1
 
 
