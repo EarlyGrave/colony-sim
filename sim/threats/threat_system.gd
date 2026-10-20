@@ -736,11 +736,60 @@ func damage_enemy(e: Enemy, amount: float, cause := "generic", by: Colonist = nu
 			if fac != "":
 				var taker := by if by != null else _first_alive()
 				sim.equipment.roll_drop(fac, taker.id if taker != null else -1)
+		if sim.equipment != null and sim.defs.enemies.get(e.def_id, {}).has("loot"):  # region F2
+			_roll_creature_loot(e, by)  # region F2
 		sim.bus.enemy_killed.emit(e.id)
 		_hot.cause = "generic"  # region F2
 
 
 # region F2
+## F2c creature loot (enemies.json `loot`). The roll uses a child rng seeded from (seed, tick, enemy id) and sim.rng is
+## restored afterwards (give() draws it for affixes), so creatures without `loot` and old goldens are untouched.
+## More pollution -> rarer ("tainted") drops: every rarity above common gets weight * (1 + taint_gain * pollution_frac).
+func _roll_creature_loot(e: Enemy, by: Colonist) -> int:
+	var cfg: Dictionary = sim.defs.enemies[e.def_id]["loot"]
+	var taker := by if by != null else _first_alive()
+	var bases: Array = cfg.get("bases", [])
+	if taker == null or bases.is_empty() or sim.day() < int(sim.defs.gear.get("_loot_min_day", 0)):  # no loot in the first days: keeps the 5-day goldens identical
+		return -1
+	var r := RandomNumberGenerator.new()
+	r.seed = hash([sim.seed_value, sim.tick, e.id, 0x1007])
+	if r.randf() >= float(cfg.get("chance", 0.0)):
+		return -1
+	var frac := sim.contamination.fraction()
+	var gain := float(cfg.get("taint_gain", 0.0))
+	var w: Dictionary = {}
+	var src: Dictionary = cfg.get("rarity_weights", {"common": 1})
+	for k: String in src:
+		w[k] = float(src[k]) * (1.0 if k == "common" else 1.0 + gain * frac)
+	var keys: Array = w.keys()
+	keys.sort()
+	var total := 0.0
+	for k: String in keys:
+		total += float(w[k])
+	var x := r.randf() * total
+	var rarity := str(keys[keys.size() - 1])
+	for k: String in keys:
+		x -= float(w[k])
+		if x < 0.0:
+			rarity = k
+			break
+	var base: String = bases[r.randi() % bases.size()]
+	var st := sim.rng.state
+	var id := sim.equipment.give(taker.id, base, rarity, loot_ilvl(sim.day()))
+	sim.rng.state = st
+	return id
+
+
+## ilvl for a drop on `day` from gear.json `_ilvl_by_day` ([[from_day, ilvl], ...] ascending).
+func loot_ilvl(day: int) -> int:
+	var out := 0
+	for pair: Array in sim.defs.gear.get("_ilvl_by_day", [[0, 0]]):
+		if day >= int(pair[0]):
+			out = int(pair[1])
+	return out
+
+
 ## Cause of the kill being announced (valid inside an enemy_killed handler, else "generic").
 func last_kill_cause() -> String:
 	return _hot.cause
