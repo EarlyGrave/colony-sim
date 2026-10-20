@@ -154,6 +154,7 @@
 	"reg_enabled": false,
 	"e2_enabled": true,
 	"fixation_enabled": false,
+	"passives_v2_enabled": false,
 	"s1_enabled": true,
 	"s2_enabled": true,
 	"s5_shuttle_bot": {"target_days": 60, "min_launch_seeds": 1, "min_siege_win_rate": 0.5, "sustain_refine_cap_percent": 50}
