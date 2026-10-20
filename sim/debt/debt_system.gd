@@ -146,7 +146,7 @@ func _daily(c: Colonist, st: DebtState) -> void:
 	var inst := sim.traits.installment(c, int(cfg["installment"]))  # region traits
 	if sim.day() >= st.due_day and st.period_paid < inst:
 		# Grace period, then despair grows in proportion to the unpaid share.
-		if sim.day() >= st.due_day + int(cfg.get("grace_days", 0)):
+		if sim.day() >= st.due_day + int(cfg.get("grace_days", 0)) + int(sim.endings.effect("grace_days", 0.0)):  # region F9W2
 			if sim.quests != null and sim.quests.is_enabled() and not sim.quests.flag("installment_missed"):  # region R1
 				sim.quests.set_flag("installment_missed")
 			var short := float(inst - st.period_paid) / float(maxi(1, inst))

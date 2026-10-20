@@ -128,7 +128,7 @@ func raid_points(index: int) -> float:
 # region O3
 ## Difficulty preset multiplier (start opt wave_mult); exactly 1.0 when absent.
 func _o3_mult() -> float:
-	return float(sim.opts.get("wave_mult", 1.0)) * sim.quests.mod("wave_mult")  # region Q0: 1.0 unless a quest set it
+	return float(sim.opts.get("wave_mult", 1.0)) * sim.quests.mod("wave_mult") * sim.endings.effect("wave_mult", 1.0)  # region F9W2 path effect; region Q0: 1.0 unless a quest set it
 # endregion
 
 
