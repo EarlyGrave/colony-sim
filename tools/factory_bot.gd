@@ -997,7 +997,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		"food": sim.items.count_stored("raw_food") + sim.items.count_stored("meal"), "over": sim.game_over_reason,
 		"debt_pct": sim.milestones.debt_paid_pct(), "end_day": sim.day(), "blocker": bot.blocker(), "nitrogen_nodes": nit_nodes,
 		"built": {}, "steps": bot._step, "log": bot.log.duplicate(),
-		"path": sim.path(), "suspicion_peak": bot.suspicion_peak, "gear_equipped": bot.gear_equipped, "branches": bot.branches_picked,  # region F1b
+		"path": sim.path(), "suspicion_peak": bot.suspicion_peak, "metro_raids": sim.threats.metro().raids_started, "defiance": snappedf(sim.threats.metro().defiance, 0.1), "gear_equipped": bot.gear_equipped, "branches": bot.branches_picked,  # region F1b
 		"ending_won": ",".join(PackedStringArray(sim.endings.path_ids().filter(func(i: String) -> bool: return sim.endings.won(i)))),
 	}
 	for b in sim.buildings.list:
