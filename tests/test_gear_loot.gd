@@ -5,6 +5,7 @@ extends TestCase
 func _scene(seed_v: int) -> Simulation:
 	var sim := make_sim(seed_v, false, 40, 40, peaceful_defs())
 	sim.colonists.spawn(Vector2i(5, 5))
+	_bare(sim)
 	sim.tick = 7 * sim.ticks_per_day
 	return sim
 
@@ -76,3 +77,13 @@ func test_no_loot_before_min_day() -> void:
 	var e := sim.threats._spawn("brute", Vector2i(8, 8))
 	sim.threats.damage_enemy(e, 9999.0, "generic", sim.colonists.list[0])
 	assert_eq(sim.equipment.instances.size(), 0, "grace period")
+
+
+## F3a: inmates start with a shiv; these tests count gear instances / item ids, so they begin from an empty armoury.
+func _bare(sim: Simulation) -> Simulation:
+	sim.equipment.instances.clear()
+	sim.equipment.equipped.clear()
+	sim.equipment.totals.clear()
+	sim.equipment._next_id = 1
+	sim.colonists._f3a_pending.clear()
+	return sim

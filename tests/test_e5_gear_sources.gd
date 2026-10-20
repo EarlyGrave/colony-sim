@@ -5,6 +5,7 @@ extends TestCase
 func _scene(seed_v := 3) -> Array:
 	var sim := make_sim(seed_v, false, 40, 40, peaceful_defs())
 	var c := sim.colonists.spawn(Vector2i(5, 5))
+	_bare(sim)
 	return [sim, c]
 
 
@@ -89,3 +90,13 @@ func test_drone_drops_deterministic_and_faction_gated() -> void:
 	var e: Enemy = sim.threats._spawn("crawler", Vector2i(20, 20))
 	sim.threats.damage_enemy(e, 9999.0)
 	assert_eq(sim.equipment.instances.size(), 0, "creatures drop no gear")
+
+
+## F3a: inmates start with a shiv; these tests count gear instances / item ids, so they begin from an empty armoury.
+func _bare(sim: Simulation) -> Simulation:
+	sim.equipment.instances.clear()
+	sim.equipment.equipped.clear()
+	sim.equipment.totals.clear()
+	sim.equipment._next_id = 1
+	sim.colonists._f3a_pending.clear()
+	return sim

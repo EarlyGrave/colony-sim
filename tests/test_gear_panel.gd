@@ -5,6 +5,7 @@ extends TestCase
 func _scene() -> Array:
 	var sim := make_sim(3, false, 40, 40, peaceful_defs())
 	var c := sim.colonists.spawn(Vector2i(5, 5))
+	_bare(sim)
 	return [sim, c]
 
 
@@ -36,3 +37,13 @@ func test_applies_only_with_gear_and_builds_tall_rows() -> void:
 	assert_eq(box.get_child_count(), sim.defs.equipment["slots"].size())
 	for ch in box.get_children():
 		assert_true((ch as Control).custom_minimum_size.y >= 64.0, "row >= 64 px")
+
+
+## F3a: inmates start with a shiv; these tests count gear instances / item ids, so they begin from an empty armoury.
+func _bare(sim: Simulation) -> Simulation:
+	sim.equipment.instances.clear()
+	sim.equipment.equipped.clear()
+	sim.equipment.totals.clear()
+	sim.equipment._next_id = 1
+	sim.colonists._f3a_pending.clear()
+	return sim

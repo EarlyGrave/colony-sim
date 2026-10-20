@@ -149,7 +149,7 @@ func _f1_act() -> void:
 				sim.start_extraction()
 	if _knob("manifest", 0) > 0 and sim.shuttle.manifest != _knob("manifest", 0):
 		sim.set_manifest(_knob("manifest", 0))
-	if _knob("equip", 0) == 1:
+	if _knob("equip", 1) == 1:  # region F3a: default ON (eval: alive>=8 6/10 both ways)
 		_equip_best()
 	if _knob("branch_pick", 0) == 1:
 		_pick_branches()
@@ -170,13 +170,20 @@ func _equip_best() -> void:
 			var g: GearItem = eq.instances[id]
 			if g.owner != c.id:
 				continue
+			if c.engineer and g.slot == "weapon" and g.base == "prison_shiv":
+				continue  # region F3a: the start shiv must not replace the engineer's rifle
 			var cur: GearItem = best.get(g.slot)
-			if cur == null or g.ilvl * 10 + rank.find(g.rarity) > cur.ilvl * 10 + rank.find(cur.rarity):
+			if cur == null or _f3a_score(g, rank) > _f3a_score(cur, rank):
 				best[g.slot] = g
 		for slot: String in best:
 			var g2: GearItem = best[slot]
 			if eq.equipped.get(c.id, {}).get(slot, -1) != g2.id and eq.equip(c.id, g2.id):
 				gear_equipped += 1
+
+
+## region F3a: ilvl, then rarity, then the base's catalogue value as the tiebreak (a vest beats a shiv at equal tier).
+func _f3a_score(g: GearItem, rank: Array) -> float:
+	return g.ilvl * 1000.0 + rank.find(g.rarity) * 100.0 + minf(99.0, float(sim.defs.gear.get(g.base, {}).get("value", 0)) / 100.0 * 100.0)
 
 
 func _pick_branches() -> void:
