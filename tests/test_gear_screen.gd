@@ -77,13 +77,13 @@ func test_twenty_items_make_twenty_cells_and_select() -> void:
 	assert_eq(p.sel_id, ids[7], "tap selects")
 
 
-func test_min_fifteen_cells_and_six_slots() -> void:
+func test_min_sixteen_cells_and_six_slots() -> void:
 	var s := _scene()
 	var sim: Simulation = s[0]
 	var c: Colonist = s[1]
 	sim.give_gear(c.id, "helmet", "common", 0)
 	var p := _open(sim, c.id)
-	assert_eq(p._grid.get_child_count(), 15)
+	assert_eq(p._grid.get_child_count(), 16)
 	assert_eq(p._doll.get_child_count(), 6)
 	for b in p._doll.get_children():
 		assert_true((b as Control).custom_minimum_size.x >= 72.0)
@@ -107,8 +107,8 @@ func test_refresh_follows_sim_changes_and_buttons_are_tall() -> void:
 	var sim: Simulation = s[0]
 	var c: Colonist = s[1]
 	var p := _open(sim, c.id)
-	assert_eq(p._grid.get_child_count(), 15)
-	for i in 16:
+	assert_eq(p._grid.get_child_count(), 16)
+	for i in 17:
 		sim.give_gear(c.id, "helmet", "common", i)
 	p.refresh()
 	assert_eq(p._grid.get_child_count(), 20, "grows by rows")

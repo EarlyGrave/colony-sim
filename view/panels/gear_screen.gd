@@ -1,15 +1,15 @@
 class_name GearScreen
 extends GamePanel
 ## F8: full gear screen. Left: paper-doll with one 72 px button per slot (2 columns). Centre: grid inventory of
-## stored gear (64 px cells, 5 columns, at least 15 cells). Right: item card + fighter profile + actions.
+## stored gear (64 px cells, 4 columns, at least 15 cells). Right: item card + fighter profile + actions.
 ## Tap only: tap an item/slot to select it, then Equip / Unequip / Socket. Commands go through Simulation.
 ## Icons come from GearIcons (W1) and the card from ItemCard (W3); both are loaded by path at run time so this
 ## panel still builds (letter fallback / plain text) if either is missing.
 
 const CELL := 64.0
 const SLOT := 72.0
-const COLS := 5
-const MIN_CELLS := 15
+const COLS := 4
+const MIN_CELLS := 16
 const ICONS_PATH := "res://view/gear_icons.gd"
 const CARD_PATH := "res://view/panels/item_card.gd"
 const DIM := Color(0.55, 0.57, 0.62)
@@ -67,7 +67,7 @@ func build() -> void:
 	row.add_child(_grid)
 	_side = VBoxContainer.new()
 	_side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_side.custom_minimum_size.x = 200.0
+	_side.custom_minimum_size.x = 240.0
 	row.add_child(_side)
 	_rebuild()
 

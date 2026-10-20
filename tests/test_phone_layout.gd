@@ -356,6 +356,8 @@ func test_gear_screen_fits() -> void:
 		for b in gs._doll.get_children() + gs._grid.get_children():
 			if b is Button:
 				assert_true((b as Button).size.x >= 63.5 and (b as Button).size.y >= 63.5, "%s cell %s" % [tag, (b as Button).size])
+		var cr := gs._side.get_children()[0].get_global_rect() as Rect2
+		assert_true(cr.position.y + 40.0 <= vp.y and cr.size.x >= 230.0, "%s item card visible %s" % [tag, cr])
 		assert_false(game.hud._o4_cluster.visible, tag + " thumb cluster hidden under the full-width sheet")
 		_check_state(game, tag + " gear sheet")
 		_drop_sheets(game)

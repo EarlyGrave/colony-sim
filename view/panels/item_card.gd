@@ -1,8 +1,9 @@
 class_name ItemCard
 extends PanelContainer
-## F8: read-only item card (title, slot, base stats, affixes, sockets, durability). Width <= 360 px.
+## F8: read-only item card (title, slot, base stats, affixes, sockets, durability). Width is flexible: min MIN_W, expands to the column, wraps text.
 ## Pure data in lines(); profile() gives the fighter summary. No commands, no signals.
 
+const MIN_W := 240.0
 const MAX_W := 360.0
 const HINT := "Select an item"
 const BASE_KEYS: Array[String] = ["damage", "armor_phys", "armor_energy", "flat_phys", "flat_energy", "accuracy", "crit_chance", "crit_mult"]
@@ -17,7 +18,8 @@ static func make(sim: Simulation, item_id: int) -> ItemCard:
 
 
 func _init() -> void:
-	custom_minimum_size = Vector2(MAX_W, 0)
+	custom_minimum_size = Vector2(MIN_W, 0)
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_box = VBoxContainer.new()
 	_box.add_theme_constant_override("separation", 4)
 	add_child(_box)
@@ -48,7 +50,8 @@ func _label(text: String, color: Color) -> void:
 	var l := Label.new()
 	l.text = text
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(MAX_W - 16.0, 0)
+	l.custom_minimum_size = Vector2(MIN_W - 20.0, 0)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	l.add_theme_color_override("font_color", color)
 	_box.add_child(l)
 
