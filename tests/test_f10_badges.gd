@@ -1,22 +1,28 @@
 extends TestCase
 ## F10W3: "NEW" badges on the gear / petition / orders buttons and the More button.
 
-const SCRATCH := "user://test_f10_badges_seen.json"
+var SCRATCH := "user://test_f10_badges_seen_%d.json" % OS.get_process_id()  # per process: parallel runs share user://
+var _hint_scratch := "user://test_f10_badges_hints_%d.json" % OS.get_process_id()
 var _old_path := ""
+var _old_hint_path := ""
 
 
 func before_each() -> void:
 	_old_path = SeenFlags.path
+	_old_hint_path = MetaStore.hint_path
 	SeenFlags.path = SCRATCH
+	MetaStore.hint_path = _hint_scratch
 	SeenFlags.reset()
 	MetaStore.save_hint_density("Full")
 
 
 func after_each() -> void:
+	super.after_each()
 	SeenFlags.reset()
 	SeenFlags.path = _old_path
-	MetaStore.save_hint_density("Full")
+	MetaStore.hint_path = _old_hint_path
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SCRATCH))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(_hint_scratch))
 
 
 func _make_game() -> GameController:
