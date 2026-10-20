@@ -88,3 +88,11 @@ alive 8/10 but gap 0.8 (rejected: breaks the core pillar). FINAL (applied on dev
 - Next batches (in order): BL balance restore → main; Collector relay + Remission ending; equip UI (equip/unequip/socket
   from the gear panel) + loot sources for gear; turn on contraband/metro/scent/objectives one at a time with bot numbers;
   skill specialization branches; story writer round 4 on the revelation beats.
+
+## 6. Next 5 tasks (in order)
+1. F1a balance (next_batches.md): get alive>=8 ≥8/10 and launch ≥1 at 60 d while pillar gap stays ≥2 (current dev: 7/10, 0, 2.2); then full suite + web_smoke → merge main + rollback row.
+2. F1d first-wave gate ON with the pacing tests fixed (`threat.first_wave_gate_days`).
+3. F2: metro raids live with bot numbers; Fight loop end to end (uplink + relay).
+4. F3: gear economy (start gear, bot equips, craft cost vs quota), all trait stats consumed.
+5. F4: Escape numbers + legacy payout, Submit → "New Names" NG+, Remission trial (owner decision first).
+Commands: see CLAUDE.md "Commands" (quick tests, sharded full suite, make_golden --regen, web_smoke, factory_eval --jobs≤3, kx_pillar_table).
