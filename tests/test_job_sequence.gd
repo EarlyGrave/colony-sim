@@ -3,7 +3,8 @@ extends TestCase
 
 const Scenario := preload("res://tests/scenario.gd")
 # Re-baselined 2026-10-19 after PW1 skill curve (L0 = 0.3x) + PW2 traits + TW3 lockdown changed job timing intentionally.
-const EXPECT := {1: "5cce1c248ae9779ba8831ee050234972735e3f53f54d79c78e77b91f99309549", 2: "2e436d3cad5d9aa7c1326021d566c3ac7802248f5371f35cc0ced57360822a26"}
+# Re-baselined 2026-10-20 (FX3, batch F3): seed 2 changed by F3c trait consumers (work_night/day speed, carry...) - verified: with TraitSystem.mod forced to 0 seed 2 reproduces the previous pin 2e436d3c...; seed 1 unchanged.
+const EXPECT := {1: "5cce1c248ae9779ba8831ee050234972735e3f53f54d79c78e77b91f99309549", 2: "59573e782155c22c470c9047a6aa6b105787714b116d68dfaecd90f0e90ae8a7"}
 
 
 func _record(seed_value: int, ticks: int) -> String:

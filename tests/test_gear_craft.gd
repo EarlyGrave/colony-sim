@@ -58,6 +58,7 @@ func test_crafting_consumes_inputs_and_produces_gear() -> void:
 	for rid: String in RECIPES:
 		var sim := make_sim(7, false, 40, 40, peaceful_defs())
 		var c := sim.colonists.spawn(Vector2i(5, 5))
+		_bare(sim)
 		var b := sim.buildings.place("workbench", Vector2i(10, 5), false)
 		var inp: Dictionary = sim.defs.recipes[rid]["inputs"]
 		for item: String in inp:
@@ -72,3 +73,12 @@ func test_crafting_consumes_inputs_and_produces_gear() -> void:
 		assert_eq(g.owner, c.id)
 		for item: String in inp:
 			assert_eq(int(b.input.get(item, 0)), 0, "%s consumed %s" % [rid, item])
+
+
+## F3a: inmates start with a shiv; this test counts gear instances, so it begins from an empty armoury.
+func _bare(sim: Simulation) -> void:
+	sim.equipment.instances.clear()
+	sim.equipment.equipped.clear()
+	sim.equipment.totals.clear()
+	sim.equipment._next_id = 1
+	sim.colonists._f3a_pending.clear()

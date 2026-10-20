@@ -76,6 +76,7 @@ func test_rifle_uses_pouch_and_perk_reduces() -> void:
 		var sim := _scene()
 		var c := sim.colonists.spawn(Vector2i(5, 5))
 		c.combat.weapon = "rifle"
+		sim.colonists._f3a_pending.clear()  # F3a would equip the start shiv over the hand-set rifle on the first tick
 		if perk:
 			sim.perks.state_of(c).add_buff("t", {"ammo_use": -0.5}, -1)
 		sim.set_drafted(c.id, true)
@@ -91,6 +92,7 @@ func test_dry_rifle_does_not_fire() -> void:
 	var sim := _scene()
 	var c := sim.colonists.spawn(Vector2i(5, 5))
 	c.combat.weapon = "rifle"
+	sim.colonists._f3a_pending.clear()
 	sim.set_drafted(c.id, true)
 	sim.ammo._pouch_init(c)
 	c.combat.pouch = 0
