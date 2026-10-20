@@ -412,3 +412,5 @@ HP); волны заканчиваются по таймеру и твари о�
   - Bot 60 d: alive>=8 6/10, audit 6/10, P1 1, launch 0. Full suite 1135 green; web smoke PASS (jsheap 148 MB).
 - BUG to fix next: tools/factory_bot.gd `_f4a_saving()` is declared inside `_f1_act()` → equip / branch picking / manifest are dead code in the bot since F4a (bot numbers since F4 are without gear equip).
 - FX5: factory_bot dead code fixed (`_f4a_saving` moved out of `_f1_act`). Bot 60 d before/after: alive>=8 6→7/10, audit 6/6, P1 1→0, gear_equipped 0 → 2-17 per seed.
+- F6 batch DONE → main c68d72e (plan docs/f6_plan.md). W1: quest beats can wait on conditions ("wait" AND/OR + wait_max_days); r4 lines use the story triggers (raids_survived 3, suspicion 40/60, d40/45). W2: FeedDirector speaks pa.<quest>.<beat> on quest_beat + d40/d50 midgame lines. W3: rename verb (pilot takes a dead inmate's name), epilogue echoes by r4 flags, masterwork line. Post-merge test fixes by orchestrator (test_f5_r4 PA dict, test_flavor skips epilogue_echo records).
+- Bot 60 d (with FX5): alive>=8 7/10, audit 6/10, P1 0, launch 0. Full suite 1159 green, web smoke PASS.
