@@ -13,6 +13,11 @@ static func register(log: QuestLog) -> void:
 	log.register_cond("installment_missed", func(_a: Variant) -> bool: return sim.quests.flag("installment_missed"))  # region N2
 	log.register_cond("suspicion_over", func(n: Variant) -> bool: return sim.contraband != null and sim.contraband.suspicion > float(n))  # region N2
 	log.register_cond("informant_alive", func(_a: Variant) -> bool: return informant_alive(sim))
+	# region W4
+	log.register_cond("raids_survived", func(n: Variant) -> bool: return sim.threats.metro().raids_repelled >= int(n))
+	log.register_cond("defiance_over", func(n: Variant) -> bool: return sim.threats.metro().defiance > float(n))
+	log.register_cond("gear_owned", func(n: Variant) -> bool: return gear_owned(sim) >= int(n))
+	# endregion
 
 
 ## arg: {block, v}. block "any" = any block that has a living member.
@@ -58,3 +63,15 @@ static func lowest_block(sim: Simulation) -> String:
 		if best == "" or sim.blocks.standing_of(b) < sim.blocks.standing_of(best):
 			best = b
 	return best
+
+
+# region W4
+## Gear instances whose owner is alive (worn or carried).
+static func gear_owned(sim: Simulation) -> int:
+	var n := 0
+	for id: int in sim.equipment.instances:
+		var c := sim.colonists.get_by_id(sim.equipment.instances[id].owner)
+		if c != null and c.alive:
+			n += 1
+	return n
+# endregion

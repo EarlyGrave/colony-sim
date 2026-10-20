@@ -178,6 +178,24 @@
 		}
 	},
 	"pa": {
+		"r4_good_behaviour": [
+			"A bonus is a loan with better lighting.",
+			"Seat 7 is reserved. Please do not ask for whom.",
+			"Armour is a form of ambition. Ambition is recorded."
+		],
+		"r4_drone_toll": [
+			"Drone 12 failed to return. Drone 13 has been informed.",
+			"Pilots are replaceable. So are walls. Please choose.",
+			"Smoke on the horizon. The Warden suggests it is yours."
+		],
+		"r4_quiet_freight": [
+			"A crate is not a sale. A sale is not a crate. File both.",
+			"Suspicion is at 60. The Warden is only curious. Loudly."
+		],
+		"r4_midgame": [
+			"Scars are non-refundable. Scars are also property.",
+			"Mid-term review: you are alive. This was not an assumption."
+		],
 		"path_submit": [
 			"Form 3-S accepted. Your continued service is appreciated.",
 			"Submission noted. Gratitude is optional but recorded."

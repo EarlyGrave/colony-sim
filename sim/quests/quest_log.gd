@@ -255,7 +255,7 @@ func _enter(qid: String, beat_id: String) -> void:
 	var b: Dictionary = beats[beat_id]
 	quests[qid]["beat"] = beat_id
 	log.append([sim.tick, qid, beat_id])
-	var text := str(b.get("text", ""))
+	var text := _w4_text(str(b.get("text", "")))  # region W4: {dead}
 	sim.bus.quest_beat.emit(qid, beat_id, text)
 	if text != "":
 		sim.bus.story_event.emit("quest_" + qid, text)
@@ -265,7 +265,7 @@ func _enter(qid: String, beat_id: String) -> void:
 		var opts: Array = []
 		for oid: String in _sorted(b["options"].keys()):
 			var o: Dictionary = b["options"][oid]
-			opts.append({"id": oid, "label": str(o.get("label", o.get("text", oid))), "enabled": _requires_ok(o.get("requires", {}))})
+			opts.append({"id": oid, "label": _w4_text(str(o.get("label", o.get("text", oid)))), "enabled": _requires_ok(o.get("requires", {}))})
 		offer(qid, beat_id, text, opts)
 	elif b.has("then"):
 		schedule(qid, str(b["then"]), float(b.get("delay_days", 1.0)))
@@ -277,7 +277,7 @@ func _resolve(qid: String, beat_id: String, opt_id: String) -> void:
 	var o: Dictionary = sim.defs.quests[qid]["beats"][beat_id]["options"][opt_id]
 	flags["%s.%s" % [qid, opt_id]] = true
 	_apply_effects(qid, o.get("effects", []))
-	var txt := str(o.get("text", ""))
+	var txt := _w4_text(str(o.get("text", "")))  # region W4
 	if txt != "":
 		sim.bus.story_event.emit("quest_" + qid, txt)
 	sim.bus.quest_resolved.emit(qid, opt_id)
@@ -298,6 +298,8 @@ func _finish(qid: String) -> void:
 
 func _requires_ok(r: Dictionary) -> bool:
 	if r.has("tag_alive") and not _w2_tag_alive(str(r["tag_alive"])):  # region W2
+		return false
+	if not _w4_requires(r):  # region W4
 		return false
 	if r.has("item") and sim.items.count_stored(str(r["item"])) < int(r.get("n", 1)):
 		return false
@@ -368,10 +370,12 @@ func _apply_effects(qid: String, effects: Array) -> void:
 					sim.blocks.apply_path(str(e["id"]))
 			"block_standing":  # region W3: target "strong"/"weak" = highest/lowest Standing block now
 				_w3_block_fx(e)
+			"trait", "credit", "suspicion", "defiance":  # region W4
+				_w4_fx(qid, e)
 			"letter":
 				if mod("pa_silent") > 0.0:  # region R1
 					continue
-				sim.bus.letter_received.emit(str(e.get("title", "Dispatch")), str(e.get("text", "")))
+				sim.bus.letter_received.emit(str(e.get("title", "Dispatch")), _w4_text(str(e.get("text", ""))))
 
 
 func _fx_items(item: String, n: int) -> void:
@@ -539,4 +543,64 @@ func _rv_on_enemy_killed(enemy_id: int) -> void:
 	for e: Enemy in sim.threats.enemies:
 		if e.id == enemy_id and e.def_id == "mimic":
 			set_flag("rv_mimic_killed")
+# endregion
+
+
+# region W4
+const DEAD_FALLBACK := "Inmate 4471"
+
+
+## Text placeholder {dead}: the last inmate who died (colonists keep their record), static name if none.
+func _w4_text(t: String) -> String:
+	if not t.contains("{dead}"):
+		return t
+	var name := DEAD_FALLBACK
+	for c in sim.colonists.list:
+		if not c.alive:
+			name = str(c.display_name)
+	return t.replace("{dead}", name)
+
+
+## Extra option gates: flag / not_flag (quest flags), informant_alive, gear_owned N.
+func _w4_requires(r: Dictionary) -> bool:
+	if r.has("flag") and not flag(str(r["flag"])):
+		return false
+	if r.has("not_flag") and flag(str(r["not_flag"])):
+		return false
+	if r.has("cond") and (not _conds.has(str(r["cond"])) or not bool(_conds[str(r["cond"])].call(true))):
+		return false
+	if r.has("informant_alive") and not SocietyConds.informant_alive(sim):
+		return false
+	if r.has("gear_owned") and SocietyConds.gear_owned(sim) < int(r["gear_owned"]):
+		return false
+	return true
+
+
+## trait {id, n=1}: grants an acquired trait to the n lowest-mood living inmates that can take it.
+## credit {n}: escape credit. suspicion {n}: Warden suspicion (+/-). defiance {n}: Metropolis defiance.
+func _w4_fx(_qid: String, e: Dictionary) -> void:
+	match str(e["verb"]):
+		"trait":
+			if sim.traits == null:
+				return
+			var cs: Array = []
+			for c in sim.colonists.list:
+				if c.alive:
+					cs.append(c)
+			cs.sort_custom(func(a: Colonist, b: Colonist) -> bool:
+				var ma := sim.mood.state_of(a).value
+				var mb := sim.mood.state_of(b).value
+				return a.id < b.id if ma == mb else ma < mb)
+			var left := int(e.get("n", 1))
+			for c: Colonist in cs:
+				if left > 0 and sim.traits.grant(c, str(e["id"])):
+					left -= 1
+		"credit":
+			if sim.contraband != null:
+				sim.contraband.escape_credit = maxi(0, sim.contraband.escape_credit + int(e["n"]))
+		"suspicion":
+			if sim.contraband != null:
+				sim.contraband.suspicion = clampf(sim.contraband.suspicion + float(e["n"]), 0.0, float(sim.contraband.cfg.get("suspicion_cap", 100.0)))
+		"defiance":
+			sim.threats.metro().add_defiance(float(e["n"]))
 # endregion

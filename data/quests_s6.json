@@ -1,0 +1,842 @@
+{
+	"r4_good_behaviour": {
+		"title": "Good Behaviour",
+		"_comment": "F5 W4 line A (submit). Story: docs/story/round4_midgame.md",
+		"trigger": {
+			"flag": "path_submit",
+			"min_day": 28
+		},
+		"start": "bonus",
+		"beats": {
+			"bonus": {
+				"text": "Form 3-S/b: early pickup. Credit: generous. Terms: waived.",
+				"effects": [
+					{
+						"verb": "letter",
+						"title": "Form 3-S/b",
+						"text": "Bonus pickup approved. Terms apply. The terms are you."
+					}
+				],
+				"options": {
+					"accept": {
+						"label": "Accept the bonus pickup",
+						"hint": "Debt cut (capped), pollution +6%, Lifers +5.",
+						"text": "Pickup booked. The terms are itemised later.",
+						"effects": [
+							{
+								"verb": "debt_pct",
+								"pct": -8
+							},
+							{
+								"verb": "pollution",
+								"value": 0.06
+							},
+							{
+								"verb": "flag",
+								"id": "r4_bonus"
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": 5
+							}
+						],
+						"then": "seats",
+						"delay_days": 3
+					},
+					"decline": {
+						"label": "Decline",
+						"hint": "Lifers -6. The refusal is filed.",
+						"text": "Declined. The Warden files it under 'Pride'.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": -6
+							},
+							{
+								"verb": "flag",
+								"id": "r4_declined"
+							}
+						],
+						"then": "seats_d",
+						"delay_days": 3
+					}
+				}
+			},
+			"seats": {
+				"text": "Seat 7: {dead}, reinstated. It knew the door code.",
+				"options": {
+					"strike": {
+						"label": "Strike the name",
+						"hint": "Clerks +8, Zealots +4. Paperwork fee +2% debt.",
+						"text": "The name is struck. The chair stays warm.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "clerk",
+								"delta": 8
+							},
+							{
+								"verb": "standing",
+								"block": "zealot",
+								"delta": 4
+							},
+							{
+								"verb": "debt_pct",
+								"pct": 2
+							},
+							{
+								"verb": "flag",
+								"id": "r4_struck"
+							}
+						],
+						"then": "gear",
+						"delay_days": 8
+					},
+					"keep": {
+						"label": "Leave it",
+						"hint": "Lifers +8. The Informant approves.",
+						"text": "Seat 7 confirmed. Occupied.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": 8
+							},
+							{
+								"verb": "informant_standing",
+								"delta": 5
+							},
+							{
+								"verb": "flag",
+								"id": "r4_seat_kept"
+							},
+							{
+								"verb": "letter",
+								"title": "Seat 7",
+								"text": "Seat 7 confirmed. Occupied."
+							}
+						],
+						"then": "gear",
+						"delay_days": 8
+					}
+				}
+			},
+			"seats_d": {
+				"text": "You declined. Seat 7: {dead}, reinstated anyway.",
+				"options": {
+					"strike": {
+						"label": "Strike the name",
+						"hint": "Clerks +8, Zealots +4. Paperwork fee +2% debt.",
+						"text": "The name is struck. The chair stays warm.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "clerk",
+								"delta": 8
+							},
+							{
+								"verb": "standing",
+								"block": "zealot",
+								"delta": 4
+							},
+							{
+								"verb": "debt_pct",
+								"pct": 2
+							},
+							{
+								"verb": "flag",
+								"id": "r4_struck"
+							}
+						],
+						"then": "gear",
+						"delay_days": 8
+					},
+					"keep": {
+						"label": "Leave it",
+						"hint": "Lifers +8. The Informant approves.",
+						"text": "Seat 7 confirmed. Occupied.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": 8
+							},
+							{
+								"verb": "informant_standing",
+								"delta": 5
+							},
+							{
+								"verb": "flag",
+								"id": "r4_seat_kept"
+							},
+							{
+								"verb": "letter",
+								"title": "Seat 7",
+								"text": "Seat 7 confirmed. Occupied."
+							}
+						],
+						"then": "gear",
+						"delay_days": 8
+					}
+				}
+			},
+			"gear": {
+				"text": "Warden: gear not on the manifest is contraband. Armour is gear.",
+				"options": {
+					"hand_over": {
+						"label": "Hand the gear over",
+						"hint": "Needs 2 gear, 10 plates. Lifers +6. Waves x0.9, 5 d.",
+						"text": "The Warden lends you a quieter week.",
+						"effects": [
+							{
+								"verb": "items",
+								"item": "plate",
+								"n": -10
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": 6
+							},
+							{
+								"verb": "mod",
+								"name": "wave_mult",
+								"value": 0.9,
+								"days": 5
+							}
+						],
+						"requires": {
+							"gear_owned": 2,
+							"items": {
+								"plate": 10
+							}
+						},
+						"then": "recount",
+						"delay_days": 4
+					},
+					"hide": {
+						"label": "Keep it hidden",
+						"hint": "Waves x1.1, 10 d. 40% the Informant talks.",
+						"text": "Hidden. The Informant has a very good memory.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "r4_hidden_gear"
+							},
+							{
+								"verb": "mod",
+								"name": "wave_mult",
+								"value": 1.1,
+								"days": 10
+							},
+							{
+								"verb": "gamble",
+								"p": 0.4,
+								"win": [
+									{
+										"verb": "letter",
+										"title": "Search",
+										"text": "Search: vests found."
+									},
+									{
+										"verb": "debt_pct",
+										"pct": 4
+									},
+									{
+										"verb": "standing",
+										"block": "lifer",
+										"delta": -4
+									},
+									{
+										"verb": "standing",
+										"block": "clerk",
+										"delta": -4
+									},
+									{
+										"verb": "standing",
+										"block": "zealot",
+										"delta": -4
+									},
+									{
+										"verb": "standing",
+										"block": "fresh_fish",
+										"delta": -4
+									}
+								],
+								"lose": [
+									{
+										"verb": "letter",
+										"title": "Search",
+										"text": "Search: nothing found. Mostly."
+									}
+								]
+							}
+						],
+						"then": "recount",
+						"delay_days": 4
+					}
+				}
+			},
+			"recount": {
+				"text": "A guard billed our wounded at the old rate. Scars cost extra.",
+				"options": {
+					"pay": {
+						"label": "Pay the scar tax",
+						"hint": "Debt +3%. Everyone is a little calmer.",
+						"text": "Scar tax paid. A receipt was issued, then lost.",
+						"effects": [
+							{
+								"verb": "debt_pct",
+								"pct": 3
+							},
+							{
+								"verb": "mood",
+								"thought": "quest_cheer"
+							}
+						]
+					},
+					"refuse": {
+						"label": "Refuse",
+						"hint": "Lifers -5. The loudest inmate hardens.",
+						"text": "The loudest inmate says no. It is not the last time.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": -5
+							},
+							{
+								"verb": "flag",
+								"id": "r4_refused"
+							},
+							{
+								"verb": "trait",
+								"id": "hardened",
+								"n": 1
+							}
+						]
+					}
+				}
+			}
+		}
+	},
+	"r4_drone_toll": {
+		"title": "Drone Toll",
+		"_comment": "F5 W4 line B (fight).",
+		"trigger": {
+			"flag": "path_fight",
+			"min_day": 30,
+			"raids_survived": 1
+		},
+		"start": "wreck",
+		"beats": {
+			"wreck": {
+				"text": "A drone came down inside the fence. Still warm. Still counting.",
+				"effects": [
+					{
+						"verb": "letter",
+						"title": "Salvage Notice",
+						"text": "Drone wreck is property of the Metropolis. So are finders."
+					}
+				],
+				"options": {
+					"strip": {
+						"label": "Strip it",
+						"hint": "Plates +6, pollution +3%.",
+						"text": "Parts, mostly. Some of it was still ticking.",
+						"effects": [
+							{
+								"verb": "items",
+								"item": "plate",
+								"n": 6
+							},
+							{
+								"verb": "pollution",
+								"value": 0.03
+							},
+							{
+								"verb": "flag",
+								"id": "r4_stripped"
+							}
+						],
+						"then": "pilot",
+						"delay_days": 2
+					},
+					"burn": {
+						"label": "Burn it where it lies",
+						"hint": "Zealots +8, pollution +6%. Waves x0.95, 5 d.",
+						"text": "The smoke is visible for a long way.",
+						"effects": [
+							{
+								"verb": "pollution",
+								"value": 0.06
+							},
+							{
+								"verb": "standing",
+								"block": "zealot",
+								"delta": 8
+							},
+							{
+								"verb": "flag",
+								"id": "r4_burned"
+							},
+							{
+								"verb": "mod",
+								"name": "wave_mult",
+								"value": 0.95,
+								"days": 5
+							}
+						],
+						"then": "pilot",
+						"delay_days": 2
+					}
+				}
+			},
+			"pilot": {
+				"text": "The wreck holds a living tech. His number is in our ledger.",
+				"options": {
+					"interrogate": {
+						"label": "Interrogate him",
+						"hint": "50%: waves x0.85 for 10 d. Else Fresh Fish unease.",
+						"text": "He talks. Whether it helps is another question.",
+						"effects": [
+							{
+								"verb": "gamble",
+								"p": 0.5,
+								"win": [
+									{
+										"verb": "flag",
+										"id": "r4_know_route"
+									},
+									{
+										"verb": "mod",
+										"name": "wave_mult",
+										"value": 0.85,
+										"days": 10
+									}
+								],
+								"lose": [
+									{
+										"verb": "mood_block",
+										"block": "fresh_fish",
+										"thought": "quest_uneasy"
+									},
+									{
+										"verb": "letter",
+										"title": "Pilot",
+										"text": "He told us what we told him."
+									}
+								]
+							}
+						],
+						"then": "strike_vote",
+						"delay_days": 5
+					},
+					"recruit": {
+						"label": "Recruit him",
+						"hint": "A new inmate. Fresh Fish +10, Informant -5.",
+						"text": "He kept the sleeve. He needs a new number.",
+						"effects": [
+							{
+								"verb": "spawn_colonist",
+								"as": "pilot"
+							},
+							{
+								"verb": "standing",
+								"block": "fresh_fish",
+								"delta": 10
+							},
+							{
+								"verb": "informant_standing",
+								"delta": -5
+							},
+							{
+								"verb": "flag",
+								"id": "r4_pilot"
+							}
+						],
+						"then": "strike_vote",
+						"delay_days": 5
+					},
+					"send_back": {
+						"label": "Send him back",
+						"hint": "Clerks +8, Zealots -8, defiance +8.",
+						"text": "He leaves with a message. The sky takes note.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "clerk",
+								"delta": 8
+							},
+							{
+								"verb": "standing",
+								"block": "zealot",
+								"delta": -8
+							},
+							{
+								"verb": "flag",
+								"id": "r4_letter"
+							},
+							{
+								"verb": "defiance",
+								"n": 8
+							},
+							{
+								"verb": "letter",
+								"title": "Pilot's Note",
+								"text": "Tell them the ground is awake. Tell them we have names."
+							}
+						],
+						"then": "strike_vote",
+						"delay_days": 5
+					}
+				}
+			},
+			"strike_vote": {
+				"text": "Zealots demand: stop the stacks. Let the ground breathe.",
+				"options": {
+					"stop": {
+						"label": "Stop refining for 2 days",
+						"hint": "Refining crawls 2 d. Pollution -4%, Zealots +15.",
+						"text": "The stacks go quiet. The ground breathes. It smells of rock.",
+						"effects": [
+							{
+								"verb": "mod",
+								"name": "refine_mult",
+								"value": 0.1,
+								"days": 2
+							},
+							{
+								"verb": "pollution",
+								"value": -0.04
+							},
+							{
+								"verb": "standing",
+								"block": "zealot",
+								"delta": 15
+							},
+							{
+								"verb": "flag",
+								"id": "r4_paused"
+							}
+						],
+						"then": "scars",
+						"delay_days": 6
+					},
+					"refuse": {
+						"label": "Refuse",
+						"hint": "Zealots -12, Lifers +6.",
+						"text": "The stacks stay lit. Prayers are redirected.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "zealot",
+								"delta": -12
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": 6
+							},
+							{
+								"verb": "flag",
+								"id": "r4_no_pause"
+							}
+						],
+						"then": "scars",
+						"delay_days": 6
+					}
+				}
+			},
+			"scars": {
+				"text": "The scars are in the wall now. Also in us.",
+				"options": {
+					"wear": {
+						"label": "Wear them",
+						"hint": "Two inmates harden.",
+						"text": "Scars are not covered. Scars are displayed.",
+						"effects": [
+							{
+								"verb": "trait",
+								"id": "hardened",
+								"n": 2
+							}
+						]
+					},
+					"cover": {
+						"label": "Cover the walls",
+						"hint": "Needs 4 plates. Everyone calmer.",
+						"text": "Fresh plates over old marks. It looks tidy. It is not.",
+						"effects": [
+							{
+								"verb": "items",
+								"item": "plate",
+								"n": -4
+							},
+							{
+								"verb": "mood",
+								"thought": "quest_cheer"
+							}
+						],
+						"requires": {
+							"items": {
+								"plate": 4
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"r4_quiet_freight": {
+		"title": "Quiet Freight",
+		"_comment": "F5 W4 line C (escape).",
+		"trigger": {
+			"flag": "path_escape",
+			"min_day": 35
+		},
+		"start": "manifest",
+		"beats": {
+			"manifest": {
+				"text": "The Ferry asks for a name to put on each crate.",
+				"options": {
+					"sell": {
+						"label": "Sell {dead}'s ID",
+						"hint": "Needs the Roll Call. Credit +10, suspicion +6.",
+						"text": "You sold his number. The Lifers noticed.",
+						"effects": [
+							{
+								"verb": "credit",
+								"n": 10
+							},
+							{
+								"verb": "suspicion",
+								"n": 6
+							},
+							{
+								"verb": "flag",
+								"id": "r4_sold_name"
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": -10
+							}
+						],
+						"requires": {
+							"cond": "rv_roll_call"
+						},
+						"then": "inspection",
+						"delay_days": 5
+					},
+					"cover": {
+						"label": "Use a made-up name",
+						"hint": "No credit. Clerks +6.",
+						"text": "Crate 1: Mr. Nobody. The Ferry stamps it.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "clerk",
+								"delta": 6
+							},
+							{
+								"verb": "flag",
+								"id": "r4_cover_name"
+							}
+						],
+						"then": "inspection",
+						"delay_days": 5
+					}
+				}
+			},
+			"inspection": {
+				"text": "Friendly inspection. The inspectors are friendly. Loudly.",
+				"effects": [
+					{
+						"verb": "letter",
+						"title": "Friendly inspection",
+						"text": "The Warden would like to see everything. Kindly."
+					}
+				],
+				"options": {
+					"open": {
+						"label": "Open every door",
+						"hint": "Needs 10 refined. Suspicion -20, Lifers +4.",
+						"text": "Ten refined leave in a box. The Warden says thank you.",
+						"effects": [
+							{
+								"verb": "items",
+								"item": "refined_essence",
+								"n": -10
+							},
+							{
+								"verb": "suspicion",
+								"n": -20
+							},
+							{
+								"verb": "standing",
+								"block": "lifer",
+								"delta": 4
+							}
+						],
+						"requires": {
+							"items": {
+								"refined_essence": 10
+							}
+						},
+						"then": "courier",
+						"delay_days": 3
+					},
+					"bribe": {
+						"label": "Bribe the Informant",
+						"hint": "Needs the Informant. Debt +3%, Clerks -5.",
+						"text": "The Informant forgets. For now.",
+						"effects": [
+							{
+								"verb": "informant_standing",
+								"delta": 12
+							},
+							{
+								"verb": "debt_pct",
+								"pct": 3
+							},
+							{
+								"verb": "standing",
+								"block": "clerk",
+								"delta": -5
+							}
+						],
+						"requires": {
+							"informant_alive": true
+						},
+						"then": "courier",
+						"delay_days": 3
+					},
+					"dump": {
+						"label": "Move the stash to the dump",
+						"hint": "Pollution +4%.",
+						"text": "The stash sleeps with the slag.",
+						"effects": [
+							{
+								"verb": "pollution",
+								"value": 0.04
+							},
+							{
+								"verb": "flag",
+								"id": "r4_dumped"
+							}
+						],
+						"then": "courier",
+						"delay_days": 3
+					}
+				}
+			},
+			"courier": {
+				"text": "Cargo: one crawler. Fed, quiet, labelled: {dead}.",
+				"effects": [
+					{
+						"verb": "letter",
+						"title": "Cargo Label",
+						"text": "Name: {dead}. Species: formerly. Handle with calm."
+					}
+				],
+				"options": {
+					"accept": {
+						"label": "Accept the cage",
+						"hint": "65%: credit +8. Else a mimic at the fence.",
+						"text": "The cage is opened carefully.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "r4_caged"
+							},
+							{
+								"verb": "gamble",
+								"p": 0.65,
+								"win": [
+									{
+										"verb": "credit",
+										"n": 8
+									},
+									{
+										"verb": "letter",
+										"title": "Cargo",
+										"text": "It sat. It did not bite."
+									}
+								],
+								"lose": [
+									{
+										"verb": "spawn_enemy",
+										"enemy": "mimic",
+										"n": 1
+									}
+								]
+							}
+						],
+						"then": "drone_tail",
+						"delay_days": 5
+					},
+					"refuse": {
+						"label": "Refuse the cargo",
+						"hint": "Zealots +6, debt +2%.",
+						"text": "The courier shrugs and leaves with the cage.",
+						"effects": [
+							{
+								"verb": "standing",
+								"block": "zealot",
+								"delta": 6
+							},
+							{
+								"verb": "debt_pct",
+								"pct": 2
+							}
+						],
+						"then": "drone_tail",
+						"delay_days": 5
+					}
+				}
+			},
+			"drone_tail": {
+				"text": "A scout drone is following the Ferry's signal.",
+				"options": {
+					"jam": {
+						"label": "Jam it",
+						"hint": "Needs 6 plates. Waves x0.9, 6 d.",
+						"text": "The signal fades. So does the drone.",
+						"effects": [
+							{
+								"verb": "items",
+								"item": "plate",
+								"n": -6
+							},
+							{
+								"verb": "mod",
+								"name": "wave_mult",
+								"value": 0.9,
+								"days": 6
+							}
+						],
+						"requires": {
+							"items": {
+								"plate": 6
+							}
+						}
+					},
+					"pass": {
+						"label": "Let it pass",
+						"hint": "Free. You were seen.",
+						"text": "The drone drifts on. It will remember.",
+						"effects": [
+							{
+								"verb": "flag",
+								"id": "r4_tailed"
+							}
+						]
+					}
+				}
+			}
+		}
+	}
+}

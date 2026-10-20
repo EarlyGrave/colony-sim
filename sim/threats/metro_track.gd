@@ -9,6 +9,7 @@ var sim: Simulation
 var cfg: Dictionary
 var defiance := 0.0
 var raids_started := 0
+var raids_repelled := 0  # region W4: drone raids repelled (cond raids_survived); replay-derived, not in state dump
 var final_done := false
 var next_raid_tick := -1
 var _last_paid := 0

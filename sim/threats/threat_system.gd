@@ -427,6 +427,8 @@ func end_wave() -> void:
 	if repelled and not sc_audit:
 		_sc_dormancy()  # region SC
 	if repelled:
+		if was_metro:
+			metro().raids_repelled += 1  # region W4
 		sim.bus.wave_repelled.emit(wave_index)  # region progression
 		if not sc_audit and not was_metro:
 			_f3a_wave_reward()  # region F3a
