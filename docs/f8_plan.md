@@ -1,0 +1,32 @@
+# F8 "Gear screen" plan (1 wave, 3 parallel workers, Sonnet, worktrees)
+Base: `git reset --hard claude/colony-sim-godot-4jftsm`. Shared files only inside `# region <agent>`. No sim commands added (equip/unequip/socket exist). All text English. Touch-first: buttons/cells >= 64 px, no hover/right-click/drag. Merge order: W1 -> W3 -> W2 (W2 consumes both).
+
+## Shared interfaces (frozen up front)
+- Icons: `res://assets/sprites/gear_<base>.png` for the 9 bases (prison_shiv, rifle, kevlar_vest, helmet, plasma_blade, smg, work_gloves, greaves, underlay); `gear_socket.png` (upgrade icon); `gear_frame_<rarity>.png` (common..legendary) = transparent overlay, 1-2 px border. All 16x16 (matches item_*.png art; scaled x4 = 64 px with NEAREST filter). Loader: `GearIcons.texture(base) -> Texture2D` (static, `view/gear_icons.gd`, owned by W1): returns icon or a generic fallback built in code (coloured slot letter) when the file is missing; `GearIcons.frame(rarity) -> Texture2D` (null if missing); `GearIcons.socket() -> Texture2D`.
+- ItemCard (W3, `view/panels/item_card.gd`, `class_name ItemCard extends PanelContainer`): `static func make(sim: Simulation, item_id: int) -> ItemCard`; `func set_item(sim, item_id: int)` (-1 = hint "Select an item"); `signal`-free, read-only. Static pure-data helper `ItemCard.lines(sim, item_id) -> Dictionary {name, rarity, color, slot_name, base:[String], affixes:[String], sockets:[String], durability:String}` for tests. Also `static func profile(sim, cid) -> Array[String]` (fighter summary lines: Armour phys/energy, Damage, Max HP, Move speed; uses `sim.equipment.total()` and existing colonist stats).
+- Stat names: `data/stat_names.json` {stat_key: {"name": "Armour", "pct": false}}; loaded by `StatNames.label(key)`/`StatNames.fmt(key, value)` (`view/stat_names.gd`, W3). Missing key -> Title-cased key with underscores replaced. Must cover every key in `StatBlock.KEYS` and every affix id in data/affixes.json (test enforces).
+- Gear focus: `GearScreen.focus_cid: int` static var in W2's panel; inspector button sets it then calls the HUD's panel toggle.
+
+## W1 Icons (owns: tools/gen_art.py [region F8 block + call in main()], assets/sprites/gear_*.png + .import, view/gear_icons.gd, tests/test_gear_icons.gd)
+- Draw 9 base icons, socket icon, 5 frames in the existing `grid()` palette style (dark outline `k`, readable silhouettes: blade, rifle, vest, helmet, gloves, greaves, underlay shirt, SMG, plasma blade with cyan glow). Run `python3 tools/gen_art.py`, then `godot --headless --path . --import` so .import files are committed. Do not touch other generated sprites (diff of other PNGs must be empty).
+- Acceptance: every `data/gear.json` base has a file; icons 16x16 with alpha; `GearIcons.texture("nope")` returns a non-null fallback.
+- Tests: test_gear_icons (file per base, size, fallback, frame per rarity key in equipment.json).
+
+## W3 Item card + stat names (owns: data/stat_names.json, view/stat_names.gd, view/panels/item_card.gd, tests/test_item_card.gd, tests/test_stat_names.gd)
+- Card layout (phone 844x390, width <= 360 px, scroll-safe): title row "Name" in rarity colour + "ilvl N"; slot; base stats block; one line per affix (human name + value, e.g. "+12% Damage"); "Sockets: AP Rounds, [empty]" using upgrades.json names and upgrade_slots; durability "Durability 72/100" (+ red text if < 25%, "Broken: stats halved" at 0 per equipment.json durability.zero_stat_mult); profile helper as above.
+- Read helpers: only add small static helpers in item_card.gd; if a sim getter is truly missing add a read-only method in `# region F8` of sim/equipment/equipment_system.gd (no commands, deterministic, no goldens change).
+- Acceptance: lines() for a rolled rare item lists base stats and each affix separately; no raw ids anywhere in text; the old `GearPanel.stat_line` switches to `StatNames.fmt` (W3 owns that one-function edit inside `# region F8` of gear_panel.gd; W2 must not edit stat_line).
+- Tests: stat_names covers all keys; lines() content for a hand-made item with 2 affixes + 1 upgrade + durability 20; profile sums match `sim.equipment.total`.
+- Screenshot: a scratch scene/test harness rendering ItemCard for a legendary item -> `<scratchpad>/f8_card.png` (see CLAUDE.md item 11).
+
+## W2 Gear screen (owns: view/panels/gear_screen.gd, view/gear_grid.gd, view/panels/gear_panel.gd [region F8 only: Open button], view/panels/panel_registry.gd [one line, below slot 6, region F8], tests/test_gear_screen.gd, tests/test_phone_layout.gd [region F8 test only])
+- Panel id `gear_screen`, label "Gear" (toolbar entry via PANELS; hidden when no equipment state). Opened from toolbar (focus = selected inmate, else first inmate with gear) and from the inmate card.
+- Layout (landscape phone): left column paper-doll with 6 slot buttons (head, hands, legs, torso_inner, torso_outer, weapon) 72x72 each, icon + rarity frame, empty slot shows dim slot name; centre grid inventory of stored gear: 1x1 cells 64x64, 5 columns, `GridContainer`, min 15 cells (empty cells drawn dim; cell count grows by rows as items exceed); right column `ItemCard` (W3) for the selected item/slot + profile lines + action buttons (>= 64 px).
+- Interaction (tap only): tap grid item -> selects it (highlight + card); "Equip" button (or tap a matching slot) -> `sim.equip(cid,id)`; tap worn slot -> selects it, "Unequip" -> `sim.unequip(cid,slot)`; "Socket" shows upgrade choices -> `sim.socket(id,u)`. Wrong-slot tap shows a one-line hint, no command. Rebuild on bus change/`refresh()`.
+- Old inspector gear section: KEEP (fallback, existing test_gear_panel stays green) and add an "Open gear" button (>= 64 px) at its top.
+- Icons via `GearIcons`, with `ItemCard` loaded by name; if a sibling merge is not yet present the panel must still build (fallback text) - but merge order makes this moot.
+- Tests (test_gear_screen): build with scenario sim + `sim.give`; equip/unequip via the panel callbacks changes `sim.equipment.equipped`; 20 stored items -> 20 cells + selection works; test_phone_layout: panel fits 844x390 and 2532x1170 (every control inside viewport, buttons >= 64 px, no overlap with the bottom toolbar).
+- Screenshot: `<scratchpad>/f8_gear_844.png` and `f8_gear_2532.png` with an inmate wearing 3 items and 6 stored.
+
+## Orchestrator checks after merge
+`tools/run_tests_quick.sh` after each merge; full sharded suite + `tools/web_smoke.py` before main; confirm goldens untouched (no sim change); look at both screenshots.
