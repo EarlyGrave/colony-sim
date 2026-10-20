@@ -47,6 +47,3 @@ print(f"objmet {sum(om)} total over {n} seeds  per-seed: {om}")
 print("seed path    ending_won  gear_eq branches susp_peak")
 for r in ok:
     print(f"{r['seed']:>4} {(r.get('path') or '-'):<7} {(r.get('ending_won') or '-'):<11} {r.get('gear_equipped', 0):>7} {r.get('branches', 0):>8} {r.get('susp_peak', 0):>9}")
-mr = [r.get("metro", 0) for r in ok]
-print(f"metro raids per seed: {mr}  seeds>=2: {sum(1 for x in mr if x >= 2)}/{n}  seeds==0: {sum(1 for x in mr if x == 0)}/{n}")
-print("defiance end:", [r.get("defiance", 0) for r in ok])
