@@ -72,6 +72,7 @@ func state() -> Dictionary:
 		rows.append({"phase": p, "id": str(d.get("id", "")), "title": str(d.get("title", "")), "done": is_done(p),
 			"required": required(p), "delivered": (delivered.get(p, {}) as Dictionary).duplicate(),
 			"reward": _reward_text(d.get("reward", {}))})
+	_alt_rows(rows)  # region W2
 	return {"enabled": enabled(), "phase": next_phase(), "total": phase_count(), "done": done_phases.size(), "phases": rows}
 
 
@@ -143,11 +144,13 @@ func _cut_debt(pct: int) -> void:
 
 
 func has_state() -> bool:
-	return not done_phases.is_empty() or not delivered.is_empty()
+	return not done_phases.is_empty() or not delivered.is_empty() or not detail.is_empty()
 
 
 func state_parts() -> Array:
 	var out: Array = ["e1", done_phases.duplicate()]
+	if not detail.is_empty():  # region W2 (hash part only while a detail runs)
+		out.append(["w2", detail["alt"], detail["ids"].duplicate(), detail["done"].duplicate(), detail["start"]])
 	var ps := delivered.keys()
 	ps.sort()
 	for p: int in ps:
@@ -158,3 +161,187 @@ func state_parts() -> Array:
 			row.append([item, delivered[p][item]])
 		out.append(row)
 	return out
+
+
+# region W2: Petition Waivers. One alternative payment per phase (petitions.json "alt"), paid in people / risk.
+# "detail": volunteers work at a hazardous site; "informant": suspicion + Standing hit. Completion = _complete(p).
+## {phase, alt, ids:[int], done:[int], work:{id:ticks}, site:Vector2i, start:tick}; empty = no detail running.
+var detail: Dictionary = {}
+const DETAIL_PROTECTED := ["draft", "eat", "feed_patient", "fight", "flee", "mental_break", "rescue", "retreat", "sleep", "tend"]
+
+
+func alt_def(p: int) -> Dictionary:
+	if p < 1 or p > phase_count():
+		return {}
+	return (phase_defs()[p - 1] as Dictionary).get("alt", {})
+
+
+## "" when the alt of phase p can be started now, else a short reason (the UI shows it greyed out).
+func alt_block_reason(p: int) -> String:
+	var a := alt_def(p)
+	if a.is_empty():
+		return "none"
+	if p != next_phase() or not sim.milestones.has_terminal():
+		return "locked"
+	if not detail.is_empty():
+		return "detail under way"
+	match str(a.get("kind", "")):
+		"detail":
+			if _volunteers(int(a.get("volunteers", 3))).size() < int(a.get("volunteers", 3)):
+				return "not enough healthy volunteers"
+			if _site().x < 0:
+				return "no site"
+		"informant":
+			if sim.contraband == null or not sim.contraband.is_enabled() or sim.blocks == null or not sim.blocks.is_enabled():
+				return "no covert channel"
+			if not SocietyConds.informant_alive(sim):
+				return "no informant"
+		_:
+			return "none"
+	return ""
+
+
+func alt_available(p: int) -> bool:
+	return alt_block_reason(p) == ""
+
+
+func _alt_rows(rows: Array) -> void:
+	for r: Dictionary in rows:
+		var p := int(r["phase"])
+		var a := alt_def(p)
+		if a.is_empty() or bool(r["done"]):
+			continue
+		var reason := alt_block_reason(p) if p == next_phase() else "locked"
+		r["alt"] = {"id": str(a.get("id", "")), "title": str(a.get("title", "")), "cost": str(a.get("cost", "")),
+			"available": reason == "", "reason": reason,
+			"active": not detail.is_empty() and int(detail["phase"]) == p,
+			"progress": detail_progress() if not detail.is_empty() and int(detail["phase"]) == p else 0.0}
+
+
+func detail_active() -> bool:
+	return not detail.is_empty()
+
+
+## 0..1 over all volunteers.
+func detail_progress() -> float:
+	if detail.is_empty():
+		return 0.0
+	var need := maxf(1.0, float(alt_def(int(detail["phase"])).get("work_ticks", 1)) * (detail["ids"] as Array).size())
+	var got := 0.0
+	for id: int in detail["ids"]:
+		got += float((detail["work"] as Dictionary).get(id, 0))
+	return clampf(got / need, 0.0, 1.0)
+
+
+## Command body of Simulation.deliver_petition_alt. False (no state change) when not allowed.
+func deliver_alt(p: int, alt_id: String) -> bool:
+	if not enabled() or alt_block_reason(p) != "" or str(alt_def(p).get("id", "")) != alt_id:
+		return false
+	var a := alt_def(p)
+	if str(a["kind"]) == "informant":
+		sim.contraband.suspicion = minf(float(sim.contraband.cfg.get("suspicion_cap", 100.0)), sim.contraband.suspicion + float(a.get("suspicion", 0)))
+		var inf := sim.colonists.get_by_id(sim.blocks.informant_id())
+		sim.blocks._change(sim.blocks.block_of(inf), -float(a.get("standing", 0)), true)
+		sim.contraband._check_suspicion()
+		delivered.erase(p)
+		_complete(p)
+		return true
+	var ids: Array = []
+	for c: Colonist in _volunteers(int(a.get("volunteers", 3))):
+		ids.append(c.id)
+	var work: Dictionary = {}
+	for id: int in ids:
+		work[id] = 0
+	detail = {"phase": p, "alt": alt_id, "ids": ids, "done": [], "work": work, "site": _site(), "start": sim.tick}
+	return true
+
+
+## Healthy, free volunteers: alive, not downed, not the Informant, fewest injuries first, then id.
+func _volunteers(n: int) -> Array[Colonist]:
+	var inf: int = sim.blocks.informant_id() if sim.blocks != null else 0
+	var pool: Array[Colonist] = []
+	for c in sim.colonists.list:
+		if c.alive and not c.hidden and c.id != inf and not sim.health.is_downed(c):
+			pool.append(c)
+	pool.sort_custom(func(x: Colonist, y: Colonist) -> bool:
+		var ix := sim.health.state_of(x).injuries.size()
+		var iy := sim.health.state_of(y).injuries.size()
+		return ix < iy or (ix == iy and x.id < y.id))
+	return pool.slice(0, n) if pool.size() >= n else []
+
+
+## Hazardous site: the walkable cell nearest to the first reachable nest, pulled 6 cells towards the base.
+func _site() -> Vector2i:
+	var home := sim.map_center()
+	var target := Vector2i(sim.map.width * 3 / 4, sim.map.height / 2)
+	if sim.ecology != null:
+		for n: Dictionary in sim.ecology.nests:
+			target = n["cell"]
+			break
+	var dir := Vector2(home - target)
+	if dir.length() > 6.0:
+		target += Vector2i((dir.normalized() * 6.0).round())
+	for r in 12:
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				if maxi(absi(dx), absi(dy)) != r:
+					continue
+				var c := target + Vector2i(dx, dy)
+				if sim.map.in_bounds(c) and sim.pathfinder.is_walkable(c) and sim.pathfinder.reachable(home, c):
+					return c
+	return Vector2i(-1, -1)
+
+
+## Called by DetailJob at the site. True when this volunteer finished (one injury roll, sim.rng).
+func detail_work(c: Colonist) -> bool:
+	if detail.is_empty() or not (detail["ids"] as Array).has(c.id):
+		return true
+	if (detail["done"] as Array).has(c.id):
+		return true
+	var a := alt_def(int(detail["phase"]))
+	var w: int = int(detail["work"].get(c.id, 0)) + 1
+	detail["work"][c.id] = w
+	if w < int(a.get("work_ticks", 300)):
+		return false
+	detail["done"].append(c.id)
+	if sim.rng.randf() < float(a.get("injury_chance", 0.0)):
+		sim.health.apply_damage(c, float(a.get("injury", 8.0)))
+	return true
+
+
+func tick() -> void:
+	if detail.is_empty():
+		return
+	var a := alt_def(int(detail["phase"]))
+	if sim.tick - int(detail["start"]) > int(float(a.get("timeout_days", 4)) * sim.ticks_per_day):
+		_abort_detail("timeout")
+		return
+	for id: int in detail["ids"]:
+		var c := sim.colonists.get_by_id(id)
+		if c == null or not c.alive or sim.health.is_downed(c):
+			_abort_detail("volunteer lost")  # phase stays open, nothing paid
+			return
+	if (detail["done"] as Array).size() >= (detail["ids"] as Array).size():
+		var p: int = detail["phase"]
+		detail = {}
+		delivered.erase(p)
+		_complete(p)
+		return
+	if sim.alarm:
+		return
+	for id: int in detail["ids"]:
+		if (detail["done"] as Array).has(id):
+			continue
+		var c := sim.colonists.get_by_id(id)
+		if c.job == null or not (c.job.type in DETAIL_PROTECTED or c.job.type == "detail"):
+			sim.jobs.request_override(c, DetailJob.new(detail["site"]))
+
+
+func _abort_detail(reason: String) -> void:
+	for id: int in detail["ids"]:
+		var c := sim.colonists.get_by_id(id)
+		if c != null and c.alive and c.job != null and c.job.type == "detail":
+			sim.jobs.end_job(c, Job.Status.FAILED, false)
+	detail = {}
+	sim.bus.letter_received.emit("Volunteer Detail", "The detail is called off (%s). The petition stays open." % reason)
+# endregion

@@ -6,6 +6,7 @@
 			"id": "p1", "title": "Petition I: Filing Fees",
 			"parts": {"plate": 60, "parts": 20},
 			"reward": {"debt_cut_pct": 5},
+			"alt": {"id": "detail", "kind": "detail", "title": "Volunteer Detail", "cost": "3 inmates, risk of injury", "volunteers": 3, "work_ticks": 300, "injury_chance": 0.3, "injury": 8.0, "timeout_days": 4},
 			"letter": "The wardens stamp your petition 'received'. Each debt is trimmed by 5%."
 		},
 		{
@@ -18,6 +19,7 @@
 			"id": "p3", "title": "Petition III: Proof of Industry",
 			"parts": {"coal": 30, "nitrogen": 20},
 			"reward": {"debt_cut_pct": 10, "unlock_tier": 3},
+			"alt": {"id": "informant", "kind": "informant", "title": "Informant Report", "cost": "suspicion +25, Informant block Standing -20", "suspicion": 25, "standing": 20},
 			"letter": "The wardens inspect your power plant. Debts drop 10% and high-throughput industry is cleared."
 		},
 		{
