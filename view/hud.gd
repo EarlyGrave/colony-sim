@@ -573,6 +573,8 @@ func show_inspector(target: Dictionary) -> void:
 		if _side_id == "inspector":
 			close_side()
 		return
+	if target.get("colonist") != null:  # region F8W2: the Gear toolbar entry opens on the last inspected inmate
+		GearScreen.focus_cid = (target["colonist"] as Colonist).id
 	if _inspector == null or _side != _inspector:
 		_open_side(_inspector_panel(), "inspector")
 	_inspector.set_target(target)
@@ -609,6 +611,8 @@ func open_panel_for(id: String, colonist_id: int, skill := "") -> void:
 		return
 	if p is PerkPanel:
 		(p as PerkPanel).focus_colonist(colonist_id, skill)
+	elif p is GearScreen:  # region F8W2
+		(p as GearScreen).focus_colonist(colonist_id)
 	_open_side(p, id)
 
 
@@ -1089,7 +1093,7 @@ func _o4_build() -> void:
 	msc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
 	_menu_popup.add_child(msc)
 	_reparent_to(_menu_box, msc)
-	_menu_box.columns = 12
+	_menu_box.columns = 24  # region F8W2: one scrolling row even with every optional entry visible (was 12)
 	for b: Button in _menu_box.get_children():
 		b.custom_minimum_size = Vector2(96, 64)
 		b.add_theme_font_size_override("font_size", 16)
@@ -1175,6 +1179,10 @@ func _o4_layout() -> void:
 	var y0 := maxf(_stack.get_combined_minimum_size().y, _stack.size.y) + 4.0
 	var side_open := _side != null and is_instance_valid(_side)
 	var sw := minf(SIDE_W, vp.x * 0.45)
+	var wide := side_open and _side.has_meta("wide_sheet")  # region F8W2: gear screen takes the full width, thumb cluster hides
+	if wide:
+		sw = vp.x - O4_LEFT - 8.0
+	_o4_cluster.visible = not wide
 	var limit := vp.x - 8.0 - ((sw + 8.0) if side_open else 0.0)  # right edge free for the thumb cluster
 	var menu_open := _menu_popup.visible
 	var pop_open := _open_cat != "" or menu_open
@@ -1578,6 +1586,9 @@ func _s4_update() -> void:
 	var eb: Button = _panel_buttons.get("ending")  # region EV: the Ending button appears once a path is chosen
 	if eb != null:
 		eb.visible = sim.endings != null and sim.path() != ""
+	var gb: Button = _panel_buttons.get("gear_screen")  # region F8W2: Gear entry only once any gear exists
+	if gb != null:
+		gb.visible = sim.equipment != null and sim.equipment.has_state()
 	var ob: Button = _panel_buttons.get("orders")  # region W1: Orders button only while the flag is on
 	if ob != null:
 		ob.visible = sim.regulations != null and sim.regulations.enabled()
