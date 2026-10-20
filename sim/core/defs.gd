@@ -91,6 +91,7 @@ var chips: Dictionary = {}  # region T4
 var fuels: Dictionary = {}  # region L3: data/fuels.json (fuel item -> burn/waste/spent fields)
 var fixation: Dictionary = {}  # region W3
 var roles: Dictionary = {}  # region C1
+var traits_v3: Dictionary = {}  # region traits_v3: only when balance.traits_v3_enabled
 # region L5
 # endregion
 
@@ -216,6 +217,10 @@ func load_from(dir: String) -> void:
 		chips = _load_json(dir + "chips.json")
 	# endregion
 	roles = _load_json(dir + "roles.json")  # region C1
+	# region traits_v3: gated by balance flag (false -> no load, zero behaviour change)
+	if bool(balance.get("traits_v3_enabled", false)) and FileAccess.file_exists(dir + "traits_v3.json"):
+		traits_v3 = _load_json(dir + "traits_v3.json")
+	# endregion
 	fixation = _load_json(dir + "fixation.json")  # region W3
 
 
@@ -298,6 +303,7 @@ func duplicate_defs() -> Defs:
 	d.chips = chips.duplicate(true)  # region T4
 	d.fuels = fuels.duplicate(true)  # region L3
 	d.roles = roles.duplicate(true)  # region C1
+	d.traits_v3 = traits_v3.duplicate(true)  # region traits_v3
 	d.fixation = fixation.duplicate(true)  # region W3
 	d.quests = quests.duplicate(true)  # region Q0
 	return d
