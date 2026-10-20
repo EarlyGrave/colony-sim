@@ -64,7 +64,7 @@ func mark_won(id: String) -> bool:
 		return false
 	sim.quests.set_flag("ending_won_" + id)
 	sim.bus.ending_won.emit(id)
-	var ep := epilogue(id)  # region RV
+	var ep := epilogue_for(id, sim)  # region RV
 	if not ep.is_empty():
 		sim.bus.letter_received.emit(str(ep[0]), "\n".join(PackedStringArray(ep.slice(1))))
 	return true
@@ -79,4 +79,31 @@ static func epilogue(id: String) -> Array:
 		if a is Array:
 			return a
 	return []
+# endregion
+
+
+# region F6c
+## Base epilogue + one echo line per set r4 quest flag + a masterwork line (up to 2 names).
+static func epilogue_for(id: String, sim: Simulation) -> Array:
+	var ep := epilogue(id).duplicate()
+	if ep.is_empty() or sim == null:
+		return ep
+	for l: String in echo_lines(id, sim):
+		ep.append(l)
+	return ep
+
+
+static func echo_lines(id: String, sim: Simulation) -> Array:
+	var out: Array = []
+	var j: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/flavor.json"))
+	if j is Dictionary and sim != null and sim.quests != null:
+		for e: Variant in (j as Dictionary).get("epilogue_echo", {}).get(id, []):
+			if sim.quests.flag(str((e as Dictionary).get("flag", ""))):
+				out.append(str((e as Dictionary)["line"]))
+	if sim != null and sim.fixation != null and not sim.fixation.masterworks.is_empty():
+		var names: Array = []
+		for m: Dictionary in sim.fixation.masterworks.slice(0, 2):
+			names.append(str(m["name"]))
+		out.append("Hung on the wall: %s." % ", ".join(PackedStringArray(names)))
+	return out
 # endregion

@@ -33,6 +33,7 @@ static func stats_from(sim: Simulation) -> Dictionary:
 		return s
 	s["colonists"] = sim.colonists.alive_count()
 	s["ending"] = ending_id(sim)  # region F2
+	s["epilogue_echo"] = EndingSystem.echo_lines(str(s["ending"]), sim)  # region F6c
 	return s
 
 
@@ -113,6 +114,12 @@ func _init(p_stats: Dictionary = {}, ending_text: String = "", p_ng: Dictionary 
 			el.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			ModalStyle.style_label(el)
 			epilogue_box.add_child(el)
+		for line: Variant in stats.get("epilogue_echo", []):  # region F6c
+			var el2 := Label.new()
+			el2.text = str(line)
+			el2.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			ModalStyle.style_label(el2)
+			epilogue_box.add_child(el2)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 24)
