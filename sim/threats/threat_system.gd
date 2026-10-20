@@ -428,6 +428,8 @@ func end_wave() -> void:
 		_sc_dormancy()  # region SC
 	if repelled:
 		sim.bus.wave_repelled.emit(wave_index)  # region progression
+		if not sc_audit and not was_metro:
+			_f3a_wave_reward()  # region F3a
 
 
 # region K1
@@ -1195,4 +1197,45 @@ func _rv_gate_ok() -> bool:
 		return true
 	var extra := float(cfg.get("first_wave_gate_days", 0.0))
 	return sim.tick >= next_wave_tick + int(extra * sim.ticks_per_day)
+# endregion
+
+
+# region F3a
+## Non-kill gear source: surviving (repelling) a creature wave may hand one inmate a common/uncommon item, so seeds whose
+## creatures carry no loot still see gear. gear.json `_wave_reward` {chance, bases, rarity_weights}. Child rng seeded from
+## (seed, tick, wave); sim.rng is restored after give() (it draws for affixes). Returns the item id or -1.
+func _f3a_wave_reward() -> int:
+	var cfg: Dictionary = sim.defs.gear.get("_wave_reward", {})
+	var bases: Array = cfg.get("bases", [])
+	if sim.equipment == null or bases.is_empty() or sim.day() < int(sim.defs.gear.get("_loot_min_day", 0)):
+		return -1
+	var alive: Array = []
+	for c in sim.colonists.list:
+		if c.alive:
+			alive.append(c)
+	if alive.is_empty():
+		return -1
+	var r := RandomNumberGenerator.new()
+	r.seed = hash([sim.seed_value, sim.tick, wave_index, 0xF3A])
+	if r.randf() >= float(cfg.get("chance", 0.0)):
+		return -1
+	var w: Dictionary = cfg.get("rarity_weights", {"common": 1})
+	var keys: Array = w.keys()
+	keys.sort()
+	var total := 0.0
+	for k: String in keys:
+		total += float(w[k])
+	var x := r.randf() * total
+	var rarity := str(keys[keys.size() - 1])
+	for k: String in keys:
+		x -= float(w[k])
+		if x < 0.0:
+			rarity = k
+			break
+	var base: String = bases[r.randi() % bases.size()]
+	var taker: Colonist = alive[r.randi() % alive.size()]
+	var st := sim.rng.state
+	var id := sim.equipment.give(taker.id, base, rarity, loot_ilvl(sim.day()))
+	sim.rng.state = st
+	return id
 # endregion

@@ -126,6 +126,7 @@ func report() -> void:
 			for v in ["", "mutant"]:
 				line += "%9.1f" % survive_s(defs, id, float(row[1]), v)
 		print(line)
+	_f3a_armour_table()  # region F3a
 	print("\n== 3. targets ==")
 	var bm := float(defs.roles["roles"]["bulwark"]["dmg_taken_mult"])
 	print("Bulwark lasts %.2fx an unsquadded inmate (target >= 2.0): %s" % [1.0 / bm, "OK" if 1.0 / bm >= 2.0 else "FAIL"])
@@ -148,3 +149,40 @@ func _ttk_row(label: String, weapon: String, volley: Array) -> void:
 		for v in ["", "mutant"]:
 			line += "%9.1f" % ttk(defs, weapon, float(creature(defs, id, v)["hp"]), skill, dist, volley)
 	print(line)
+
+
+# region F3a
+## Armour columns straight from data/gear.json: {phys, energy} armour and flat of a piece.
+static func gear_armor(defs_: Defs, base: String) -> Dictionary:
+	var g: Dictionary = defs_.gear.get(base, {})
+	var a: Dictionary = g.get("armor", {})
+	var f: Dictionary = g.get("flat", {})
+	return {"armor": float(a.get("phys", 0.0)), "flat": float(f.get("phys", 0.0)), "armor_e": float(a.get("energy", 0.0))}
+
+
+## Seconds an unsquadded inmate lasts under one creature wearing `base` ("" = nothing). Creature hits are phys.
+static func survive_armored_s(defs_: Defs, id: String, base: String, variant := "") -> float:
+	var cr := creature(defs_, id, variant)
+	var ga := gear_armor(defs_, base) if base != "" else {"armor": 0.0, "flat": 0.0}
+	var per_hit := resolve(float(cr["damage"]), float(ga["armor"]), float(ga["flat"]))
+	return INMATE_HP / (per_hit / float(cr["cycle_s"]))
+
+
+func _f3a_armour_table() -> void:
+	print("\n== 2b. F3a armour: seconds an unsquadded inmate lasts, without / with gear (data/gear.json) ==")
+	var bases: Array = ["", "underlay", "helmet", "kevlar_vest"]
+	var line := "%-26s" % "creature"
+	for b: String in bases:
+		var ga := gear_armor(defs, b) if b != "" else {"armor": 0.0, "flat": 0.0}
+		line += "%18s" % ("%s(%d/%d)" % [b if b != "" else "none", int(ga["armor"]), int(ga["flat"])])
+	line += "%10s" % "vest x"
+	print(line)
+	for id: String in ["crawler", "burrower", "mimic"]:
+		if not defs.enemies.has(id):
+			continue
+		line = "%-26s" % id
+		for b: String in bases:
+			line += "%18.1f" % survive_armored_s(defs, id, b)
+		line += "%9.2fx" % (survive_armored_s(defs, id, "kevlar_vest") / survive_armored_s(defs, id, ""))
+		print(line)
+# endregion

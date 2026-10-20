@@ -2,6 +2,7 @@
 	"_comment": "Gear bases (E2), affixless. Numeric keys are summed via StatBlock.KEYS; armor/flat are {phys, energy}. weapons.json keeps combat/abilities blocks.",
 	"_ilvl_by_day": [[0, 0], [15, 3], [30, 6], [45, 10]],
 	"_loot_min_day": 6,
+	"_wave_reward": {"chance": 0.35, "bases": ["kevlar_vest", "helmet", "work_gloves", "greaves", "underlay"], "rarity_weights": {"common": 8, "uncommon": 2}},
 	"prison_shiv": {"name": "Shiv", "slot": "weapon", "kind": "melee", "damage": 7.0, "cooldown_ticks": 8, "range": 1.5, "skill": "melee", "tags": ["weapon", "melee"], "value": 5},
 	"rifle": {"name": "Rifle", "slot": "weapon", "kind": "ranged", "damage": 12.0, "cooldown_ticks": 14, "range": 9.0, "skill": "shooting", "tags": ["weapon", "ranged"], "value": 40},
 	"kevlar_vest": {"name": "Kevlar Vest", "slot": "torso_outer", "armor": {"phys": 40, "energy": 5}, "flat": {"phys": 2, "energy": 0}, "tags": ["armor", "body"], "value": 30},

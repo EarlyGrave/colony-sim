@@ -5,6 +5,7 @@ extends TestCase
 func _scene() -> Array:
 	var sim := make_sim(3, false, 40, 40, peaceful_defs())
 	var c := sim.colonists.spawn(Vector2i(5, 5))
+	_bare(sim)
 	return [sim, c.id]
 
 
@@ -97,3 +98,13 @@ func test_deterministic_and_hash_gated() -> void:
 	assert_eq(_run(), _run())
 	var s := _scene()
 	assert_false(s[0].equipment.has_state(), "no instances, hash part absent")
+
+
+## F3a: inmates start with a shiv; these tests count gear instances / item ids, so they begin from an empty armoury.
+func _bare(sim: Simulation) -> Simulation:
+	sim.equipment.instances.clear()
+	sim.equipment.equipped.clear()
+	sim.equipment.totals.clear()
+	sim.equipment._next_id = 1
+	sim.colonists._f3a_pending.clear()
+	return sim

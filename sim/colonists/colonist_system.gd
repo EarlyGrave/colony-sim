@@ -31,6 +31,7 @@ func spawn(cell: Vector2i) -> Colonist:
 	c.combat.weapon = str(sim.defs.weapons["combat"]["start_weapon"])
 	# endregion
 	list.append(c)
+	_f3a_start_gear(c)  # region F3a
 	return c
 
 
@@ -48,6 +49,7 @@ func add(c: Colonist) -> void:
 
 
 func tick() -> void:
+	_f3a_equip_start()  # region F3a
 	for c in list:
 		if c.alive:
 			sim.jobs.tick_colonist(c)
@@ -165,4 +167,32 @@ func _f3_earned() -> Array:
 			continue
 		out.append(id)
 	return out
+# endregion
+
+
+# region F3a
+## Start gear: every inmate owns a prison shiv as a real GearItem (common, ilvl 0; no rng draw). Non-engineers wear it from tick 0
+## (engineers keep their rifle from weapons.json), so the bot's equip rule and the UI see a real item in the weapon slot.
+var _f3a_pending: Array[int] = []
+
+
+func _f3a_start_gear(c: Colonist) -> void:
+	if sim.equipment == null or not sim.defs.gear.has("prison_shiv"):
+		return
+	if sim.equipment.give(c.id, "prison_shiv", "common", 0) >= 0:
+		_f3a_pending.append(c.id)
+
+
+func _f3a_equip_start() -> void:
+	if _f3a_pending.is_empty():
+		return
+	for cid: int in _f3a_pending:
+		var c := get_by_id(cid)
+		if c == null or c.engineer:
+			continue
+		for id: int in sim.equipment.stored_of(cid):
+			if sim.equipment.instances[id].base == "prison_shiv":
+				sim.equipment.equip(cid, id)
+				break
+	_f3a_pending.clear()
 # endregion
