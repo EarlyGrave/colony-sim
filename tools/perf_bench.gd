@@ -21,8 +21,12 @@ func _ready() -> void:
 		await _run_view(seed_value, opts, n_enemies, ticks)
 		get_tree().quit(0)
 		return
+	if int(a.get("late", 0)) == 1:  # region F10W2
+		_run_late(seed_value, int(a.get("ticks", 300)), int(a.get("runs", 3)))
+		get_tree().quit(0)
+		return
 	var bus: Node = load("res://autoload/event_bus.gd").new()
-	var t0 := Time.get_ticks_usec()
+	var t0:= Time.get_ticks_usec()
 	var sim := Simulation.new(seed_value, bus, null, opts)
 	sim.start_new_game()
 	var gen_ms := (Time.get_ticks_usec() - t0) / 1000.0
@@ -41,6 +45,47 @@ func _ready() -> void:
 		sim.colonists.alive_count(), sim.colonists.list.size()])
 	print("jobs/combat run inside the colonists/threats lines")
 	get_tree().quit(0)
+
+
+# region F10W2
+## --late=1 [--runs=3 --ticks=300 --seed=1]: late-game scenario (Scenario.late_game), median of `runs`, table vs the "late" budget.
+func _run_late(seed_value: int, ticks: int, runs: int) -> void:
+	var f := FileAccess.open("res://tests/perf_budget.json", FileAccess.READ)
+	var b: Dictionary = JSON.parse_string(f.get_as_text())
+	var late: Dictionary = b.get("late", {})
+	var avgs := {}
+	var p95s := {}
+	var info := {}
+	for r in runs:
+		var bus: Node = load("res://autoload/event_bus.gd").new()
+		var sim := Scenario.late_sim(seed_value, bus)
+		info = Scenario.late_game(sim)
+		for i in 100:
+			sim.step()
+		var m := Scenario.measure(sim, ticks)
+		for k in Scenario.LATE_BUCKETS:
+			var arr: Array = m.get(k, [0.0])
+			if not avgs.has(k):
+				avgs[k] = []
+				p95s[k] = []
+			avgs[k].append(Scenario.avg(arr))
+			p95s[k].append(Scenario.p95(arr))
+		bus.free()
+	print("late-game %s (median of %d x %d ticks, ms/tick)" % [str(info), runs, ticks])
+	print("%-14s %8s %8s %8s %8s" % ["bucket", "avg", "p95", "budget.avg", "budget.p95"])
+	for k in Scenario.LATE_BUCKETS:
+		var av := _median(avgs[k])
+		var p9 := _median(p95s[k])
+		var lim: Dictionary = late.get(k, {})
+		print("%-14s %8.3f %8.3f %8s %8s  (delta avg %s, p95 %s)" % [k, av, p9, str(lim.get("avg", "-")), str(lim.get("p95", "-")),
+			("%+.3f" % (av - float(lim["avg"]))) if lim.has("avg") else "-", ("%+.3f" % (p9 - float(lim["p95"]))) if lim.has("p95") else "-"])
+
+
+func _median(a: Array) -> float:
+	var s: Array = a.duplicate()
+	s.sort()
+	return float(s[s.size() / 2])
+# endregion
 
 
 func _run_view(seed_value: int, opts: Dictionary, n_enemies: int, frames: int) -> void:

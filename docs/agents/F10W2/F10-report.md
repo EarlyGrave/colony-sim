@@ -1,0 +1,2 @@
+# F10 W2 report
+Late-game perf scenario (perf_scenario.gd late_game, perf_bench --late=1, tests/test_f10_perf_late.gd, "late" budget). Median of 3x300 ticks, shared host: total avg 1.15 / p95 2.40 ms (budget 1.7 / 3.2). No hot spots fixed (nothing obvious; sim/ untouched, goldens identical). Web est: x2-3 => p95 ~5-7 ms < 10. web_smoke PASS, jsheap 123 MB (tutorial) / 139 MB (size250); its FPS is a software-GL lower bound, no usable factor.
