@@ -386,3 +386,6 @@ HP); волны заканчиваются по таймеру и твари о�
 - Owner: balance tuning postponed (content first). F1a SK/TH stopped; new main bar in DECISIONS.md.
 - LA: launch still 0/10 at 60 d. Copper is no longer the wall: petition pace + refined essence (P4 ~d60, shuttle needs ~20 d more; P4 short 60-76 refined on seeds 1/6). repair_rock_fix hurts (6/10 alive). Added bot knob `pg_bot.la_hoard_day` (off) + tools/la_diag.gd. Table: baseline 7/5/3/2/0; hoard25+cu_first 8/6/2/2/0. Override syntax: `--ov={"balance":{"key":val}}`.
 - F2 wave running: F2a metro live, F2b Fight loop, F2c gear loot, F2d ending screens.
+- F2d merged: win screen shows the won path's epilogue (4 cases tested); card scrolls, buttons visible at 844x390.
+- F2c merged: creature loot (`loot` in enemies.json, child rng, rarity × (1 + 3·pollution_frac), ilvl by day). Drops ≥3 on 6/10 seeds (bar 8/10 unreachable: seeds 1/6/8 have ZERO waves in 60 d, seed 5 dies d27). No loot before day 6 (`_loot_min_day`, keeps goldens). tools/gear_loot_eval.gd.
+- F2a partial (not merged): metro.enabled=true but defiance never rises for bots (quota=0, shipping decays it). Fix relayed to F2b (metro_track region F2).
