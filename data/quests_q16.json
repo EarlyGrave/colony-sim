@@ -12,7 +12,7 @@
 		"start": "show",
 		"beats": {
 			"show": {
-				"text": "The old Lifer unfolds a receipt: prior sentence, Lull, 40 units, paid. Receipts outlive sentences.",
+				"text": "A Lifer unfolds a receipt: prior sentence, Lull, 40 units, paid.",
 				"options": {
 					"read": {
 						"label": "Read it aloud",

@@ -127,3 +127,64 @@ func test_text_lengths() -> void:
 	var pa: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/flavor.json"))["pa"]
 	for k in ["path_submit", "path_fight", "path_escape"]:
 		assert_true((pa[k] as Array).size() >= 2, k)
+
+
+# region F4d: Revelation polish
+func test_f4d_roll_call_fires_and_mimic_name() -> void:
+	for s in range(1, 4):
+		var sim := _sim(s)
+		sim.colonists.spawn(Vector2i(4, 4))
+		var victim: Colonist = sim.colonists.list[0]
+		sim.threats.awakened = false
+		victim.alive = false  # a buried inmate
+		sim.quests.set_flag("rv_colonist_died")
+		sim.quests.set_flag("rv_mimic_killed")
+		sim.tick = 8 * sim.ticks_per_day
+		assert_false(_run_until_pending(sim, "q15_roll_call", 3).is_empty(), "Q15 fired seed %d" % s)
+		var e := Enemy.new(7, "mimic", sim.defs.enemies["mimic"], Vector2i(1, 1))
+		assert_eq(e.name_of_dead(sim.colonists.list), victim.display_name)
+		var g := Enemy.new(8, "grub" if sim.defs.enemies.has("grub") else "mimic", sim.defs.enemies["mimic"], Vector2i(1, 1))
+		g.def_id = "other"
+		assert_eq(g.name_of_dead(sim.colonists.list), "")
+
+
+func test_f4d_warden_pa_keys() -> void:
+	var j: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/flavor.json"))
+	for k in ["path_submit", "path_fight", "path_escape"]:
+		assert_true((j["pa"] as Dictionary).has(k) and (j["pa"][k] as Array).size() >= 1, k)
+		for l: String in j["pa"][k]:
+			assert_true(l.length() <= 70, l)
+
+
+func test_f4d_blocks_panel_line() -> void:
+	var sim := _sim(2)
+	assert_eq(BlocksPanel.creatures_line(sim), "")
+	sim.quests.set_flag("clue_our_dead")
+	assert_eq(BlocksPanel.creatures_line(sim), "Creatures: former inmates")
+
+
+func test_f4d_quest_text_length() -> void:
+	for f in ["q15", "q16"]:
+		var txt := FileAccess.get_file_as_string("res://data/quests_%s.json" % f)
+		var re := RegEx.create_from_string('"(?:text|label|hint|title)":\\s*"([^"]*)"')
+		for m in re.search_all(txt):
+			assert_true(m.get_string(1).length() <= 70, m.get_string(1))
+
+
+func test_f4d_dump_side_spawn() -> void:
+	for s in range(1, 4):
+		var sim := _sim(s)
+		var th := sim.threats
+		var w := sim.map.width
+		var h := sim.map.height
+		var c := Vector2i(w - 4, h / 2)  # dump on the east side
+		for dx in 2:
+			sim.map.set_zone(c + Vector2i(dx, 0), "waste_dump")
+		var e := th.f4d_dump_edge()
+		assert_true(e.x >= 0, "edge seed %d" % s)
+		assert_true(e.x == w - 1 or e.x == 0 or e.y == 0 or e.y == h - 1)
+		assert_true(absi(e.y - c.y) <= 6 and e.x >= w - 4, "east edge seed %d got %s" % [s, str(e)])
+		assert_eq(th._f4d_origin(Vector2i(3, 0)), Vector2i(3, 0), "flag off keeps origin")
+		th.cfg["spawn_at_pollution_peak"] = true
+		assert_eq(th._f4d_origin(Vector2i(3, 0)), e)
+# endregion

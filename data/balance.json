@@ -109,6 +109,7 @@
 		"first_wave_max_points": 3.0,
 		"first_wave_delay_days": 3.5,
 		"first_wave_gate_days": 0.0,
+		"spawn_at_pollution_peak": false,
 		"wave_interval_days": 3.5,
 		"wave_duration_ticks": 350,
 		"base_strength": 1.2,

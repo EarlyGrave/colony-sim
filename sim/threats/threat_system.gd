@@ -1239,3 +1239,57 @@ func _f3a_wave_reward() -> int:
 	sim.rng.state = st
 	return id
 # endregion
+
+
+# region F4d
+## Flag `spawn_at_pollution_peak` (balance threat, default off): the very first wave comes from the map-edge cell nearest the
+## waste dump (zone cells' centroid), else the refinery cluster (processor centroid). Contamination is one global number, so the
+## dump / refineries stand in for the pollution peak. Deterministic: scans the edge in a fixed order, strict `<` keeps the first.
+func _f4d_origin(fallback: Vector2i) -> Vector2i:
+	if not bool(cfg.get("spawn_at_pollution_peak", false)):
+		return fallback
+	var e := f4d_dump_edge()
+	return e if e.x >= 0 else fallback
+
+
+## Centroid of the waste-dump zone, else of the processors; (-1, -1) when the colony has neither.
+func f4d_pollution_peak() -> Vector2i:
+	var sum := Vector2i.ZERO
+	var n := 0
+	var w := sim.map.width
+	for i in sim.map.zone_ids.size():
+		if sim.map.zone_ids[i] == "waste_dump":
+			sum += Vector2i(i % w, i / w)
+			n += 1
+	if n == 0:
+		for b in sim.buildings.list:
+			if not b.destroyed and str(b.def.get("machine", "")) == "processor":
+				sum += b.cell
+				n += 1
+	return sum / n if n > 0 else Vector2i(-1, -1)
+
+
+## Reachable map-edge cell closest to the pollution peak ((-1, -1) when there is no peak).
+func f4d_dump_edge() -> Vector2i:
+	var peak := f4d_pollution_peak()
+	if peak.x < 0:
+		return Vector2i(-1, -1)
+	var home := sim.map_center()
+	var w := sim.map.width
+	var h := sim.map.height
+	var best := Vector2i(-1, -1)
+	var best_d := 1 << 30
+	var edge: Array[Vector2i] = []
+	for x in w:
+		edge.append(Vector2i(x, 0))
+		edge.append(Vector2i(x, h - 1))
+	for y in range(1, h - 1):
+		edge.append(Vector2i(0, y))
+		edge.append(Vector2i(w - 1, y))
+	for c in edge:
+		var d := (c - peak).length_squared()
+		if d < best_d and sim.pathfinder.reachable_terrain(c, home):
+			best_d = d
+			best = c
+	return best
+# endregion
