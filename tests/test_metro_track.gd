@@ -130,7 +130,6 @@ func test_disabled_is_inert() -> void:
 	m.note_covert_sale(10)
 	assert_eq(m.defiance, 0.0)
 	assert_false(m.tick())
-	assert_false(sim.defs.raids.has("drone_sweep"))
 	for _i in sim.ticks_per_day * 2:
 		sim.step()
 	assert_eq(m.raids_started, 0)

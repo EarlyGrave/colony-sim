@@ -19,8 +19,6 @@ func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	cfg = sim.defs.balance.get("metro", {})
 	if enabled():
-		for id: String in sim.defs.metro.get("raids", {}):
-			sim.defs.raids[id] = sim.defs.metro["raids"][id]  # tagged faction "metropolis"; creature picks skip them
 		next_raid_tick = int(float(cfg["first_raid_day"]) * sim.ticks_per_day)
 
 
@@ -89,6 +87,11 @@ func fight_path() -> bool:
 	return defiance >= float(cfg["fight_threshold"])
 
 
+## region F2e: the player picked the fight path (distinct from fight_path(), the high-defiance escalation state).
+func chosen_fight() -> bool:
+	return sim.path() == "fight"
+
+
 func wants_final() -> bool:
 	return fight_path() and not final_done and raids_started >= int(cfg["final_after_raids"])
 
@@ -98,8 +101,10 @@ func pick_raid() -> String:
 		return "collector_assault"
 	var ids: Array[String] = []
 	var p := points()
-	for id: String in sim.defs.metro["raids"]:
-		var r: Dictionary = sim.defs.metro["raids"][id]
+	for id: String in sim.defs.raids:  # drone rows live in data/raids.json, tagged faction "metropolis"
+		var r: Dictionary = sim.defs.raids[id]
+		if str(r.get("faction", "creature")) != "metropolis":
+			continue
 		if not bool(r.get("final", false)) and float(r["min_points"]) <= p:
 			ids.append(id)
 	ids.sort()
@@ -120,7 +125,7 @@ func tick() -> bool:
 	if defiance < float(cfg["min_defiance"]):
 		return false
 	var grace := int(float(cfg["grace_days"]) * sim.ticks_per_day)
-	if not fight_path() and th.next_wave_tick >= 0 and th.next_wave_tick - sim.tick < grace:  # region F2: on the fight path the Metropolis does not wait for creature waves
+	if not chosen_fight() and not fight_path() and th.next_wave_tick >= 0 and th.next_wave_tick - sim.tick < grace:  # region F2: on the fight path the Metropolis does not wait for creature waves
 		return false  # a creature wave is imminent: never stack, wait for it
 	var id := pick_raid()
 	if id == "":
@@ -134,7 +139,7 @@ func tick() -> bool:
 	raids_started += 1
 	if id == "collector_assault":
 		final_done = true
-	next_raid_tick = sim.tick + int(float(cfg["interval_days"]) * sim.ticks_per_day)
+	next_raid_tick = sim.tick + int(float(cfg["fight_interval_days" if chosen_fight() else "interval_days"]) * sim.ticks_per_day)  # region F2e: the fight path is raided more often
 	# the pollution timer yields: no creature wave for grace_days after a drone raid ends
 	th.next_wave_tick = maxi(th.next_wave_tick, th.wave_end_tick + grace)
 	sim.bus.metro_raid_started.emit(id, pts)
@@ -145,5 +150,5 @@ func tick() -> bool:
 
 ## A creature wave ended: drones hold off for grace_days.
 func on_creature_wave_end() -> void:
-	if enabled():
+	if enabled() and not (chosen_fight() and bool(cfg.get("fight_raid_after_wave", true))):  # region F2e: on the fight path the first gap after a wave is the raid window
 		next_raid_tick = maxi(next_raid_tick, sim.tick + int(float(cfg["grace_days"]) * sim.ticks_per_day))
