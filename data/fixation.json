@@ -1,0 +1,21 @@
+{
+	"_comment": "W3 Fixation (strange mood). Once per game a skilled inmate demands items + a workbench. Flag: balance.json fixation_enabled.",
+	"min_day": 25,
+	"skill": "crafting",
+	"min_level": 3,
+	"cost": {"plate": 6, "refined_essence": 2},
+	"offer_ticks": 1200,
+	"deadline_days": 3,
+	"work_ticks": 300,
+	"bench": "workbench",
+	"rarity": "legendary",
+	"ilvl": 10,
+	"bases": ["rifle", "plasma_blade", "smg", "kevlar_vest", "helmet"],
+	"fail_break_ticks": 360,
+	"text": "{who} is fixated: a masterwork, 6 plates and 2 refined essence, 3 days.",
+	"yes_label": "Feed it",
+	"no_label": "Decline",
+	"done_text": "{who} finished {item}. The Warden pretends not to notice.",
+	"fail_text": "{who} could not finish. The materials are gone.",
+	"cancel_text": "{who} dropped the work. Materials returned."
+}

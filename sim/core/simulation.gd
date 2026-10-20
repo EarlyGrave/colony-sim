@@ -30,6 +30,7 @@ var buildings: BuildingSystem
 var contamination: ContaminationSystem
 var threats: ThreatSystem
 var storyteller: Storyteller
+var fixation: FixationSystem  # region W3
 var crises: CrisisSystem  # region crises
 # region health
 var health: HealthSystem
@@ -290,6 +291,7 @@ func _init_systems() -> void:
 	contamination = ContaminationSystem.new(self)
 	threats = ThreatSystem.new(self)
 	storyteller = Storyteller.new(self)
+	fixation = FixationSystem.new(self)  # region W3
 	crises = CrisisSystem.new(self)  # region crises
 	# region health
 	health = HealthSystem.new(self)
@@ -485,6 +487,7 @@ func step() -> void:
 	if profiling:
 		_lap("crises")
 	storyteller.tick()
+	fixation.tick()  # region W3
 	if profiling:
 		_lap("storyteller")
 	if tutorial != null:  # region O1

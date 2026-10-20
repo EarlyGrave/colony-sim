@@ -1,7 +1,6 @@
 # Sim contract (portable spec)
 What a re-implementation (other engine/language) must reproduce to be "the same game": same seed + same command log
-= same `state_hash` at every tick. Source of truth is the code; `tests/test_contract_doc.gd` keeps the command table and
-the data-file table below in sync with it. "(GD)" marks GDScript-specific behaviour a port must emulate or replace.
+= same `state_hash` at every tick. Source of truth is the code; `tests/test_contract_doc.gd` keeps the command table and the data-file table below in sync with it. "(GD)" marks GDScript-specific behaviour a port must emulate or replace.
 ## 1. Tick order (`Simulation.step()`)
 `if game_over_reason != "": return`, then `tick += 1`, then in this exact order:
 1. `crafting.tick` (bills)  2. `needs.tick`  3. `farming.tick`  4. `colonists.tick` (jobs, movement)
@@ -145,6 +144,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `endings.json` | paths[], ponr_flags{}, submit_ponr_petition_phase (EN1) |
 | `regulations.json` | settings.timeout_days + slots[] {day,title,text,default,options{id:{label,price,excludes[],effects{mod:mult,waste}}}} (W1, flag reg_enabled) |
 | `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter,alt{id,kind,title,cost,...}} (E1; W2 alt), gated by balance e1_enabled) |
+| `fixation.json` | min_day, skill/min_level, cost{}, deadline_days, work_ticks, bench, rarity, bases[] (W3; gated by balance fixation_enabled; offer reuses `answer_event`, own rng `seed ^ 0xF1C5A7`, tick after storyteller) |
 | `quests_q2.json` | Q2 Pilgrims of the Slag: trigger pollution_min, zealot, beats/options (gated by balance q_enabled) |
 | `shuttle.json` | preset_mult, gantry, parts_need, part_cost, countdown_days, siege_* numbers, repair_cost, win_letter (S1, gated by balance s1_enabled) |
 | `milestones.json` | tiers id -> {parts{item:n}} audit deliveries per tier |
