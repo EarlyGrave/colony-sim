@@ -380,3 +380,4 @@ HP); волны заканчиваются по таймеру и твари о�
 - Fixers: FX (13 red after merge; lockdown_radius 24→36), FX2 (3 tests), FX3 (drone sprites/combat_model). First-wave gate ships OFF (0 days).
 - F1c: raid_objectives ON vs OFF (10 seeds, 60 d): alive>=8 7→5/10 → stays OFF. Baseline on dev now: alive>=8 7/10, audit 5, P1 3, P3 2, launch 0 (morning main: 9/8/5/3/1) → balance regression, BL working.
 - Full suite 1037 green on dev. main NOT updated (last main 42247d1) until balance restored.
+- BL final: dirty_mult 0.35→0.28 only → pillar gap 2.2, alive>=8 7/10, audit 5, P1 3, P3 2, launch 0; 1037 green. main stays 42247d1. See docs/HANDOFF.md.

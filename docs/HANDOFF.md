@@ -46,7 +46,7 @@ all default off). Next plan: **docs/design/next_batches.md** (Fable coherence re
 Bot baseline on dev (60 d, 10 seeds, F1c): alive>=8 7/10, audit 5, P1 3, P3 2, launch 0. raid_objectives ON was
 worse (alive 5/10) → stays OFF. BL balance attempts (branch `worktree-agent-a9f274b41e4c31a6c`): survival vs pillar
 pull against each other — "dirty_mult .28 + old skills" = pillar gap 2.2 / alive 7/10; "skills 2-4 + XP×1.5" =
-alive 8/10 but gap 0.8 (rejected: breaks the core pillar). See PROGRESS for the final BL decision.
+alive 8/10 but gap 0.8 (rejected: breaks the core pillar). FINAL (applied on dev 00:10 UTC): only `dirty_mult` 0.35→0.28 → pillar gap 2.2, alive>=8 7/10, audit 5, P1 3, P3 2, launch 0. Full suite 1037 green. Still below the main bar (alive>=8 ≥8/10, launch ≥1) → **main stays at 42247d1**; batch F1a in next_batches.md is the next job. The rejected 'skills 2-4 + XP×1.5 + lo/hi .28/.45' row reached alive 8/10 + audit 8 + gap 2.0 but breaks test_waves (dies on wave 4) and test_k5_power.
 
 ## 3. Open problems (do these first)
 1. **Balance regression from the night merges** (skill curve L0=0.3x, trait hunger, lockdown): pillar gap
