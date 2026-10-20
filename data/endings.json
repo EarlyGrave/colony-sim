@@ -11,6 +11,17 @@
 		"remission": "ponr_remission"
 	},
 	"submit_ponr_petition_phase": 1,
+	"path_effects": {
+		"submit": {
+			"wave_mult": 1.2,
+			"grace_days": 5
+		},
+		"escape": {
+			"petition_fee_mult": 0.8
+		},
+		"fight": {},
+		"remission": {}
+	},
 	"fight": {
 		"building": "uplink_array",
 		"min_power_factor": 0.5,

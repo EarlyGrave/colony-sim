@@ -70,6 +70,18 @@ func mark_won(id: String) -> bool:
 	return true
 
 
+# region F9W2
+## Promised path effects (data/endings.json "path_effects"). Returns `default` while no path is chosen
+## or the key is absent for it. Callers compose with quest mods as a PRODUCT (grace_days: sum).
+func effect(name: String, default: float) -> float:
+	var p := path()
+	if p == "":
+		return default
+	var e: Dictionary = (sim.defs.endings.get("path_effects", {}) as Dictionary).get(p, {})
+	return float(e.get(name, default))
+# endregion
+
+
 # region RV
 ## Epilogue lines for an ending ([title, line, ...]) from data/flavor.json "epilogue"; empty if missing.
 static func epilogue(id: String) -> Array:
