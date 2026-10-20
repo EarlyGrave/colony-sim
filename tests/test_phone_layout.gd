@@ -364,3 +364,32 @@ func test_gear_screen_fits() -> void:
 		_settle(game, size, sc)
 		assert_true(game.hud._o4_cluster.visible, tag + " cluster back"))
 # endregion
+
+
+# region F10W3
+func test_new_badges_do_not_overlap_or_grow_buttons() -> void:
+	var old_path := SeenFlags.path
+	SeenFlags.path = "user://test_phone_badges_seen.json"
+	SeenFlags.reset()
+	var game := _make_game()
+	game.sim.run_ticks(60)
+	game.sim.give_gear(game.sim.colonists.list[0].id, "helmet", "rare", 2)
+	_each_size(func(size: Vector2i, sc: float) -> void:
+		var tag := "%dx%d@%.2f" % [size.x, size.y, sc]
+		game.hud._s4_update()
+		game.hud._f10_badges(true)
+		_settle(game, size, sc)
+		game.hud._f10_badges(true)
+		assert_true(NewBadge.is_on(game.hud._menu_btn), tag + " More badge on")
+		var gb: Button = game.hud._panel_buttons["gear_screen"]
+		assert_true(NewBadge.is_on(gb), tag + " gear badge on")
+		var br := (gb.get_node("NewBadge") as Control).size
+		assert_true(br.x <= 28.0 and br.y <= 28.0, tag + " badge size %s" % br)
+		_check_state(game, tag + " badges")
+		game.hud._menu_popup.visible = true
+		_settle(game, size, sc)
+		_check_state(game, tag + " badges, More open")
+		game.hud._menu_popup.visible = false)
+	SeenFlags.reset()
+	SeenFlags.path = old_path
+# endregion
