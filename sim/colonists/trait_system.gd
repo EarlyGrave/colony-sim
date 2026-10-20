@@ -61,6 +61,36 @@ func shift_mult(c: Colonist) -> float:
 ## Multiplier on the tainted-ground illness chance (essence_nose: mutation_risk).
 func mutation_mult(c: Colonist) -> float:
 	return maxf(0.0, 1.0 + mod(c, "mutation_risk"))
+
+
+## F4e: added to the hit chance of a melee attacker with no equipped weapon.
+func unarmed_hit(c: Colonist) -> float:
+	return mod(c, "unarmed_hit")
+
+
+## F4e: multiplier on wear a batch puts on a machine (machine_breakage -0.3 = 30% less wear).
+func breakage_mult(c: Colonist) -> float:
+	return maxf(0.0, 1.0 + mod(c, "machine_breakage"))
+
+
+## F4e: multiplier on refining speed (refining_speed +0.1 = batches need 1/1.1 of the work).
+func refine_speed(c: Colonist) -> float:
+	return maxf(0.1, 1.0 + mod(c, "refining_speed"))
+
+
+## F4e: whole quality tiers added to a craft roll (quality_tier -1 = one tier worse).
+func quality_shift(c: Colonist) -> int:
+	return roundi(mod(c, "quality_tier"))
+
+
+## F4e: debt installment size for this colonist (installment_pct -0.05 = 5% smaller), at least 1.
+func installment(c: Colonist, base: int) -> int:
+	return maxi(1, roundi(float(base) * maxf(0.0, 1.0 + mod(c, "installment_pct"))))
+
+
+## F4e: extra movement gain per tick (move_speed +0.15 = 15% faster).
+func move_bonus(c: Colonist) -> float:
+	return mod(c, "move_speed")
 # endregion
 
 

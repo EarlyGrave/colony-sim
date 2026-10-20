@@ -30,6 +30,8 @@ func hit_chance(c: Colonist, w: Dictionary, dist: float) -> float:
 	p += sim.perks.mod(c, "hit_chance") + sim.traits.mod(c, "hit")  # region perks + traits
 	if c.combat != null:
 		p += att_of(c)[StatBlock.ACC]  # region E1
+	if str(w["kind"]) == "melee" and _wdef.get(c.id) == null:
+		p += sim.traits.unarmed_hit(c)  # region traits
 	return clampf(p, float(cfg["hit_min"]), float(cfg["hit_max"]))
 
 

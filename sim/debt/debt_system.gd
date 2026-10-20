@@ -61,7 +61,7 @@ func _on_joined(id: int) -> void:
 func is_overdue(c: Colonist) -> bool:
 	var st := state_of(c)
 	return st != null and st.remaining() > 0 and sim.day() >= st.due_day \
-			and st.period_paid < int(cfg["installment"])
+			and st.period_paid < sim.traits.installment(c, int(cfg["installment"]))  # region traits
 
 
 # --- Commands (called from Simulation) ---------------------------------------------
@@ -143,7 +143,7 @@ func _daily(c: Colonist, st: DebtState) -> void:
 		_pay(c, st, mini(st.quota, st.remaining()))
 		if st.remaining() == 0:
 			return
-	var inst := int(cfg["installment"])
+	var inst := sim.traits.installment(c, int(cfg["installment"]))  # region traits
 	if sim.day() >= st.due_day and st.period_paid < inst:
 		# Grace period, then despair grows in proportion to the unpaid share.
 		if sim.day() >= st.due_day + int(cfg.get("grace_days", 0)):
