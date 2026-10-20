@@ -8,8 +8,7 @@ What a re-implementation (other engine/language) must reproduce to be "the same 
 8. `perks.tick`  9. `health.tick`  10. `debt.tick`  11. `mood.tick`  12. `threats.tick`  13. `contamination.tick`
 14. `mutation.tick`  14b. `ecology.tick` (T5: nest hunger banks, rally letter)  15. `crises.tick`  15b. `regulations.tick` (W1)  16. `storyteller.tick`
 Then: if no colonist is alive (list non-empty) `end_game("colonists_dead")`; if `tick % ticks_per_day == 0` emit `day_started`; emit `tick_advanced`.
-`TICKS_PER_SECOND = 10` at 1x; `ticks_per_day = balance.ticks_per_day`. Speed (pause/1x/2x/3x) is the view's job: it only changes how many `step()` calls happen.
-Commands run between steps: a command recorded at tick T was issued after step number T and before step T+1.
+`TICKS_PER_SECOND = 10` at 1x; `ticks_per_day = balance.ticks_per_day`. Speed (pause/1x/2x/3x) is the view's job: it only changes how many `step()` calls happen. Commands run between steps: a command recorded at tick T was issued after step number T and before step T+1.
 Construction: `Simulation.new(seed, bus, defs, opts)` then `start_new_game()` (map gen, `_init_systems()`, starting colony, `StartOpts.apply`).
 System construction order in `_init_systems()` fixes id allocation and listener order.
 ## 2. RNG rules
