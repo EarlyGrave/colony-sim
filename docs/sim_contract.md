@@ -7,15 +7,14 @@ the data-file table below in sync with it. "(GD)" marks GDScript-specific behavi
 1. `crafting.tick` (bills)  2. `needs.tick`  3. `farming.tick`  4. `colonists.tick` (jobs, movement)
 5. *research slot (pending R2a): after colonists, before logistics*  6. `logistics.tick` (belts)  7. `power.tick` (L3: networks, fuel burn, brownout) then `buildings.tick_machines`  7b. `chips.tick` (T4)
 8. `perks.tick`  9. `health.tick`  10. `debt.tick`  11. `mood.tick`  12. `threats.tick`  13. `contamination.tick`
-14. `mutation.tick`  14b. `ecology.tick` (T5: nest hunger banks, rally letter)  15. `crises.tick`  16. `storyteller.tick`
+14. `mutation.tick`  14b. `ecology.tick` (T5: nest hunger banks, rally letter)  15. `crises.tick`  15b. `regulations.tick` (W1)  16. `storyteller.tick`
 Then: if no colonist is alive (list non-empty) `end_game("colonists_dead")`; if `tick % ticks_per_day == 0` emit `day_started`; emit `tick_advanced`.
 `TICKS_PER_SECOND = 10` at 1x; `ticks_per_day = balance.ticks_per_day`. Speed (pause/1x/2x/3x) is the view's job: it only changes how many `step()` calls happen.
 Commands run between steps: a command recorded at tick T was issued after step number T and before step T+1.
 Construction: `Simulation.new(seed, bus, defs, opts)` then `start_new_game()` (map gen, `_init_systems()`, starting colony, `StartOpts.apply`).
 System construction order in `_init_systems()` fixes id allocation and listener order.
 ## 2. RNG rules
-- Algorithm: Godot `RandomNumberGenerator` (PCG32), `rng.seed = seed_value` in `_init`. Calls used: `randi_range(a,b)`, `randf()`, and `randf_range` in map gen.
-  A port must implement the same generator or regenerate its goldens.
+- Algorithm: Godot `RandomNumberGenerator` (PCG32), `rng.seed = seed_value` in `_init`. Calls used: `randi_range(a,b)`, `randf()`, and `randf_range` in map gen. A port must implement the same generator or regenerate its goldens.
 - Never use global `randi()/randf()`, `Time`, OS clocks or `hash()` of unordered data in sim code.
 - One shared stream `sim.rng`. Its call ORDER is part of the contract: adding, removing or reordering a call shifts every later roll. Users:
   map generation (once, at start), colonist generation (`Generator`, `Skills` init), `quality` (2 `randf` per roll), `combat` hit roll
@@ -25,8 +24,7 @@ System construction order in `_init_systems()` fixes id allocation and listener 
 - Independent streams that never touch `sim.rng`: `debt` seed `seed*7919+13`; `idle_work` `seed ^ 0x1D1E`; `mutation` `seed ^ 0x3A7B`; `ecology` `seed ^ 0xEC01` (nest placement at `start_new_game`, mutant-variant rolls); storyteller chain stream `_prng` `seed ^ 0x9E3779`.
 - Pick-from-list rolls index lists in deterministic order (id order or insertion order), never an unordered Dictionary walk.
 ## 3. Determinism and number rules
-- State is ints, bools, strings, floats, cells (`Vector2i`), arrays, and Dictionaries with string/int keys. No Callables, Nodes or signals in state.
-  Cell-keyed Dictionaries are lookup-only in tick paths.
+- State is ints, bools, strings, floats, cells (`Vector2i`), arrays, and Dictionaries with string/int keys. No Callables, Nodes or signals in state. Cell-keyed Dictionaries are lookup-only in tick paths.
 - Iterate each system's `list` (insertion order = id order). To walk a Dictionary, walk a sorted key list.
 - Ints: ticks, ids, counts, stack sizes. Ids are allocated monotonically per system and never reused.
 - Floats: 64-bit IEEE double (hp, needs, contamination, mood, xp). Keep operation order (no FMA, no reassociation).
@@ -83,6 +81,7 @@ Unrecorded helpers (tests/tools only): `place_instant`, `set_patrol_route` (wrap
 | `covert_sale` | n: int | bool | N2: Escape path + contraband_on; consumes n refined -> escape_credit, +suspicion (x2 while Informant alive) |
 | `squad_focus` | sid: int, enemy_id: int | bool | C1: enemy alive; non-medic members `order_attack` | `give_gear` | cid, base, rarity, ilvl | int | E2: gear id or -1 | `equip` | cid, item_id | bool | E2: owner only, replaces slot, one resum | `unequip` | cid, slot | bool | E2 | `socket` | item_id, upgrade_id | bool | E2: free slot by rarity + tags |
 | `resolve_crisis` | crisis_id: str, option_id: str | bool | crisis active, option exists |
+| `choose_regulation` | slot: int, id: String | bool | W1: reg_enabled, slot open, option known, not excluded; unanswered slot auto-picks default after 2 d |
 | `answer_event` | event_uid: int, accept: bool | bool | pending storyteller choice with that uid |
 | `answer_quest` | uid: int, option_id: String | bool | pending quest choice; false if disabled/unknown |
 | `set_turret_ammo_policy` | building_id: int, policy: str | bool | turret exists, policy in `ammo.json` policies |
@@ -144,6 +143,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `meta.json` | legacy, next_batch, scout_cells, unlocks (cross-run meta, enters the sim via `opts`) |
 | `presets.json` | default, order, presets{id: name, sentence, wave_strength_mult, waste_mult, starting_debt_mult, crate, hint_density} (O3; become opts `wave_mult`, `waste_mult`, `debt_mult`, `crate`, `hint_density` via `StartOpts.preset_opts`; neutral values emit no key, so standard_term = `{}`) |
 | `endings.json` | paths[], ponr_flags{}, submit_ponr_petition_phase (EN1) |
+| `regulations.json` | settings.timeout_days + slots[] {day,title,text,default,options{id:{label,price,excludes[],effects{mod:mult,waste}}}} (W1, flag reg_enabled) |
 | `petitions.json` | preset_mult + phases[] {id,title,parts,reward{debt_cut_pct,items,unlock_tier},letter,alt{id,kind,title,cost,...}} (E1; W2 alt), gated by balance e1_enabled) |
 | `quests_q2.json` | Q2 Pilgrims of the Slag: trigger pollution_min, zealot, beats/options (gated by balance q_enabled) |
 | `shuttle.json` | preset_mult, gantry, parts_need, part_cost, countdown_days, siege_* numbers, repair_cost, win_letter (S1, gated by balance s1_enabled) |

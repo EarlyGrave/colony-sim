@@ -175,7 +175,7 @@ func _ready() -> void:
 		pb.add_theme_font_size_override("font_size", 17)
 		pb.pressed.connect(func() -> void: toggle_panel(pid))
 		_panel_buttons[pid] = pb
-		if pid == "petition" or pid == "dispatch" or pid == "shuttle" or pid == "beacons" or pid == "blocks" or pid == "ending":  # region EV  # region S4  # region N4: blocks button appears with the first Standing change  # region E4: shown only while the sim exposes it
+		if pid == "petition" or pid == "dispatch" or pid == "shuttle" or pid == "beacons" or pid == "blocks" or pid == "ending" or pid == "orders":  # region W1  # region EV  # region S4  # region N4: blocks button appears with the first Standing change  # region E4: shown only while the sim exposes it
 			pb.visible = false
 
 	_menu_btn = _button(speed_row, "More", Vector2(88, 64))
@@ -1577,6 +1577,9 @@ func _s4_update() -> void:
 	var eb: Button = _panel_buttons.get("ending")  # region EV: the Ending button appears once a path is chosen
 	if eb != null:
 		eb.visible = sim.endings != null and sim.path() != ""
+	var ob: Button = _panel_buttons.get("orders")  # region W1: Orders button only while the flag is on
+	if ob != null:
+		ob.visible = sim.regulations != null and sim.regulations.enabled()
 # endregion
 
 
