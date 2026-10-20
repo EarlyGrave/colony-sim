@@ -6,7 +6,7 @@ autonomous loop (section 5). Talk to the owner in Russian (informal "ты", he/h
 ## 1. Where things are
 - Repo `/home/user/colony-sim`, Godot 4.7.2, GDScript. Dev branch `claude/colony-sim-godot-4jftsm`; Pages deploys `main`.
 - Rollback points: `docs/rollback_points.md` (no git tags — proxy refuses tag pushes).
-- Design (source of truth, newest first):
+- Design: **docs/gdd/README.md** is the single source of truth (tree of ≤350-line files with status tags, 2026-10-20). Older sources below:
   - `docs/design/owner_notes_2026-10-19.md` — owner's own notes (Russian): story, 3 endings, combat, items, skills, traits.
   - `docs/design/GDD.md` — master design doc integrating everything; section 15 = open owner questions.
   - `docs/design/{economy_endgame,society_narrative,threats_pacing,combat_items,progression_traits}.md` — the five
@@ -63,7 +63,7 @@ alive 8/10 but gap 0.8 (rejected: breaks the core pillar). FINAL (applied on dev
    emerge as "scars" (decided without owner, review).
    Design question from RV: contamination is one global number — "first monsters come from the dump side" needs
    per-area pollution or a dump-zone marker.
-5. Owner TODO (keep reminding): delete stray `/b1.txt /b3.txt`.
+5. Owner TODO (keep reminding): delete stray `/b1.txt /b3.txt` (still present 2026-10-20; the safety check blocks Claude from deleting files at /).
 
 ## 4. Agents and roles (CLAUDE.md "Working mode" is binding)
 - Orchestrator (main session): talks to owner, merges, runs suites, updates docs, commits/pushes. Does not implement.
