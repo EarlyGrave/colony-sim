@@ -182,3 +182,53 @@ func test_f3c_armor_flat() -> void:
 	sim.combat.resum(c)
 	assert_near(sim.combat.def_of(c)[StatBlock.FLAT_PHYS], 0.0, 0.001)
 # endregion
+
+
+# region F4e: the last six stats
+func test_f4e_unarmed_hit() -> void:
+	var r := _solo("scrapper")
+	var sim: Simulation = r[0]
+	var c: Colonist = r[1]
+	var w := {"kind": "melee", "skill": "melee"}
+	var with_t := sim.combat.hit_chance(c, w, 1.0)
+	c.bio["traits"] = []
+	var without := sim.combat.hit_chance(c, w, 1.0)
+	assert_near(with_t - without, 0.1, 0.001)
+
+
+func test_f4e_machine_breakage() -> void:
+	var r := _solo("careful")
+	assert_near(r[0].traits.breakage_mult(r[1]), 0.7, 0.001)
+	r[1].bio["traits"] = []
+	assert_near(r[0].traits.breakage_mult(r[1]), 1.0, 0.001)
+	assert_near(r[0].traits.breakage_mult(null), 1.0, 0.001)
+
+
+func test_f4e_refining_speed() -> void:
+	var r := _solo("essence_nose")
+	assert_near(r[0].traits.refine_speed(r[1]), 1.1, 0.001)
+	assert_near(r[0].traits.refine_speed(null), 1.0, 0.001)
+
+
+func test_f4e_quality_tier() -> void:
+	var r := _solo("hasty")
+	assert_eq(r[0].traits.quality_shift(r[1]), -1)
+	r[1].bio["traits"] = []
+	assert_eq(r[0].traits.quality_shift(r[1]), 0)
+
+
+func test_f4e_installment_pct() -> void:
+	var r := _solo("ledger_eye")
+	var sim: Simulation = r[0]
+	assert_eq(sim.traits.installment(r[1], 100), 95)
+	r[1].bio["traits"] = []
+	assert_eq(sim.traits.installment(r[1], 100), 100)
+
+
+func test_f4e_move_speed() -> void:
+	var r := _solo("jittery")
+	var c: Colonist = r[1]
+	var with_t := c.move_gain(r[0])
+	c.bio["traits"] = []
+	assert_near(with_t - c.move_gain(r[0]), 0.15, 0.001)
+# endregion

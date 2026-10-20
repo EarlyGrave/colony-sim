@@ -143,6 +143,8 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 	var need := int(b.recipe["work_ticks"])
 	if sim.quests != null and sim.quests.is_started() and _is_refining(b):  # region QX: refine_mult scales refining speed
 		need = maxi(1, roundi(need / maxf(0.1, sim.quests.mod("refine_mult"))))
+	if _is_refining(b):
+		need = maxi(1, roundi(need / sim.traits.refine_speed(operator)))  # region traits
 	if b.progress < need:
 		return false
 	b.progress = 0
@@ -188,7 +190,7 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 	if b.recipe.has("gear_craft") and operator != null:  # region E5
 		sim.equipment.craft(operator.id, str(b.recipe["gear_craft"]))  # region E5
 	refined_batches += 1
-	wear(b, float(b.def.get("wear_per_batch", 0.0)))
+	wear(b, float(b.def.get("wear_per_batch", 0.0)) * sim.traits.breakage_mult(operator))  # region traits
 	batch_operator = operator  # region perks
 	sim.bus.batch_refined.emit(b.id, b.recipe_id)
 	if operator != null:  # region F3

@@ -60,6 +60,7 @@ func roll(item_id: String, operator: Colonist, bench_id: String) -> String:
 	for t: float in _cfg["thresholds"]:
 		if score >= t:
 			idx += 1
+	idx = clampi(idx + sim.traits.quality_shift(operator), 0, _ids.size() - 1)  # region traits
 	return _store(_ids[idx])
 
 
