@@ -396,3 +396,11 @@ HP); волны заканчиваются по таймеру и твари о�
 - F3 batch DONE → main 50fd7cb. F3a: start prison_shiv GearItem (engineers keep rifle), creature-wave reward (35%, armour), bot equips best gear by default (alive same 6/10 ON/OFF), combat_model 2b (vest ×1.8-2.1 survival). F3b: craft_gear = plates + refined (vest 5/8 ≈ 2 installments), gated by T2 research; vest per inmate costs 5-9% refined (24% on poor seeds), debt paid -15-30%; plates are the binding constraint; tools/gear_budget.gd. F3c: carry, xp_mult, hit, work day/night, mutation_risk, standing_gain, armor_flat consumed (still unread: unarmed_hit, machine_breakage, refining_speed, quality_tier, installment_pct, move_speed). F3d: all 11 branch effects already consumed — tests + tools/skill_model.gd; branch level stays 5.
 - FX3: 3 post-merge interaction failures fixed (tests only). Lesson: quick tests miss cross-worker interactions — run the full suite right after the last merge of a wave (done).
 - Bot 60 d after F3: alive>=8 6/10, audit 4, P1 0, P3 0, launch 0. Full suite 1077 green, web smoke PASS.
+- F4 batch DONE (without F4c Remission — waits for owner) → main 2bce7ab.
+  - F4a Escape: suspicion capped 95 + decay 4/d, legacy from extraction (25/colonist) + credit (0.5, cap 40); escape bot (path=3 sell_every=6, 90 d): susp peak <= 84 on 10/10, bandit fee + extraction won on 4/10. contraband.enabled stays false (S4a turns it on).
+  - F4b NG+ carry per ending (data/meta.json endings); legacy reads the Submit manifest; legacy × ending mult. ng_new_names flag set by shuttle_system but unread (redundant).
+  - F4d Q15/PA keys verified, Enemy.name_of_dead, Blocks "Creatures: former inmates", dump-side first wave (flag OFF).
+  - F4e last 6 trait stats consumed (unarmed_hit, machine_breakage, refining_speed, quality_tier, installment_pct, move_speed). Goldens: save_load_midgame regen.
+  - F4f mimic name: inspect toast + "<Name> is gone for good." in the kill feed after Q15. FX4 fixed a real crash (view built an Enemy with an empty def on every mimic death).
+  - Bot 60 d: alive>=8 6/10, audit 6/10 (up from 4), P1 1, launch 0. web smoke jsheap 123 → 167 MB (watch).
+- Orchestrator slips today: one red push (pipe hid exit code), one parallel merge+push (conflict saved it). Rules: pipefail; merge → full suite → push strictly sequential.
