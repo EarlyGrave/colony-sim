@@ -826,6 +826,8 @@ func _cap_parts() -> void:
 func _hoarding() -> bool:
 	if _knob("hoard", 1) == 0:
 		return false
+	if _knob("la_hoard_day", 0) > 0 and sim.day() >= _knob("la_hoard_day", 0):  # region LA: stop extra debt / contracts early (installments, turrets, research still first)
+		return true
 	return sim.milestones.is_tier_done(2) or sim.shuttle.unlocked()  # region LN: from tier 2 on
 # endregion
 
