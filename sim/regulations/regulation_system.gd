@@ -40,6 +40,7 @@ func tick() -> void:
 		expires = sim.tick + timeout_ticks
 		var s: Dictionary = slots[next]
 		sim.bus.story_event.emit("reg_slot_%d" % next, "Standing Orders: %s. %s" % [s["title"], s["text"]])
+		sim.bus.regulation_offered.emit(next)  # region F7W3
 
 
 ## Why an option cannot be picked ("" = fine).
@@ -79,6 +80,7 @@ func _apply(slot: int, id: String, by_timeout: bool) -> void:
 		if stat != "waste" and sim.quests != null:
 			sim.quests.set_mod(stat, float(sim.quests.mod(stat)) * float(fx[stat]), 0.0)
 	sim.bus.story_event.emit("reg_done_%d" % slot, "Standing Orders: %s%s." % [o["label"], " (by default)" if by_timeout else ""])
+	sim.bus.regulation_chosen.emit(slot, id, by_timeout)  # region F7W3
 
 
 func mult(stat: String) -> float:

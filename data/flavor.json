@@ -178,6 +178,19 @@
 		}
 	},
 	"pa": {
+		"regulation": {
+			"offered": ["New Standing Orders posted. Read them. Then pick one.", "Standing Orders are open. Silence will be chosen for you."],
+			"generic": ["Order recorded. It was never optional.", "Your choice is filed. So are you."],
+			"overtime": ["Overtime approved. Your rest was not consulted.", "Longer shifts. The refinery thanks you."],
+			"standard": ["Standard shifts. Mediocrity is stable."],
+			"night_watch": ["Night watch posted. Someone must stay awake."],
+			"grease": ["Grease noted. The Warden is not offended."],
+			"comply": ["Compliance logged. Good inmates are quiet inmates."],
+			"open_books": ["Books open. Be careful what you hide in them."],
+			"zero_tolerance": ["Zero tolerance. The word zero is generous."],
+			"status_quo": ["Status quo kept. The yard stays as it is."],
+			"clean_yard": ["Clean yard ordered. Dust is a form of dissent."]
+		},
 		"r4_good_behaviour": {
 			"bonus": ["A bonus is a loan with better lighting."],
 			"seats": ["Seat 7 is reserved. Please do not ask for whom."],
