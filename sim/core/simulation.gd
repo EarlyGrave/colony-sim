@@ -466,6 +466,7 @@ func step() -> void:
 	remission.tick()  # region EN4
 	squads.tick()  # region C1
 	contraband.tick()  # region I3
+	petition.tick()  # region W2: volunteer detail upkeep
 	if profiling:
 		_lap("squads")
 	contamination.tick()
@@ -1124,6 +1125,15 @@ func deliver_petition(phase: int) -> bool:
 	if not endings.petition_allowed():  # region EN1
 		return false
 	return petition.deliver(phase)
+
+
+# region W2
+func deliver_petition_alt(phase: int, alt_id: String) -> bool:
+	_record("deliver_petition_alt", [phase, alt_id])  # save-load
+	if not endings.petition_allowed():
+		return false
+	return petition.deliver_alt(phase, alt_id)
+# endregion
 
 
 func get_petition_state() -> Dictionary:

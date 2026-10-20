@@ -67,6 +67,38 @@ func refresh() -> void:
 			_sig = ""
 			refresh())
 		content.add_child(b)
+		_alt_row(row)  # region W2
+
+
+# region W2: second payment form (waiver). Greyed out with a reason when its preconditions fail.
+func _alt_row(row: Dictionary) -> void:
+	var alt: Dictionary = row.get("alt", {})
+	if alt.is_empty():
+		return
+	var p := int(row.get("phase", 0))
+	add_line("or: %s (%s)" % [str(alt.get("title", "")), str(alt.get("cost", ""))], Color(0.9, 0.75, 0.5))
+	if bool(alt.get("active", false)):
+		var bar := ProgressBar.new()
+		bar.max_value = 1.0
+		bar.value = float(alt.get("progress", 0.0))
+		bar.show_percentage = false
+		bar.custom_minimum_size = Vector2(0, 14)
+		content.add_child(bar)
+	var b := Button.new()
+	b.name = "AltButton"
+	b.text = str(alt.get("title", "")) if bool(alt.get("available", false)) else "%s - %s" % [str(alt.get("title", "")), str(alt.get("reason", ""))]
+	b.custom_minimum_size = BTN
+	b.focus_mode = Control.FOCUS_NONE
+	b.clip_text = true
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.disabled = not bool(alt.get("available", false))
+	var alt_id := str(alt.get("id", ""))
+	b.pressed.connect(func() -> void:
+		_a().deliver_petition_alt(p, alt_id)
+		_sig = ""
+		refresh())
+	content.add_child(b)
+# endregion
 
 
 func _a() -> Object:

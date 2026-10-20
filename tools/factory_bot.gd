@@ -865,6 +865,8 @@ func _deliveries() -> void:
 		return
 	var p: int = sim.petition.next_phase()
 	_hold_ingots(p == 2)
+	if p > 0 and _w2_alt(p, day):  # region W2
+		return
 	if p > 0 and sim.deliver_petition(p):
 		phase_day[p - 1] = day
 
@@ -1071,3 +1073,27 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	if own_bus:
 		bus.free()
 	return r
+
+
+# region W2
+## pg_bot.use_alt (0 off, default): from day pg_bot.alt_day (20) take the waiver when the scarce item is short:
+## P1 Volunteer Detail while plates < the requirement; P3 Informant Report whenever it is available.
+func _w2_alt(p: int, day: float) -> bool:
+	if _knob("use_alt", 0) == 0:
+		return false
+	for d: int in sim.petition.done_phases:  # a detail completes some ticks after the command
+		if phase_day[d - 1] < 0.0:
+			phase_day[d - 1] = day
+	if day < float(_knob("alt_day", 20)):
+		return false
+	if sim.petition.detail_active():
+		return true  # the detail pays the phase: keep the plates for later phases instead of part-delivering
+	if not sim.petition.alt_available(p):
+		return false
+	if p == 1 and sim.items.count_stored("plate") >= int(sim.petition.required(1).get("plate", 0)):
+		return false
+	if p != 1 and p != 3:
+		return false
+	var alt_id := str(sim.petition.alt_def(p).get("id", ""))
+	return sim.deliver_petition_alt(p, alt_id)
+# endregion
