@@ -183,6 +183,7 @@
 				}
 			},
 			"gear": {
+				"wait": {"min_day": 40},
 				"text": "Warden: gear not on the manifest is contraband. Armour is gear.",
 				"options": {
 					"hand_over": {
@@ -500,6 +501,7 @@
 				}
 			},
 			"strike_vote": {
+				"wait": [{"block_standing_below": {"block": "any", "v": 20}}, {"min_day": 45}],
 				"text": "Zealots demand: stop the stacks. Let the ground breathe.",
 				"options": {
 					"stop": {
@@ -556,6 +558,7 @@
 				}
 			},
 			"scars": {
+				"wait": {"raids_survived": 3},
 				"text": "The scars are in the wall now. Also in us.",
 				"options": {
 					"wear": {
@@ -657,6 +660,7 @@
 				}
 			},
 			"inspection": {
+				"wait": {"suspicion_over": 40},
 				"text": "Friendly inspection. The inspectors are friendly. Loudly.",
 				"effects": [
 					{
@@ -804,6 +808,7 @@
 				}
 			},
 			"drone_tail": {
+				"wait": {"suspicion_over": 60},
 				"text": "A scout drone is following the Ferry's signal.",
 				"options": {
 					"jam": {
