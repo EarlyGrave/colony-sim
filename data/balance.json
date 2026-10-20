@@ -74,6 +74,7 @@
 	},
 	"creature_essence_base": 1,
 	"e3_enabled": true,
+	"traits_v3_enabled": false,
 	"e3": {"clean_ref": 0.5},
 	"k2_enabled": true,
 	"k2": {

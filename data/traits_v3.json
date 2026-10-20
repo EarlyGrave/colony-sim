@@ -1,0 +1,501 @@
+{
+	"_comment": "Traits v3 (docs/gdd/03-colony/traits-v3/). NOT loaded by Defs unless balance.traits_v3_enabled is true. Effects are additive stats read via TraitSystemV3.mod(); every stat key must exist in `stats` (consumer registry). thought_<id>: -1.0 = ignore that thought, +1.0 = double. Rarity draw in file order, fixed rng draw count (see roll_birth).",
+	"schema": 3,
+	"rarity_weight": {"common": 30, "uncommon": 12, "rare": 5, "legendary": 1},
+	"slots": {
+		"innate_max": 2,
+		"innate_none_chance": 0.2,
+		"background_count": 1,
+		"social_birth_chance": 0.3,
+		"acquired_max": 3,
+		"mutation_max": 2
+	},
+	"ladders": {
+		"age": ["t_cell_rot", "t_old_timer"],
+		"essence": ["t_glowtouched", "t_second_skin", "t_hollow"]
+	},
+	"stats": {
+		"work_speed": {"consumer": "sim/jobs/job_system.gd work_mult", "kind": "pct"},
+		"carry": {"consumer": "sim/jobs/haul_job.gd carry_cap", "kind": "pct"},
+		"hunger": {"consumer": "sim/needs/needs_system.gd food decay", "kind": "pct"},
+		"mood_base": {"consumer": "sim/mood/mood_system.gd base", "kind": "flat"},
+		"thought_*": {"consumer": "sim/mood/mood_system.gd thought mult", "kind": "pct"},
+		"break_chance": {"consumer": "sim/mood/mood_system.gd break roll", "kind": "pct"},
+		"despair_mult": {"consumer": "sim/debt/debt_system.gd despair tick", "kind": "pct"},
+		"installment_pct": {"consumer": "sim/debt/debt_system.gd installment", "kind": "pct"},
+		"flee_threshold": {"consumer": "sim/jobs/job_system.gd flee on alarm", "kind": "flat"},
+		"hit": {"consumer": "sim/combat/combat_system.gd hit chance", "kind": "flat"},
+		"unarmed_hit": {"consumer": "sim/combat/combat_system.gd unarmed", "kind": "flat"},
+		"armor_flat": {"consumer": "sim/combat/combat_system.gd FLAT_PHYS", "kind": "flat"},
+		"xp_mult_*": {"consumer": "sim/progression/progression_system.gd award", "kind": "pct"},
+		"standing_gain": {"consumer": "sim/society/block_system.gd paid_gain", "kind": "pct"},
+		"mutation_risk": {"consumer": "sim/mutation/mutation_system.gd illness roll", "kind": "pct"},
+		"work_night": {"consumer": "sim/jobs/job_system.gd shift_mult", "kind": "pct"},
+		"work_day": {"consumer": "sim/jobs/job_system.gd shift_mult", "kind": "pct"},
+		"machine_breakage": {"consumer": "sim/buildings/building_system.gd wear", "kind": "pct"},
+		"refining_speed": {"consumer": "sim/buildings/building_system.gd batch work", "kind": "pct"},
+		"quality_tier": {"consumer": "sim/quality/quality_system.gd roll", "kind": "flat"},
+		"move_speed": {"consumer": "sim/colonists/colonist.gd move_gain", "kind": "pct"},
+		"max_hp": {"consumer": "NEW sim/colonists/generator.gd after roll (c.max_hp)", "kind": "flat"},
+		"melee_damage": {"consumer": "NEW sim/combat/combat_system.gd damage roll", "kind": "pct"},
+		"heal_rate": {"consumer": "NEW sim/health/health_system.gd heal tick mult", "kind": "pct"},
+		"injury_severity": {"consumer": "NEW sim/health/health_system.gd add_injury", "kind": "pct"},
+		"illness_severity": {"consumer": "NEW sim/mutation/mutation_system.gd add_illness", "kind": "pct"},
+		"rest_decay": {"consumer": "NEW sim/needs/needs_system.gd rest decay", "kind": "pct"},
+		"rest_gain": {"consumer": "NEW sim/needs/needs_system.gd sleep gain", "kind": "pct"},
+		"alarm_delay": {"consumer": "NEW sim/jobs/job_system.gd ticks before flee", "kind": "flat"},
+		"suspicion_gain": {"consumer": "NEW sim/threats/metro_track.gd add_suspicion (own sales/acts)", "kind": "pct"},
+		"defiance_gain": {"consumer": "NEW sim/threats/metro_track.gd add_defiance", "kind": "pct"},
+		"contraband_price": {"consumer": "NEW sim/society/contraband.gd sale", "kind": "pct"},
+		"contraband_find": {"consumer": "NEW sim/society/contraband.gd find roll", "kind": "pct"},
+		"target_weight": {"consumer": "NEW sim/threats/threat_system.gd pick_target", "kind": "pct"},
+		"spot_range": {"consumer": "NEW sim/idle_work patrol spotting radius", "kind": "flat"},
+		"warning_ticks": {"consumer": "NEW sim/threats/threat_system.gd wave_incoming lead", "kind": "flat"},
+		"informant_weight": {"consumer": "NEW sim/society/block_system.gd informant pick", "kind": "flat"},
+		"petition_weight": {"consumer": "NEW sim/research/petition_system.gd contribution", "kind": "pct"},
+		"riot_spread": {"consumer": "NEW sim/debt/debt_system.gd riot join roll (block)", "kind": "pct"},
+		"scrub_speed": {"consumer": "NEW sim/jobs scrub job work", "kind": "pct"},
+		"mining_speed": {"consumer": "NEW sim/jobs/mine_job.gd work", "kind": "pct"},
+		"research_speed": {"consumer": "NEW sim/research/research_system.gd work", "kind": "pct"},
+		"fixation_chance": {"consumer": "NEW sim/fixation/fixation_system.gd offer roll", "kind": "pct"},
+		"debt_total": {"consumer": "NEW sim/debt/debt_system.gd state creation", "kind": "pct"},
+		"aura_mood": {"consumer": "NEW sim/mood/mood_system.gd: block mates get flat mood", "kind": "flat"},
+		"aura_xp": {"consumer": "NEW sim/progression/progression_system.gd: same-job mates", "kind": "pct"},
+		"aura_break": {"consumer": "NEW sim/mood/mood_system.gd: block mates break roll", "kind": "pct"},
+		"leaning_submit": {"consumer": "NEW sim/society/block_system.gd leaning vote", "kind": "flat"},
+		"leaning_fight": {"consumer": "NEW sim/society/block_system.gd leaning vote", "kind": "flat"},
+		"leaning_escape": {"consumer": "NEW sim/society/block_system.gd leaning vote", "kind": "flat"},
+		"thought_neg": {"consumer": "NEW sim/mood/mood_system.gd: all negative thoughts", "kind": "pct"},
+		"thought_pos": {"consumer": "NEW sim/mood/mood_system.gd: all positive thoughts", "kind": "pct"},
+		"tend_xp": {"consumer": "NEW sim/health/health_system.gd: doctor xp when tending this patient", "kind": "pct"},
+		"creature_essence": {"consumer": "NEW sim/threats/threat_system.gd kill drop", "kind": "flat"},
+		"work_streak": {"consumer": "NEW sim/jobs/job_system.gd same-type streak bonus", "kind": "pct"},
+		"work_switch": {"consumer": "NEW sim/jobs/job_system.gd first 30 ticks after switch", "kind": "pct"},
+		"standing_effect": {"consumer": "NEW sim/society/block_system.gd thoughts/despair from standing", "kind": "pct"},
+		"purify_cost": {"consumer": "NEW sim/mutation/mutation_system.gd purify", "kind": "pct"}
+	},
+	"needs": {
+		"_comment": "Trait needs: checked once per day by daily_needs(c, ctx); ctx keys are booleans the consumer fills. If `want` is false for `days` days in a row the thought `thought` is added (mood.json must define it).",
+		"t_tunnel_rat": {"want": "mined_today", "days": 2, "thought": "no_tunnel"},
+		"t_curious": {"want": "research_active", "days": 3, "thought": "nothing_new"},
+		"t_dreamer": {"want": "letter_today", "days": 5, "thought": "no_letter"},
+		"t_creature_of_habit": {"want": "same_job", "days": 1, "thought": "routine_broken"},
+		"t_gallows_humor": {"want": "block_mate_alive", "days": 1, "thought": "no_audience"},
+		"t_essence_hum": {"want": "near_essence", "days": 2, "thought": "hum_fades"}
+	},
+	"acquire": [
+		{"trait": "t_hardened", "on": "rescued", "count": 1},
+		{"trait": "t_resigned", "on": "despair_day", "count": 5, "reset_on": "despair_relief"},
+		{"trait": "t_settled", "on": "calm_day", "count": 30, "reset_on": "break"},
+		{"trait": "t_shellshocked", "on": "downed_in_wave", "count": 2},
+		{"trait": "t_marked", "on": "heavy_injury", "count": 3},
+		{"trait": "t_docked", "on": "docked", "count": 1},
+		{"trait": "t_last_one", "on": "block_wiped", "count": 1},
+		{"trait": "t_lean_years", "on": "starving_day", "count": 3, "reset_on": "ate"},
+		{"trait": "t_reported", "on": "reported", "count": 1},
+		{"trait": "t_cell_rot", "on": "day_served", "count": 60},
+		{"trait": "t_old_timer", "on": "day_served", "count": 120, "replaces": "t_cell_rot"},
+		{"trait": "t_runner", "on": "escape_stopped", "count": 1},
+		{"trait": "t_glowtouched", "on": "exposure_illness", "count": 1},
+		{"trait": "t_second_skin", "on": "exposure_illness", "count": 3, "requires": "t_glowtouched", "replaces": "t_glowtouched"},
+		{"trait": "t_hollow", "on": "exposure_illness", "count": 6, "requires": "t_second_skin", "replaces": "t_second_skin"},
+		{"trait": "t_essence_hum", "on": "refined_batch", "count": 40},
+		{"trait": "t_black_veins", "on": "tainted_kill", "count": 10},
+		{"trait": "t_echo", "on": "mimic_met", "count": 1, "requires": "t_glowtouched"},
+		{"trait": "t_waste_kin", "on": "scrubbed_cell", "count": 60},
+		{"trait": "t_block_boss", "on": "high_standing_day", "count": 10, "reset_on": "low_standing_day"},
+		{"trait": "t_outcast", "on": "low_standing_day", "count": 10, "reset_on": "high_standing_day"},
+		{"trait": "t_wardens_ear", "on": "made_informant", "count": 1},
+		{"trait": "t_agitator", "on": "riot", "count": 2},
+		{"trait": "t_mentor", "on": "skill_seven", "count": 1},
+		{"trait": "t_peacemaker", "on": "calmed_break", "count": 3}
+	],
+	"lose": [
+		{"trait": "t_settled", "on": "break"},
+		{"trait": "t_docked", "on": "period_paid"},
+		{"trait": "t_shellshocked", "on": "wave_unscathed", "count": 3},
+		{"trait": "t_reported", "on": "informant_gone"},
+		{"trait": "t_block_boss", "on": "low_standing_day", "count": 5},
+		{"trait": "t_outcast", "on": "high_standing_day", "count": 5}
+	],
+	"bonds": {
+		"_comment": "Pair traits link two inmates (bio.trait_links[id] = other id). daily_bonds() rolls them.",
+		"t_cellmate": {"days_same_block": 20, "chance": 0.15, "excludes": ["t_outcast", "t_quiet_one"]},
+		"t_rival": {"days_same_job": 10, "chance": 0.1, "excludes": ["t_peacemaker"]}
+	},
+	"traits": {
+		"t_stoic": {
+			"name": "Stoic", "category": "personality", "rarity": "common",
+			"desc": "Takes the bad news like weather.",
+			"group": "temper", "excludes": ["t_volatile"],
+			"effects": {"thought_neg": -0.3, "thought_pos": -0.3, "break_chance": -0.25}
+		},
+		"t_volatile": {
+			"name": "Volatile", "category": "personality", "rarity": "common",
+			"desc": "Short fuse. Long memory.",
+			"group": "temper", "excludes": ["t_stoic", "t_peacemaker"],
+			"effects": {"break_chance": 0.4, "melee_damage": 0.15, "hit": 0.05}
+		},
+		"t_greedy": {
+			"name": "Greedy", "category": "personality", "rarity": "common",
+			"desc": "Counts every cut and wants the bigger one.",
+			"group": "outlook", "excludes": ["t_compliant"],
+			"effects": {"contraband_price": 0.15, "carry": 0.1, "despair_mult": 0.2, "thought_left_to_ledger": 0.5}
+		},
+		"t_compliant": {
+			"name": "Compliant", "category": "personality", "rarity": "common",
+			"desc": "Fills in the form before it is handed out.",
+			"group": "outlook", "excludes": ["t_defiant", "t_greedy"],
+			"effects": {"despair_mult": -0.2, "standing_gain": -0.3, "informant_weight": 3, "leaning_submit": 1, "thought_inspection_praise": 1.0}
+		},
+		"t_defiant": {
+			"name": "Defiant", "category": "personality", "rarity": "uncommon",
+			"desc": "Reads the quota and laughs. Quietly, so far.",
+			"group": "outlook", "excludes": ["t_compliant"],
+			"effects": {"defiance_gain": 0.25, "standing_gain": 0.3, "leaning_fight": 1, "informant_weight": -3, "thought_inspection_praise": -1.0}
+		},
+		"t_paranoid": {
+			"name": "Paranoid", "category": "personality", "rarity": "uncommon",
+			"desc": "Sleeps facing the door. Hears the tunnels first.",
+			"excludes": ["t_heavy_sleeper"],
+			"effects": {"spot_range": 2, "warning_ticks": 30, "flee_threshold": 0.2, "mood_base": -3, "thought_escape_rumors": 1.0}
+		},
+		"t_curious": {
+			"name": "Curious", "category": "personality", "rarity": "uncommon",
+			"desc": "Opens the crate before reading the label.",
+			"effects": {"xp_mult_all": 0.15, "research_speed": 0.1, "fixation_chance": 0.5, "machine_breakage": 0.1},
+			"skills": {"crafting": 1}
+		},
+		"t_morbid": {
+			"name": "Morbid", "category": "personality", "rarity": "uncommon",
+			"desc": "Volunteers for the waste pits. Whistles there.",
+			"effects": {"thought_colonist_died": -1.0, "scrub_speed": 0.25, "mood_base": -2, "aura_mood": -1}
+		},
+		"t_tunnel_rat": {
+			"name": "Tunnel Rat", "category": "personality", "rarity": "common",
+			"desc": "Happiest with rock on three sides.",
+			"effects": {"mining_speed": 0.15, "work_day": -0.05, "thought_no_tunnel": 1.0},
+			"skills": {"mining": 1}
+		},
+		"t_gallows_humor": {
+			"name": "Gallows Humor", "category": "personality", "rarity": "uncommon",
+			"desc": "The mess hall laughs. The Warden logs it.",
+			"effects": {"aura_mood": 2, "break_chance": 0.1, "thought_wave_survived": 0.5}
+		},
+		"t_creature_of_habit": {
+			"name": "Creature of Habit", "category": "personality", "rarity": "common",
+			"desc": "Same bunk, same shift, same spoon.",
+			"effects": {"work_streak": 0.1, "work_switch": -0.15, "thought_routine_broken": 1.0}
+		},
+		"t_dreamer": {
+			"name": "Dreamer", "category": "personality", "rarity": "common",
+			"desc": "Writes letters nobody will deliver.",
+			"effects": {"thought_letter_home": 1.0, "petition_weight": 0.1, "leaning_escape": 1, "work_speed": -0.05}
+		},
+		"t_methodical": {
+			"name": "Methodical", "category": "personality", "rarity": "common",
+			"desc": "Three checks per bolt. The bolt holds.",
+			"group": "pace", "excludes": ["t_reckless"],
+			"effects": {"quality_tier": 1, "work_speed": -0.1, "machine_breakage": -0.2}
+		},
+		"t_reckless": {
+			"name": "Reckless", "category": "personality", "rarity": "common",
+			"desc": "Safety briefings are for people with time.",
+			"group": "pace", "excludes": ["t_methodical"],
+			"effects": {"work_speed": 0.1, "machine_breakage": 0.3, "injury_severity": 0.2, "hit": 0.05, "flee_threshold": -0.2}
+		},
+		"t_hulking": {
+			"name": "Hulking", "category": "body", "rarity": "uncommon",
+			"desc": "Ducks through every door on the planet.",
+			"group": "build", "excludes": ["t_wiry"],
+			"effects": {"carry": 0.35, "melee_damage": 0.15, "hunger": 0.25, "move_speed": -0.1, "target_weight": 0.2},
+			"skills": {"mining": 1}
+		},
+		"t_wiry": {
+			"name": "Wiry", "category": "body", "rarity": "common",
+			"desc": "All sinew and no spare.",
+			"group": "build", "excludes": ["t_hulking"],
+			"effects": {"move_speed": 0.15, "hunger": -0.1, "max_hp": -15}
+		},
+		"t_tar_lungs": {
+			"name": "Tar Lungs", "category": "body", "rarity": "uncommon",
+			"desc": "Coughs on the haze. Never complains about it.",
+			"effects": {"thought_taint": -1.0, "illness_severity": 0.3, "hunger": -0.1, "work_night": 0.05}
+		},
+		"t_one_eye": {
+			"name": "One Eye", "category": "body", "rarity": "uncommon",
+			"desc": "Half the view, twice the nerve.",
+			"effects": {"hit": -0.1, "unarmed_hit": 0.05, "spot_range": -1, "thought_injured": -0.5, "standing_gain": 0.1}
+		},
+		"t_fast_healer": {
+			"name": "Fast Healer", "category": "body", "rarity": "uncommon",
+			"desc": "Stitches come out early. Appetite comes in.",
+			"group": "blood", "excludes": ["t_bleeder"],
+			"effects": {"heal_rate": 0.5, "hunger": 0.1}
+		},
+		"t_bleeder": {
+			"name": "Bleeder", "category": "body", "rarity": "uncommon",
+			"desc": "Every cut is a lesson for the medic.",
+			"group": "blood", "excludes": ["t_fast_healer"],
+			"effects": {"injury_severity": 0.3, "tend_xp": 0.5, "xp_mult_medicine": 0.2}
+		},
+		"t_insomniac": {
+			"name": "Insomniac", "category": "body", "rarity": "common",
+			"desc": "The lights-out siren is a suggestion.",
+			"group": "sleep", "excludes": ["t_heavy_sleeper"],
+			"effects": {"rest_decay": 0.3, "work_night": 0.2, "thought_slept_on_floor": -1.0}
+		},
+		"t_heavy_sleeper": {
+			"name": "Heavy Sleeper", "category": "body", "rarity": "common",
+			"desc": "Slept through the last two riots.",
+			"group": "sleep", "excludes": ["t_insomniac", "t_paranoid"],
+			"effects": {"rest_gain": 0.3, "alarm_delay": 20, "thought_riot_witness": -1.0}
+		},
+		"t_sharp_ears": {
+			"name": "Sharp Ears", "category": "body", "rarity": "rare",
+			"desc": "Hears the burrowers before the ground does.",
+			"effects": {"warning_ticks": 60, "spot_range": 1, "thought_silenced_prayer": 1.0}
+		},
+		"t_dead_nerves": {
+			"name": "Dead Nerves", "category": "body", "rarity": "rare",
+			"desc": "Pain is a rumor they have not confirmed.",
+			"effects": {"thought_injured": -1.0, "max_hp": -10, "flee_threshold": -0.3, "heal_rate": -0.2}
+		},
+		"t_charge_murder": {
+			"name": "Charge: Murder", "category": "background", "rarity": "common",
+			"desc": "One body. The file does not say whose.",
+			"effects": {"thought_colonist_died": -0.5, "standing_gain": 0.2, "informant_weight": -5, "debt_total": 0.2, "melee_damage": 0.1},
+			"skills": {"melee": 2}
+		},
+		"t_charge_fraud": {
+			"name": "Charge: Fraud", "category": "background", "rarity": "common",
+			"desc": "Moved decimals. Some of them were lives.",
+			"effects": {"installment_pct": -0.08, "contraband_price": 0.1, "suspicion_gain": 0.25, "leaning_escape": 1}
+		},
+		"t_charge_sedition": {
+			"name": "Charge: Sedition", "category": "background", "rarity": "uncommon",
+			"desc": "Printed the wrong pamphlet in the right city.",
+			"effects": {"defiance_gain": 0.3, "standing_gain": 0.3, "suspicion_gain": 0.2, "leaning_fight": 2, "aura_break": 0.1}
+		},
+		"t_charge_smuggling": {
+			"name": "Charge: Smuggling", "category": "background", "rarity": "common",
+			"desc": "Knows which crates the manifest forgets.",
+			"effects": {"contraband_find": 0.5, "suspicion_gain": -0.25, "carry": 0.1, "leaning_escape": 1}
+		},
+		"t_charge_arson": {
+			"name": "Charge: Arson", "category": "background", "rarity": "uncommon",
+			"desc": "Likes the refinery. Likes it a little too much.",
+			"effects": {"refining_speed": 0.15, "machine_breakage": 0.2, "flee_threshold": -0.2, "thought_taint": -0.5},
+			"skills": {"crafting": 1}
+		},
+		"t_charge_desertion": {
+			"name": "Charge: Desertion", "category": "background", "rarity": "uncommon",
+			"desc": "Left a Metropolis post. The post remembers.",
+			"effects": {"flee_threshold": 0.2, "target_weight": 0.5, "warning_ticks": 20, "leaning_fight": 1},
+			"skills": {"shooting": 3}
+		},
+		"t_charge_debt": {
+			"name": "Charge: Debt", "category": "background", "rarity": "common",
+			"desc": "Owed money. Now owes a planet.",
+			"effects": {"despair_mult": -0.2, "installment_pct": -0.05, "debt_total": 0.1, "leaning_submit": 1, "thought_left_to_ledger": -0.5}
+		},
+		"t_charge_essence_theft": {
+			"name": "Charge: Essence Theft", "category": "background", "rarity": "uncommon",
+			"desc": "Took a vial once. Knows what it hums.",
+			"effects": {"refining_speed": 0.15, "mutation_risk": 0.3, "thought_taint": -1.0, "quality_tier": 1}
+		},
+		"t_charge_cult": {
+			"name": "Charge: Cult", "category": "background", "rarity": "uncommon",
+			"desc": "Says the planet is listening. It might be.",
+			"effects": {"leaning_fight": 2, "refining_speed": -0.3, "thought_planet_doomed": -1.0, "thought_quest_uneasy": -1.0, "mood_base": 3, "aura_mood": 1}
+		},
+		"t_charge_mutiny": {
+			"name": "Charge: Mutiny", "category": "background", "rarity": "rare",
+			"desc": "Ran a transport once. Ran it the wrong way.",
+			"effects": {"riot_spread": 0.5, "standing_gain": 0.2, "leaning_escape": 1},
+			"skills": {"construction": 2, "shooting": 1}
+		},
+		"t_charge_poaching": {
+			"name": "Charge: Poaching", "category": "background", "rarity": "common",
+			"desc": "Hunted things the Metropolis had patented.",
+			"effects": {"creature_essence": 1, "xp_mult_shooting": 0.15, "thought_wave_survived": 0.5},
+			"skills": {"plants": 1, "shooting": 1}
+		},
+		"t_charge_sealed": {
+			"name": "Charge: Sealed", "category": "background", "rarity": "rare",
+			"desc": "The file is black. Even the Warden is curious.",
+			"tags": ["sealed_file"],
+			"effects": {"suspicion_gain": 0.3, "informant_weight": 2, "xp_mult_all": 0.1, "target_weight": 0.1}
+		},
+		"t_charge_wrongful": {
+			"name": "Charge: Wrongful", "category": "background", "rarity": "rare",
+			"desc": "Did not do it. Has stopped saying so.",
+			"effects": {"mood_base": -5, "despair_mult": 0.3, "petition_weight": 0.3, "leaning_escape": 2, "thought_freedman": 1.0, "aura_mood": 1}
+		},
+		"t_hardened": {
+			"name": "Hardened", "category": "scar", "rarity": "rare",
+			"desc": "Pulled back from the edge once. Fear has less grip.",
+			"effects": {"thought_injured": -0.5, "flee_threshold": -0.3}
+		},
+		"t_resigned": {
+			"name": "Resigned", "category": "scar", "rarity": "rare",
+			"desc": "Nothing left to lose, nothing left to give.",
+			"tags": ["despair_frozen"],
+			"effects": {"work_speed": -0.15, "mood_base": 4}
+		},
+		"t_settled": {
+			"name": "Settled", "category": "scar", "rarity": "uncommon",
+			"desc": "Found a rhythm in the grind.",
+			"effects": {"mood_base": 5}
+		},
+		"t_shellshocked": {
+			"name": "Shell-Shocked", "category": "scar", "rarity": "uncommon",
+			"desc": "The siren plays even when it does not.",
+			"effects": {"flee_threshold": 0.4, "hit": -0.1, "xp_mult_shooting": 0.2, "warning_ticks": 20}
+		},
+		"t_marked": {
+			"name": "Marked", "category": "scar", "rarity": "uncommon",
+			"desc": "Scars the yard can read from across the hall.",
+			"effects": {"standing_gain": 0.2, "target_weight": -0.1, "thought_injured": -0.3}
+		},
+		"t_docked": {
+			"name": "Docked", "category": "scar", "rarity": "common",
+			"desc": "Missed a payment once. Works like it.",
+			"effects": {"despair_mult": 0.2, "work_speed": 0.05, "thought_left_to_ledger": 0.5}
+		},
+		"t_last_one": {
+			"name": "Last One", "category": "scar", "rarity": "rare",
+			"desc": "Whole block gone. Still answers roll call.",
+			"effects": {"mood_base": -4, "despair_mult": -0.2, "break_chance": -0.3, "standing_effect": -1.0}
+		},
+		"t_lean_years": {
+			"name": "Lean Years", "category": "scar", "rarity": "uncommon",
+			"desc": "Starved once. Eats like it will happen again.",
+			"effects": {"hunger": -0.15, "thought_ate_raw": -1.0, "max_hp": -5}
+		},
+		"t_reported": {
+			"name": "Reported", "category": "scar", "rarity": "common",
+			"desc": "Someone talked. The block knows who did not.",
+			"effects": {"thought_clerk_reported": 1.0, "standing_gain": 0.2, "informant_weight": -5}
+		},
+		"t_cell_rot": {
+			"name": "Cell Rot", "category": "scar", "rarity": "common",
+			"desc": "Sixty days. Walls start looking reasonable.",
+			"effects": {"xp_mult_all": -0.1, "mood_base": 2, "despair_mult": -0.1}
+		},
+		"t_old_timer": {
+			"name": "Old Timer", "category": "scar", "rarity": "uncommon",
+			"desc": "Knows which forms the Warden never reads.",
+			"effects": {"xp_mult_all": -0.15, "mood_base": 3, "despair_mult": -0.2, "standing_gain": 0.2, "move_speed": -0.05, "petition_weight": 0.1}
+		},
+		"t_runner": {
+			"name": "Runner", "category": "scar", "rarity": "uncommon",
+			"desc": "Got past the fence once. The fence got better.",
+			"effects": {"move_speed": 0.1, "suspicion_gain": 0.5, "thought_escape_rumors": 1.0, "leaning_escape": 1}
+		},
+		"t_glowtouched": {
+			"name": "Glowtouched", "category": "mutation", "rarity": "uncommon",
+			"desc": "Faint light under the skin after dark.",
+			"tags": ["mutated"],
+			"effects": {"refining_speed": 0.1, "mutation_risk": 0.2, "target_weight": 0.2, "spot_range": 1}
+		},
+		"t_second_skin": {
+			"name": "Second Skin", "category": "mutation", "rarity": "rare",
+			"desc": "Skin like refinery slag. Blades skid.",
+			"tags": ["mutated"],
+			"effects": {"armor_flat": 1, "hunger": 0.15, "refining_speed": 0.1, "mutation_risk": 0.3, "target_weight": 0.3, "aura_mood": -1}
+		},
+		"t_hollow": {
+			"name": "Hollow", "category": "mutation", "rarity": "legendary",
+			"desc": "Still works. Nobody is sure who is in there.",
+			"tags": ["mutated", "despair_frozen", "no_thoughts"],
+			"effects": {"thought_neg": -1.0, "thought_pos": -1.0, "work_speed": -0.1, "armor_flat": 2, "target_weight": -0.5, "aura_mood": -2, "petition_weight": -1.0}
+		},
+		"t_essence_hum": {
+			"name": "Hums", "category": "mutation", "rarity": "rare",
+			"desc": "Hears the refined batches. Hums back.",
+			"tags": ["mutated"],
+			"effects": {"quality_tier": 1, "mood_base": -2, "refining_speed": 0.05, "thought_hum_fades": 1.0}
+		},
+		"t_black_veins": {
+			"name": "Black Veins", "category": "mutation", "rarity": "rare",
+			"desc": "Waste in the blood. The blood does not mind.",
+			"tags": ["mutated"],
+			"effects": {"melee_damage": 0.25, "heal_rate": -0.3, "mutation_risk": -1.0, "illness_severity": -0.5}
+		},
+		"t_echo": {
+			"name": "Echo", "category": "mutation", "rarity": "legendary",
+			"desc": "A mimic said their old ID. They answered.",
+			"tags": ["mutated", "clue_bearer"],
+			"effects": {"thought_colonist_died": -1.0, "target_weight": -0.3, "warning_ticks": 40, "mood_base": -3}
+		},
+		"t_waste_kin": {
+			"name": "Waste Kin", "category": "mutation", "rarity": "rare",
+			"desc": "Smells like the pits. The pits do not attack kin.",
+			"tags": ["mutated"],
+			"effects": {"target_weight": -0.4, "scrub_speed": 0.3, "purify_cost": -0.25, "aura_mood": -2}
+		},
+		"t_clean_blood": {
+			"name": "Clean Blood", "category": "mutation", "rarity": "rare", "innate": true,
+			"desc": "The haze passes through. Nothing sticks.",
+			"excludes": ["t_charge_essence_theft"],
+			"effects": {"mutation_risk": -0.5, "illness_severity": -0.3, "refining_speed": -0.05}
+		},
+		"t_cellmate": {
+			"name": "Cellmate", "category": "social", "rarity": "uncommon",
+			"desc": "Shares a bunk, a ration and a grudge.",
+			"tags": ["bond"],
+			"excludes": ["t_outcast", "t_quiet_one"],
+			"effects": {"mood_base": 3, "flee_threshold": -0.1, "thought_colonist_died": 1.0}
+		},
+		"t_rival": {
+			"name": "Rival", "category": "social", "rarity": "uncommon",
+			"desc": "Will not be outworked by that one. Ever.",
+			"tags": ["bond"],
+			"excludes": ["t_peacemaker"],
+			"effects": {"work_streak": 0.1, "break_chance": 0.1, "aura_xp": 0.05}
+		},
+		"t_block_boss": {
+			"name": "Block Boss", "category": "social", "rarity": "rare",
+			"desc": "Nobody voted. Everybody listens.",
+			"excludes": ["t_outcast", "t_quiet_one"],
+			"effects": {"standing_gain": 0.25, "aura_break": -0.1, "riot_spread": 0.3, "informant_weight": -3}
+		},
+		"t_outcast": {
+			"name": "Outcast", "category": "social", "rarity": "uncommon",
+			"desc": "Eats alone. Not by choice. Then by choice.",
+			"excludes": ["t_block_boss", "t_cellmate"],
+			"effects": {"standing_effect": -1.0, "mood_base": -2, "informant_weight": -10, "aura_mood": -1}
+		},
+		"t_wardens_ear": {
+			"name": "Warden's Ear", "category": "social", "rarity": "rare",
+			"desc": "Rations arrive a little fuller. Nobody asks why.",
+			"tags": ["informant"],
+			"excludes": ["t_defiant", "t_quiet_one"],
+			"effects": {"suspicion_gain": -0.5, "hunger": -0.1, "aura_mood": -2, "standing_gain": -0.5, "target_weight": -0.2}
+		},
+		"t_peacemaker": {
+			"name": "Peacemaker", "category": "social", "rarity": "rare",
+			"desc": "Talks people down. Has not been talked down.",
+			"excludes": ["t_volatile", "t_agitator", "t_rival"],
+			"effects": {"aura_break": -0.2, "riot_spread": -0.5, "break_chance": -0.1, "work_speed": -0.05}
+		},
+		"t_agitator": {
+			"name": "Agitator", "category": "social", "rarity": "uncommon", "innate": true,
+			"desc": "Every grievance finds its way to this bunk.",
+			"excludes": ["t_peacemaker", "t_compliant"],
+			"effects": {"riot_spread": 0.5, "standing_gain": 0.3, "aura_break": 0.15, "defiance_gain": 0.2}
+		},
+		"t_quiet_one": {
+			"name": "Quiet One", "category": "social", "rarity": "common", "innate": true,
+			"desc": "Says nothing. Is told everything.",
+			"excludes": ["t_cellmate", "t_block_boss", "t_wardens_ear", "t_gallows_humor"],
+			"effects": {"suspicion_gain": -0.3, "standing_gain": -0.3, "informant_weight": -10, "contraband_find": 0.2}
+		},
+		"t_mentor": {
+			"name": "Mentor", "category": "social", "rarity": "rare",
+			"desc": "Teaches the fresh fish which end of the pick to hold.",
+			"effects": {"aura_xp": 0.1, "xp_mult_all": -0.1, "standing_gain": 0.1}
+		}
+	}
+}
