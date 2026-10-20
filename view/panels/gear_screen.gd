@@ -186,7 +186,13 @@ func do_unequip() -> void:
 func do_socket(upgrade_id: String) -> void:
 	if _item(sel_id) == null:
 		return
-	hint = "Socketed." if sim.socket(sel_id, upgrade_id) else "Cannot socket that."
+	# region F9W1
+	if sim.socket(sel_id, upgrade_id):
+		hint = "Socketed."
+	else:
+		var miss := sim.equipment.socket_missing(upgrade_id)
+		hint = "Need %s." % miss if miss != "" else "Cannot socket that."
+	# endregion
 	_rebuild()
 
 
@@ -353,7 +359,14 @@ func _build_side(sel: GearItem) -> void:
 			_side.add_child(l)
 			for u: String in GearPanel.socket_options(sim, sel.id):
 				var sb := Button.new()
-				sb.text = str(sim.defs.upgrades[u].get("name", u))
+				# region F9W1
+				var miss := sim.equipment.socket_missing(u)
+				sb.text = "%s  -%s" % [str(sim.defs.upgrades[u].get("name", u)), GearPanel.cost_text(sim, u)]
+				if miss != "":
+					sb.disabled = true
+					sb.tooltip_text = "Need %s" % miss
+					sb.text += "  (need %s)" % miss
+				# endregion
 				sb.custom_minimum_size = Vector2(0, 64)
 				sb.focus_mode = Control.FOCUS_NONE
 				sb.pressed.connect(func() -> void: do_socket(u))

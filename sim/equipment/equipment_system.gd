@@ -74,6 +74,34 @@ func unequip(cid: int, slot: String) -> bool:
 	return true
 
 
+# region F9W1
+## Stock cost of an upgrade ({item: n}, from data/upgrades.json "cost").
+func socket_cost(upgrade_id: String) -> Dictionary:
+	return sim.defs.upgrades.get(upgrade_id, {}).get("cost", {})
+
+
+func can_afford_socket(upgrade_id: String) -> bool:
+	var cost := socket_cost(upgrade_id)
+	for k: String in cost:
+		if sim.items.count_stored(k) < int(cost[k]):
+			return false
+	return true
+
+
+## First missing "need N item" text for a cost, or "" when affordable.
+func socket_missing(upgrade_id: String) -> String:
+	var cost := socket_cost(upgrade_id)
+	var keys: Array = cost.keys()
+	keys.sort()
+	var parts: Array[String] = []
+	for k: String in keys:
+		var short: int = int(cost[k]) - sim.items.count_stored(k)
+		if short > 0:
+			parts.append("%d %s" % [short, str(sim.defs.items.get(k, {}).get("name", k)).to_lower()])
+	return ", ".join(parts)
+# endregion
+
+
 func socket(item_id: int, upgrade_id: String) -> bool:
 	var g: GearItem = instances.get(item_id)
 	if g == null or not sim.defs.upgrades.has(upgrade_id):
@@ -88,6 +116,15 @@ func socket(item_id: int, upgrade_id: String) -> bool:
 			ok = ok or tags.has(t)
 		if not ok:
 			return false
+	# region F9W1: pay only after every check passed
+	if not can_afford_socket(upgrade_id):
+		return false
+	var cost := socket_cost(upgrade_id)
+	var ckeys: Array = cost.keys()
+	ckeys.sort()
+	for k: String in ckeys:
+		sim.items.consume_stored(k, int(cost[k]), sim.map_center())
+	# endregion
 	g.upgrades.append(upgrade_id)
 	g.resum_stats(sim.defs)
 	if equipped.get(g.owner, {}).get(g.slot, -1) == g.id:

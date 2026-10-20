@@ -94,6 +94,10 @@ func test_socket_through_panel() -> void:
 	var sim: Simulation = s[0]
 	var c: Colonist = s[1]
 	var id := sim.give_gear(c.id, "rifle", "rare", 2)
+	for x in 4:
+		sim.set_zone(Vector2i(2 + x, 2), "stockpile")
+	sim.items.drop(Vector2i(2, 2), "plate", 4)
+	sim.items.drop(Vector2i(3, 2), "essence_rounds", 4)
 	var p := _open(sim, c.id)
 	p.tap_item(id)
 	var opts := GearPanel.socket_options(sim, id)
