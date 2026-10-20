@@ -636,6 +636,7 @@ func _open_side(p: GamePanel, id: String) -> void:
 	_place_side()
 	_n4_wire(p)  # region N4
 	p.open(sim)
+	_f10_opened(id)  # region F10W3
 	if id == "letters":
 		_letters.mark_read()
 	_sync_panel_buttons()
@@ -737,6 +738,7 @@ func _refresh_texts() -> void:
 	_k3_update()  # region K3
 	_e4_update()  # region E4
 	_s4_update()  # region S4
+	_f10_badges()  # region F10W3
 	_letters_btn.text = "Letters (%d)" % _letters.unread if _letters.unread > 0 else "Letters"
 	_menu_btn.text = "More (%d)" % _letters.unread if _letters.unread > 0 else "More"
 # endregion
@@ -1860,4 +1862,52 @@ static func f7w1_forecast_suffix(p_sim: Simulation) -> String:
 	if p_sim != null and p_sim.threats != null and bool(p_sim.threats.cfg.get("spawn_at_pollution_peak", false)):
 		return " · first wave: dump side"
 	return ""
+# endregion
+
+
+# region F10W3
+## "NEW" badges: gear_screen (first gear), petition (alt payment open), orders (flag on). Cleared for good
+## when the panel opens (SeenFlags "badge.<panel>"). The More button mirrors its entries. Off density = none.
+var _f10_density := "Full"
+var _f10_poll := 0
+
+
+func _f10_pending(pid: String) -> bool:
+	if SeenFlags.seen("badge." + pid):
+		return false
+	match pid:
+		"gear_screen":
+			return sim.equipment != null and sim.equipment.has_state()
+		"petition":
+			if sim.petition == null:
+				return false
+			return sim.petition.alt_available(sim.petition.next_phase())
+		"orders":
+			return sim.regulations != null and sim.regulations.enabled()
+	return false
+
+
+func _f10_badges(force := false) -> void:
+	if sim == null:
+		return
+	_f10_poll += 1
+	if not force and _f10_poll % 10 != 1:  # throttle: predicates are cheap but not free
+		return
+	if _f10_poll % 120 == 1 or force:
+		_f10_density = MetaStore.load_hint_density()
+	var any := false
+	for pid: String in ["gear_screen", "petition", "orders"]:
+		var b: Button = _panel_buttons.get(pid)
+		if b == null:
+			continue
+		var on := _f10_density != "Off" and b.visible and _f10_pending(pid)
+		NewBadge.set_on(b, on)
+		any = any or on
+	NewBadge.set_on(_menu_btn, any)
+
+
+func _f10_opened(id: String) -> void:
+	if id == "gear_screen" or id == "petition" or id == "orders":
+		SeenFlags.mark("badge." + id)
+		_f10_badges(true)
 # endregion
