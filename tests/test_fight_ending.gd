@@ -102,3 +102,50 @@ func test_deterministic_replay() -> void:
 		sim.run_ticks(sim.ticks_per_day * 2)
 		h.append(SaveGame.state_hash(sim))
 	assert_eq(h[0], h[1])
+
+
+# region F2: metro -> Collector assault -> relay -> burn -> win (forced chain)
+func _metro_sim() -> Simulation:
+	var d := peaceful_defs()
+	d.balance["e1_enabled"] = true
+	d.balance["q_enabled"] = true
+	d.balance["metro"]["enabled"] = true
+	d.balance["metro"]["first_raid_day"] = 0.0
+	d.balance["metro"]["interval_days"] = 0.0
+	d.balance["threat"]["first_wave_max_points"] = 1000.0
+	var sim := make_sim(31, false, 40, 40, d)
+	sim.colonists.spawn(Vector2i(18, 22))
+	sim.run_ticks(1)
+	sim.set_path("fight")
+	sim.threats.awakened = true
+	sim.threats.next_wave_tick = sim.tick + sim.ticks_per_day * 500
+	return sim
+
+
+func test_fight_path_defiance_climbs_without_quota() -> void:
+	var sim := _metro_sim()
+	var m := sim.threats.metro()
+	m.daily()
+	m.daily()
+	assert_eq(m.defiance, 4.0, "fight path: +per_unmet_day with no quota set")
+
+
+func test_metro_final_raid_drops_relay_and_uplink_wins() -> void:
+	var sim := _metro_sim()
+	var m := sim.threats.metro()
+	m.add_defiance(100.0)
+	m.raids_started = int(sim.defs.balance["metro"]["final_after_raids"])
+	assert_true(m.wants_final(), "wants final")
+	for r: Dictionary in sim.defs.endings["fight"]["raids"]:
+		r["mult"] = 0.0
+	for e: Dictionary in sim.defs.enemies.values():  # harmless raid: this test is about the relay chain, not combat
+		e["damage"] = 0
+		e["structure_dmg"] = 0
+	assert_true(m.tick(), "final raid started")
+	assert_true(m.final_done, "final_done")
+	assert_true(sim.fight_escape.relay_spawned, "relay dropped")
+	assert_false(sim.endings.won("fight"))
+	sim.buildings.place("uplink_array", Vector2i(2, 30), false)
+	sim.run_ticks(sim.ticks_per_day * 3)
+	assert_true(sim.endings.won("fight"), "burned down %s %s %s" % [sim.fight_escape.uplink_ready(), sim.fight_escape.relay_hp, sim.game_over_reason])
+# endregion

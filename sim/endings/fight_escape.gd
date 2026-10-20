@@ -20,6 +20,7 @@ var extract_cell := Vector2i(-1, -1)
 var extracted := 0  # colonists that left (legacy)
 var relay_spawned := false  # region EN4
 var relay_done := false
+var relay_hp := -1.0  # region F2: own countdown, colonists' repair jobs cannot heal the relay back
 
 
 func _init(p_sim: Simulation) -> void:
@@ -224,8 +225,12 @@ func _relay_tick() -> void:
 		sim.bus.letter_received.emit("Relay destroyed", str(_fc().get("relay", {}).get("lines", {}).get("won", "")))
 		sim.endings.mark_won("fight")
 		return
+	if relay_hp < 0.0:
+		relay_hp = r.hp
 	if uplink_ready():
-		sim.buildings.damage(r, float(_fc().get("relay", {}).get("damage_per_day", 400.0)) / sim.ticks_per_day)
+		relay_hp -= float(_fc().get("relay", {}).get("damage_per_day", 400.0)) / sim.ticks_per_day
+		if r.hp > relay_hp:
+			sim.buildings.damage(r, r.hp - relay_hp)
 # endregion
 
 
