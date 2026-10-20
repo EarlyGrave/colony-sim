@@ -66,6 +66,9 @@ func daily() -> void:
 		_last_paid = paid
 	var shipped := paid > _last_paid
 	_last_paid = paid
+	if sim.path() == "fight":  # region F2: the fight path defies the Metropolis: defiance climbs every day, shipping no longer calms it
+		add_defiance(float(cfg["per_unmet_day"]))
+		return
 	if shipped:
 		add_defiance(-float(cfg["decay_on_ship"]))
 	elif _quota_total() > 0:
@@ -117,7 +120,7 @@ func tick() -> bool:
 	if defiance < float(cfg["min_defiance"]):
 		return false
 	var grace := int(float(cfg["grace_days"]) * sim.ticks_per_day)
-	if th.next_wave_tick >= 0 and th.next_wave_tick - sim.tick < grace:
+	if not fight_path() and th.next_wave_tick >= 0 and th.next_wave_tick - sim.tick < grace:  # region F2: on the fight path the Metropolis does not wait for creature waves
 		return false  # a creature wave is imminent: never stack, wait for it
 	var id := pick_raid()
 	if id == "":

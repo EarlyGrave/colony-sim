@@ -109,6 +109,7 @@ func act() -> void:
 		_nitrogen_trickle()
 	if sim.tick % 200 == 60:
 		_f1_act()  # region F1b
+		_f2b_act()  # region F2b
 
 
 # region F1b
@@ -140,7 +141,8 @@ func _f1_act() -> void:
 	if _knob("endgame", 0) == 1:
 		match sim.path():
 			"fight":
-				sim.start_assault()
+				if sim.buildings.count_of("turret") >= _knob("fight_turrets_min", 6):  # region F2b
+					sim.start_assault()
 			"escape":
 				sim.contact_bandits()
 				sim.pay_bandit_fee()
@@ -189,6 +191,45 @@ func _pick_branches() -> void:
 # endregion
 
 
+# region F2b
+## Fight path: once tier 3 is reached (petition P3 done) the bot queues fuel cells and builds the Uplink Array (60 parts, 20 fuel cells, 30 power).
+var uplink_day := -1.0
+var uplink_started := false
+
+
+func _f2b_want_parts() -> bool:
+	return sim.path() == "fight" and sim.petition.done_phases.size() >= 3 and sim.fight_escape.uplink() == null
+
+
+func _f2b_building() -> bool:
+	return sim.path() == "fight" and _bp_count("uplink_array") > 0
+
+
+func _f2b_act() -> void:
+	if sim.path() == "fight" and sim.tick % 1200 == 60:
+		log.append("d%.1f F2b alive %d turrets %d waves %d metro %d def %.0f uplink %s asl %d/%d" % [_day_f(), sim.colonists.alive_count(), sim.buildings.count_of("turret"), sim.threats.wave_index, sim.threats.metro().raids_started, sim.threats.metro().defiance, str(sim.fight_escape.uplink() != null), sim.fight_escape.assault_step, sim.fight_escape.assault_failed])
+	if sim.path() == "fight" and sim.tutorial != null and not sim.tutorial.finished():
+		sim.tutorial.skip_all()  # a player has long finished the tutorial by the path choice; its wave hold also froze the Metropolis track
+	if sim.path() != "fight" or not (sim.milestones.is_tier_done(3) or sim.petition.done_phases.size() >= 3):  # petition replaces the tier-3 audit wall
+		return
+	if sim.fight_escape.uplink() != null:
+		if uplink_day < 0.0:
+			uplink_day = _day_f()
+		return
+	var need_fc := int(sim.defs.buildings["uplink_array"]["cost"].get("fuel_cell", 20))
+	var wb := _first("workbench")
+	if wb != null and not _has_bill(wb, "fuel_cell") and sim.defs.recipes.has("fuel_cell") and sim.items.count_stored("fuel_cell") < need_fc:
+		sim.add_bill(wb.id, "fuel_cell", "until", need_fc + 4)
+	if _f2b_building() and sim.tick % 600 == 60:
+		_priorities()
+	if not uplink_started and _bp_count("uplink_array") == 0:
+		var c := _spot("uplink_array", sim.map_center() + Vector2i(10, -10), false)
+		if c.x >= 0 and _put("uplink_array", c) != null:
+			uplink_started = true
+			_power(c)
+# endregion
+
+
 # region RF
 ## The refinery eats every loose ore stack, so the hand_plate bill (3 ore a plate) starves when the taint cap leaves the
 ## refinery running: keep a small ore reserve in the stockpile while plates are short, drop it once they are back.
@@ -218,6 +259,8 @@ func _upkeep() -> void:
 	# Turrets as blueprints (10 refined each, built by colonists): 3 + waves, max 10.
 	var have := sim.buildings.count_of("turret") + _bp_count("turret")
 	var want := mini(3 + sim.threats.wave_index, 10)
+	if sim.path() == "fight":  # region F2b: the Collector assault needs a real perimeter
+		want = maxi(want, _knob("fight_turrets", 14))
 	var turret_floor := 10 + (_research_reserve() if (have >= _knob("turret_min", 3) and _knob("turret_after_research", 1) == 1) else 0)  # PG: research essence before the 4th+ turret
 	if have < want and sim.items.count_stored("refined_essence") >= turret_floor and _bp_count("turret") < 2:
 		var angle := TAU * float(have * 7 % 13) / 13.0
@@ -297,10 +340,10 @@ func _priorities() -> void:
 			sim.set_work_priority(c.id, "cooking", 1)
 		elif i >= 4:
 			sim.set_work_priority(c.id, "construction", 1)  # PL: builds were starved behind mining (refinery took d13-d30)
-			sim.set_work_priority(c.id, "hauling", 1)
+			sim.set_work_priority(c.id, "hauling", 3 if (i >= 6 and _f2b_building()) else 1)  # region F2b
 			sim.set_work_priority(c.id, "mining", 3)
 			sim.set_work_priority(c.id, "repair", 1)  # YX: repair/operating default to 3 and starved behind endless hauling/building
-			sim.set_work_priority(c.id, "operating", 1)
+			sim.set_work_priority(c.id, "operating", 3 if (i >= 6 and _f2b_building()) else 1)  # region F2b: operating outranked build order, the Uplink blueprint starved
 		i += 1
 
 
@@ -816,6 +859,8 @@ func _cap_parts() -> void:
 	var cap := 11
 	if sim.milestones.is_tier_done(2):
 		cap = 21 if sim.petition.next_phase() <= 1 else 25
+	if _f2b_want_parts():  # region F2b: Uplink needs 60 parts
+		cap = 70
 	sim.defs.recipes["make_parts"]["stock_cap"] = {"parts": cap}
 # endregion
 
