@@ -416,3 +416,5 @@ HP); волны заканчиваются по таймеру и твари о�
 - Bot 60 d (with FX5): alive>=8 7/10, audit 6/10, P1 0, launch 0. Full suite 1159 green, web smoke PASS.
 - F7 (in progress): W1 dump-zone tint + legend + forecast hint, W3 regulation/fixation bus signals + 9 regulation PA lines (inert while flags OFF) — merged on dev 50dff94. W2 tools/petition_pace.gd done but its commit was denied by the permission classifier; files untracked in its worktree, waiting for the owner's decision.
 - W2 finding (60 d, 10 seeds, default bot): P1 is never delivered on any seed. Blockers: P1 plate short 4, no terminal 3, audit T2 plate 2, audit T2 parts 1 → plates are the main brake (6/10); refined is plentiful but goes to installments. Balance pass should start with plate production and the early terminal → audit chain, not late petition.
+- F7 batch DONE → main 4e64c98. W2 petition_pace.gd committed by the orchestrator with the owner's OK (the worker's own commit was denied by the permission classifier). Full suite 1168 green, web smoke PASS, bot alive>=8 7/10.
+- Note: tools/run_tests_sharded.sh uses --path . (cwd); always run it from the repo root being tested.
