@@ -203,7 +203,7 @@ func covert_sale(n: int) -> bool:
 	var gain := float(cfg["suspicion_per_unit"]) * n
 	if SocietyConds.informant_alive(sim):
 		gain *= float(cfg["informant_suspicion_mult"])
-	suspicion = minf(100.0, suspicion + gain)
+	suspicion = minf(float(cfg.get("suspicion_cap", 100.0)), suspicion + gain)  # region F4: the Warden never gets a sure thing (cap < 100)
 	sim.ledger.record_event("contraband:covert_sale", n)
 	_check_suspicion()
 	return true
