@@ -73,6 +73,7 @@ var ecology: EcologySystem  # region T5
 var milestones: MilestoneSystem  # region R2b
 var quests: QuestLog  # region Q0
 var petition: PetitionSystem  # region E1
+var regulations: RegulationSystem  # region W1
 var endings: EndingSystem  # region EN1
 var fight_escape: FightEscape  # region EN3
 var remission: Remission  # region EN4
@@ -319,6 +320,7 @@ func _init_systems() -> void:
 	research = ResearchSystem.new(self)  # region R2a
 	milestones = MilestoneSystem.new(self)  # region R2b
 	petition = PetitionSystem.new(self)  # region E1
+	regulations = RegulationSystem.new(self)  # region W1
 	quests = QuestLog.new(self)  # region Q0
 	endings = EndingSystem.new(self)  # region EN1
 	fight_escape = FightEscape.new(self)  # region EN3
@@ -478,6 +480,7 @@ func step() -> void:
 	if profiling:
 		_lap("ecology")
 	crises.tick()  # region crises
+	regulations.tick()  # region W1: no-op while balance reg_enabled is off
 	if profiling:
 		_lap("crises")
 	storyteller.tick()
@@ -1124,6 +1127,13 @@ func deliver_petition(phase: int) -> bool:
 	if not endings.petition_allowed():  # region EN1
 		return false
 	return petition.deliver(phase)
+
+
+# region W1
+func choose_regulation(slot: int, id: String) -> bool:
+	_record("choose_regulation", [slot, id])  # save-load
+	return regulations.choose(slot, id)
+# endregion
 
 
 func get_petition_state() -> Dictionary:

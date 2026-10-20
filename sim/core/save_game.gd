@@ -123,6 +123,8 @@ static func state_hash(sim: Simulation) -> int:
 		parts.append(pw)
 	if sim.tutorial != null:  # region O1: only in tutorial mode, so other hashes stay as they were
 		parts.append(sim.tutorial.state_parts())
+	if not sim.regulations.chosen.is_empty():  # region W1: absent until a slot was answered
+		parts.append([sim.regulations.chosen, sim.regulations.pending])
 	if not sim.squads.list.is_empty():  # region C1: only while a squad exists, other hashes stay as they were
 		parts.append(sim.squads.state_parts())
 	if sim.equipment.has_state():  # region E2: only once a gear instance exists, goldens stay identical

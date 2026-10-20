@@ -151,6 +151,7 @@
 	"b4_enabled": true,
 	"k5_enabled": true,
 	"e1_enabled": true,
+	"reg_enabled": false,
 	"e2_enabled": true,
 	"s1_enabled": true,
 	"s2_enabled": true,

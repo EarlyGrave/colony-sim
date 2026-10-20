@@ -159,6 +159,21 @@ func _f4a_saving() -> bool:
 		_equip_best()
 	if _knob("branch_pick", 0) == 1:
 		_pick_branches()
+	_reg_act()  # region W1
+
+
+# region W1
+## Standing Orders: knob pg_bot.reg_pick (0 = never answer, so slots time out to their default; 1..3 = option index in the slot).
+func _reg_act() -> void:
+	var pick := _knob("reg_pick", 0)
+	if pick <= 0 or sim.regulations.pending < 0:
+		return
+	var ids: Array = (sim.regulations.slots[sim.regulations.pending]["options"] as Dictionary).keys()
+	var slot := sim.regulations.pending
+	for i in range(ids.size()):  # wanted option first, then the others (an excluded option is rejected)
+		if sim.choose_regulation(slot, str(ids[(pick - 1 + i) % ids.size()])):
+			return
+# endregion
 
 
 # region F4a
@@ -1035,6 +1050,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		"esc": [sim.fight_escape.paid, sim.fight_escape.extracted, sim.contraband.escape_credit, sim.contraband.sales, sim.contraband.inspections, sim.contraband.raids, sim.fight_escape.contacted],  # region F4a
 		"ending_won": ",".join(PackedStringArray(sim.endings.path_ids().filter(func(i: String) -> bool: return sim.endings.won(i)))),
 	}
+	r["regs"] = ",".join(PackedStringArray(range(3).filter(func(i: int) -> bool: return sim.regulations.chosen.has(i)).map(func(i: int) -> String: return str(sim.regulations.chosen[i]))))  # region W1
 	for b in sim.buildings.list:
 		r["built"][b.def_id] = int(r["built"].get(b.def_id, 0)) + 1
 	for item in ["plate", "parts", "ingot_iron", "ingot_copper", "coal", "refined_essence", "essence_ore", "fuel_cell"]:

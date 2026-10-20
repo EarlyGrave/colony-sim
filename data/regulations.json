@@ -1,0 +1,38 @@
+{
+	"settings": {"timeout_days": 2.0},
+	"slots": [
+		{
+			"day": 15,
+			"title": "Shift Policy",
+			"text": "The warden asks how the crew should work.",
+			"default": "standard",
+			"options": {
+				"overtime": {"label": "Overtime", "price": "Refining +25%, waste +25%.", "effects": {"refine_mult": 1.25, "waste": 1.25}},
+				"standard": {"label": "Standard Shifts", "price": "No change.", "effects": {}},
+				"night_watch": {"label": "Night Watch", "price": "Waves -10%, despair +15%.", "effects": {"wave_mult": 0.9, "despair_mult": 1.15}}
+			}
+		},
+		{
+			"day": 30,
+			"title": "Audit Stance",
+			"text": "Inspectors are due. Choose how to meet them.",
+			"default": "comply",
+			"options": {
+				"grease": {"label": "Grease the Clerk", "price": "Audit parts -20%, petition fee +15%.", "effects": {"audit_parts_mult": 0.8, "petition_fee_mult": 1.15}},
+				"comply": {"label": "Comply", "price": "No change.", "effects": {}},
+				"open_books": {"label": "Open Books", "price": "Audit parts -10%, waste +10%.", "effects": {"audit_parts_mult": 0.9, "waste": 1.1}}
+			}
+		},
+		{
+			"day": 45,
+			"title": "Containment Order",
+			"text": "The yard can be run hard or run clean.",
+			"default": "status_quo",
+			"options": {
+				"zero_tolerance": {"label": "Zero Tolerance", "price": "Waves -20%, despair +20%.", "excludes": ["night_watch"], "effects": {"wave_mult": 0.8, "despair_mult": 1.2}},
+				"status_quo": {"label": "Status Quo", "price": "No change.", "effects": {}},
+				"clean_yard": {"label": "Clean Yard", "price": "Waste -25%, refining -15%.", "excludes": ["overtime"], "effects": {"waste": 0.75, "refine_mult": 0.85}}
+			}
+		}
+	]
+}

@@ -23,6 +23,7 @@ const PANELS: Array = [
 	# slot 5
 	["research", "Research", "res://view/panels/research_panel.gd"],  # region R2d
 	# slot 6
+	["orders", "Orders", "res://view/panels/regulation_card.gd"],  # region W1
 	["handbook", "?", "res://view/panels/handbook_panel.gd"],  # region O2
 	["forecast", "Wave", "res://view/panels/forecast_panel.gd"],  # region C5
 	["power", "Power", "res://view/panels/power_panel.gd"],  # region L4
