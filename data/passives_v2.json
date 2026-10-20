@@ -1,0 +1,2361 @@
+{
+	"_comment": "Passives v2 (earned perks). Loaded by PassiveTreeV2.load_default(), NOT by Defs; gated by balance.passives_v2_enabled. Points = 'marks'. requires_groups: every group needs >= n allocated ids from `any`. Effects are read only via PassiveTreeV2.mod(). See docs/gdd/03-colony/passives-v2/.",
+	"schema": 2,
+	"marks": {
+		"milestones": {
+			"3": 1,
+			"6": 2,
+			"10": 3
+		},
+		"max_keystones": 2,
+		"undo_grace_ticks": 1800,
+		"dossier_carry_max": 4
+	},
+	"respec": {
+		"item": "refined_essence",
+		"per_mark": 1,
+		"keystone_standing": 5,
+		"lockout_days": 3,
+		"path_mult": {
+			"submit": 0.5,
+			"fight": 1.0,
+			"escape": 1.5,
+			"": 1.0
+		}
+	},
+	"caps": {
+		"waste_mult": -0.4,
+		"contamination_per_batch": -0.4,
+		"installment_pct": -0.4,
+		"suspicion_gain": -0.6,
+		"damage_taken": -0.5,
+		"hunger": -0.5,
+		"gear_wear": -0.8
+	},
+	"details": {
+		"pit": {
+			"name": "The Pit",
+			"blurb": "Mining, hauling, building. The safe end of the sentence.",
+			"gate": {
+				"skills": {
+					"mining": 3,
+					"construction": 3
+				}
+			},
+			"color": "#c8a060",
+			"next": "stacks"
+		},
+		"stacks": {
+			"name": "The Stacks",
+			"blurb": "Refining essence. Every batch is a debt to the planet.",
+			"gate": {
+				"skills": {
+					"operating": 3
+				}
+			},
+			"color": "#9a5cff",
+			"next": "shop"
+		},
+		"shop": {
+			"name": "The Shop",
+			"blurb": "Benches, files, ammo presses. Quality is the only thing the Warden cannot confiscate.",
+			"gate": {
+				"skills": {
+					"crafting": 3
+				}
+			},
+			"color": "#4fb3a9",
+			"next": "yard"
+		},
+		"yard": {
+			"name": "The Yard",
+			"blurb": "Fists, shivs, rifles. What the waves teach.",
+			"gate": {
+				"skills": {
+					"shooting": 3,
+					"melee": 3
+				}
+			},
+			"color": "#e04a3a",
+			"next": "infirmary"
+		},
+		"infirmary": {
+			"name": "The Infirmary",
+			"blurb": "Rags, needles, calm voices. Keeping bodies and heads together.",
+			"gate": {
+				"skills": {
+					"medicine": 3
+				}
+			},
+			"color": "#5fd36b",
+			"next": "ledger"
+		},
+		"ledger": {
+			"name": "The Ledger",
+			"blurb": "Debt, Standing, suspicion, the Warden's favour. Politics of the block.",
+			"gate": {
+				"deed": "d_first_installment"
+			},
+			"color": "#ffd23a",
+			"next": "pit"
+		}
+	},
+	"deeds": [
+		{
+			"id": "d_first_installment",
+			"name": "First Installment",
+			"text": "Paid the Warden once. The ledger has a page with your name now.",
+			"trigger": "counter:installments",
+			"at": 1,
+			"marks": 1
+		},
+		{
+			"id": "d_first_blood",
+			"name": "First Blood",
+			"text": "Killed a creature.",
+			"trigger": "record:kills",
+			"at": 1,
+			"marks": 1
+		},
+		{
+			"id": "d_ten_kills",
+			"name": "Ten Notches",
+			"text": "Ten kills.",
+			"trigger": "record:kills",
+			"at": 10,
+			"marks": 2
+		},
+		{
+			"id": "d_fifty_kills",
+			"name": "Yard Legend",
+			"text": "Fifty kills.",
+			"trigger": "record:kills",
+			"at": 50,
+			"marks": 3
+		},
+		{
+			"id": "d_three_waves",
+			"name": "Still Standing",
+			"text": "Survived three waves.",
+			"trigger": "record:waves_survived",
+			"at": 3,
+			"marks": 1
+		},
+		{
+			"id": "d_ten_waves",
+			"name": "Old Hand",
+			"text": "Survived ten waves.",
+			"trigger": "record:waves_survived",
+			"at": 10,
+			"marks": 2
+		},
+		{
+			"id": "d_ore_500",
+			"name": "Five Hundred Rocks",
+			"text": "Mined 500 ore.",
+			"trigger": "record:ore_mined",
+			"at": 500,
+			"marks": 1
+		},
+		{
+			"id": "d_ore_2000",
+			"name": "Mountain Mover",
+			"text": "Mined 2000 ore.",
+			"trigger": "record:ore_mined",
+			"at": 2000,
+			"marks": 2
+		},
+		{
+			"id": "d_refined_20",
+			"name": "Stack Hand",
+			"text": "Refined 20 batches.",
+			"trigger": "record:refined",
+			"at": 20,
+			"marks": 1
+		},
+		{
+			"id": "d_refined_100",
+			"name": "Stack Boss",
+			"text": "Refined 100 batches.",
+			"trigger": "record:refined",
+			"at": 100,
+			"marks": 2
+		},
+		{
+			"id": "d_repairs_10",
+			"name": "Duct Tape",
+			"text": "Repaired ten things.",
+			"trigger": "record:repairs",
+			"at": 10,
+			"marks": 1
+		},
+		{
+			"id": "d_got_up",
+			"name": "Got Up Again",
+			"text": "Was downed and lived.",
+			"trigger": "record:downs",
+			"at": 1,
+			"marks": 1
+		},
+		{
+			"id": "d_rescuer",
+			"name": "Carried a Friend",
+			"text": "Rescued a downed inmate.",
+			"trigger": "counter:rescues",
+			"at": 1,
+			"marks": 1
+		},
+		{
+			"id": "d_healer_10",
+			"name": "Ten Patients",
+			"text": "Tended ten patients.",
+			"trigger": "counter:tends",
+			"at": 10,
+			"marks": 1
+		},
+		{
+			"id": "d_debt_cleared",
+			"name": "Paid in Full",
+			"text": "Cleared the whole debt.",
+			"trigger": "counter:debt_cleared",
+			"at": 1,
+			"marks": 3
+		},
+		{
+			"id": "d_thirty_quiet",
+			"name": "Thirty Quiet Days",
+			"text": "Thirty days without a break.",
+			"trigger": "counter:quiet_days",
+			"at": 30,
+			"marks": 2
+		}
+	],
+	"stat_consumers": {
+		"mining_speed": "sim/jobs/mine_job.gd:27",
+		"ore_yield": "sim/jobs/mine_job.gd:39,54",
+		"work_speed": "sim/jobs/job_system.gd:190",
+		"build_speed": "sim/jobs/build_job.gd:25",
+		"build_cost": "sim/buildings/building_system.gd:427",
+		"building_hp": "sim/buildings/building_system.gd:437",
+		"carry": "sim/colonists/trait_system.gd:47 carry_cap (haul_job:61, deliver_job:32)",
+		"move_speed": "sim/colonists/colonist.gd:62",
+		"hunger": "sim/needs/needs_system.gd:29",
+		"rest_gain": "sim/needs/needs_system.gd:38 rest_tick",
+		"threat_attract": "sim/threats/threat_system.gd:141",
+		"operate_speed": "sim/jobs/operate_job.gd:28",
+		"craft_speed": "sim/jobs/operate_job.gd:28",
+		"repair_speed": "sim/jobs/repair_job.gd:30,55",
+		"machine_breakage": "sim/buildings/building_system.gd:193 breakage_mult",
+		"waste_mult": "sim/buildings/building_system.gd:174 (cap -0.4 shared with perks, D23)",
+		"contamination_per_batch": "sim/contamination/contamination_system.gd:28 (cap -0.4)",
+		"mutation_risk": "sim/mutation/mutation_system.gd:429 mutation_mult",
+		"craft_input": "sim/buildings/building_system.gd:153",
+		"craft_quality": "sim/quality/quality_system.gd:57",
+		"quality_tier": "sim/quality/quality_system.gd:63 quality_shift",
+		"gear_wear": "sim/equipment/equipment_system.gd:253,270 (loss per hit/attack)",
+		"ammo_use": "sim/combat/ammo.gd:83",
+		"hit_chance": "sim/combat/combat_system.gd:30",
+		"unarmed_hit": "sim/combat/combat_system.gd:34",
+		"melee_damage": "sim/combat/combat_system.gd:177",
+		"unarmed_damage": "sim/combat/combat_system.gd:179",
+		"crit_chance": "sim/combat/combat_system.gd:180",
+		"attack_speed": "sim/combat/combat_system.gd:168",
+		"dodge_chance": "sim/threats/threat_system.gd:649,1081",
+		"damage_taken": "sim/health/health_system.gd:28",
+		"armor_flat": "sim/combat/combat_system.gd:106,111",
+		"flee_threshold": "sim/jobs/job_system.gd:35",
+		"tend_quality": "sim/health/health_system.gd:71",
+		"heal_speed": "sim/health/health_system.gd:78 (doctor), :185 (self)",
+		"infection_chance": "sim/health/health_system.gd:79,208",
+		"mood_base": "sim/mood/mood_system.gd:54",
+		"break_chance": "sim/mood/mood_system.gd:92",
+		"thought_injured": "sim/mood/mood_system.gd:40 (thought_<id> scale)",
+		"despair_mult": "sim/debt/debt_system.gd:155",
+		"installment_pct": "sim/colonists/trait_system.gd:87 installment (debt_system:64,146)",
+		"standing_gain": "sim/society/block_system.gd:73",
+		"suspicion_gain": "sim/society/contraband.gd:194 covert_sale / :212 _suspicion_day",
+		"stash_cap": "sim/society/contraband.gd:50 skim_budget",
+		"sale_price": "sim/society/contraband.gd:201 escape_credit += n",
+		"xp_mult_mining": "sim/progression/progression_system.gd:30",
+		"xp_mult_operating": "sim/progression/progression_system.gd:30",
+		"xp_mult_crafting": "sim/progression/progression_system.gd:30",
+		"xp_mult_medicine": "sim/progression/progression_system.gd:30",
+		"xp_mult_shooting": "sim/progression/progression_system.gd:30",
+		"xp_mult_melee": "sim/progression/progression_system.gd:30",
+		"xp_mult_all": "sim/progression/progression_system.gd:30"
+	},
+	"passives": [
+		{
+			"id": "p_pit_callouses",
+			"name": "Callouses",
+			"desc": "Hands that stopped bleeding weeks ago. Mining +8%.",
+			"detail": "pit",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				0
+			],
+			"requires_groups": [],
+			"effects": {
+				"mining_speed": 0.08
+			},
+			"icon": "passive_pit_callouses",
+			"earned": "marks",
+			"gate": {
+				"skills": {
+					"mining": 3,
+					"construction": 3
+				}
+			}
+		},
+		{
+			"id": "p_pit_yard_shoulders",
+			"name": "Yard Shoulders",
+			"desc": "Carries a quarter more per trip.",
+			"detail": "pit",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_callouses"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"carry": 0.25
+			},
+			"icon": "passive_pit_yard_shoulders",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_pick_rhythm",
+			"name": "Pick Rhythm",
+			"desc": "All work 5% faster.",
+			"detail": "pit",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_callouses"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"work_speed": 0.05
+			},
+			"icon": "passive_pit_pick_rhythm",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_scaffold_eye",
+			"name": "Scaffold Eye",
+			"desc": "Builds 12% faster.",
+			"detail": "pit",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_callouses"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"build_speed": 0.12
+			},
+			"icon": "passive_pit_scaffold_eye",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_the_mule",
+			"name": "The Mule",
+			"desc": "Carries half again as much; walks 5% slower.",
+			"detail": "pit",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				0,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_yard_shoulders"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"carry": 0.5,
+				"move_speed": -0.05
+			},
+			"icon": "passive_pit_the_mule",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_ore_sense",
+			"name": "Ore Sense",
+			"desc": "Ore yield +10%.",
+			"detail": "pit",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_pick_rhythm"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"ore_yield": 0.1
+			},
+			"icon": "passive_pit_ore_sense",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_salvage_habit",
+			"name": "Salvage Habit",
+			"desc": "Buildings cost 15% less material.",
+			"detail": "pit",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				2,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_scaffold_eye"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"build_cost": -0.15
+			},
+			"icon": "passive_pit_salvage_habit",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_long_shift",
+			"name": "Long Shift",
+			"desc": "Hunger -10%, work +3%.",
+			"detail": "pit",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_the_mule"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"hunger": -0.1,
+				"work_speed": 0.03
+			},
+			"icon": "passive_pit_long_shift",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_quiet_pick",
+			"name": "Quiet Pick",
+			"desc": "Mining noise draws 10% fewer creatures.",
+			"detail": "pit",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_ore_sense"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"threat_attract": -0.1
+			},
+			"icon": "passive_pit_quiet_pick",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_braced_walls",
+			"name": "Braced Walls",
+			"desc": "Buildings raised by this inmate have +15% HP.",
+			"detail": "pit",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_salvage_habit"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"building_hp": 0.15
+			},
+			"icon": "passive_pit_braced_walls",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_vein_reader",
+			"name": "Vein Reader",
+			"desc": "Ore yield +20%, mining XP +15%.",
+			"detail": "pit",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				1,
+				4
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_long_shift",
+						"p_pit_quiet_pick",
+						"p_pit_braced_walls"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"ore_yield": 0.2,
+				"xp_mult_mining": 0.15
+			},
+			"icon": "passive_pit_vein_reader",
+			"earned": "marks"
+		},
+		{
+			"id": "p_pit_lifers_back",
+			"name": "Lifer's Back",
+			"desc": "Carry x2, mining +25%. Hunger +25%, walks 15% slower.",
+			"detail": "pit",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				1,
+				5
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_the_mule",
+						"p_pit_salvage_habit",
+						"p_pit_vein_reader"
+					],
+					"n": 2
+				}
+			],
+			"effects": {
+				"carry": 1.0,
+				"mining_speed": 0.25,
+				"hunger": 0.25,
+				"move_speed": -0.15
+			},
+			"icon": "passive_pit_lifers_back",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_rubber_gloves",
+			"name": "Rubber Gloves",
+			"desc": "Operates machines 8% faster.",
+			"detail": "stacks",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				0
+			],
+			"requires_groups": [],
+			"effects": {
+				"operate_speed": 0.08
+			},
+			"icon": "passive_stacks_rubber_gloves",
+			"earned": "marks",
+			"gate": {
+				"skills": {
+					"operating": 3
+				}
+			}
+		},
+		{
+			"id": "p_stacks_valve_feel",
+			"name": "Valve Feel",
+			"desc": "Machines wear 15% slower under this operator.",
+			"detail": "stacks",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_rubber_gloves"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"machine_breakage": -0.15
+			},
+			"icon": "passive_stacks_valve_feel",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_nose_plug",
+			"name": "Nose Plug",
+			"desc": "Mutation risk -15%.",
+			"detail": "stacks",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_rubber_gloves"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"mutation_risk": -0.15
+			},
+			"icon": "passive_stacks_nose_plug",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_scrub_hands",
+			"name": "Scrub Hands",
+			"desc": "Refining waste -5%.",
+			"detail": "stacks",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_rubber_gloves"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"waste_mult": -0.05
+			},
+			"icon": "passive_stacks_scrub_hands",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_slow_pour",
+			"name": "Slow Pour",
+			"desc": "Contamination per batch -10%; operates 5% slower.",
+			"detail": "stacks",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				0,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_valve_feel"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"contamination_per_batch": -0.1,
+				"operate_speed": -0.05
+			},
+			"icon": "passive_stacks_slow_pour",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_gauge_eye",
+			"name": "Gauge Eye",
+			"desc": "Operates machines 10% faster.",
+			"detail": "stacks",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_nose_plug"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"operate_speed": 0.1
+			},
+			"icon": "passive_stacks_gauge_eye",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_second_skin",
+			"name": "Second Skin",
+			"desc": "Mutation risk -30%; hunger +5%.",
+			"detail": "stacks",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				2,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_scrub_hands"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"mutation_risk": -0.3,
+				"hunger": 0.05
+			},
+			"icon": "passive_stacks_second_skin",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_still_air",
+			"name": "Still Air",
+			"desc": "Draws 10% fewer creatures.",
+			"detail": "stacks",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_slow_pour"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"threat_attract": -0.1
+			},
+			"icon": "passive_stacks_still_air",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_fume_tolerance",
+			"name": "Fume Tolerance",
+			"desc": "Machinery XP +20%.",
+			"detail": "stacks",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_gauge_eye"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"xp_mult_operating": 0.2
+			},
+			"icon": "passive_stacks_fume_tolerance",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_flush_cycle",
+			"name": "Flush Cycle",
+			"desc": "Refining waste -10%.",
+			"detail": "stacks",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_second_skin"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"waste_mult": -0.1
+			},
+			"icon": "passive_stacks_flush_cycle",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_cold_hands",
+			"name": "Cold Hands",
+			"desc": "Contamination per batch -15%.",
+			"detail": "stacks",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				1,
+				4
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_still_air",
+						"p_stacks_fume_tolerance",
+						"p_stacks_flush_cycle"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"contamination_per_batch": -0.15
+			},
+			"icon": "passive_stacks_cold_hands",
+			"earned": "marks"
+		},
+		{
+			"id": "p_stacks_essence_lung",
+			"name": "Essence Lung",
+			"desc": "Waste -20%, operates +20%. Mutation +50%, creatures smell you.",
+			"detail": "stacks",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				1,
+				5
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_slow_pour",
+						"p_stacks_second_skin",
+						"p_stacks_cold_hands"
+					],
+					"n": 2
+				}
+			],
+			"effects": {
+				"waste_mult": -0.2,
+				"operate_speed": 0.2,
+				"mutation_risk": 0.5,
+				"threat_attract": 0.3
+			},
+			"icon": "passive_stacks_essence_lung",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_file_and_vice",
+			"name": "File and Vice",
+			"desc": "Crafts 8% faster.",
+			"detail": "shop",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				0
+			],
+			"requires_groups": [],
+			"effects": {
+				"craft_speed": 0.08
+			},
+			"icon": "passive_shop_file_and_vice",
+			"earned": "marks",
+			"gate": {
+				"skills": {
+					"crafting": 3
+				}
+			}
+		},
+		{
+			"id": "p_shop_scrap_eye",
+			"name": "Scrap Eye",
+			"desc": "Crafting uses 5% less input.",
+			"detail": "shop",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_file_and_vice"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"craft_input": -0.05
+			},
+			"icon": "passive_shop_scrap_eye",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_true_edge",
+			"name": "True Edge",
+			"desc": "Better craft quality rolls.",
+			"detail": "shop",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_file_and_vice"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"craft_quality": 0.5
+			},
+			"icon": "passive_shop_true_edge",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_oil_rag",
+			"name": "Oil Rag",
+			"desc": "Own gear wears 15% slower.",
+			"detail": "shop",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_file_and_vice"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"gear_wear": -0.15
+			},
+			"icon": "passive_shop_oil_rag",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_reloader",
+			"name": "Reloader",
+			"desc": "Uses 15% less ammo.",
+			"detail": "shop",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				0,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_scrap_eye"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"ammo_use": -0.15
+			},
+			"icon": "passive_shop_reloader",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_steady_file",
+			"name": "Steady File",
+			"desc": "Better craft quality rolls.",
+			"detail": "shop",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_true_edge"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"craft_quality": 0.5
+			},
+			"icon": "passive_shop_steady_file",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_patch_kit",
+			"name": "Patch Kit",
+			"desc": "Repairs 30% faster; machines wear 10% slower.",
+			"detail": "shop",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				2,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_oil_rag"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"repair_speed": 0.3,
+				"machine_breakage": -0.1
+			},
+			"icon": "passive_shop_patch_kit",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_tinker_hours",
+			"name": "Tinker Hours",
+			"desc": "Crafting XP +20%.",
+			"detail": "shop",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_reloader"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"xp_mult_crafting": 0.2
+			},
+			"icon": "passive_shop_tinker_hours",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_tight_tolerance",
+			"name": "Tight Tolerance",
+			"desc": "Own gear wears 15% slower.",
+			"detail": "shop",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_steady_file"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"gear_wear": -0.15
+			},
+			"icon": "passive_shop_tight_tolerance",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_bench_sense",
+			"name": "Bench Sense",
+			"desc": "Crafts 10% faster.",
+			"detail": "shop",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_patch_kit"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"craft_speed": 0.1
+			},
+			"icon": "passive_shop_bench_sense",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_makers_mark",
+			"name": "Maker's Mark",
+			"desc": "Crafted gear is one quality tier higher.",
+			"detail": "shop",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				1,
+				4
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_tinker_hours",
+						"p_shop_tight_tolerance",
+						"p_shop_bench_sense"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"quality_tier": 1
+			},
+			"icon": "passive_shop_makers_mark",
+			"earned": "marks"
+		},
+		{
+			"id": "p_shop_signature_work",
+			"name": "Signature Work",
+			"desc": "+1 quality tier, gear wear -50%. Crafts 30% slower, +15% input.",
+			"detail": "shop",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				1,
+				5
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_reloader",
+						"p_shop_patch_kit",
+						"p_shop_makers_mark"
+					],
+					"n": 2
+				}
+			],
+			"effects": {
+				"quality_tier": 1,
+				"craft_quality": 1.0,
+				"gear_wear": -0.5,
+				"craft_speed": -0.3,
+				"craft_input": 0.15
+			},
+			"icon": "passive_shop_signature_work",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_yard_stance",
+			"name": "Yard Stance",
+			"desc": "Hit chance +4%.",
+			"detail": "yard",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				0
+			],
+			"requires_groups": [],
+			"effects": {
+				"hit_chance": 0.04
+			},
+			"icon": "passive_yard_yard_stance",
+			"earned": "marks",
+			"gate": {
+				"skills": {
+					"shooting": 3,
+					"melee": 3
+				}
+			}
+		},
+		{
+			"id": "p_yard_shiv_grip",
+			"name": "Shiv Grip",
+			"desc": "Melee damage +10%.",
+			"detail": "yard",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_yard_stance"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"melee_damage": 0.1
+			},
+			"icon": "passive_yard_shiv_grip",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_duck_and_cover",
+			"name": "Duck and Cover",
+			"desc": "Dodge +5%.",
+			"detail": "yard",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_yard_stance"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"dodge_chance": 0.05
+			},
+			"icon": "passive_yard_duck_and_cover",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_flinch_less",
+			"name": "Flinch Less",
+			"desc": "Damage taken -5%.",
+			"detail": "yard",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_yard_stance"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"damage_taken": -0.05
+			},
+			"icon": "passive_yard_flinch_less",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_brawler",
+			"name": "Brawler",
+			"desc": "Unarmed damage +30%, unarmed hit +10%.",
+			"detail": "yard",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				0,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_shiv_grip"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"unarmed_damage": 0.3,
+				"unarmed_hit": 0.1
+			},
+			"icon": "passive_yard_brawler",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_breath_control",
+			"name": "Breath Control",
+			"desc": "Hit chance +6%.",
+			"detail": "yard",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_duck_and_cover"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"hit_chance": 0.06
+			},
+			"icon": "passive_yard_breath_control",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_thick_skin",
+			"name": "Thick Skin",
+			"desc": "Flat armour +1; hunger +5%.",
+			"detail": "yard",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				2,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_flinch_less"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"armor_flat": 1,
+				"hunger": 0.05
+			},
+			"icon": "passive_yard_thick_skin",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_fast_hands",
+			"name": "Fast Hands",
+			"desc": "Attacks 10% faster.",
+			"detail": "yard",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_brawler"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"attack_speed": 0.1
+			},
+			"icon": "passive_yard_fast_hands",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_count_shots",
+			"name": "Count Shots",
+			"desc": "Uses 10% less ammo.",
+			"detail": "yard",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_breath_control"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"ammo_use": -0.1
+			},
+			"icon": "passive_yard_count_shots",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_scar_tissue",
+			"name": "Scar Tissue",
+			"desc": "Injuries hurt the mood 30% less.",
+			"detail": "yard",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_thick_skin"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"thought_injured": -0.3
+			},
+			"icon": "passive_yard_scar_tissue",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_killers_eye",
+			"name": "Killer's Eye",
+			"desc": "Crit chance +8%.",
+			"detail": "yard",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				1,
+				4
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_fast_hands",
+						"p_yard_count_shots",
+						"p_yard_scar_tissue"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"crit_chance": 0.08
+			},
+			"icon": "passive_yard_killers_eye",
+			"earned": "marks"
+		},
+		{
+			"id": "p_yard_dead_man_walking",
+			"name": "Dead Man Walking",
+			"desc": "Never flees, damage -20%, hit +10%. Mood -8, heals 30% slower.",
+			"detail": "yard",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				1,
+				5
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_brawler",
+						"p_yard_thick_skin",
+						"p_yard_killers_eye"
+					],
+					"n": 2
+				}
+			],
+			"effects": {
+				"flee_threshold": -1.0,
+				"damage_taken": -0.2,
+				"hit_chance": 0.1,
+				"mood_base": -8,
+				"heal_speed": -0.3
+			},
+			"icon": "passive_yard_dead_man_walking",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_clean_rags",
+			"name": "Clean Rags",
+			"desc": "Tend quality +10%.",
+			"detail": "infirmary",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				0
+			],
+			"requires_groups": [],
+			"effects": {
+				"tend_quality": 0.1
+			},
+			"icon": "passive_infirmary_clean_rags",
+			"earned": "marks",
+			"gate": {
+				"skills": {
+					"medicine": 3
+				}
+			}
+		},
+		{
+			"id": "p_infirmary_bedside_manner",
+			"name": "Bedside Manner",
+			"desc": "Patients get 10% fewer infections.",
+			"detail": "infirmary",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_clean_rags"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"infection_chance": -0.1
+			},
+			"icon": "passive_infirmary_bedside_manner",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_light_sleeper",
+			"name": "Light Sleeper",
+			"desc": "Rests 15% faster.",
+			"detail": "infirmary",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_clean_rags"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"rest_gain": 0.15
+			},
+			"icon": "passive_infirmary_light_sleeper",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_iron_gut",
+			"name": "Iron Gut",
+			"desc": "Hunger -10%.",
+			"detail": "infirmary",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_clean_rags"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"hunger": -0.1
+			},
+			"icon": "passive_infirmary_iron_gut",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_triage",
+			"name": "Triage",
+			"desc": "Tend quality +20%, patients heal 15% faster.",
+			"detail": "infirmary",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				0,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_bedside_manner"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"tend_quality": 0.2,
+				"heal_speed": 0.15
+			},
+			"icon": "passive_infirmary_triage",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_steady_needle",
+			"name": "Steady Needle",
+			"desc": "Tend quality +10%.",
+			"detail": "infirmary",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_light_sleeper"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"tend_quality": 0.1
+			},
+			"icon": "passive_infirmary_steady_needle",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_thick_blood",
+			"name": "Thick Blood",
+			"desc": "Own wounds heal 25% faster, 15% fewer infections.",
+			"detail": "infirmary",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				2,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_iron_gut"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"heal_speed": 0.25,
+				"infection_chance": -0.15
+			},
+			"icon": "passive_infirmary_thick_blood",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_calm_voice",
+			"name": "Calm Voice",
+			"desc": "Breaks 15% less often.",
+			"detail": "infirmary",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_triage"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"break_chance": -0.15
+			},
+			"icon": "passive_infirmary_calm_voice",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_chart_reader",
+			"name": "Chart Reader",
+			"desc": "Medicine XP +20%.",
+			"detail": "infirmary",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_steady_needle"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"xp_mult_medicine": 0.2
+			},
+			"icon": "passive_infirmary_chart_reader",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_taint_watch",
+			"name": "Taint Watch",
+			"desc": "Mutation risk -20%.",
+			"detail": "infirmary",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_thick_blood"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"mutation_risk": -0.2
+			},
+			"icon": "passive_infirmary_taint_watch",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_even_keel",
+			"name": "Even Keel",
+			"desc": "Base mood +5.",
+			"detail": "infirmary",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				1,
+				4
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_calm_voice",
+						"p_infirmary_chart_reader",
+						"p_infirmary_taint_watch"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"mood_base": 5
+			},
+			"icon": "passive_infirmary_even_keel",
+			"earned": "marks"
+		},
+		{
+			"id": "p_infirmary_field_surgeon",
+			"name": "Field Surgeon",
+			"desc": "Tend +40%, heal +30%. Hunger +20%, combat XP halved.",
+			"detail": "infirmary",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				1,
+				5
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_triage",
+						"p_infirmary_thick_blood",
+						"p_infirmary_even_keel"
+					],
+					"n": 2
+				}
+			],
+			"effects": {
+				"tend_quality": 0.4,
+				"heal_speed": 0.3,
+				"hunger": 0.2,
+				"xp_mult_shooting": -0.5,
+				"xp_mult_melee": -0.5
+			},
+			"icon": "passive_infirmary_field_surgeon",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_count_the_coins",
+			"name": "Count the Coins",
+			"desc": "Installments 3% smaller.",
+			"detail": "ledger",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				0
+			],
+			"requires_groups": [],
+			"effects": {
+				"installment_pct": -0.03
+			},
+			"icon": "passive_ledger_count_the_coins",
+			"earned": "marks",
+			"gate": {
+				"deed": "d_first_installment"
+			}
+		},
+		{
+			"id": "p_ledger_quiet_mouth",
+			"name": "Quiet Mouth",
+			"desc": "Suspicion from your deals -15%.",
+			"detail": "ledger",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_count_the_coins"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"suspicion_gain": -0.15
+			},
+			"icon": "passive_ledger_quiet_mouth",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_block_voice",
+			"name": "Block Voice",
+			"desc": "Block Standing gains +25%.",
+			"detail": "ledger",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_count_the_coins"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"standing_gain": 0.25
+			},
+			"icon": "passive_ledger_block_voice",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_stoic",
+			"name": "Stoic",
+			"desc": "Despair grows 10% slower.",
+			"detail": "ledger",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				1
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_count_the_coins"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"despair_mult": -0.1
+			},
+			"icon": "passive_ledger_stoic",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_stash_pocket",
+			"name": "Stash Pocket",
+			"desc": "Can hide 2 more units of contraband.",
+			"detail": "ledger",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				0,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_quiet_mouth"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"stash_cap": 2
+			},
+			"icon": "passive_ledger_stash_pocket",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_haggler",
+			"name": "Haggler",
+			"desc": "Installments 5% smaller.",
+			"detail": "ledger",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_block_voice"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"installment_pct": -0.05
+			},
+			"icon": "passive_ledger_haggler",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_shot_caller",
+			"name": "Shot Caller",
+			"desc": "Standing gains +50%; breaks 10% more often.",
+			"detail": "ledger",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				2,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_stoic"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"standing_gain": 0.5,
+				"break_chance": 0.1
+			},
+			"icon": "passive_ledger_shot_caller",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_long_memory",
+			"name": "Long Memory",
+			"desc": "Despair grows 10% slower.",
+			"detail": "ledger",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				0,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_stash_pocket"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"despair_mult": -0.1
+			},
+			"icon": "passive_ledger_long_memory",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_clean_sheet",
+			"name": "Clean Sheet",
+			"desc": "Suspicion from your deals -15%.",
+			"detail": "ledger",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				1,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_haggler"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"suspicion_gain": -0.15
+			},
+			"icon": "passive_ledger_clean_sheet",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_scrip_sense",
+			"name": "Scrip Sense",
+			"desc": "Covert sales pay 10% more.",
+			"detail": "ledger",
+			"tier": "minor",
+			"cost": 1,
+			"pos": [
+				2,
+				3
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_shot_caller"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"sale_price": 0.1
+			},
+			"icon": "passive_ledger_scrip_sense",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_wardens_ear",
+			"name": "Warden's Ear",
+			"desc": "Installments 10% smaller; Standing gains -25%.",
+			"detail": "ledger",
+			"tier": "notable",
+			"cost": 2,
+			"pos": [
+				1,
+				4
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_long_memory",
+						"p_ledger_clean_sheet",
+						"p_ledger_scrip_sense"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"installment_pct": -0.1,
+				"standing_gain": -0.25
+			},
+			"icon": "passive_ledger_wardens_ear",
+			"earned": "marks"
+		},
+		{
+			"id": "p_ledger_trustee",
+			"name": "Trustee",
+			"desc": "Installments -20%, Standing +50%, suspicion -50%. Despair +30%.",
+			"detail": "ledger",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				1,
+				5
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_stash_pocket",
+						"p_ledger_shot_caller",
+						"p_ledger_wardens_ear"
+					],
+					"n": 2
+				}
+			],
+			"effects": {
+				"installment_pct": -0.2,
+				"standing_gain": 0.5,
+				"suspicion_gain": -0.5,
+				"despair_mult": 0.3,
+				"work_speed": -0.1
+			},
+			"icon": "passive_ledger_trustee",
+			"earned": "marks"
+		},
+		{
+			"id": "p_key_clean_hands",
+			"name": "Clean Hands Doctrine",
+			"desc": "Contamination -20%, ore +15%. Operates 25% slower.",
+			"detail": "pit+stacks",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				3,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_pit_the_mule",
+						"p_pit_salvage_habit",
+						"p_pit_vein_reader"
+					],
+					"n": 1
+				},
+				{
+					"any": [
+						"p_stacks_slow_pour",
+						"p_stacks_second_skin",
+						"p_stacks_cold_hands"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"contamination_per_batch": -0.2,
+				"ore_yield": 0.15,
+				"operate_speed": -0.25
+			},
+			"icon": "passive_key_clean_hands",
+			"earned": "marks"
+		},
+		{
+			"id": "p_key_essence_smith",
+			"name": "Essence Smith",
+			"desc": "Craft quality way up, input -20%. Your batches taint +20%.",
+			"detail": "stacks+shop",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				3,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_stacks_slow_pour",
+						"p_stacks_second_skin",
+						"p_stacks_cold_hands"
+					],
+					"n": 1
+				},
+				{
+					"any": [
+						"p_shop_reloader",
+						"p_shop_patch_kit",
+						"p_shop_makers_mark"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"craft_quality": 1.5,
+				"craft_input": -0.2,
+				"contamination_per_batch": 0.2
+			},
+			"icon": "passive_key_essence_smith",
+			"earned": "marks"
+		},
+		{
+			"id": "p_key_armourers_pride",
+			"name": "Armourer's Pride",
+			"desc": "Gear wear -50%, armour +2, ammo -25%. Builds 20% slower.",
+			"detail": "shop+yard",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				3,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_shop_reloader",
+						"p_shop_patch_kit",
+						"p_shop_makers_mark"
+					],
+					"n": 1
+				},
+				{
+					"any": [
+						"p_yard_brawler",
+						"p_yard_thick_skin",
+						"p_yard_killers_eye"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"gear_wear": -0.5,
+				"armor_flat": 2,
+				"ammo_use": -0.25,
+				"build_speed": -0.2
+			},
+			"icon": "passive_key_armourers_pride",
+			"earned": "marks"
+		},
+		{
+			"id": "p_key_walking_wounded",
+			"name": "Walking Wounded",
+			"desc": "Damage -10%, heals +50%, shrugs off pain. Tends 20% worse.",
+			"detail": "yard+infirmary",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				3,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_yard_brawler",
+						"p_yard_thick_skin",
+						"p_yard_killers_eye"
+					],
+					"n": 1
+				},
+				{
+					"any": [
+						"p_infirmary_triage",
+						"p_infirmary_thick_blood",
+						"p_infirmary_even_keel"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"damage_taken": -0.1,
+				"heal_speed": 0.5,
+				"thought_injured": -0.5,
+				"tend_quality": -0.2
+			},
+			"icon": "passive_key_walking_wounded",
+			"earned": "marks"
+		},
+		{
+			"id": "p_key_chaplain",
+			"name": "Chaplain",
+			"desc": "Despair -25%, breaks -25%, mood +3. Learns 15% slower.",
+			"detail": "infirmary+ledger",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				3,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_infirmary_triage",
+						"p_infirmary_thick_blood",
+						"p_infirmary_even_keel"
+					],
+					"n": 1
+				},
+				{
+					"any": [
+						"p_ledger_stash_pocket",
+						"p_ledger_shot_caller",
+						"p_ledger_wardens_ear"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"despair_mult": -0.25,
+				"break_chance": -0.25,
+				"mood_base": 3,
+				"xp_mult_all": -0.15
+			},
+			"icon": "passive_key_chaplain",
+			"earned": "marks"
+		},
+		{
+			"id": "p_key_quota_hawk",
+			"name": "Quota Hawk",
+			"desc": "Ore +20%, installments -10%. Draws creatures, mood -4.",
+			"detail": "ledger+pit",
+			"tier": "keystone",
+			"cost": 3,
+			"pos": [
+				3,
+				2
+			],
+			"requires_groups": [
+				{
+					"any": [
+						"p_ledger_stash_pocket",
+						"p_ledger_shot_caller",
+						"p_ledger_wardens_ear"
+					],
+					"n": 1
+				},
+				{
+					"any": [
+						"p_pit_the_mule",
+						"p_pit_salvage_habit",
+						"p_pit_vein_reader"
+					],
+					"n": 1
+				}
+			],
+			"effects": {
+				"ore_yield": 0.2,
+				"installment_pct": -0.1,
+				"threat_attract": 0.15,
+				"mood_base": -4
+			},
+			"icon": "passive_key_quota_hawk",
+			"earned": "marks"
+		}
+	]
+}

@@ -1045,6 +1045,372 @@ def gear_art():
         save(img, "gear_frame_" + rarity)
 # endregion
 
+# region passives_v2
+# Passive icons (docs/gdd/03-colony/passives-v2): 16x16, frame shape = tier
+# (minor: cut-corner box, notable: double square, keystone: diamond), colour = detail,
+# glyph = detail motif (minor/notable) or a unique keystone motif, sigil = 4x4 mark per node.
+PPAL = dict(PAL)
+PPAL.update({
+    "x": "#f4f0e8", "X": "#b8b0a0",  # light / shade of the glyph
+    "q": "#1a1420",                   # dark fill
+})
+PASSIVE_DETAIL_COLORS = {
+    "pit": "#c8a060", "stacks": "#9a5cff", "shop": "#4fb3a9", "yard": "#e04a3a",
+    "infirmary": "#5fd36b", "ledger": "#ffd23a", "key": "#ffb347",
+}
+PASSIVE_GLYPHS = {
+    "pit": [  # pickaxe
+        "....xxxx..",
+        "...xXxxxx.",
+        "..xX...xx.",
+        "..x...x.x.",
+        ".....x....",
+        "....x.....",
+        "...x......",
+        "..x.......",
+        ".x........",
+        "x.........",
+    ],
+    "stacks": [  # flask
+        "...xxxx...",
+        "....xx....",
+        "....xx....",
+        "...x..x...",
+        "..x....x..",
+        ".x......x.",
+        ".x.XXXX.x.",
+        ".x.XXXX.x.",
+        "..xXXXXx..",
+        "...xxxx...",
+    ],
+    "shop": [  # wrench
+        ".......xx.",
+        "......xxxx",
+        "......x.xx",
+        ".....xxxx.",
+        "....xxx...",
+        "...xxx....",
+        "..xxx.....",
+        ".xxx......",
+        "xxx.......",
+        "xx........",
+    ],
+    "yard": [  # fist
+        "..........",
+        "..xxxxxx..",
+        ".xXxxxxxx.",
+        ".xxxxxxxx.",
+        ".xxxxxxxx.",
+        ".xXXXXXxx.",
+        "..xxxxxx..",
+        "..xxxxxx..",
+        "...xxxx...",
+        "..........",
+    ],
+    "infirmary": [  # cross
+        "...xxxx...",
+        "...xxxx...",
+        "...xXXx...",
+        "xxxxXXxxxx",
+        "xxXXXXXXxx",
+        "xxXXXXXXxx",
+        "xxxxXXxxxx",
+        "...xXXx...",
+        "...xxxx...",
+        "...xxxx...",
+    ],
+    "ledger": [  # ledger book
+        ".xxxxxxxx.",
+        ".xXXXXXXx.",
+        ".xXxxxxXx.",
+        ".xXXXXXXx.",
+        ".xXxxxxXx.",
+        ".xXXXXXXx.",
+        ".xXxxxxXx.",
+        ".xXXXXXXx.",
+        ".xxxxxxxx.",
+        "..xxxxxx..",
+    ],
+}
+PASSIVE_KEY_GLYPHS = {
+    "pit_lifers_back": [  # bent back under a sack
+        "..........",
+        "....xxxx..",
+        "...xxxxxx.",
+        "..xxxxxxxx",
+        ".xxXXxxxxx",
+        ".xxXXxx...",
+        "..xxxx....",
+        "..x..x....",
+        ".xx..xx...",
+        "..........",
+    ],
+    "stacks_essence_lung": [  # lungs
+        "....xx....",
+        "....xx....",
+        ".xx.xx.xx.",
+        "xxxxxxxxxx",
+        "xXxxxxxxXx",
+        "xXxxxxxxXx",
+        "xxxx..xxxx",
+        "xxxx..xxxx",
+        ".xx....xx.",
+        "..........",
+    ],
+    "shop_signature_work": [  # stamped seal
+        "..xxxxxx..",
+        ".xXXXXXXx.",
+        "xXXxxxxXXx",
+        "xXx....xXx",
+        "xXx.xx.xXx",
+        "xXx.xx.xXx",
+        "xXx....xXx",
+        "xXXxxxxXXx",
+        ".xXXXXXXx.",
+        "..xxxxxx..",
+    ],
+    "yard_dead_man_walking": [  # skull
+        "..xxxxxx..",
+        ".xxxxxxxx.",
+        "xxxxxxxxxx",
+        "xxqqxxqqxx",
+        "xxqqxxqqxx",
+        "xxxxxxxxxx",
+        ".xxxqqxxx.",
+        "..xxxxxx..",
+        "..xqxqxq..",
+        "..xxxxxx..",
+    ],
+    "infirmary_field_surgeon": [  # scalpel
+        ".......xx.",
+        "......xxx.",
+        ".....xxx..",
+        "....xxx...",
+        "...xxx....",
+        "..xxx.....",
+        ".xXx......",
+        "xXX.......",
+        "XX........",
+        "..........",
+    ],
+    "ledger_trustee": [  # key
+        "..xxxx....",
+        ".xx..xx...",
+        ".x....x...",
+        ".xx..xx...",
+        "..xxxx....",
+        "...xx.....",
+        "...xx.....",
+        "...xxxx...",
+        "...xx.....",
+        "...xxxx...",
+    ],
+    "clean_hands": [  # open hand
+        "...x.x.x..",
+        "..xx.x.xx.",
+        "x.xxxxxxx.",
+        "xx.xxxxxx.",
+        ".xxxxxxxx.",
+        "..xxxxxxx.",
+        "..xxxxxx..",
+        "...xxxxx..",
+        "...xxxx...",
+        "..........",
+    ],
+    "essence_smith": [  # anvil with glow
+        "..........",
+        "...xxxxxxx",
+        "..xxxxxxx.",
+        ".xxxxxxx..",
+        "...xxx....",
+        "...xxx....",
+        "..xxxxx...",
+        ".xxxxxxx..",
+        ".XXXXXXX..",
+        "..........",
+    ],
+    "armourers_pride": [  # shield
+        ".xxxxxxxx.",
+        "xxxxxxxxxx",
+        "xxXXxxXXxx",
+        "xxXXxxXXxx",
+        "xxxxxxxxxx",
+        ".xxxxxxxx.",
+        ".xxxxxxxx.",
+        "..xxxxxx..",
+        "...xxxx...",
+        "....xx....",
+    ],
+    "walking_wounded": [  # bandaged heart
+        "..........",
+        ".xx...xx..",
+        "xxxx.xxxx.",
+        "xxXXXXXxx.",
+        "xxxxxxxxx.",
+        ".xxXXXxx..",
+        "..xxxxx...",
+        "...xxx....",
+        "....x.....",
+        "..........",
+    ],
+    "chaplain": [  # candle
+        "....x.....",
+        "...xXx....",
+        "...xXx....",
+        "....x.....",
+        "...xxxx...",
+        "...xXXx...",
+        "...xXXx...",
+        "...xXXx...",
+        "..xxxxxx..",
+        "..........",
+    ],
+    "quota_hawk": [  # hawk head
+        "..........",
+        "...xxxx...",
+        "..xxxxxx..",
+        ".xxqxxxxx.",
+        ".xxxxxxxxx",
+        "..xxxxxXX.",
+        "...xxxxX..",
+        "....xxx...",
+        "....xx....",
+        "..........",
+    ],
+}
+PASSIVE_SIGILS = [  # 4x4 marks, one per node slot (m1..m8, n1..n3) within a detail
+    ["....", ".xx.", ".xx.", "...."],  # dot
+    [".x..", "xxx.", ".x..", "...."],  # plus
+    [".x..", "xxx.", ".x..", ".x.."],  # arrow up
+    ["x...", "xx..", "xxx.", "xxxx"],  # ramp
+    ["x.x.", ".x..", "x.x.", "...."],  # cross
+    ["xxxx", "x..x", "x..x", "xxxx"],  # box
+    [".x..", ".x..", "xxx.", ".x.."],  # drop
+    ["..x.", ".x..", "xxx.", ".x.."],  # bolt
+    ["xxx.", ".x..", ".x..", "...."],  # tee
+    ["xxxx", "....", "xxxx", "...."],  # bars
+    ["x..x", ".xx.", ".xx.", "x..x"],  # star
+    [".xx.", "x..x", "x..x", ".xx."],  # ring
+]
+# (sprite name, detail, tier, slot index) — generated with data/passives_v2.json (same order).
+PASSIVE_ICONS = [
+    ("passive_pit_callouses", "pit", "minor", 0),
+    ("passive_pit_yard_shoulders", "pit", "minor", 1),
+    ("passive_pit_pick_rhythm", "pit", "minor", 2),
+    ("passive_pit_scaffold_eye", "pit", "minor", 3),
+    ("passive_pit_the_mule", "pit", "notable", 4),
+    ("passive_pit_ore_sense", "pit", "minor", 5),
+    ("passive_pit_salvage_habit", "pit", "notable", 6),
+    ("passive_pit_long_shift", "pit", "minor", 7),
+    ("passive_pit_quiet_pick", "pit", "minor", 8),
+    ("passive_pit_braced_walls", "pit", "minor", 9),
+    ("passive_pit_vein_reader", "pit", "notable", 10),
+    ("passive_pit_lifers_back", "pit", "keystone", "lifers_back"),
+    ("passive_stacks_rubber_gloves", "stacks", "minor", 0),
+    ("passive_stacks_valve_feel", "stacks", "minor", 1),
+    ("passive_stacks_nose_plug", "stacks", "minor", 2),
+    ("passive_stacks_scrub_hands", "stacks", "minor", 3),
+    ("passive_stacks_slow_pour", "stacks", "notable", 4),
+    ("passive_stacks_gauge_eye", "stacks", "minor", 5),
+    ("passive_stacks_second_skin", "stacks", "notable", 6),
+    ("passive_stacks_still_air", "stacks", "minor", 7),
+    ("passive_stacks_fume_tolerance", "stacks", "minor", 8),
+    ("passive_stacks_flush_cycle", "stacks", "minor", 9),
+    ("passive_stacks_cold_hands", "stacks", "notable", 10),
+    ("passive_stacks_essence_lung", "stacks", "keystone", "essence_lung"),
+    ("passive_shop_file_and_vice", "shop", "minor", 0),
+    ("passive_shop_scrap_eye", "shop", "minor", 1),
+    ("passive_shop_true_edge", "shop", "minor", 2),
+    ("passive_shop_oil_rag", "shop", "minor", 3),
+    ("passive_shop_reloader", "shop", "notable", 4),
+    ("passive_shop_steady_file", "shop", "minor", 5),
+    ("passive_shop_patch_kit", "shop", "notable", 6),
+    ("passive_shop_tinker_hours", "shop", "minor", 7),
+    ("passive_shop_tight_tolerance", "shop", "minor", 8),
+    ("passive_shop_bench_sense", "shop", "minor", 9),
+    ("passive_shop_makers_mark", "shop", "notable", 10),
+    ("passive_shop_signature_work", "shop", "keystone", "signature_work"),
+    ("passive_yard_yard_stance", "yard", "minor", 0),
+    ("passive_yard_shiv_grip", "yard", "minor", 1),
+    ("passive_yard_duck_and_cover", "yard", "minor", 2),
+    ("passive_yard_flinch_less", "yard", "minor", 3),
+    ("passive_yard_brawler", "yard", "notable", 4),
+    ("passive_yard_breath_control", "yard", "minor", 5),
+    ("passive_yard_thick_skin", "yard", "notable", 6),
+    ("passive_yard_fast_hands", "yard", "minor", 7),
+    ("passive_yard_count_shots", "yard", "minor", 8),
+    ("passive_yard_scar_tissue", "yard", "minor", 9),
+    ("passive_yard_killers_eye", "yard", "notable", 10),
+    ("passive_yard_dead_man_walking", "yard", "keystone", "dead_man_walking"),
+    ("passive_infirmary_clean_rags", "infirmary", "minor", 0),
+    ("passive_infirmary_bedside_manner", "infirmary", "minor", 1),
+    ("passive_infirmary_light_sleeper", "infirmary", "minor", 2),
+    ("passive_infirmary_iron_gut", "infirmary", "minor", 3),
+    ("passive_infirmary_triage", "infirmary", "notable", 4),
+    ("passive_infirmary_steady_needle", "infirmary", "minor", 5),
+    ("passive_infirmary_thick_blood", "infirmary", "notable", 6),
+    ("passive_infirmary_calm_voice", "infirmary", "minor", 7),
+    ("passive_infirmary_chart_reader", "infirmary", "minor", 8),
+    ("passive_infirmary_taint_watch", "infirmary", "minor", 9),
+    ("passive_infirmary_even_keel", "infirmary", "notable", 10),
+    ("passive_infirmary_field_surgeon", "infirmary", "keystone", "field_surgeon"),
+    ("passive_ledger_count_the_coins", "ledger", "minor", 0),
+    ("passive_ledger_quiet_mouth", "ledger", "minor", 1),
+    ("passive_ledger_block_voice", "ledger", "minor", 2),
+    ("passive_ledger_stoic", "ledger", "minor", 3),
+    ("passive_ledger_stash_pocket", "ledger", "notable", 4),
+    ("passive_ledger_haggler", "ledger", "minor", 5),
+    ("passive_ledger_shot_caller", "ledger", "notable", 6),
+    ("passive_ledger_long_memory", "ledger", "minor", 7),
+    ("passive_ledger_clean_sheet", "ledger", "minor", 8),
+    ("passive_ledger_scrip_sense", "ledger", "minor", 9),
+    ("passive_ledger_wardens_ear", "ledger", "notable", 10),
+    ("passive_ledger_trustee", "ledger", "keystone", "trustee"),
+    ("passive_key_clean_hands", "key", "keystone", "clean_hands"),
+    ("passive_key_essence_smith", "key", "keystone", "essence_smith"),
+    ("passive_key_armourers_pride", "key", "keystone", "armourers_pride"),
+    ("passive_key_walking_wounded", "key", "keystone", "walking_wounded"),
+    ("passive_key_chaplain", "key", "keystone", "chaplain"),
+    ("passive_key_quota_hawk", "key", "keystone", "quota_hawk"),
+]
+
+
+def _passive_frame(d, tier, col):
+    base = rgba(col)
+    dim = rgba(col, 110)
+    if tier == "minor":
+        d.rectangle([1, 1, 14, 14], outline=dim)
+        for cx, cy in ((1, 1), (14, 1), (1, 14), (14, 14)):
+            d.point((cx, cy), (0, 0, 0, 0))
+    elif tier == "notable":
+        d.rectangle([0, 0, 15, 15], outline=base)
+        d.rectangle([2, 2, 13, 13], outline=dim)
+    else:  # keystone: diamond
+        d.polygon([(7, 0), (8, 0), (15, 7), (15, 8), (8, 15), (7, 15), (0, 8), (0, 7)], outline=base)
+        d.polygon([(7, 2), (8, 2), (13, 7), (13, 8), (8, 13), (7, 13), (2, 8), (2, 7)], outline=dim)
+
+
+def passives_v2_art():
+    for name, detail, tier, slot in PASSIVE_ICONS:
+        col = PASSIVE_DETAIL_COLORS[detail]
+        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        _passive_frame(d, tier, col)
+        if tier == "keystone":
+            rows = PASSIVE_KEY_GLYPHS[slot] if detail == "key" else PASSIVE_KEY_GLYPHS[detail + "_" + slot]
+        else:
+            rows = PASSIVE_GLYPHS[detail]
+        pal = dict(PPAL)
+        pal["x"] = col
+        pal["X"] = "#f4f0e8"
+        glyph = outline(grid(rows, pal))
+        img.alpha_composite(glyph, (3, 3))
+        if tier != "keystone":
+            d.rectangle([10, 10, 15, 15], fill=rgba("#1a1420"))
+            img.alpha_composite(grid(PASSIVE_SIGILS[slot], {".": None, "x": "#f4f0e8"}), (11, 11))
+        save(img, name)
+# endregion
+
 
 def main():
     os.makedirs(OUT, exist_ok=True)
@@ -1064,6 +1430,7 @@ def main():
     belt_art()  # region A2c
     machine_art()  # region A2c
     gear_art()  # region F8
+    passives_v2_art()  # region passives_v2
     print("sprites written to", os.path.normpath(OUT))
 
 

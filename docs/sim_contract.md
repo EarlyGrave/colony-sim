@@ -159,6 +159,7 @@ event queues but must preserve listener order (registration order in `_init_syst
 | `names.json` | names[], backstories[] |
 | `needs.json` | start_food/rest, retry_ticks, food{}, rest{} |
 | `perks.json` | caps, respec_cost, perks id -> {skill, level, effect}, levels_per_point |
+| `passives_v2.json` | passives v2 (flag `passives_v2_enabled` false; NOT loaded by Defs, read by `PassiveTreeV2.load_default()`): marks, respec, caps, details, deeds, stat_consumers, passives id -> {detail, tier, cost, requires_groups, gate?, effects, icon} |
 | `plants.json` | id -> {item, yield, grow_ticks, sow_ticks, harvest_ticks, min_daylight} |
 | `quests_q6.json` | Q6 quest defs (QuestLog-merged, gated by q_enabled) |
 | `quests_q11.json` | Q11 Previous Tenant (NG+, sentence_min 2) |
