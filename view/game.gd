@@ -65,6 +65,7 @@ func _ready() -> void:
 	hud.focus_cell_requested.connect(func(cell: Vector2i) -> void:
 		camera.focus = WorldView.cell_to_world(cell))
 	_r4e_connect()  # region R4e
+	_f10w1_setup()  # region F10W1
 	hud.o2_cell_rect = _r5x_cell_rect  # region R5X
 	EventBus.game_over.connect(_on_game_over_meta)  # region meta
 	EventBus.shuttle_won.connect(_sx_on_shuttle_won)  # region SX
@@ -111,6 +112,27 @@ func _initial_seed() -> int:
 
 func _random_seed() -> int:
 	return int(Time.get_unix_time_from_system() * 1000.0) % 1000000
+
+
+# region F10W1
+var _f10w1_hints: HintDirector
+var _f10w1_t := 0.0
+var _f10w1_clock := 0.0
+
+
+func _f10w1_setup() -> void:
+	_f10w1_hints = HintDirector.new()
+	_f10w1_hints.connect_bus(EventBus)
+
+
+func _f10w1_process(delta: float) -> void:
+	_f10w1_clock += delta
+	_f10w1_t += delta
+	if _f10w1_t < 1.0 or _f10w1_hints == null or hud == null:
+		return
+	_f10w1_t = 0.0
+	_f10w1_hints.poll(sim, _f10w1_clock, func(text: String) -> void: hud.show_message(text, 6.0))
+# endregion
 
 
 # region W1
@@ -324,6 +346,7 @@ func _process(delta: float) -> void:
 		auto_panel.visible = hud._side == null or not is_instance_valid(hud._side) or not auto_panel.get_global_rect().intersects(hud._side.get_global_rect())
 		if not hud.u1_strip_wanted() and not auto_panel._machine_row.visible and not auto_panel._logic_row.visible:  # region U1
 			auto_panel.visible = false
+	_f10w1_process(delta)  # region F10W1
 	if sim == null or speed == 0:
 		return
 	_accum += delta * Simulation.TICKS_PER_SECOND * speed * _c5_time_scale()  # region C5
