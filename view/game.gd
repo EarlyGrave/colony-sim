@@ -370,6 +370,8 @@ func _on_tapped(world_pos: Vector2) -> void:
 	# region combat
 	if _combat_tap(world_pos, cell):
 		return
+	if _mimic_tap(world_pos, cell):  # region F4f
+		return
 	# endregion
 	if _l2_tap(cell):  # region L2
 		return
@@ -573,6 +575,25 @@ func _combat_tap(world_pos: Vector2, cell: Vector2i) -> bool:
 	if sim.order_move(sel.id, cell):
 		hud.show_message("Move here", 2.0)
 	return true
+# endregion
+
+
+# region F4f
+var _face_picker: FlavorPicker = FlavorPicker.load_default()
+
+
+## Inspect tool on a mimic after Q15: "Mimic — wears the face of <Name>". Anything else falls through.
+func _mimic_tap(world_pos: Vector2, cell: Vector2i) -> bool:
+	if tool != "inspect" or not MimicFace.revealed(sim):
+		return false
+	var half := Vector2(WorldView.TILE, WorldView.TILE) * 0.5
+	for e in sim.threats.enemies_in_range(Vector2(cell), 2.0):
+		if (e.visual_pos() * WorldView.TILE + half).distance_to(world_pos) < WorldView.TILE * 0.9:
+			var line := MimicFace.inspect_line(sim, e, _face_picker)
+			if line != "":
+				hud.show_message(line, 4.0)
+				return true
+	return false
 # endregion
 
 

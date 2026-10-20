@@ -57,6 +57,10 @@ func _on_enemy_killed(id: int) -> void:
 	var kind := sim.threats.last_kill_kind()
 	var cause := sim.threats.last_kill_cause()
 	var name_ := str(sim.defs.enemies.get(kind, {}).get("name", "Creature"))
+	var gone := MimicFace.gone_line(sim, id, kind, _picker)  # region F4f: Q15 reveal
+	if gone != "":
+		feed.push(gone)
+		return
 	var ctx := {"enemy": name_, "n": id, "cause": cause}
 	var keys: Array[String] = ["feed.%s.%s" % [kind, cause], "feed.%s.generic" % kind, FlavorPicker.K_FEED_GENERIC]
 	feed.push(_line(keys, ctx, id))

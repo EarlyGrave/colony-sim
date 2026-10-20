@@ -1,5 +1,9 @@
 {
 	"_comment": "Flavor text bank. Leaf = array of lines. Placeholders: {who} {victim} {enemy} {n} {cause}. Max 70 chars resolved.",
+	"mimic": {
+		"wears": ["Mimic — wears the face of {who}"],
+		"gone": ["{who} is gone for good."]
+	},
 	"feed": {
 		"generic": [
 			"Something died. The paperwork is already late.",
