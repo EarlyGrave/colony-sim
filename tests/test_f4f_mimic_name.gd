@@ -48,3 +48,12 @@ func test_other_creatures_never_named() -> void:
 	sim.quests.set_flag("clue_our_dead")
 	var e: Enemy = sim.threats._spawn("crawler", Vector2i(10, 10))
 	assert_eq(MimicFace.worn_name(sim, e), "")
+
+
+func test_gone_name_by_id_builds_valid_enemy() -> void:
+	# Regression: worn_name_by_id used Enemy.new(.., {}, ..) which errored on def["max_hp"].
+	var r := _rig()
+	var sim: Simulation = r[0]
+	sim.quests.set_flag("clue_our_dead")
+	assert_eq(MimicFace.worn_name_by_id(sim, 3, "mimic"), (r[1] as Colonist).display_name)
+	assert_eq(MimicFace.worn_name_by_id(sim, 3, "crawler"), "")

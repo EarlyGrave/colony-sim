@@ -21,9 +21,9 @@ static func worn_name(sim: Simulation, e: Enemy) -> String:
 
 ## Same for a mimic already gone from the list (enemy ids are unique; the pick depends only on id + the dead).
 static func worn_name_by_id(sim: Simulation, id: int, kind: String) -> String:
-	if kind != "mimic" or not revealed(sim):
+	if kind != "mimic" or not revealed(sim) or not sim.defs.enemies.has(kind):
 		return ""
-	return Enemy.new(id, kind, {}, Vector2i.ZERO).name_of_dead(sim.colonists.list)
+	return Enemy.new(id, kind, sim.defs.enemies[kind], Vector2i.ZERO).name_of_dead(sim.colonists.list)
 
 
 static func inspect_line(sim: Simulation, e: Enemy, picker: FlavorPicker) -> String:
