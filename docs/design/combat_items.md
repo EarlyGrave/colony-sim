@@ -1,3 +1,5 @@
+> Superseded by docs/gdd/ (2026-10-20): current design + status tags live in docs/gdd/README.md; this file is kept for history and worker breakdowns.
+
 # Combat & equipment design (Fable lead, 2026-10-19; numbers = direction only)
 Source: `docs/design/owner_notes_2026-10-19.md`. Base: `sim/combat/combat_system.gd`, `sim/health/health_system.gd`, `data/weapons.json`, `data/quality.json`.
 Everything below stays deterministic (`sim.rng` only, affix rolls use a child RNG seeded from `sim.rng.randi()`) and data-driven.

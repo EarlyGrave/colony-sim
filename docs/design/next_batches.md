@@ -1,3 +1,5 @@
+> Superseded by docs/gdd/ (2026-10-20): current design + status tags live in docs/gdd/README.md; this file is kept for history and worker breakdowns.
+
 # Next batches — coherence review + 4 worker-ready waves (Fable, 2026-10-19 ~23:35 UTC)
 Inputs: owner notes, GDD, five lead docs, revelation.md, HANDOFF, git log -80, reports TW2/TW4, E1-E5, PW2-PW4, N1-N4,
 EN1-EN4, MT, RV, EV, FX, CU (BL/MT/RV/EV wrote no files; their state is read from code/HANDOFF). Numbers = direction.

@@ -1,3 +1,5 @@
+> Superseded by docs/gdd/ (2026-10-20): current design + status tags live in docs/gdd/README.md; this file is kept for history and worker breakdowns.
+
 # Design: threats, pacing and player agency (Fable lead, 2026-10-19)
 
 Scope: creature waves, raids, remote miners, storyteller. Pillar: mining safe, refining dangerous

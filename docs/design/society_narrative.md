@@ -1,3 +1,5 @@
+> Superseded by docs/gdd/ (2026-10-20): current design + status tags live in docs/gdd/README.md; this file is kept for history and worker breakdowns.
+
 # Society & Story design pass (2026-10-19) - canon v2 (owner notes), lead: Fable
 Source of truth: docs/design/owner_notes_2026-10-19.md; bible rewritten (docs/story/bible.md). Numbers are
 directions, not balance. Traits: referenced only (docs/design/progression_traits.md). No code here.

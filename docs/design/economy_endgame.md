@@ -1,3 +1,5 @@
+> Superseded by docs/gdd/ (2026-10-20): current design + status tags live in docs/gdd/README.md; this file is kept for history and worker breakdowns.
+
 # Economy & endings — quota, refining, parts, three (+1) endings, Next Sentence (2026-10-19, v2)
 Author: game designer (Fable). Source of truth: docs/design/owner_notes_2026-10-19.md (numbers = direction only).
 Master doc: docs/design/GDD.md. Baseline bot (factory_eval 10 seeds/60 d): launch 1/10, alive>=8 9/10, audit 8, P1 5, P3 3.

@@ -1,3 +1,5 @@
+> Superseded by docs/gdd/ (2026-10-20): current design + status tags live in docs/gdd/README.md; this file is kept for history and worker breakdowns.
+
 # Progression & Traits — design (Fable lead, 2026-10-19)
 Source: owner notes 2026-10-19 (numbers = direction only). Current state: `Skills` (levels 0-10, linear XP
 `100+40L`, speed `1+0.1L`, passions), `data/traits.json` (7 traits, skill init + work_speed only, rolled flat

@@ -1,3 +1,5 @@
+> Superseded by docs/gdd/ (2026-10-20): current design + status tags live in docs/gdd/README.md; this file is kept for history and worker breakdowns.
+
 # Design note: fog of war? (Fable design lead, 2026-10-20)
 
 Question: should "Sentence Ended" have fog of war as a gameplay constraint? Short answer: **no terrain
