@@ -404,3 +404,10 @@ HP); волны заканчиваются по таймеру и твари о�
   - F4f mimic name: inspect toast + "<Name> is gone for good." in the kill feed after Q15. FX4 fixed a real crash (view built an Enemy with an empty def on every mimic death).
   - Bot 60 d: alive>=8 6/10, audit 6/10 (up from 4), P1 1, launch 0. web smoke jsheap 123 → 167 MB (watch).
 - Orchestrator slips today: one red push (pipe hid exit code), one parallel merge+push (conflict saved it). Rules: pipefail; merge → full suite → push strictly sequential.
+- F5 batch DONE → main 8dee64a (scout docs/scout/midgame_loop.md + story docs/story/round4_midgame.md → plan docs/f5_plan.md).
+  - W4: quest verbs trait/credit/suspicion/defiance, {dead}, conds raids_survived/defiance_over/gear_owned; r4 lines Good Behaviour (submit), Drone Toll (fight), Quiet Freight (escape) in data/quests_s6.json. 10 r4 PA lines in data but not shown by FeedDirector yet.
+  - W2: petition alt payments ON (P1 volunteer detail, P3 informant report); bot knob use_alt OFF (60 d alive 6→4/10 noisy; 90 d P1 2/6 → 5/6).
+  - W1: Standing Orders (slots d15/30/45, 3 options) — flag reg_enabled OFF (option set 3 → alive 4/10). Owner can switch it on.
+  - W3: Fixation (named legendary masterwork or break) — flag fixation_enabled OFF (accept-always alive 4/10).
+  - Bot 60 d: alive>=8 6/10, audit 6/10, P1 1, launch 0. Full suite 1135 green; web smoke PASS (jsheap 148 MB).
+- BUG to fix next: tools/factory_bot.gd  is declared inside  → equip / branch picking / manifest are dead code in the bot since F4a (bot numbers since F4 are without gear equip).
