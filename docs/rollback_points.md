@@ -32,3 +32,4 @@ Restore: `git checkout -b restore <sha>` (or reset a branch to it).
 | 2026-10-20 | 4e64c98 | F7 (dump-zone tint, reg/fixation signals + PA, petition_pace tool) | 1168 green, smoke PASS, bot alive>=8 7/10 |
 | 2026-10-20 | 1a71dac | F8 gear screen (icons, grid inventory, item card, stat names) | 1186 green, smoke PASS, bot alive>=8 7/10 |
 | 2026-10-20 | 0f11434 | F9 (path effects, socket cost, gear wear flag OFF + repair, ng_new_names removed) | 1205 green, smoke PASS, bot alive>=8 7/10 |
+| 2026-10-20 | ad385e1 | F10 (hints + SeenFlags, late-game perf bench/budget, NEW badges, test isolation) | 1222 green x2, smoke PASS, bot alive>=8 7/10 |
