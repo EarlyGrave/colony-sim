@@ -98,3 +98,17 @@ func move_flow(field: FlowField, sim: Simulation) -> int:
 	if field.dist_at(cell) == 0:
 		return Move.ARRIVED
 	return Move.MOVING
+
+
+# region RV
+## A mimic wears the name of an inmate who died: deterministic pick by enemy id from the dead (colonists keep their
+## record after death); "" for other creatures or when nobody has died yet.
+func name_of_dead(colonists: Array) -> String:
+	if def_id != "mimic":
+		return ""
+	var dead: Array[String] = []
+	for c in colonists:
+		if not c.alive:
+			dead.append(str(c.display_name))
+	return "" if dead.is_empty() else dead[id % dead.size()]
+# endregion

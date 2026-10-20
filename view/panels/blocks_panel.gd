@@ -72,6 +72,13 @@ static func leaning_for(sim_ref: Simulation, b: String) -> String:
 	return "Undecided"
 
 
+## After Q15 "Roll Call" (clue_our_dead): the creatures were inmates once.
+static func creatures_line(sim_ref: Simulation) -> String:
+	if sim_ref == null or sim_ref.quests == null or not sim_ref.quests.flag("clue_our_dead"):
+		return ""
+	return "Creatures: former inmates"
+
+
 func members_of(b: String) -> Array:
 	var out: Array = []
 	if sim == null or sim.blocks == null:
@@ -102,6 +109,7 @@ func refresh() -> void:
 	for b: String in ids:
 		parts.append([b, roundi(sim.blocks.standing_of(b)), members_of(b).size(), _trend.get(b, 0.0), leaning_for(sim, b)])
 	var cb := sim.contraband
+	parts.append([creatures_line(sim)])
 	parts.append([sim.blocks.informant_id(), cb.stash_total() if cb != null else -1, cb.suspicion if cb != null else -1.0])
 	var sig := str(parts)
 	if sig == _sig:
@@ -149,6 +157,8 @@ func _add_info_rows() -> void:
 		var reports := int(mod.reports) if mod != null else 0
 		t = "Reports: %d, fee x%.1f (%s)" % [reports, sim.quests.mod("petition_fee_mult"), inf.display_name]
 	_info_row(t)
+	if creatures_line(sim) != "":  # region RV
+		_info_row(creatures_line(sim))
 	var cb := sim.contraband
 	if cb != null and cb.is_enabled():
 		_info_row("Stash: %d, suspicion %d" % [cb.stash_total(), roundi(cb.suspicion)])

@@ -25,7 +25,7 @@
 				"delay_days": 0.5
 			},
 			"count": {
-				"text": "It had a number. The number is in our ledger. Nobody said it. Everyone counted again.",
+				"text": "It had a number. It is in our ledger. Everyone counted again.",
 				"options": {
 					"bury": {
 						"label": "Bury it as an inmate",
