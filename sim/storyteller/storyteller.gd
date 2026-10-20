@@ -253,6 +253,8 @@ func answer(uid: int, accept: bool) -> bool:
 		return false
 	if p["kind"] == "chain":
 		return _answer_chain(p, accept)  # region event-chains
+	if p["kind"] == "fixation":  # region W3
+		return sim.fixation.answer(p, accept)
 	if p["kind"] == "survivor" and accept:
 		if not bool(p["rescued"]):
 			p["rescued"] = true
@@ -288,6 +290,10 @@ func _tick_pending() -> void:
 			if sim.tick >= int(p["expires"]):
 				_answer_chain(p, false)
 			continue
+		if p["kind"] == "fixation":  # region W3
+			if sim.tick >= int(p["expires"]):
+				sim.fixation.answer(p, false)
+			continue
 		var c: Colonist = p["colonist"]
 		if bool(p.get("rescued", false)):
 			if sim.tick >= int(p["tend_at"]) and _has_untended(c):
@@ -309,6 +315,17 @@ func _post(kind: String, c: Colonist, text: String) -> void:
 	pending.append({"uid": uid, "kind": kind, "colonist": c, "text": text, "rescued": false, "tend_at": 0,
 		"expires": sim.tick + int(sim.defs.arrivals["choice_timeout_ticks"])})
 	sim.bus.event_choice_posted.emit(uid, text)
+
+
+# region W3
+## Fixation offer (FixationSystem): a colony-level choice with button labels, no colonist attached.
+func post_fixation(cid: int, text: String, yes_label: String, no_label: String, expires: int) -> void:
+	var uid := _next_uid
+	_next_uid += 1
+	pending.append({"uid": uid, "kind": "fixation", "colonist": null, "text": text, "rescued": false, "tend_at": 0,
+		"cid": cid, "yes_label": yes_label, "no_label": no_label, "expires": expires})
+	sim.bus.event_choice_posted.emit(uid, text)
+# endregion
 
 
 func _find_pending(uid: int) -> Dictionary:

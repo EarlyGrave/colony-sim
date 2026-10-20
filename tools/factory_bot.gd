@@ -110,6 +110,17 @@ func act() -> void:
 	if sim.tick % 200 == 60:
 		_f1_act()  # region F1b
 		_f2b_act()  # region F2b
+	if sim.fixation.offered:
+		_w3_fixation()  # region W3
+
+
+# region W3
+## pg_bot.fixation_accept: 0 = decline the Fixation offer (default), 1 = accept it.
+func _w3_fixation() -> void:
+	for p in sim.storyteller.pending.duplicate():
+		if p["kind"] == "fixation":
+			sim.answer_event(int(p["uid"]), _knob("fixation_accept", 0) == 1)
+# endregion
 
 
 # region F1b
@@ -1023,6 +1034,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		if sim.map.node_resource(n) == "nitrogen":
 			nit_nodes += 1
 	var st: Dictionary = sim.get_shuttle_state()
+	bot.log.append("W3 fixation offered=%s masterworks=%d failures=%d accepted=%d cancels=%d active=%s refined=%d gear_equipped=%d" % [sim.fixation.offered, sim.fixation.masterworks.size(), sim.fixation.failures, sim.fixation.accepted, sim.fixation.cancels, not sim.fixation.active.is_empty(), sim.items.count_stored("refined_essence"), bot.gear_equipped])  # region W3
 	var r := {
 		"seed": seed_value, "phase_day": bot.phase_day.duplicate(), "audit_day": bot.audit_day,
 		"parts": int(st.get("parts", 0)), "need": int(st.get("need", 24)), "launch_day": bot.launch_day, "won_day": bot.won_day,

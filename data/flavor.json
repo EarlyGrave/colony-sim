@@ -178,6 +178,9 @@
 		}
 	},
 	"pa": {
+		"fix_offer": ["Inmate seized a bench. Do not interrupt the paperwork."],
+		"fix_done": ["Workshop output logged as 'unexpectedly good'."],
+		"fix_fail": ["Workshop incident closed. Materials written off."],
 		"path_submit": [
 			"Form 3-S accepted. Your continued service is appreciated.",
 			"Submission noted. Gratitude is optional but recorded."

@@ -28,6 +28,8 @@
 		"block_proud": {"label": "Proud of the block", "value": 4, "duration_days": 1.5},
 		"block_shamed": {"label": "Shamed before the block", "value": -5, "duration_days": 1.5},
 		"leveled_up": {"label": "Mastered a trade", "value": 6, "duration_days": 2.0},
+		"fixation_done": {"label": "Made a masterwork", "value": 12, "duration_days": 3.0},
+		"fixation_failed": {"label": "Fixation ended in ruin", "value": -10, "duration_days": 2.0},
 		"clerk_reported": {"label": "Reported by the Warden's office", "value": -10, "duration_days": 3.0}
 	}
 }
