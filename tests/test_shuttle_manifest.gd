@@ -51,7 +51,6 @@ func test_win_submit_sets_ending_and_hook() -> void:
 	sim.bus.ending_won.connect(func(id: String) -> void: won.append(id))
 	sim.run_ticks(3)
 	assert_eq(won, ["submit"])
-	assert_true(sim.quests.flag("ng_new_names"))
 	assert_eq(sim.shuttle.freed, 2)
 	assert_eq(sim.shuttle.stayed, 1)
 

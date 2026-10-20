@@ -79,7 +79,6 @@ func _win_submit() -> void:
 		return
 	freed = seats()
 	stayed = maxi(0, sim.colonists.alive_count() - freed)
-	sim.quests.set_flag("ng_new_names")  # NG+ hook: the next run starts with new names, only the Dossier carries
 	sim.ending_won("submit")
 # endregion
 

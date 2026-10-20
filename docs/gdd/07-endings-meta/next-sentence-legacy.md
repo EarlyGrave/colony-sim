@@ -19,7 +19,7 @@ reserve), start XP, revealed forecast, scout probe, crates (food / parts). Saved
 | remission | 25 % | yes | yes | no | — | 1.0 |
 - Two-run chain: run 1 survives 9/10, run 2 6/10 (accepted: the next sentence should be harder).
 - NG+ quests: Q11 Previous Tenant (`clue_loop`), Q12 Rolled Over, S5 Old Cells; veteran's block +10.
-- `ng_new_names` flag set by the shuttle is read by nobody (redundant with the table).
+- (2026-10-20) Dead flag `ng_new_names` removed; the table is the only source.
 
 ## Not built
 - Three-way Dossier pick Veteran / Archivist (start with a clue) / Debtor (debt x1.5, essence x1.5) `[IDEA]`

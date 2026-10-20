@@ -28,7 +28,7 @@ Bot: P1 0/10 at 60 d today (plates), P4 ~d60 when reached; see balance findings.
   (1 + pollution_frac) "madness peak"); gantry repairable (`repair_gantry`, 1 plate); parts lost 50 % if
   the gantry falls. Win -> "Sentence Ended" screen with the Submit epilogue; Continue keeps playing.
 - Old design "2 Metropolis drone-shuttles of goods pickup during the siege" `[IDEA]` (not built).
-- `ng_new_names` flag is set by the shuttle but read by nobody (redundant; carry is in `meta.json endings`).
+- (2026-10-20) Dead flag `ng_new_names` removed; NG+ carry lives in `meta.json endings`.
 
 ## Bot numbers
 Scripted supply bot: launch 4/5 (d29-37). Real factory bot: launch 1/10 at 60 d once (seed 5, RP/FC pass),
