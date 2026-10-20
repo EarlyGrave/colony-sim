@@ -24,6 +24,8 @@ func test_every_line_fits_and_resolves() -> void:
 	var p := FlavorPicker.load_bank()
 	var total := 0
 	for k in p.all_keys():
+		if k.begins_with("epilogue_echo"):
+			continue  # F6c: {flag, line} records read by EndingSystem.echo_lines (own 70-char test), not a line bank
 		for raw in p.lines_of(k):
 			total += 1
 			assert_eq(FlavorPicker.unknown_placeholders(raw).size(), 0, "unknown placeholder: %s" % raw)
