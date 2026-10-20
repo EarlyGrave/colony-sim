@@ -53,6 +53,8 @@
 		"default_max": 100,
 		"loss_per_hit_taken": 0.2,
 		"loss_per_attack": 0.1,
+		"wear_enabled": false,
+		"repair_plates_full": 3,
 		"zero_stat_mult": 0.5,
 		"value_mult_at_zero": 0.1
 	},

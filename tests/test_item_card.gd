@@ -69,3 +69,13 @@ func test_profile_matches_totals() -> void:
 	assert_eq(p[0], "Armour: %d phys / %d energy" % [ap, ae])
 	assert_eq(p.size(), 4)
 	assert_eq(p[2], "Max HP: %d" % roundi(c.max_hp))
+
+
+func test_repair_line_only_when_damaged() -> void:  # F9W3
+	var s := _scene()
+	var sim: Simulation = s[0]
+	var c: Colonist = s[1]
+	var id := sim.give_gear(c.id, "helmet", "common", 0)
+	assert_eq(ItemCard.lines(sim, id)["repair"], "")
+	sim.equipment.set_durability(id, 40.0)
+	assert_eq(ItemCard.lines(sim, id)["repair"], "Repair: 2 plate")

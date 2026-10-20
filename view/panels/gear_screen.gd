@@ -196,6 +196,15 @@ func do_socket(upgrade_id: String) -> void:
 	_rebuild()
 
 
+# region F9W3
+func do_repair() -> void:
+	if _item(sel_id) == null:
+		return
+	hint = "Repaired." if sim.repair_gear(sel_id) else sim.equipment.repair_block(sel_id)
+	_rebuild()
+# endregion
+
+
 func step_inmate(dir: int) -> void:
 	var list := _inmates()
 	if list.is_empty():
@@ -351,6 +360,25 @@ func _build_side(sel: GearItem) -> void:
 		act.focus_mode = Control.FOCUS_NONE
 		act.pressed.connect(do_unequip if worn else do_equip)
 		_side.add_child(act)
+		# region F9W3
+		var rc := sim.equipment.repair_cost(sel.id)
+		if rc > 0:
+			var rb := Button.new()
+			rb.text = "Repair (%d plate)" % rc
+			rb.custom_minimum_size = Vector2(0, 64)
+			rb.focus_mode = Control.FOCUS_NONE
+			var why := sim.equipment.repair_block(sel.id)
+			rb.disabled = why != ""
+			rb.tooltip_text = why
+			rb.pressed.connect(do_repair)
+			_side.add_child(rb)
+			if why != "":
+				var rl := Label.new()
+				rl.text = why
+				rl.add_theme_font_size_override("font_size", 14)
+				rl.add_theme_color_override("font_color", Color(0.95, 0.8, 0.3))
+				_side.add_child(rl)
+		# endregion
 		var free: int = int(sim.defs.equipment["upgrade_slots"].get(sel.rarity, 0)) - sel.upgrades.size()
 		if free > 0:
 			var l := Label.new()

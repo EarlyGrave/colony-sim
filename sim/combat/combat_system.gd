@@ -192,6 +192,7 @@ func _try_attack(c: Colonist, e: Enemy) -> bool:
 	if aimed or volley or sim.rng.randf() < hit_chance(c, w, dist):
 		dmg = resolve_hit(att_of(c), e.def_stats, dmg, str(w.get("damage_kind", "phys")))  # region E1
 		sim.threats.damage_enemy(e, dmg, "melee", c)  # region F2 + F3
+	sim.equipment.wear_attack(c.id)  # region F9W3 (hit or miss)
 	if sim.profiling:  # region E4: XP award has its own cost, keep it out of the "combat" bucket
 		var ta := Time.get_ticks_usec()
 		sim.progression.award(c, skill, float(cfg["xp_per_attack"]), "attack", false)  # region progression
