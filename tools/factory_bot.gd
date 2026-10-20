@@ -110,6 +110,8 @@ func act() -> void:
 	if sim.tick % 200 == 60:
 		_f1_act()  # region F1b
 		_f2b_act()  # region F2b
+	if sim.tick % 100 == 20:
+		_reg_act()  # region W1
 
 
 # region F1b
@@ -159,7 +161,6 @@ func _f4a_saving() -> bool:
 		_equip_best()
 	if _knob("branch_pick", 0) == 1:
 		_pick_branches()
-	_reg_act()  # region W1
 
 
 # region W1
