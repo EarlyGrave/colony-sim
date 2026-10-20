@@ -47,10 +47,10 @@ func _craft_once(seed_v: int) -> String:
 	var sim: Simulation = s[0]
 	var c: Colonist = s[1]
 	var b := sim.buildings.place("workbench", Vector2i(10, 5), false)
-	sim.ledger.record_produced("machine_parts", 3, "test")
-	sim.ledger.record_produced("refined_essence", 2, "test")
-	b.input["machine_parts"] = 3
-	b.input["refined_essence"] = 2
+	var inp: Dictionary = sim.defs.recipes["craft_gear_vest"]["inputs"]  # F3b: plates + refined essence
+	for item: String in inp:
+		sim.ledger.record_produced(item, int(inp[item]), "test")
+		b.input[item] = int(inp[item])
 	assert_gt(sim.add_bill(b.id, "craft_gear_vest", "count", 1), 0)
 	sim.crafting._select(b)
 	assert_true(sim.buildings.work(b, int(b.recipe["work_ticks"]), c))
