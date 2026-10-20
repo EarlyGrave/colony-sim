@@ -178,24 +178,24 @@
 		}
 	},
 	"pa": {
-		"r4_good_behaviour": [
-			"A bonus is a loan with better lighting.",
-			"Seat 7 is reserved. Please do not ask for whom.",
-			"Armour is a form of ambition. Ambition is recorded."
-		],
-		"r4_drone_toll": [
-			"Drone 12 failed to return. Drone 13 has been informed.",
-			"Pilots are replaceable. So are walls. Please choose.",
-			"Smoke on the horizon. The Warden suggests it is yours."
-		],
-		"r4_quiet_freight": [
-			"A crate is not a sale. A sale is not a crate. File both.",
-			"Suspicion is at 60. The Warden is only curious. Loudly."
-		],
-		"r4_midgame": [
-			"Scars are non-refundable. Scars are also property.",
-			"Mid-term review: you are alive. This was not an assumption."
-		],
+		"r4_good_behaviour": {
+			"bonus": ["A bonus is a loan with better lighting."],
+			"seats": ["Seat 7 is reserved. Please do not ask for whom."],
+			"gear": ["Armour is a form of ambition. Ambition is recorded."]
+		},
+		"r4_drone_toll": {
+			"wreck": ["Drone 12 failed to return. Drone 13 has been informed."],
+			"pilot": ["Pilots are replaceable. So are walls. Please choose."],
+			"strike_vote": ["Smoke on the horizon. The Warden suggests it is yours."]
+		},
+		"r4_quiet_freight": {
+			"manifest": ["A crate is not a sale. A sale is not a crate. File both."],
+			"drone_tail": ["Suspicion is at 60. The Warden is only curious. Loudly."]
+		},
+		"r4_midgame": {
+			"d40": ["Scars are non-refundable. Scars are also property."],
+			"d50": ["Mid-term review: you are alive. This was not an assumption."]
+		},
 		"fix_offer": ["Inmate seized a bench. Do not interrupt the paperwork."],
 		"fix_done": ["Workshop output logged as 'unexpectedly good'."],
 		"fix_fail": ["Workshop incident closed. Materials written off."],

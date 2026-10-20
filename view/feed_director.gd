@@ -6,6 +6,8 @@ extends RefCounted
 ##   feed: enemy_killed, colonist_downed, building_destroyed
 ##   PA:   wave_started, wave_incoming, crisis_started, research_completed, colonist_died,
 ##         outpost_lost, every 5th day_started
+##   F6W2 PA: quest_beat -> pa.<quest>.<beat> then pa.<quest> (missing = silent); day 40/50 with a
+##         path_* flag -> pa.r4_midgame.d40/d50. Nothing when sim.quests.mod("pa_silent") > 0.
 
 const DAY_ASIDE_EVERY := 5
 const MAX_LEN := 70
@@ -38,6 +40,7 @@ func bind(p_sim: Simulation) -> void:
 		_c(b.outpost_lost, func(_i: int) -> void: _pa(FlavorPicker.K_PA_OUTPOST_LOST, {}))
 	_c(b.wave_repelled, func(_i: int) -> void: _pa(FlavorPicker.K_PA_WAVE_REPELLED, {}))
 	_c(b.day_started, _on_day)
+	_c(b.quest_beat, _on_quest_beat)  # region F6W2
 
 
 func unbind() -> void:
@@ -79,6 +82,8 @@ func _on_building(id: int) -> void:
 
 
 func _on_day(day: int) -> void:
+	if _mid_pa(day):  # region F6W2: replaces the quiet-day aside
+		return
 	if day > 0 and day % DAY_ASIDE_EVERY == 0:
 		_pa(FlavorPicker.K_PA_QUIET_DAY, {"n": day}, day)
 
@@ -119,3 +124,30 @@ func _line(keys: Array[String], ctx: Dictionary, subject: int) -> String:
 
 func _fit(s: String) -> String:
 	return s if s.length() <= MAX_LEN else s.left(MAX_LEN - 1) + "."
+
+
+# region F6W2
+func _pa_silent() -> bool:
+	return sim.quests != null and sim.quests.mod("pa_silent") > 0.0
+
+
+func _on_quest_beat(quest_id: String, beat_id: String, _text: String) -> void:
+	if _pa_silent():
+		return
+	var keys: Array[String] = ["pa.%s.%s" % [quest_id, beat_id], "pa.%s" % quest_id]
+	var s := _picker.pick_first(keys, {"tick": sim.tick, "id": beat_id})
+	if s != "":
+		pa.announce(_fit(s))
+
+
+func _mid_pa(day: int) -> bool:
+	if (day != 40 and day != 50) or _pa_silent():
+		return false
+	if not (sim.quests.flag("path_submit") or sim.quests.flag("path_fight") or sim.quests.flag("path_escape")):
+		return false
+	var s := _picker.pick_first(["pa.r4_midgame.d%d" % day], {"tick": sim.tick, "id": day})
+	if s == "":
+		return false
+	pa.announce(_fit(s))
+	return true
+# endregion
