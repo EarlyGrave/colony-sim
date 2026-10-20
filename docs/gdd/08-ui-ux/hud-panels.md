@@ -41,3 +41,12 @@ hint density full / new / off). Tutorial bot: all 12 steps, 0 deaths, d11-12. Si
 ## Owner feedback loop
 Phone screenshot + one blunt sentence -> one task (CLAUDE.md 9). F8 ("grid inventory + icons") is the
 latest such request shipped.
+
+## Contextual hints + "NEW" badges `[BUILT]` (F10)
+- `view/hint_director.gd` + `data/hints.json`: one-time toasts for first gear, damaged gear (<50 %), petition alt
+  available, Q14 path choice, first drone raid. Respect hint density (Off: none; New: gear_first + drone_raid only),
+  silent while a tutorial step is active, max 1 per 10 s. Read-only (state hash unchanged).
+- `view/seen_flags.gd` (`user://seen_flags.json`, in-memory fallback) remembers what the player has seen.
+- `view/new_badge.gd`: red "NEW" tag (26x14) on the Gear entry, petition alt, Orders (only if `reg_enabled`) and the
+  More button; cleared when the panel is opened (`badge.<panel>` seen flag). Density Off shows no badges.
+- Gear screen (F8): paper-doll + 4-column grid + ItemCard, see [../06-items-gear/gear-ui.md](../06-items-gear/gear-ui.md).

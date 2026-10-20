@@ -33,3 +33,5 @@ L3/L6/L10 per branch), `power_model.gd`, `b1_preset_table.gd`, `b2_table.gd`, `p
 ## Test suite
 208 test files, 1186 tests green (sharded ~2 min). Runner fails on any engine/script error. Contract doc test
 keeps `docs/sim_contract.md` in sync; golden replays; phone layout overlap scan; text-length tests.
+
+Late-game perf (F10, 250 map, 12 inmates fully geared, drone raid + 70 enemies, desktop shared host): avg 1.15 ms / p95 2.4 ms per tick vs 10 ms contract; threats ~57 %, colonists next; web est. avg 2.3-3.5 / p95 5-7 ms.
