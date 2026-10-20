@@ -410,4 +410,4 @@ HP); волны заканчиваются по таймеру и твари о�
   - W1: Standing Orders (slots d15/30/45, 3 options) — flag reg_enabled OFF (option set 3 → alive 4/10). Owner can switch it on.
   - W3: Fixation (named legendary masterwork or break) — flag fixation_enabled OFF (accept-always alive 4/10).
   - Bot 60 d: alive>=8 6/10, audit 6/10, P1 1, launch 0. Full suite 1135 green; web smoke PASS (jsheap 148 MB).
-- BUG to fix next: tools/factory_bot.gd  is declared inside  → equip / branch picking / manifest are dead code in the bot since F4a (bot numbers since F4 are without gear equip).
+- BUG to fix next: tools/factory_bot.gd `_f4a_saving()` is declared inside `_f1_act()` → equip / branch picking / manifest are dead code in the bot since F4a (bot numbers since F4 are without gear equip).
