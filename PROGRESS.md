@@ -381,3 +381,8 @@ HP); волны заканчиваются по таймеру и твари о�
 - F1c: raid_objectives ON vs OFF (10 seeds, 60 d): alive>=8 7→5/10 → stays OFF. Baseline on dev now: alive>=8 7/10, audit 5, P1 3, P3 2, launch 0 (morning main: 9/8/5/3/1) → balance regression, BL working.
 - Full suite 1037 green on dev. main NOT updated (last main 42247d1) until balance restored.
 - BL final: dirty_mult 0.35→0.28 only → pillar gap 2.2, alive>=8 7/10, audit 5, P1 3, P3 2, launch 0; 1037 green. main stays 42247d1. See docs/HANDOFF.md.
+
+## 2026-10-20 — F1a reshaped, F2 started
+- Owner: balance tuning postponed (content first). F1a SK/TH stopped; new main bar in DECISIONS.md.
+- LA: launch still 0/10 at 60 d. Copper is no longer the wall: petition pace + refined essence (P4 ~d60, shuttle needs ~20 d more; P4 short 60-76 refined on seeds 1/6). repair_rock_fix hurts (6/10 alive). Added bot knob `pg_bot.la_hoard_day` (off) + tools/la_diag.gd. Table: baseline 7/5/3/2/0; hoard25+cu_first 8/6/2/2/0. Override syntax: `--ov={"balance":{"key":val}}`.
+- F2 wave running: F2a metro live, F2b Fight loop, F2c gear loot, F2d ending screens.
