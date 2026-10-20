@@ -316,3 +316,5 @@ factory_eval 10 seeds/60 d, off vs on: alive>=8 9/10 vs 4/10; audit tier2 7 vs 6
 ## 2026-10-20
 - Fog of war: research done (docs/design/fog_of_war.md). Terrain/LoS fog rejected; "creature haze" (D-lite, sensors + scent ghosts, pollution shrinks sight) goes to the BACKLOG, revisit after F1a. Owner decision.
 - F1a starts as one wave of 3 workers (SK skills/traits, TH threat pressure, LA launch chain): docs/f1a_plan.md.
+- Owner (2026-10-20): balance tuning is premature while content/mechanics are still moving. F1a SK/TH stopped; LA (copper → parts → shuttle chain is a broken mechanic, not tuning) continues.
+- New main bar (owner): full suite green + web_smoke PASS + bot sanity (alive>=8 >= 6/10, no mass deaths). Precise balance (G in next_batches.md) is postponed to one pass after the content batches. Next: F2 "Metropolis live + Fight has a number".
