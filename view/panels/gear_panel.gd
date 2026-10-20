@@ -84,6 +84,17 @@ static func stored_rows(sim: Simulation, cid: int) -> Array:
 	return out
 
 
+## F9W1: "2 plate" style cost text of an upgrade.
+static func cost_text(sim: Simulation, upgrade_id: String) -> String:
+	var cost: Dictionary = sim.equipment.socket_cost(upgrade_id)
+	var keys: Array = cost.keys()
+	keys.sort()
+	var parts: Array[String] = []
+	for k: String in keys:
+		parts.append("%d %s" % [int(cost[k]), str(sim.defs.items.get(k, {}).get("name", k)).to_lower()])
+	return ", ".join(parts) if not parts.is_empty() else "free"
+
+
 ## Socket choices for an item: upgrade ids whose tags fit (sorted).
 static func socket_options(sim: Simulation, item_id: int) -> Array:
 	var g: GearItem = sim.equipment.instances[item_id]
@@ -120,7 +131,7 @@ func _build_stored(sim: Simulation, c: Colonist, box: VBoxContainer) -> void:
 		v.add_child(_button("Equip", func() -> void: sim.equip(c.id, id)))
 		if int(r["sockets_free"]) > 0:
 			for u: String in socket_options(sim, id):
-				v.add_child(_button("Socket: %s" % str(sim.defs.upgrades[u].get("name", u)), func() -> void: sim.socket(id, u)))
+				v.add_child(_button("Socket: %s (%s)" % [str(sim.defs.upgrades[u].get("name", u)), cost_text(sim, u)], func() -> void: sim.socket(id, u))) # F9W1
 		box.add_child(row)
 # endregion
 

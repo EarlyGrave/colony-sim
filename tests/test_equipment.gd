@@ -70,12 +70,20 @@ func test_new_slot_without_code_change() -> void:
 	assert_eq(sim.equipment.total(s[1], "armor_phys"), 7.0)
 
 
+func _stock_plates(sim: Simulation, n: int) -> void:
+	for x in 4:
+		sim.set_zone(Vector2i(2 + x, 2), "stockpile")
+	sim.ledger.record_produced("plate", n, "test")
+	sim.items.drop(Vector2i(2, 2), "plate", n)
+
+
 func test_socket_rules() -> void:
 	var s := _scene()
 	var sim: Simulation = s[0]
 	var common := sim.give_gear(s[1], "kevlar_vest", "common")
 	assert_false(sim.socket(common, "kevlar_plate"), "common has no slots")
 	var rare := sim.give_gear(s[1], "kevlar_vest", "rare")
+	_stock_plates(sim, 4)
 	assert_false(sim.socket(rare, "ap_rounds"), "tag mismatch")
 	sim.equip(s[1], rare)
 	assert_true(sim.socket(rare, "kevlar_plate"))
@@ -87,6 +95,7 @@ func test_socket_rules() -> void:
 func _run() -> int:
 	var s := _scene()
 	var sim: Simulation = s[0]
+	_stock_plates(sim, 4)
 	sim.equip(s[1], sim.give_gear(s[1], "kevlar_vest", "rare", 5))
 	sim.socket(1, "kevlar_plate")
 	for i in 20:

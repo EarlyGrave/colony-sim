@@ -53,6 +53,7 @@ static func build(seed_value: int, bus: Node, units := UNITS, enemies := ENEMIES
 				for slot in LOADOUT:
 					var gid := sim.give_gear(col.id, slot[0], "legendary", 12)
 					if slot[1] != "":
+						sim.defs.upgrades[slot[1]]["cost"] = {}  # F9W1: bench sockets for free
 						sim.socket(gid, slot[1])
 					sim.equip(col.id, gid)
 				if sim.threats.enemies.size() < enemies:

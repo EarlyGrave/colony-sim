@@ -30,6 +30,9 @@ func test_ui_equip_unequip_socket_commands() -> void:
 	var sim: Simulation = s[0]
 	var c: Colonist = s[1]
 	var id := sim.give_gear(c.id, "kevlar_vest", "uncommon", 2)
+	for x in 4:
+		sim.set_zone(Vector2i(2 + x, 2), "stockpile")
+	sim.items.drop(Vector2i(2, 2), "plate", 4)
 	var p := GearPanel.new()
 	assert_true(p.applies(sim, {"colonist": c}), "stored gear shows the section")
 	assert_true(_press(_build(sim, c), "Socket: Kevlar"), "socket button")
