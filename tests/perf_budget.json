@@ -10,6 +10,16 @@
 		"total": {"avg": 4.0, "p95": 10.0}
 	},
 	"combat": {"avg": 0.6, "p95": 1.5, "_doc": "tests/test_equip_perf.gd: CombatSystem.try_attack bucket, 220 inmates x 6 legendary, 300 enemies in contact"},
+	"late": {
+		"_doc": "F10W2 tools/perf_scenario.gd late_game: drone raid + 10 fully equipped inmates + 2 quests + petition alt + wear ON + 70 enemies (10 in contact), 250 map. Measured p95 (shared host, median of 3) x ~1.3; tiny buckets floored for noise.",
+		"threats": {"avg": 1.0, "p95": 1.8},
+		"colonists": {"avg": 0.5, "p95": 0.9},
+		"contamination": {"avg": 0.08, "p95": 0.15},
+		"logistics": {"avg": 0.05, "p95": 0.1},
+		"mutation": {"avg": 0.05, "p95": 0.1},
+		"combat": {"avg": 0.12, "p95": 0.3},
+		"total": {"avg": 1.7, "p95": 3.2}
+	},
 	"splitters_8k_200": {"avg": 1.0, "p95": 2.0},
 	"first_tick_ms": 20.0,
 	"flow_builds_per_600": 60,

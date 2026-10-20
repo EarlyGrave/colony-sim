@@ -24,7 +24,7 @@
 L3/L6/L10 per branch), `power_model.gd`, `b1_preset_table.gd`, `b2_table.gd`, `progression_report.gd`.
 
 ## Perf and memory
-`tools/perf_bench.gd` (+ `perf_scenario`, `perf_threat`, `perf_threat_belts`, `belt_bench`), `mem_probe.gd
+`tools/perf_bench.gd --late=1` (F10: late-game scenario, table vs `late` budget; test `tests/test_f10_perf_late.gd`), `tools/perf_bench.gd` (+ `perf_scenario`, `perf_threat`, `perf_threat_belts`, `belt_bench`), `mem_probe.gd
 --size=250`, `view_bench`, `w2a_bench`; `tests/test_perf_budget.gd` + `tests/perf_budget.json`.
 
 ## Visual checks
