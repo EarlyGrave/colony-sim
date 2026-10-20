@@ -312,3 +312,7 @@ factory_eval 10 seeds/60 d, off vs on: alive>=8 9/10 vs 4/10; audit tier2 7 vs 6
 - Traits may emerge as "scars" (max 1 acquired).
 - lockdown_radius 36 (24 broke wave balance). First-wave gate shipped off. raid_objectives/scent/metro/contraband/remission off until bot numbers pass.
 - main frozen at 42247d1 until balance restored (pillar gap ≥2 and alive>=8 ≥8/10).
+
+## 2026-10-20
+- Fog of war: research done (docs/design/fog_of_war.md). Terrain/LoS fog rejected; "creature haze" (D-lite, sensors + scent ghosts, pollution shrinks sight) goes to the BACKLOG, revisit after F1a. Owner decision.
+- F1a starts as one wave of 3 workers (SK skills/traits, TH threat pressure, LA launch chain): docs/f1a_plan.md.
