@@ -331,3 +331,34 @@ func test_ending_sheet_fits() -> void:
 		_check_state(game, tag + " ending sheet")
 		_drop_sheets(game))
 # endregion
+
+
+# region F8
+func test_gear_screen_fits() -> void:
+	var game := _make_game()
+	game.sim.run_ticks(60)
+	var c: Colonist = game.sim.colonists.list[0]
+	game.sim.equip(c.id, game.sim.give_gear(c.id, "helmet", "epic", 5))
+	for i in 7:
+		game.sim.give_gear(c.id, "kevlar_vest", "rare", i)
+	GearScreen.focus_cid = c.id
+	_each_size(func(size: Vector2i, sc: float) -> void:
+		var tag := "%dx%d@%.2f" % [size.x, size.y, sc]
+		game.hud.toggle_panel("gear_screen")
+		_settle(game, size, sc)
+		var vp := game.hud.get_viewport().get_visible_rect().size
+		var sheet := game.hud._side.get_global_rect()
+		assert_true(sheet.position.x >= 72.0 and sheet.end.x <= vp.x and sheet.end.y <= vp.y, "%s gear sheet %s in %s" % [tag, sheet, vp])
+		var gs := game.hud._side as GearScreen
+		for ctl: Control in [gs._doll, gs._grid, gs._side]:
+			var r := ctl.get_global_rect()
+			assert_true(r.end.x <= sheet.end.x + 1.0, "%s column %s right edge %.0f <= %.0f" % [tag, ctl.name, r.end.x, sheet.end.x])
+		for b in gs._doll.get_children() + gs._grid.get_children():
+			if b is Button:
+				assert_true((b as Button).size.x >= 63.5 and (b as Button).size.y >= 63.5, "%s cell %s" % [tag, (b as Button).size])
+		assert_false(game.hud._o4_cluster.visible, tag + " thumb cluster hidden under the full-width sheet")
+		_check_state(game, tag + " gear sheet")
+		_drop_sheets(game)
+		_settle(game, size, sc)
+		assert_true(game.hud._o4_cluster.visible, tag + " cluster back"))
+# endregion

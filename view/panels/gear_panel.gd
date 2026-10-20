@@ -46,6 +46,7 @@ static func stat_line(g: GearItem) -> String:
 
 func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 	var c: Colonist = target["colonist"]
+	_open_gear_button(c, target, box)  # region F8
 	for r: Dictionary in rows(sim, c.id):
 		var row := PanelContainer.new()
 		row.custom_minimum_size = Vector2(0, ROW_H)
@@ -122,4 +123,14 @@ func _build_stored(sim: Simulation, c: Colonist, box: VBoxContainer) -> void:
 			for u: String in socket_options(sim, id):
 				v.add_child(_button("Socket: %s" % str(sim.defs.upgrades[u].get("name", u)), func() -> void: sim.socket(id, u)))
 		box.add_child(row)
+# endregion
+
+
+# region F8: shortcut to the full gear screen (only when the inspector can open panels)
+static func _open_gear_button(c: Colonist, target: Dictionary, box: VBoxContainer) -> void:
+	var req: Callable = target.get("request_panel", Callable())
+	if not req.is_valid():
+		return
+	var cid := c.id
+	box.add_child(_button("Open gear", func() -> void: req.call("gear_screen", cid)))
 # endregion
