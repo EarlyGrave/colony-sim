@@ -15,3 +15,5 @@ icons from `tools/gen_art.py` (16x16 gear icons + rarity frames).
 
 Owner request behind F8: "grid inventory + icons". Not built: drag between slots (by design, touch),
 comparison tooltips (no hover), repair button (no repair job).
+
+> F9 (2026-10-20): repair `[BUILT]` (`repair_gear`, Repair button on the gear screen / item card); wear behind `durability.wear_enabled` (OFF).

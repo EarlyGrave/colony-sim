@@ -9,7 +9,7 @@
 | Wave reward | `[BUILT]` (F3a) | `gear.json _wave_reward` | 35 % chance of an armour piece after a repelled wave (pity source for seeds with few kills) |
 | Fixation masterwork | `[BUILT, flag OFF: fixation_enabled]` | `sim/fixation/`, `data/fixation.json` | legendary ilvl 10, named after the inmate |
 | r4 quest `gear` verb | `[BUILT]` | `quest_log.gd` region W4 | e.g. strip the drone -> uncommon plasma_blade/smg |
-| Repair | `[PLANNED]` | — | durability never destroys, so repair is a future maintenance job |
+| Repair | `[BUILT]` (F9W3) | `repair_gear` command, `equipment.json durability.repair_plates_full` | workbench + 1-3 plates restores max durability; wear itself is `[BUILT, flag OFF: durability.wear_enabled]` |
 | Trade / sell gear | `[IDEA]` | — | `value` exists on bases; no buyer |
 
 ## Gear economy numbers (`tools/gear_budget.gd`, F3b, 60 d)

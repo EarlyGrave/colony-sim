@@ -18,12 +18,12 @@ through `sim.path()` (nobody greps flags). Before Q14 `path() == ""` and every s
 
 ## What each path changes mid-game `[BUILT]` unless noted
 - Submit: launch-window notices (+0.1 wave mult / 8 d), seats manifest, madness siege x (1 + pollution).
-  Society doc also wanted `wave_mult 1.2` and quota grace +5 d on Submit: **not built** (`debt_system.gd`
-  reads only `grace_days`; no path check) — `[PLANNED]` or drop.
+  Path effects `[BUILT]` (F9): `wave_mult` ×1.2 and debt grace +5 d (`data/endings.json path_effects`,
+  read via `EndingSystem.effect()` in threat_system `_o3_mult` and debt_system grace).
 - Fight: missed installments no longer count as missed (debt_system), Debt of the Dead waived, Walkout
   demands a refinery stop instead of payment, metro raids escalate, r4 "Drone Toll".
-- Escape: `covert_sale` unlocked, suspicion meter live, r4 "Quiet Freight". Society doc's "petition fee
-  x0.8 on Escape" is **not built** (`petition_system.gd` reads only the quest mod `petition_fee_mult`).
+- Escape: `covert_sale` unlocked, suspicion meter live, r4 "Quiet Freight". Petition fee ×0.8 on
+  Escape `[BUILT]` (F9, `path_effects.escape.petition_fee_mult`, product with the quest mod, min 1).
 - Remission: Q17 not built; `path_remission` can only be set by command/tests today.
 - Block Standing shifts +-15 by leaning on the choice; Warden letter per path (`pa.path_*`).
 

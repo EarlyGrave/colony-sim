@@ -38,3 +38,5 @@ summed once per change. Items on the ground are stacks `gear` x1 with `carry_qua
 ## Where it still has no loop
 Repair, trade value sink, dodge affix, enemy affixes, operating-branch effects on gear: not built.
 `gear_owned` cond and `gear` quest verb exist (r4 lines, with [DATA] fallbacks).
+
+> F9 (2026-10-20): repair `[BUILT]` (`repair_gear`, Repair button on the gear screen / item card); wear behind `durability.wear_enabled` (OFF).

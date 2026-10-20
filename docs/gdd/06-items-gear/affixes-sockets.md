@@ -22,9 +22,9 @@ Report: legendary offense/defense split 40-60 % over 1000 rolls.
 
 ## Upgrade sockets (`data/upgrades.json`)
 `kevlar_plate` {flat_phys +3} (armour), `ap_rounds` {pen_pct_phys +0.25} (weapon). Same stat keys, same
-summation; `socket(item_id, upgrade_id)` checks free sockets and `tags_any`, then appends the id — there is
-**no item cost** (`equipment_system.gd socket()` touches no ledger) `[PARTIAL]`: crafting/paying for an
-upgrade is not built.
+summation; `socket(item_id, upgrade_id)` checks free sockets and `tags_any`, then pays the
+upgrade `cost` from stock `[BUILT]` (F9W1, `upgrades.json`: kevlar_plate 2 plate; ap_rounds 1 plate + 2
+essence_rounds); refused with nothing consumed when short; buttons show the cost.
 
 ## Performance rule
 Affixes are never iterated per hit: pre-summed into `GearItem.stats`, then into the unit's packed
