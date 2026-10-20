@@ -161,10 +161,6 @@ func _f1_act() -> void:
 				sim.contact_bandits()
 				sim.pay_bandit_fee()
 				_f4a_rally()  # region F4a: gather first, then call the pickup
-## Escape path: optional extra debt payments wait until the bandit fee is covered (installments are still paid).
-func _f4a_saving() -> bool:
-	return sim.path() == "escape" and _knob("sell_every", 0) > 0 and not sim.fight_escape.paid and sim.contraband.escape_credit < sim.fight_escape.bandit_fee()
-
 
 	if _knob("manifest", 0) > 0 and sim.shuttle.manifest != _knob("manifest", 0):
 		sim.set_manifest(_knob("manifest", 0))
@@ -189,6 +185,11 @@ func _reg_act() -> void:
 
 
 # region F4a
+## Escape path: optional extra debt payments wait until the bandit fee is covered (installments are still paid).
+func _f4a_saving() -> bool:
+	return sim.path() == "escape" and _knob("sell_every", 0) > 0 and not sim.fight_escape.paid and sim.contraband.escape_credit < sim.fight_escape.bandit_fee()
+
+
 ## Escape endgame: once the fee is paid everybody walks to the extraction point; the pickup is called when 3/4 of the
 ## living colonists stand there (or after 2 days of gathering), and everybody keeps walking while the countdown runs.
 func _f4a_rally() -> void:
