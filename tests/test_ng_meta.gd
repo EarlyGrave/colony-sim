@@ -120,3 +120,68 @@ func test_store_atomic_and_corrupt() -> void:
 	f.close()
 	assert_eq(int(MetaStore.load_state(path).ng["sentence"]), 1)
 	DirAccess.remove_absolute(path)
+
+
+# region F4b
+func _ending_summary(ending: String) -> Dictionary:
+	var s := _summary()
+	s["ending"] = ending
+	s["credits"] = 95
+	return s
+
+
+func test_submit_new_names_no_debt() -> void:
+	var m := MetaState.new()
+	m.finish_sentence(_ending_summary("submit"))
+	assert_eq(int(m.ng["carry_debt"]), 0)
+	assert_ne(m.ng["dossier"]["name"], "B")  # renamed, skills kept
+	assert_eq(int(m.ng["dossier"]["skills"]["mining"]), 6)
+	assert_eq(int(m.ng["credits"]), 0)
+	var m2 := MetaState.new()
+	m2.finish_sentence(_ending_summary("submit"))
+	assert_eq(m2.ng["dossier"]["name"], m.ng["dossier"]["name"])  # deterministic
+	var o: Dictionary = m.make_ng_opts()["opts"]
+	assert_false(o.has("carry_debt"))
+	assert_eq(o["veteran"]["name"], m.ng["dossier"]["name"])
+
+
+func test_escape_credits_ten_percent() -> void:
+	var m := MetaState.new()
+	m.finish_sentence(_ending_summary("escape"))
+	assert_eq(int(m.ng["credits"]), 9)
+	assert_eq(m.ng["dossier"]["name"], "B")
+	assert_true(int(m.ng["carry_debt"]) > 0)
+	assert_eq(int(m.make_ng_opts()["opts"]["start_credits"]), 9)
+	var d: Dictionary = JSON.parse_string(JSON.stringify(m.to_dict()))
+	var m2 := MetaState.new()
+	m2.load_dict(d)
+	assert_eq(int(m2.ng["credits"]), 9)
+
+
+func test_fight_no_carry_and_legacy_double() -> void:
+	var m := MetaState.new()
+	m.finish_sentence(_ending_summary("fight"))
+	assert_eq(int(m.ng["carry_debt"]), 0)
+	assert_true((m.ng["dossier"] as Dictionary).is_empty())
+	assert_true((m.ng["techs"] as Array).is_empty())
+	assert_eq(int(m.ng["credits"]), 0)
+	var sim := make_sim(7, true, 24, 24, peaceful_defs())
+	sim.tick = sim.ticks_per_day * 3
+	var base := int(Legacy.summarize(sim, "x")["legacy"])
+	assert_eq(Legacy.ending_legacy_mult(sim), 1.0)
+	sim.endings.mark_won("fight")
+	assert_eq(Legacy.won_ending(sim), "fight")
+	assert_eq(Legacy.ending_legacy_mult(sim), 2.0)
+	assert_eq(int(Legacy.summarize(sim, "x")["legacy"]), base * 2)
+
+
+func test_legacy_reads_manifest() -> void:
+	var sim := make_sim(7, true, 24, 24, peaceful_defs())
+	assert_eq(Legacy.summarize(sim, "x")["freed"], 0)
+	sim.shuttle.freed = 3
+	sim.shuttle.stayed = 2
+	var s := Legacy.summarize(sim, "x")
+	assert_eq(s["freed"], 3)
+	assert_eq(s["stayed"], 2)
+	assert_eq(Legacy.ng_snapshot(sim, "shuttle")["ending"], "")
+# endregion

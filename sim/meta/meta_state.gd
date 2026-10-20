@@ -125,7 +125,7 @@ const NG_HISTORY_CAP := 20
 
 static func ng_defaults() -> Dictionary:
 	return {"sentence": 1, "carry_debt": 0, "dossier": {}, "techs": [], "history": [],
-		"prev_seed": 0, "last_preset": ""}
+		"prev_seed": 0, "last_preset": "", "credits": 0, "ending": ""}
 
 
 func _load_ng(v: Variant) -> void:
@@ -137,6 +137,8 @@ func _load_ng(v: Variant) -> void:
 	ng["carry_debt"] = maxi(0, int(d.get("carry_debt", 0)))
 	ng["prev_seed"] = int(d.get("prev_seed", 0))
 	ng["last_preset"] = str(d.get("last_preset", ""))
+	ng["credits"] = maxi(0, int(d.get("credits", 0)))
+	ng["ending"] = str(d.get("ending", ""))
 	var dos: Variant = d.get("dossier", {})
 	if dos is Dictionary and not (dos as Dictionary).is_empty():
 		var sk := {}
@@ -186,7 +188,11 @@ func has_ng_carry() -> bool:
 func finish_sentence(summary: Dictionary) -> void:
 	var cfg := ng_cfg()
 	var left := int(summary.get("debt_left", 0))
-	ng["carry_debt"] = roundi(left * float(cfg["debt_carry_frac"]))
+	var rule := ending_rule(str(summary.get("ending", "")))  # region F4b
+	var frac := float(rule.get("debt_frac", cfg["debt_carry_frac"]))
+	ng["carry_debt"] = roundi(left * frac)
+	ng["credits"] = floori(int(summary.get("credits", 0)) * float(rule.get("credit_frac", 0.0)))
+	ng["ending"] = str(summary.get("ending", ""))
 	var best: Dictionary = {}
 	var best_sum := -1
 	for c: Variant in summary.get("colonists", []):
@@ -197,7 +203,7 @@ func finish_sentence(summary: Dictionary) -> void:
 		if sum > best_sum or (sum == best_sum and int(cd.get("id", 0)) < int(best.get("id", 0))):
 			best_sum = sum
 			best = cd
-	if best.is_empty():
+	if best.is_empty() or not bool(rule.get("dossier", true)):
 		ng["dossier"] = {}
 	else:
 		var perks: Array = best.get("perks", [])
@@ -207,6 +213,8 @@ func finish_sentence(summary: Dictionary) -> void:
 		ng["dossier"] = {"name": str(best.get("name", "")), "skills": sk,
 			"perk_id": str(perks[0]) if not perks.is_empty() else "",
 			"traits": _str_list(best.get("traits", []))}
+		if bool(rule.get("rename", false)):
+			ng["dossier"]["name"] = new_name(str(ng["dossier"]["name"]), int(summary.get("seed", 0)))  # region F4b
 	var cand: Array = []
 	for t: Variant in summary.get("techs", []):
 		var id := str(t)
@@ -216,7 +224,7 @@ func finish_sentence(summary: Dictionary) -> void:
 		var ta := int(defs.research[a]["tier"])
 		var tb := int(defs.research[b]["tier"])
 		return ta < tb or (ta == tb and a < b))
-	ng["techs"] = cand.slice(0, int(cfg["tech_carry"]))
+	ng["techs"] = cand.slice(0, int(cfg["tech_carry"])) if bool(rule.get("techs", true)) else []
 	var hist: Array = ng["history"]
 	hist.append({"n": int(ng["sentence"]), "seed": int(summary.get("seed", 0)), "days": int(summary.get("days", 0)),
 		"debt_paid": int(summary.get("debt_paid", 0)), "preset": str(summary.get("preset", preset)),
@@ -225,6 +233,25 @@ func finish_sentence(summary: Dictionary) -> void:
 	ng["prev_seed"] = int(summary.get("seed", 0))
 	ng["last_preset"] = str(summary.get("preset", preset))
 	ng["sentence"] = int(ng["sentence"]) + 1
+
+
+## Carry rule for an ending id (data/meta.json endings); {} = default behaviour.
+func ending_rule(ending: String) -> Dictionary:
+	var e: Variant = (defs.meta.get("endings", {}) as Dictionary).get(ending, {})
+	return (e as Dictionary) if e is Dictionary else {}
+
+
+## Deterministic fresh name from data/names.json ("New Names"): never the old one.
+func new_name(old: String, seed_value: int) -> String:
+	var names: Array = defs.names.get("names", [])
+	if names.is_empty():
+		return old
+	var i := absi(seed_value * 31 + old.hash()) % names.size()
+	for k in names.size():
+		var n := str(names[(i + k) % names.size()])
+		if n != old:
+			return n
+	return old
 
 
 func _ng_cur_preset() -> String:
@@ -257,6 +284,8 @@ func make_ng_opts() -> Dictionary:
 	if at_top:
 		var over := maxi(1, int(ng["sentence"]) - 1)
 		o["wave_mult"] = minf(3.0, float(o.get("wave_mult", 1.0)) + float(ng_cfg()["extra_wave_mult"]) * over)
+	if int(ng["credits"]) > 0:  # region F4b
+		o["start_credits"] = int(ng["credits"])
 	if int(ng["carry_debt"]) > 0:
 		o["carry_debt"] = int(ng["carry_debt"])
 	var dos: Dictionary = ng["dossier"]

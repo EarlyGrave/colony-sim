@@ -94,6 +94,9 @@ static func _apply_ng(sim: Simulation, opts: Dictionary) -> void:
 	var carry := int(opts.get("carry_debt", 0))
 	if carry > 0:
 		sim.debt.add_carry(carry)
+	var credits := int(opts.get("start_credits", 0))  # region F4b: Escape -> "New Sector" credits carry
+	if credits > 0:
+		sim.contraband.escape_credit += credits
 # endregion
 
 

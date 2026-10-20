@@ -11,14 +11,9 @@ static func summarize(sim: Simulation, reason: String) -> Dictionary:
 		if c.get("state", "") == "fulfilled":
 			fulfilled += 1
 			delivered += int(c["essence"])
-	var freed := 0
-	var stayed := 0
-	for id: int in sim.debt.gone:
-		if sim.debt.gone[id] == "left":
-			freed += 1
-	for id: int in sim.debt.states:
-		if sim.debt.states[id].outcome == "stayed":
-			stayed += 1
+	var fs := _freed_stayed(sim)  # region F4b: the Submit manifest wins over debt outcomes
+	var freed := int(fs[0])
+	var stayed := int(fs[1])
 	var perks := 0
 	for col in sim.colonists.list:
 		if col.perks != null:
@@ -32,6 +27,7 @@ static func summarize(sim: Simulation, reason: String) -> Dictionary:
 	pts += perks * float(w["per_perk_learned"])
 	pts += sim.debt.legacy_points * float(w["debt_points_weight"])
 	pts += sim.progression.milestones * float(w.get("per_milestone", 0.0))  # region PW3
+	pts *= ending_legacy_mult(sim)  # region F4b
 	return {
 		"reason": reason, "seed": sim.seed_value, "days": days,
 		"contracts": fulfilled, "essence": delivered, "freed": freed, "stayed": stayed,
@@ -58,5 +54,39 @@ static func ng_snapshot(sim: Simulation, result: String, preset_id := "") -> Dic
 			"perks": (c.perks.learned.duplicate() if c.perks != null else []),
 			"traits": (c.bio.get("traits", []) as Array).duplicate()})
 	return {"seed": sim.seed_value, "days": sim.day(), "result": result, "preset": preset_id,
-		"debt_left": left, "debt_paid": paid, "colonists": cols, "techs": sim.research.done.duplicate()}
+		"debt_left": left, "debt_paid": paid, "colonists": cols, "techs": sim.research.done.duplicate(),
+		"ending": won_ending(sim), "credits": sim.contraband.escape_credit}  # region F4b
+# endregion
+
+
+# region F4b
+## The ending the run was won with ("" if none): submit / fight / escape / remission.
+static func won_ending(sim: Simulation) -> String:
+	for id: Variant in sim.endings.path_ids():
+		if sim.endings.won(str(id)):
+			return str(id)
+	return ""
+
+
+## [freed, stayed]: the Submit manifest if the shuttle left with one, else debt outcomes.
+static func _freed_stayed(sim: Simulation) -> Array:
+	if sim.shuttle.freed > 0 or sim.shuttle.stayed > 0:
+		return [sim.shuttle.freed, sim.shuttle.stayed]
+	var freed := 0
+	var stayed := 0
+	for id: int in sim.debt.gone:
+		if sim.debt.gone[id] == "left":
+			freed += 1
+	for id: int in sim.debt.states:
+		if sim.debt.states[id].outcome == "stayed":
+			stayed += 1
+	return [freed, stayed]
+
+
+## Fight win doubles legacy (data/meta.json endings.fight.legacy_mult).
+static func ending_legacy_mult(sim: Simulation) -> float:
+	var e := won_ending(sim)
+	if e == "":
+		return 1.0
+	return float((sim.defs.meta.get("endings", {}) as Dictionary).get(e, {}).get("legacy_mult", 1.0))
 # endregion
