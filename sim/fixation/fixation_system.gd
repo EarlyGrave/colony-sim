@@ -79,6 +79,7 @@ func _try_offer() -> void:
 			break
 	offered = true
 	_pa("fix_offer")
+	sim.bus.fixation_offered.emit(pick.id, str(cfg["skill"]))  # region F7W3
 	sim.storyteller.post_fixation(pick.id, str(cfg["text"]).replace("{who}", pick.display_name),
 		str(cfg["yes_label"]), str(cfg["no_label"]), sim.tick + int(cfg["offer_ticks"]))
 
@@ -156,6 +157,7 @@ func _succeed(c: Colonist) -> void:
 		masterworks.append({"cid": c.id, "who": c.display_name, "base": base, "gear_id": gid, "name": nm})
 	sim.mood.add_thought(c, "fixation_done")
 	_pa("fix_done")
+	sim.bus.fixation_done.emit(c.id, base)  # region F7W3
 	sim.bus.story_event.emit("fixation_done", str(cfg["done_text"]).replace("{who}", c.display_name).replace("{item}", nm))
 	active = {}
 
@@ -171,5 +173,6 @@ func _fail(c: Colonist) -> void:
 		sim.bus.mood_break_started.emit(c.id, "wander")
 	sim.mood.add_thought(c, "fixation_failed")
 	_pa("fix_fail")
+	sim.bus.fixation_failed.emit(c.id)  # region F7W3
 	sim.bus.story_event.emit("fixation_fail", str(cfg["fail_text"]).replace("{who}", c.display_name))
 	active = {}

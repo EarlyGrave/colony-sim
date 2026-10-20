@@ -8,6 +8,8 @@ extends RefCounted
 ##         outpost_lost, every 5th day_started
 ##   F6W2 PA: quest_beat -> pa.<quest>.<beat> then pa.<quest> (missing = silent); day 40/50 with a
 ##         path_* flag -> pa.r4_midgame.d40/d50. Nothing when sim.quests.mod("pa_silent") > 0.
+##   F7W3 PA: regulation_offered -> pa.regulation.offered; regulation_chosen -> pa.regulation.<id> then
+##         pa.regulation.generic. fixation_* signals are NOT shown here (Warden letters already exist).
 
 const DAY_ASIDE_EVERY := 5
 const MAX_LEN := 70
@@ -41,6 +43,8 @@ func bind(p_sim: Simulation) -> void:
 	_c(b.wave_repelled, func(_i: int) -> void: _pa(FlavorPicker.K_PA_WAVE_REPELLED, {}))
 	_c(b.day_started, _on_day)
 	_c(b.quest_beat, _on_quest_beat)  # region F6W2
+	_c(b.regulation_offered, _on_reg_offered)  # region F7W3
+	_c(b.regulation_chosen, _on_reg_chosen)  # region F7W3
 
 
 func unbind() -> void:
@@ -150,4 +154,22 @@ func _mid_pa(day: int) -> bool:
 		return false
 	pa.announce(_fit(s))
 	return true
+# endregion
+
+
+# region F7W3
+func _on_reg_offered(slot: int) -> void:
+	_reg_pa(["pa.regulation.offered"] as Array[String], slot)
+
+
+func _on_reg_chosen(slot: int, id: String, _by_timeout: bool) -> void:
+	_reg_pa(["pa.regulation.%s" % id, "pa.regulation.generic"] as Array[String], slot)
+
+
+func _reg_pa(keys: Array[String], slot: int) -> void:
+	if _pa_silent():
+		return
+	var s := _picker.pick_first(keys, {"tick": sim.tick, "id": slot})
+	if s != "":
+		pa.announce(_fit(s))
 # endregion

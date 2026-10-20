@@ -184,3 +184,11 @@ signal shuttle_won
 # region RO
 signal raid_objective_met(raid_id: String, kind: String)
 # endregion
+
+# region F7W3
+signal regulation_offered(slot: int)
+signal regulation_chosen(slot: int, id: String, by_timeout: bool)
+signal fixation_offered(colonist_id: int, item_id: String)
+signal fixation_done(colonist_id: int, item_id: String)
+signal fixation_failed(colonist_id: int)
+# endregion
