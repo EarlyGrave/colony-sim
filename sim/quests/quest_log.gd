@@ -335,6 +335,8 @@ func _apply_effects(qid: String, effects: Array) -> void:
 				sim.colonists.add(nc)
 				if e.has("as"):
 					quests[qid]["refs"][str(e["as"])] = nc.id
+			"rename":  # region F6c
+				_f6c_rename(qid, e)
 			"remove_colonist":
 				var c := sim.colonists.get_by_id(_w2_ref(qid, str(e.get("who", ""))))  # region W2
 				if c != null and c.alive:
@@ -554,11 +556,7 @@ const DEAD_FALLBACK := "Inmate 4471"
 func _w4_text(t: String) -> String:
 	if not t.contains("{dead}"):
 		return t
-	var name := DEAD_FALLBACK
-	for c in sim.colonists.list:
-		if not c.alive:
-			name = str(c.display_name)
-	return t.replace("{dead}", name)
+	return t.replace("{dead}", dead_name())
 
 
 ## Extra option gates: flag / not_flag (quest flags), informant_alive, gear_owned N.
@@ -603,4 +601,25 @@ func _w4_fx(_qid: String, e: Dictionary) -> void:
 				sim.contraband.suspicion = clampf(sim.contraband.suspicion + float(e["n"]), 0.0, float(sim.contraband.cfg.get("suspicion_cap", 100.0)))
 		"defiance":
 			sim.threats.metro().add_defiance(float(e["n"]))
+# endregion
+
+
+# region F6c
+## Last inmate who died (colonists keep their record); DEAD_FALLBACK if nobody died. Shared by {dead} and rename.
+func dead_name() -> String:
+	var name := DEAD_FALLBACK
+	for c in sim.colonists.list:
+		if not c.alive:
+			name = str(c.display_name)
+	return name
+
+
+## Verb rename {who: ref, to: "dead"}: the ref'd colonist takes the dead inmate's name (kept if nobody died).
+func _f6c_rename(qid: String, e: Dictionary) -> void:
+	var c := sim.colonists.get_by_id(_w2_ref(qid, str(e.get("who", ""))))
+	if c == null or str(e.get("to", "")) != "dead":
+		return
+	var n := dead_name()
+	if n != DEAD_FALLBACK:
+		c.display_name = n
 # endregion

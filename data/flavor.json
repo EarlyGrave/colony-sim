@@ -632,6 +632,24 @@
 		"The Collector thanks you for your silence. It cannot hear you anyway.",
 		"The Warden regrets. Form 9-A: regret withdrawn."
 	],
+	"epilogue_echo": {
+		"submit": [
+			{"flag": "r4_seat_kept", "line": "Seat 7 stayed empty. Someone kept the door."},
+			{"flag": "r4_sold_name", "line": "A name was sold. It still answers to the buyer."}
+		],
+		"fight": [
+			{"flag": "r4_struck", "line": "The strike is remembered. Nobody signed it."},
+			{"flag": "r4_burned", "line": "The wreck burned for days. Nobody asked who lit it."}
+		],
+		"escape": [
+			{"flag": "r4_pilot", "line": "The pilot wore a dead man's name. It fit."},
+			{"flag": "r4_know_route", "line": "You knew the route. The drones never did."}
+		],
+		"remission": [
+			{"flag": "r4_good_behaviour", "line": "Good behaviour was logged. It was also true."},
+			{"flag": "r4_quiet_freight", "line": "Freight came and went. Nobody counted the crates."}
+		]
+	},
 	"epilogue": {
 		"submit": [
 			"Case closed. Cause: silence.",

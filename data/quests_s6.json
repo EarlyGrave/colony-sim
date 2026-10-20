@@ -444,6 +444,11 @@
 								"as": "pilot"
 							},
 							{
+								"verb": "rename",
+								"who": "pilot",
+								"to": "dead"
+							},
+							{
 								"verb": "standing",
 								"block": "fresh_fish",
 								"delta": 10
