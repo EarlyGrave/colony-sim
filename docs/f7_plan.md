@@ -1,0 +1,31 @@
+# F7 plan: Readability + diagnosis (prompter, 2026-10-20)
+Sources: PROGRESS F5/F6 notes, HANDOFF s5 pitfalls, ThreatSystem.f4d_pollution_peak (flag spawn_at_pollution_peak OFF), regulation_system.gd, fixation_system.gd, petition_system.gd, tools/la_diag.gd.
+One wave, 3 workers, disjoint files. NOT decided here: Remission ending, turning reg_enabled / fixation_enabled / spawn_at_pollution_peak ON. No balance tuning; goldens must NOT change (`make_golden.gd` diff empty).
+Common: reset to claude/colony-sim-godot-4jftsm; `--import`; quick tests only; commit `.uid`; sim deterministic (no new rng); English text <=70 chars/line; shared files only in `# region F7Wn`; report in reply (<=30 lines).
+sim_contract.md stays <=250 lines (now 250). No new recorded command is planned -> no row; any needed line is net zero (join prose lines).
+Merge order: W2 -> W1 -> W3 (W2 is tool-only). Then full `run_tests_sharded.sh` once, `web_smoke.py`.
+
+## W1 Dump-zone map tint (view only)
+Own: view/world_view.gd region F7W1 (zone drawing: `_draw_zones` and the chunk zone loop near line 1101), view/hud.gd region F7W1 (contamination legend + forecast line), NEW tests/test_f7_dump_tint.gd.
+Design: the waste_dump zone (cells in `sim.items.zone_cells["waste_dump"]`; fall back to processor centroid via `sim.threats.f4d_pollution_peak()`, read-only) gets a subtle fill (alpha <= 0.18, colour from data/zones.json) PLUS a small centre marker at the peak cell, drawn only while the contamination overlay is on (`show_field`). Flat and 3D mode both. Do not touch sim or zones.json colours.
+Legend: add a third entry "dump" (swatch + 16 px label) to `_legend`; when the flag `spawn_at_pollution_peak` is ON add to the forecast text " · first wave: dump side". Phone: legend must not overlap toolbar/bottom inset at 844x390.
+Accept: no dump zone and no processor -> nothing drawn, no error; overlay off -> no tint; tint does not hide the green/purple contamination colours (alpha cap); no new per-frame allocations (reuse chunk redraw, same invalidation as zone_changed).
+Tests: tint cell list matches zone cells; peak marker equals f4d_pollution_peak; legend has 3 entries and forecast suffix only with flag ON (force in test); none when empty map. Screenshot via tools/screenshot.tscn at 844x390 with overlay on (a new tools/f7_shot.gd/.tscn is allowed), attach path in report.
+
+## W2 Petition pace diagnosis (tool, read-only)
+Own: NEW tools/petition_pace.gd (+ .uid), NEW tests/test_f7_petition_pace.gd. Nothing else; sim untouched.
+Usage: `godot --headless --path . -s tools/petition_pace.gd -- --seeds=1-10 --days=60 [--ov={"balance":{...}}]`, same bot setup as tools/la_diag.gd (factory_bot, tutorial, research_locked).
+Per seed print: for P1..P4 the day it OPENS (previous phase done, or d0 for P1) and day it CLOSES (`petition.done_phases` growth); if still open at the end: the BLOCKER = the largest unmet item of `petition.remaining(p)` (plates / refined_essence / parts / other) and audit tier required vs reached (read from the existing audit/petition state; if not exposed, report n/a, do not add sim API).
+Income vs spend table per 5 days (sampled every 5 d via tick delta): refined and plates produced vs consumed, split by category (petition deliver, craft_gear, repairs/build, fuel cells, installments). Source from Ledger/stock deltas that already exist (`sim.ledger`, `sim.items.count_stored`); if a category cannot be read, merge it into "other" and say so in the header.
+Summary line per seed: first stalled phase + blocker; footer: histogram over seeds of the stalling blocker (the answer "where P1-P4 stall").
+Accept: runs 10 seeds x 60 d in <= 5 min; deterministic (two runs identical output); never errors with `--seeds=1`; header documents columns.
+Test (smoke): 1 seed x 5 days returns a table with the P1 row and the 5-day income header, no engine error (call the tool's static `run(seed, days) -> String`; keep the file instantiable without quit()).
+
+## W3 Regulations and fixation surface (inert while flags OFF)
+Own: autoload/event_bus.gd region F7W3 (signals only), sim/regulations/regulation_system.gd region F7W3, sim/fixation/fixation_system.gd region F7W3, view/feed_director.gd region F7W3, data/flavor.json `pa.regulation` block (new key only), NEW tests/test_f7_surface.gd.
+Finding: both systems already emit generic `story_event` ids (reg_slot_N, reg_done_N, fixation_done/fail/cancel) and fixation sends Warden letters; there are NO dedicated signals and regulations have no PA lines.
+Signals (declare only if missing; check first): `regulation_offered(slot: int)`, `regulation_chosen(slot: int, id: String, by_timeout: bool)`, `fixation_offered(colonist_id: int, item_id: String)`, `fixation_done(colonist_id: int, item_id: String)`, `fixation_failed(colonist_id: int)`. Emitted right next to the existing story_event calls; the story_event calls stay unchanged (no double letter). Emission happens only on code paths that already require the flags, so with flags OFF nothing fires; no state, no hash change.
+FeedDirector: connect regulation_offered / regulation_chosen only. One PA line each via the picker, keys `pa.regulation.offered`, `pa.regulation.<id>` (then `pa.regulation` fallback); text from the 3 existing option ids in data (read regulation ids from data/rules or the regulations json, do not invent). Fixation signals are NOT shown (letters already exist): connect nothing, just document. Respect pa_silent. Update header comment.
+flavor.json: add the `pa.regulation` block (<=70 chars/line, dry Warden voice); do not edit other keys (F6 owner of `pa` r4 blocks is done).
+Accept: flags OFF -> a 30-day run emits zero of the 5 new signals and state_hash equals before; flags forced ON in-test -> offered at slot day, chosen emits once per slot (choose and timeout both), fixation offered/done/failed each fire once with right payload; feed shows exactly one PA line per regulation event and none for fixation; goldens unchanged.
+Tests: tests/test_f7_surface.gd forces `balance.reg_enabled` / `fixation_enabled` true on a fresh sim defs copy (never shared Defs mutation: see F2a lesson) and drives day ticks; plus existing test_f5_regulations / test_f5_fixation stay green.
