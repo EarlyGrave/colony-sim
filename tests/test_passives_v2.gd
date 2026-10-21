@@ -310,3 +310,43 @@ func test_save_roundtrip_and_determinism() -> void:
 	assert_eq(c.deeds.has("d_first_blood"), true)
 	assert_eq(int(c.allocated_at["p_yard_brawler"]), 30)
 	assert_true(is_equal_approx(tree.mod(c, "unarmed_damage"), 0.5))
+
+
+## Icons r3: every passive has its own glyph (pairwise >= MIN_ICON_DIFF differing pixels) and every
+## detail has a branch logo sprite that exists.
+const MIN_ICON_DIFF := 20
+
+
+func _icon_bytes(icon_name: String) -> PackedByteArray:
+	var tex := load("res://assets/sprites/%s.png" % icon_name) as Texture2D
+	assert_true(tex != null, "missing sprite " + icon_name)
+	if tex == null:
+		return PackedByteArray()
+	return tex.get_image().get_data()
+
+
+func test_icons_unique_and_logos_exist() -> void:
+	var d: Dictionary = PassiveTreeV2.load_default()
+	var names: Array[String] = []
+	var datas: Array[PackedByteArray] = []
+	for p: Dictionary in d["passives"]:
+		names.append(str(p["icon"]))
+		datas.append(_icon_bytes(str(p["icon"])))
+	assert_eq(names.size(), 90)
+	for i in names.size():
+		for j in range(i + 1, names.size()):
+			var a := datas[i]
+			var b := datas[j]
+			if a.size() != b.size() or a.is_empty():
+				continue
+			var diff := 0
+			for k in range(0, a.size(), 4):
+				if a[k] != b[k] or a[k + 1] != b[k + 1] or a[k + 2] != b[k + 2] or a[k + 3] != b[k + 3]:
+					diff += 1
+			assert_true(diff >= MIN_ICON_DIFF, "icons too similar (%d px): %s / %s" % [diff, names[i], names[j]])
+	var details: Dictionary = d["details"]
+	assert_eq(details.size(), 6)
+	for det: String in details:
+		var logo := str(details[det].get("logo", ""))
+		assert_true(logo != "", "detail %s has no logo" % det)
+		assert_true(ResourceLoader.exists("res://assets/sprites/%s.png" % logo), "logo sprite missing: " + logo)

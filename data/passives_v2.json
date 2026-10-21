@@ -43,6 +43,7 @@
 				}
 			},
 			"color": "#c8a060",
+			"logo": "passive_logo_pit",
 			"schools": [
 				"Mule",
 				"Digger"
@@ -58,6 +59,7 @@
 				}
 			},
 			"color": "#9a5cff",
+			"logo": "passive_logo_stacks",
 			"schools": [
 				"Clean",
 				"Dirty"
@@ -73,6 +75,7 @@
 				}
 			},
 			"color": "#4fb3a9",
+			"logo": "passive_logo_shop",
 			"schools": [
 				"Fixer",
 				"Artisan"
@@ -89,6 +92,7 @@
 				}
 			},
 			"color": "#e04a3a",
+			"logo": "passive_logo_yard",
 			"schools": [
 				"Wall",
 				"Killer"
@@ -104,6 +108,7 @@
 				}
 			},
 			"color": "#5fd36b",
+			"logo": "passive_logo_infirmary",
 			"schools": [
 				"Doctor",
 				"Survivor"
@@ -117,6 +122,7 @@
 				"deed": "d_first_installment"
 			},
 			"color": "#ffd23a",
+			"logo": "passive_logo_ledger",
 			"schools": [
 				"Trustee",
 				"Smuggler"

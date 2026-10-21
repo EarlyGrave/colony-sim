@@ -1046,445 +1046,1215 @@ def gear_art():
 # endregion
 
 # region passives_v2
-# Passive icons (docs/gdd/03-colony/passives-v2): 16x16, frame shape = tier
-# (minor: cut-corner box, notable: double square, keystone: diamond), colour = detail,
-# glyph = detail motif (minor/notable) or a unique keystone motif, sigil = 4x4 mark per node.
-PPAL = dict(PAL)
-PPAL.update({
-    "x": "#f4f0e8", "X": "#b8b0a0",  # light / shade of the glyph
-    "q": "#1a1420",                   # dark fill
-})
+# Passive icons (docs/gdd/03-colony/passives-v2), redrawn r3: 16x16, frame shape = tier
+# (minor: cut-corner box, notable: double square, keystone: diamond), colour = ONLY the branch
+# colour (base / light / dark shade, one optional white pixel). Every passive has its own glyph
+# (10x10, PASSIVE_GLYPHS); the branch symbol lives in the separate passive_logo_<detail>.png
+# that the UI shows next to the passive's name. Seam keystones ("a+b") are drawn half in
+# branch a (left) and half in branch b (right), rim included.
 PASSIVE_DETAIL_COLORS = {
     "pit": "#c8a060", "stacks": "#9a5cff", "shop": "#4fb3a9", "yard": "#e04a3a",
-    "infirmary": "#5fd36b", "ledger": "#ffd23a", "key": "#ffb347",
+    "infirmary": "#5fd36b", "ledger": "#ffd23a",
 }
-PASSIVE_GLYPHS = {
+PASSIVE_DARK = "#1a1420"
+PASSIVE_LOGO_COLOR = "#e8e2d4"  # neutral light: logos sit next to text on a dark UI
+PASSIVE_LOGOS = {  # 16x16 branch logos, glyph chars: x light, X shade, . empty
     "pit": [  # pickaxe
-        "....xxxx..",
-        "...xXxxxx.",
-        "..xX...xx.",
-        "..x...x.x.",
-        ".....x....",
-        "....x.....",
-        "...x......",
-        "..x.......",
-        ".x........",
-        "x.........",
+        "................",
+        "....xxxxxxxx....",
+        "..xxxXXXXXXxxx..",
+        ".xxX....xx..Xxx.",
+        ".xx.....xx...xx.",
+        "........xx......",
+        "........xx......",
+        "........xx......",
+        "........xx......",
+        "........xx......",
+        "........xx......",
+        "........xx......",
+        "........xx......",
+        "........xx......",
+        "........xx......",
+        "................",
     ],
-    "stacks": [  # flask
-        "...xxxx...",
-        "....xx....",
-        "....xx....",
-        "...x..x...",
-        "..x....x..",
-        ".x......x.",
-        ".x.XXXX.x.",
-        ".x.XXXX.x.",
-        "..xXXXXx..",
-        "...xxxx...",
+    "stacks": [  # potion flask
+        "................",
+        "......xxxx......",
+        "......xxxx......",
+        ".......xx.......",
+        ".......xx.......",
+        ".......xx.......",
+        "......xxxx......",
+        ".....xx..xx.....",
+        "....xx....xx....",
+        "...xx..xx..xx...",
+        "...x..xXXx..x...",
+        "...x.XXXXXX.x...",
+        "...xXXXXXXXXx...",
+        "....xXXXXXXx....",
+        ".....xxxxxx.....",
+        "................",
     ],
     "shop": [  # wrench
-        ".......xx.",
-        "......xxxx",
-        "......x.xx",
-        ".....xxxx.",
-        "....xxx...",
-        "...xxx....",
-        "..xxx.....",
-        ".xxx......",
-        "xxx.......",
-        "xx........",
+        "................",
+        "........xxx..xx.",
+        ".......xxxxxxxx.",
+        ".......xxx......",
+        ".......xxx......",
+        "........xxx.....",
+        ".......xxxx.....",
+        "......xxxx......",
+        ".....xxxx.......",
+        "....xxxx........",
+        "...xxxx.........",
+        "..xxxx..........",
+        "..xxx...........",
+        "..xx............",
+        "................",
+        "................",
     ],
-    "yard": [  # fist
-        "..........",
-        "..xxxxxx..",
-        ".xXxxxxxx.",
-        ".xxxxxxxx.",
-        ".xxxxxxxx.",
-        ".xXXXXXxx.",
-        "..xxxxxx..",
-        "..xxxxxx..",
-        "...xxxx...",
-        "..........",
+    "yard": [  # crossed blades
+        "................",
+        "xx............xx",
+        "xxx..........xxx",
+        ".xxx........xxx.",
+        "..xxx......xxx..",
+        "...xxx....xxx...",
+        "....xxx..xxx....",
+        ".....xxxxxx.....",
+        "......xxxx......",
+        ".....xxxxxx.....",
+        "....xxx..xxx....",
+        "...XXX....XXX...",
+        "..XXXX....XXXX..",
+        ".XX..........XX.",
+        "................",
+        "................",
     ],
-    "infirmary": [  # cross
-        "...xxxx...",
-        "...xxxx...",
-        "...xXXx...",
-        "xxxxXXxxxx",
-        "xxXXXXXXxx",
-        "xxXXXXXXxx",
-        "xxxxXXxxxx",
-        "...xXXx...",
-        "...xxxx...",
-        "...xxxx...",
+    "infirmary": [  # medical plus
+        "................",
+        "......xxxx......",
+        "......xxxx......",
+        "......xxxx......",
+        "......xxxx......",
+        "..xxxxxxxxxxxx..",
+        "..xxxxxxxxxxxx..",
+        "..xxxxxxxxxxxx..",
+        "..xxxxxxxxxxxx..",
+        "......xxxx......",
+        "......xxxx......",
+        "......xxxx......",
+        "......xxxx......",
+        "................",
+        "................",
+        "................",
     ],
-    "ledger": [  # ledger book
-        ".xxxxxxxx.",
-        ".xXXXXXXx.",
-        ".xXxxxxXx.",
-        ".xXXXXXXx.",
-        ".xXxxxxXx.",
-        ".xXXXXXXx.",
-        ".xXxxxxXx.",
-        ".xXXXXXXx.",
-        ".xxxxxxxx.",
-        "..xxxxxx..",
-    ],
-}
-PASSIVE_KEY_GLYPHS = {  # 12x12 keystone silhouettes (diamond-shaped: narrow top/bottom, wide middle)
-    "pit_beast_of_burden": [  # bent back under a huge sack
-        "....xxxx....",
-        "...xxxxxx...",
-        "..xxxxxxxx..",
-        ".xxxxxxxxxx.",
-        ".xxxxxxxxxx.",
-        "xxXXxxxxxxxx",
-        "xxXXxxxxxxx.",
-        ".xxxxxxxx...",
-        "..xxxxx.....",
-        "..xx..xx....",
-        ".xxx..xxx...",
-        "............",
-    ],
-    "pit_mole": [  # mole snout and claws
-        "............",
-        "....xxxx....",
-        "...xxxxxx...",
-        "..xqxxxxqx..",
-        ".xxxxxxxxxx.",
-        "xxxxxXXxxxxx",
-        "xxxxXXXXxxxx",
-        ".xxxxXXxxxx.",
-        "..xxxxxxxx..",
-        "..x.x..x.x..",
-        ".xx.xx.xx.xx",
-        "............",
-    ],
-    "stacks_slow_hands": [  # hourglass
-        "...xxxxxx...",
-        "...xXXXXx...",
-        "...xXXXXx...",
-        "....xXXx....",
-        ".....xx.....",
-        ".....xx.....",
-        "....x..x....",
-        "...x....x...",
-        "...x.XX.x...",
-        "...xXXXXx...",
-        "...xxxxxx...",
-        "............",
-    ],
-    "stacks_essence_lung": [  # lungs
-        ".....xx.....",
-        ".....xx.....",
-        "..xx.xx.xx..",
-        ".xxxxxxxxxx.",
-        "xxXxxxxxxXxx",
-        "xxXxxxxxxXxx",
-        "xxxxxxxxxxxx",
-        "xxxxx..xxxxx",
-        "xxxxx..xxxxx",
-        ".xxxx..xxxx.",
-        "..xx....xx..",
-        "............",
-    ],
-    "shop_jury_rig": [  # tape roll over a crossed wrench
-        "....xx..xx..",
-        "...x..xx..x.",
-        "...x..xx..x.",
-        "....xxxxxx..",
-        "..xxXXXXxxx.",
-        ".xxXX..XXxx.",
-        ".xxX....Xxx.",
-        ".xxXX..XXxx.",
-        "..xxXXXXxx..",
-        "...xxxxxx...",
-        "....xxxx....",
-        "............",
-    ],
-    "shop_signature_work": [  # stamped seal
-        "....xxxx....",
-        "..xxXXXXxx..",
-        ".xXXxxxxXXx.",
-        ".xXx....xXx.",
-        "xXx..xx..xXx",
-        "xXx.xXXx.xXx",
-        "xXx.xXXx.xXx",
-        "xXx..xx..xXx",
-        ".xXx....xXx.",
-        ".xXXxxxxXXx.",
-        "..xxXXXXxx..",
-        "....xxxx....",
-    ],
-    "yard_dead_man_walking": [  # skull
-        "...xxxxxx...",
-        "..xxxxxxxx..",
-        ".xxxxxxxxxx.",
-        "xxxxxxxxxxxx",
-        "xxqqxxxxqqxx",
-        "xxqqxxxxqqxx",
-        "xxxxxqqxxxxx",
-        ".xxxxxxxxxx.",
-        "..xxxxxxxx..",
-        "..xqxqxqxx..",
-        "...xxxxxx...",
-        "............",
-    ],
-    "yard_short_fuse": [  # lit fuse on a bomb
-        "........xX..",
-        ".......xXx..",
-        "......xx....",
-        ".....xx.....",
-        "...xxxx.....",
-        "..xxxxxx....",
-        ".xxxxxxxx...",
-        ".xxXxxxxx...",
-        ".xxXxxxxx...",
-        ".xxxxxxxx...",
-        "..xxxxxx....",
-        "...xxxx.....",
-    ],
-    "infirmary_field_surgeon": [  # scalpel
-        ".........xx.",
-        "........xxx.",
-        ".......xxx..",
-        "......xxx...",
-        ".....xxx....",
-        "....xxx.....",
-        "...xXx......",
-        "..xXX.......",
-        ".xXX........",
-        "xXX.........",
-        "XX..........",
-        "............",
-    ],
-    "infirmary_white_nights": [  # open eye under a crescent moon
-        "......xxx...",
-        ".....x......",
-        ".....x......",
-        "......xxx...",
-        "...xxxxxx...",
-        ".xxxxXXxxxx.",
-        "xxxxXqqXxxxx",
-        "xxxxXqqXxxxx",
-        ".xxxxXXxxxx.",
-        "...xxxxxx...",
-        "............",
-        "............",
-    ],
-    "ledger_trustee": [  # the Warden's key
-        "....xxxx....",
-        "...xx..xx...",
-        "...x....x...",
-        "...xx..xx...",
-        "....xxxx....",
-        ".....xx.....",
-        ".....xx.....",
-        ".....xxxx...",
-        ".....xx.....",
-        ".....xxxx...",
-        ".....xx.....",
-        "............",
-    ],
-    "ledger_ghost_on_the_roll": [  # a ghost over a crossed-out roll line
-        "....xxxx....",
-        "...xxxxxx...",
-        "..xxxxxxxx..",
-        "..xqxxxxqx..",
-        "..xxxxxxxx..",
-        "..xxxxxxxx..",
-        "..xxxxxxxx..",
-        "..xx.xx.xx..",
-        "............",
-        ".XXXXXXXXXX.",
-        "..X......X..",
-        "............",
-    ],
-    "clean_hands": [  # open hand
-        "....x.x.x...",
-        "...xx.x.xx..",
-        "...xx.x.xx..",
-        "x..xxxxxxx..",
-        "xx.xxxxxxx..",
-        ".xxxxxxxxx..",
-        "..xxxxxxxx..",
-        "..xxxxxxxx..",
-        "...xxxxxx...",
-        "...xxxxxx...",
-        "....xxxx....",
-        "............",
-    ],
-    "tailings_eater": [  # jaws biting an ore lump
-        "............",
-        "..xx.xx.xx..",
-        ".xxxxxxxxxx.",
-        "xxxxxxxxxxxx",
-        "xxx.XXXX.xxx",
-        ".xxXXXXXXxx.",
-        ".xxXXXXXXxx.",
-        "xxx.XXXX.xxx",
-        "xxxxxxxxxxxx",
-        ".xxxxxxxxxx.",
-        "..xx.xx.xx..",
-        "............",
-    ],
-    "essence_smith": [  # anvil with glow
-        ".....X......",
-        "....XXX.....",
-        "..xxxxxxxxxx",
-        ".xxxxxxxxxx.",
-        "xxxxxxxxxx..",
-        "....xxxx....",
-        "....xxxx....",
-        "...xxxxxx...",
-        "..xxxxxxxx..",
-        ".xxxxxxxxxx.",
-        ".XXXXXXXXXX.",
-        "............",
-    ],
-    "overclock": [  # gear with a bolt
-        "....xxxx....",
-        "..x.xxxx.x..",
-        ".xxxxxxxxxx.",
-        ".xxx.XX.xxx.",
-        "xxx.XX..xxxx",
-        "xxx.XXXX.xxx",
-        "xxx..XX..xxx",
-        "xxx...X..xxx",
-        ".xxx....xxx.",
-        ".xxxxxxxxxx.",
-        "..x.xxxx.x..",
-        "....xxxx....",
-    ],
-    "armourers_pride": [  # shield
-        ".xxxxxxxxxx.",
-        "xxxxxxxxxxxx",
-        "xxXXxxxxXXxx",
-        "xxXXxxxxXXxx",
-        "xxxxxxxxxxxx",
-        "xxxxxXXxxxxx",
-        ".xxxxXXxxxx.",
-        ".xxxxxxxxxx.",
-        "..xxxxxxxx..",
-        "...xxxxxx...",
-        "....xxxx....",
-        ".....xx.....",
-    ],
-    "full_auto": [  # three rounds in a row
-        "............",
-        "..x...x...x.",
-        ".xXx.xXx.xXx",
-        ".xxx.xxx.xxx",
-        ".xxx.xxx.xxx",
-        ".xxx.xxx.xxx",
-        ".xxx.xxx.xxx",
-        ".xxx.xxx.xxx",
-        ".XXX.XXX.XXX",
-        ".xxx.xxx.xxx",
-        "............",
-        "............",
-    ],
-    "walking_wounded": [  # bandaged heart
-        "............",
-        "..xxx..xxx..",
-        ".xxxxxxxxxx.",
-        "xxxXXXXXXxxx",
-        "xxxxxxxxxxxx",
-        "xxxxxxxxxxxx",
-        ".xxXXXXXXxx.",
-        "..xxxxxxxx..",
-        "...xxxxxx...",
-        "....xxxx....",
-        ".....xx.....",
-        "............",
-    ],
-    "stretcher_bearer": [  # stretcher with a cross
-        "............",
-        "x..........x",
-        "xxxxxxxxxxxx",
-        "xxxxxXXxxxxx",
-        "xxxxxXXxxxxx",
-        "xxxXXXXXXxxx",
-        "xxxXXXXXXxxx",
-        "xxxxxXXxxxxx",
-        "xxxxxXXxxxxx",
-        "xxxxxxxxxxxx",
-        "x..........x",
-        "............",
-    ],
-    "chaplain": [  # candle
-        ".....X......",
-        "....xXx.....",
-        "....xXx.....",
-        ".....x......",
-        "....xxxx....",
-        "....xXXx....",
-        "....xXXx....",
-        "....xXXx....",
-        "....xXXx....",
-        "...xxxxxx...",
-        "..xxxxxxxx..",
-        "............",
-    ],
-    "blood_debt": [  # a drop of blood with a coin mark
-        ".....xx.....",
-        ".....xx.....",
-        "....xxxx....",
-        "....xxxx....",
-        "...xxxxxx...",
-        "..xxxxxxxx..",
-        ".xxxXXXXxxx.",
-        ".xxXxxxxXxx.",
-        ".xxXxxxxXxx.",
-        ".xxxXXXXxxx.",
-        "..xxxxxxxx..",
-        "...xxxxxx...",
-    ],
-    "quota_hawk": [  # hawk head
-        "............",
-        "....xxxx....",
-        "...xxxxxx...",
-        "..xxqxxxxx..",
-        ".xxxxxxxxxx.",
-        ".xxxxxxxxxXX",
-        "..xxxxxxxXX.",
-        "...xxxxxXX..",
-        "....xxxxx...",
-        ".....xxx....",
-        ".....xx.....",
-        "............",
-    ],
-    "pocket_vein": [  # a pouch with ore inside
-        "............",
-        "....x..x....",
-        "...xxxxxx...",
-        "....xxxx....",
-        "...xxxxxx...",
-        "..xxxxxxxx..",
-        ".xxxXXxxxxx.",
-        ".xxXXXXxxxx.",
-        ".xxxXXxxxxx.",
-        "..xxxxxxxx..",
-        "...xxxxxx...",
-        "............",
+    "ledger": [  # coin with a slot-mark
+        "................",
+        "......xxxx......",
+        "....xxxxxxxx....",
+        "...xxXXXXXXxx...",
+        "..xxXxxxxxxXxx..",
+        "..xxXxxXXxxXxx..",
+        "..xxXxxXXxxXxx..",
+        "..xxXxxXXxxXxx..",
+        "..xxXxxXXxxXxx..",
+        "..xxXxxxxxxXxx..",
+        "...xxXXXXXXxx...",
+        "....xxxxxxxx....",
+        "......xxxx......",
+        "................",
+        "................",
+        "................",
     ],
 }
-PASSIVE_SIGILS = [  # 4x4 marks, one per node slot (m1..m4, n1..n3, m5, m6, n4, n5) within a detail
-    ["....", ".xx.", ".xx.", "...."],  # dot
-    [".x..", "xxx.", ".x..", "...."],  # plus
-    [".x..", "xxx.", ".x..", ".x.."],  # arrow up
-    ["x...", "xx..", "xxx.", "xxxx"],  # ramp
-    ["x.x.", ".x..", "x.x.", "...."],  # cross
-    ["xxxx", "x..x", "x..x", "xxxx"],  # box
-    [".x..", ".x..", "xxx.", ".x.."],  # drop
-    ["..x.", ".x..", "xxx.", ".x.."],  # bolt
-    ["xxx.", ".x..", ".x..", "...."],  # tee
-    ["xxxx", "....", "xxxx", "...."],  # bars
-    ["x..x", ".xx.", ".xx.", "x..x"],  # star
-    [".xx.", "x..x", "x..x", ".xx."],  # ring
-]
-# (sprite name, detail, tier, slot index) — generated with data/passives_v2.json (same order).
+PASSIVE_GLYPHS = {}
+G = PASSIVE_GLYPHS  # authoring alias
+G["pit_callouses"] = """
+.b.b.b.b..
+.b.b.b.b..
+.b.b.b.b..
+.bbbbbbbb.
+.bbdbbbdb.
+.bbbbdbbbb
+.bdbbbbbbb
+.bbbbbdbb.
+..bbbbbb..
+..bbbbbb..
+"""
+G["pit_yard_shoulders"] = """
+...bbbb...
+..bbllbb..
+..bbbbbb..
+...bbbb...
+.bbbbbbbb.
+bbbbbbbbbb
+bbdbbbbdbb
+bbbbbbbbbb
+bb.bbbb.bb
+bb......bb
+"""
+G["pit_pick_rhythm"] = """
+..........
+..........
+......l...
+......b...
+..l...b...
+..b...b.l.
+..b.l.b.b.
+l.b.b.b.b.
+b.b.b.b.b.
+b.b.b.b.b.
+"""
+G["pit_scaffold_eye"] = """
+..bbbbbb..
+.bllddllb.
+..bbbbbb..
+.b......b.
+.bb....bb.
+.bbbbbbbb.
+.bl....lb.
+.b.llll.b.
+.bbbbbbbb.
+.b......b.
+"""
+G["pit_the_mule"] = """
+......b.b.
+.....bb.bb
+.....bbbb.
+....bbbbb.
+...bbdbbb.
+..bbbbbbb.
+.bbbbbbb..
+bbbbbbbb..
+bdbbbb....
+bbbb......
+"""
+G["pit_vein_reader"] = """
+...bbbb...
+..bbbbbbb.
+.bbbbblbbb
+.bbbllbbbb
+bbbblbbbbb
+bbbblllbbb
+bbbbbblbbd
+.bbbbbllb.
+.bbbbbbdd.
+..bbbbbb..
+"""
+G["pit_salvage_habit"] = """
+bbbbdbbbbb
+bbbbdbbbbb
+dddddddddd
+bbdbbbbdbb
+bbdbbbbdbb
+dddddddddd
+bbbbdbbb..
+bbbbdbbb..
+......llll
+......llll
+"""
+G["pit_long_shift"] = """
+...bbbb...
+..b....b..
+.b..l...b.
+b...l....b
+b...l....b
+b...lll..b
+b........b
+.b......b.
+..b....b..
+...bbbb...
+"""
+G["pit_braced_walls"] = """
+bbbbbbbbbb
+bl......lb
+b.l....l.b
+b..l..l..b
+b...ll...b
+b...ll...b
+b..l..l..b
+b.l....l.b
+bl......lb
+bbbbbbbbbb
+"""
+G["pit_quiet_pick"] = """
+..........
+......b...
+.....bb...
+bbbbbbb.l.
+bbbbbbb..l
+bbbbbbb.l.
+bbbbbbb..l
+.....bb...
+......b...
+..........
+"""
+G["pit_foreman"] = """
+..........
+....bb....
+..bbllbb..
+.bbbllbbb.
+.bbbbbbbb.
+bbbbbbbbbb
+dddddddddd
+..........
+..........
+..........
+"""
+G["pit_beast_of_burden"] = """
+..bbbbbbb.
+.bbllllbb.
+.blbbbblb.
+.blbllbbb.
+.blbbbblb.
+.bbllllbb.
+..bbbbbbb.
+...b..b...
+..bb..bb..
+..b....b..
+"""
+G["pit_mole"] = """
+..........
+...bbbb...
+..bbbbbb..
+.bbdbbdbb.
+.bbbbbbbb.
+.bbbllbbb.
+..bblldbb.
+.bbbbbbbb.
+bbb.bb.bbb
+bb........
+"""
+G["stacks_rubber_gloves"] = """
+..b.b.b...
+..b.b.b.b.
+..b.b.b.b.
+.bbbbbbbbb
+.bbbbbbbb.
+.bbbbbbbb.
+..bbbbbb..
+..dddddd..
+..dbdbdb..
+..dddddd..
+"""
+G["stacks_valve_feel"] = """
+...bbbb...
+..b....b..
+.b..bb..b.
+b...bb...b
+bbbbllbbbb
+bbbbllbbbb
+b...bb...b
+.b..bb..b.
+..b....b..
+...bbbb...
+"""
+G["stacks_nose_plug"] = """
+....bb....
+....bb....
+....bb....
+...bbbb...
+..bbbbbb..
+.llllllll.
+bbbbbbbbbb
+bbdbbbbdbb
+.bbbbbbbb.
+..........
+"""
+G["stacks_scrub_hands"] = """
+.....b.l..
+..l.......
+...b...b..
+..........
+.dddddddd.
+.bbbbbbbb.
+.bbbbbbbb.
+.b.b.b.b..
+.l.l.l.l..
+..........
+"""
+G["stacks_slow_pour"] = """
+.bbbbbb...
+.bbllbb...
+.bbbbbbb..
+..bbbbbbb.
+...bbbbb.b
+..........
+.......b..
+.......l..
+.......b..
+......bbb.
+"""
+G["stacks_lead_apron"] = """
+.b......b.
+.b.bbbb.b.
+..bb..bb..
+..bbbbbb..
+.bbbbbbbb.
+.bbbllbbb.
+.bbbllbbb.
+.bdddddbb.
+.bd.bb.db.
+.bbbbbbbb.
+"""
+G["stacks_flush_cycle"] = """
+...bbbb...
+..b....bb.
+.b......bb
+.b..bb..b.
+.b..bb....
+.b........
+.bb......b
+..bb....b.
+...bbbbb..
+..........
+"""
+G["stacks_still_air"] = """
+.bbbbbbb..
+.b.......l
+.bbbbbbb.l
+.b.bbb.b.l
+.b..bb..b.
+.b...b....
+.b........
+.b........
+.b........
+.b........
+"""
+G["stacks_fume_tolerance"] = """
+...bbbb...
+..bbbbbb..
+.bbbbbbbb.
+.bllbbllb.
+.bllbbllb.
+.bbbbbbbb.
+..bbddbb..
+..bdddbb..
+..bbddbb..
+...bbbb...
+"""
+G["stacks_cold_hands"] = """
+....bb....
+.b..bb..b.
+..b.bb.b..
+...bbbb...
+bbbbllbbbb
+bbbbllbbbb
+...bbbb...
+..b.bb.b..
+.b..bb..b.
+....bb....
+"""
+G["stacks_hot_pour"] = """
+....b.....
+....bb....
+...bbb.b..
+..bbbbbb..
+..bbllbbb.
+.bbbllbbb.
+.bbllllbb.
+.bbllllbb.
+..bbllbb..
+...bbbb...
+"""
+G["stacks_slow_hands"] = """
+bbbbbbbbbb
+.bllllllb.
+..bllllb..
+...bllb...
+....bb....
+....bb....
+...b..b...
+..b.dd.b..
+.b.dddd.b.
+bbbbbbbbbb
+"""
+G["stacks_essence_lung"] = """
+....bb....
+....bb....
+..bb.bb.b.
+.bbbbbbbbb
+bbbbbbbbbb
+bbbbb.bbbb
+bbbbb.bbbb
+.bbbb.bbb.
+.bbbb.bbb.
+..bb...bb.
+"""
+
+G["shop_file_and_vice"] = """
+.b......b.
+bbbbbbbbbb
+.bbbllbbb.
+.bbbllbbb.
+.bbbllbbb.
+.bbbllbbb.
+.bbb..bbb.
+.bbbbbbbb.
+dddddddddd
+dddddddddd
+"""
+G["shop_oil_rag"] = """
+..........
+.......bb.
+.....bbb..
+.bbbbbbb..
+bbbllbbb..
+bbbllbbb..
+bbbbbbbb..
+.bbbbbb...
+.......l..
+......lll.
+"""
+G["shop_true_edge"] = """
+.......bbb
+......bbbl
+.....bbbb.
+....bbbb..
+...bbbb...
+..bbbb....
+.dbbb.....
+dddb......
+dd........
+d.........
+"""
+G["shop_scrap_eye"] = """
+...bbbb...
+..bbbbbb..
+.bbl..bbb.
+bbl....bbb
+bb......bb
+bb......bb
+bbb....bbb
+.bbb..bbb.
+..bbbbbb..
+...bbbb...
+"""
+G["shop_patch_kit"] = """
+..........
+.bbbbbbbb.
+.b.b.b.bb.
+.bbbllbbb.
+.b.bllb.b.
+.bbllbbbb.
+.b.llb.bb.
+.bbbbbbbb.
+..........
+..........
+"""
+G["shop_makers_mark"] = """
+..........
+..bbbbbb..
+.bbllllbb.
+bbbbbbbbbb
+bbbbbdbbbb
+bbbdddbbbb
+bbbbdddbbb
+bbbdbbdbbb
+dddddddddd
+..........
+"""
+G["shop_steady_file"] = """
+.......bbb
+......bdbb
+.....bdbb.
+....bdbb..
+...bdbb...
+..bdbb....
+.bdbb.....
+dddb......
+dd........
+d.........
+"""
+G["shop_tight_tolerance"] = """
+bb......bb
+bb......bb
+bb.bbbb.bb
+bb.bddb.bb
+bb.bddb.bb
+bb.bbbb.bb
+bb......bb
+bbbbbbbbbb
+bbbbbbbbbb
+..........
+"""
+G["shop_tinker_hours"] = """
+.bb.......
+bbbbb.bb..
+bblbb.bbb.
+bbbbb.bbb.
+.bbb.bbblb
+..bbbbbbbb
+...bbbblbb
+...bbbbbb.
+....bbbb..
+..........
+"""
+G["shop_grease_monkey"] = """
+..........
+.bbbbbbbb.
+.bllllllb.
+.bbbbbbbb.
+.bllbbllb.
+.bbbbbbbb.
+.bbbbbbbb.
+.bbbbbbbb.
+.dddddddd.
+...b..b...
+"""
+G["shop_reloader"] = """
+..bb..bb..
+.bbbb.bbbb
+.bllb.bllb
+.bbbb.bbbb
+.bbbb.bbbb
+.bbbb.bbbb
+.bbbb.bbbb
+.bbbb.bbbb
+dddddddddd
+dddddddddd
+"""
+G["shop_jury_rig"] = """
+...bbbb...
+..bbbbbb..
+.bb....bb.
+.bb.dd.bb.
+.bb.dd.bb.
+.bb....bb.
+..bbbbbb.b
+...bbbb.bb
+......bbbb
+.......bb.
+"""
+G["shop_signature_work"] = """
+........bb
+.......bbb
+......bbb.
+.....bbb..
+....bbb...
+...bbb....
+..bddb....
+..bdb.....
+.b.bbbbbbb
+b.bb......
+"""
+G["yard_yard_stance"] = """
+..........
+bbb....bbb
+bbbb..bbbb
+bbbb..bbbb
+bbbb..bbbb
+bbbb..bbbb
+bbbb..bbbb
+bbbb..bbbb
+bbbb..bbbb
+dddd..dddd
+"""
+G["yard_shiv_grip"] = """
+.......bbb
+......bbbl
+.....bbbb.
+....bbbb..
+...bbbb...
+..dbdbd...
+.dbdbd....
+.dbdb.....
+dbdb......
+bb........
+"""
+G["yard_flinch_less"] = """
+..........
+.......bb.
+......bbb.
+l.....bbb.
+lllllllbb.
+l.....bbb.
+......bbb.
+.......bb.
+..........
+..........
+"""
+G["yard_breath_control"] = """
+...bbbb...
+..b....b..
+.b..bb..b.
+.b.b..b.b.
+.b.b..b.b.
+.b..bb..b.
+..b....b..
+...bbbb...
+..........
+..........
+"""
+G["yard_brawler"] = """
+..........
+.bbbbbbbb.
+.blblblbb.
+.bbbbbbbb.
+.bbbbbbbb.
+.bbbbbbbb.
+.bbbbbbbb.
+..bbbbbb..
+..dddddd..
+..dddddd..
+"""
+G["yard_thick_skin"] = """
+..bbbbbb..
+.bbdbbdbb.
+bbdbbdbbdb
+bbbdbbdbbb
+bbdbbdbbdb
+.bbdbbdbb.
+.bbbdbbdb.
+..bbdbbd..
+...bbbb...
+..........
+"""
+G["yard_killers_eye"] = """
+..........
+...bbbb...
+.bbbbbbbb.
+bbbllllbbb
+bblldllbbb
+bblldllbbb
+bbbllllbbb
+.bbbbbbbb.
+...bbbb...
+..........
+"""
+G["yard_fast_hands"] = """
+l.........
+.l.b.b.b..
+l..b.b.b..
+.l.b.b.b..
+l.bbbbbbb.
+.lbbbbbbbb
+l.bbbbbbb.
+.l.bbbbb..
+l..bbbbb..
+...bbbb...
+"""
+G["yard_count_shots"] = """
+..........
+.b.b.b.b..
+.b.b.b.b..
+.b.b.b.b..
+.b.b.b.bl.
+bbbbbbbbbl
+.b.b.b.b.l
+.b.b.b.b..
+.b.b.b.b..
+..........
+"""
+G["yard_scar_tissue"] = """
+bbbbbbbbbb
+bbbbbbbbll
+bbbbbbblbb
+bdbbbblbdb
+bbbbbllbbb
+bbbdlbbbdb
+bbbllbbbbb
+bbllbbbdbb
+bllbbbbbbb
+bbbbbbbbbb
+"""
+G["yard_marksman"] = """
+....bb....
+....bb....
+..bbbbbb..
+.bb.bb.bb.
+bbbbllbbbb
+bbbbllbbbb
+.bb.bb.bb.
+..bbbbbb..
+....bb....
+....bb....
+"""
+G["yard_dead_man_walking"] = """
+...bbbb...
+..bbbbbb..
+.bbbbbbbb.
+.bbbbbbbb.
+.bddbbddb.
+.bddbbddb.
+..bbddbb..
+..bbbbbb..
+..bdbdbb..
+...bbbb...
+"""
+G["yard_short_fuse"] = """
+.......bl.
+......b.l.
+.....b....
+...bbb....
+..bbbbbb..
+.bbbbbbbb.
+.bllbbbbb.
+.bllbbbbb.
+.bbbbbbbb.
+..bbbbbb..
+"""
+
+G["infirmary_clean_rags"] = """
+..........
+.bbbbbbb..
+.blllllbb.
+.bbbbbbbb.
+.bllllllb.
+.bbbbbbbb.
+.bllllbbb.
+.bbbbbbb..
+..........
+..........
+"""
+G["infirmary_bedside_manner"] = """
+..........
+..........
+.bb.......
+.bbb......
+.bbbbbbbbb
+.bbllbbbbb
+.bbbbbbbbb
+bbbbbbbbbb
+b........b
+b........b
+"""
+G["infirmary_iron_gut"] = """
+...bbbb...
+...bb.....
+..bbbbb...
+.bbbbbbbb.
+bbldbbbbbb
+bbbbbldbbb
+bbbbbbbbbb
+.bbdbbbbb.
+..bbbbbb..
+...bbb....
+"""
+G["infirmary_light_sleeper"] = """
+bbbbbb....
+...bb.....
+..bb......
+.bb...bbbb
+bbbbbb..bb
+.....bbb..
+....bb....
+...bbbbbb.
+..........
+..........
+"""
+G["infirmary_triage"] = """
+...bbbb...
+..b....b..
+..b.bb.b..
+...bbbb...
+.bbbbbbbb.
+.bllllllb.
+.bbbbbbbb.
+.blllllbb.
+.bbbbbbbb.
+.bllllbbb.
+"""
+G["infirmary_thick_blood"] = """
+..........
+.bbbb.....
+bbllbb.bbb
+bbllbb.bbb
+.bbbb.bllb
+...bbb.bbb
+..bllbb...
+..bllbb...
+...bbb....
+..........
+"""
+G["infirmary_even_keel"] = """
+..........
+..........
+bbbbbbbbbb
+blllbbllll
+blllbbllll
+bbbbbbbbbb
+..........
+bbbbbbbbbb
+.bbbbbbbb.
+..bbbbbb..
+"""
+G["infirmary_steady_needle"] = """
+.......bb.
+......b..b
+.....b..bb
+....b..bb.
+...bb.bb..
+..bb..b...
+.bb...b...
+bb....b...
+b.....bb..
+.......b..
+"""
+G["infirmary_calm_voice"] = """
+.bbbbbbbb.
+bbbbbbbbbb
+bbblbblbbb
+bblbbbblbb
+bbbbbbbbbb
+bbbbbbbbbb
+.bbbbbbbb.
+..bb......
+...b......
+..........
+"""
+G["infirmary_chart_reader"] = """
+...bbbb...
+.bbbllbbb.
+.bbbbbbbb.
+.bbbbbbbb.
+.bbbbllbb.
+.bllbbbbb.
+.bbblbbbb.
+.bbbbbbbb.
+.bbbbbbbb.
+.bbbbbbbb.
+"""
+G["infirmary_cast_iron"] = """
+..........
+..........
+.bbbbbbbb.
+bbbbbbbbbb
+bbllbbbbbb
+bbbbbbbbbb
+.bbbbbbbbb
+..bbbbbbbb
+...ddddd..
+..........
+"""
+G["infirmary_field_surgeon"] = """
+.......bbb
+......bbbl
+.....bbbb.
+....bbbb..
+...bbbb...
+..bbbb....
+.bbdb.....
+bbdd......
+bdd.......
+dd........
+"""
+G["infirmary_white_nights"] = """
+...bbbb...
+..b.......
+.b..bb....
+.b..bb.bb.
+.b.......b
+.b..ddd.b.
+..b.dwd.b.
+...bbbbb..
+..........
+..........
+"""
+G["ledger_count_the_coins"] = """
+bbbbbbbbbb
+..........
+bb.bb.bbbb
+..........
+bbbbb.bbbb
+bbbb.bbbbb
+..........
+b.bbbbbbbb
+bbbbbb.bbb
+bbbbbbbbbb
+"""
+G["ledger_block_voice"] = """
+.......bb.
+......bbb.
+bbb..bbb.l
+bbbbbbbb.l
+bbbbbbbb.l
+bbb..bbb.l
+.b....bbb.
+.b.....bb.
+..........
+..........
+"""
+G["ledger_long_memory"] = """
+..bbbbbb..
+.bbbbbbbb.
+bbblbbbbbb
+bbbblbbblb
+bbblbblbbb
+bblbbbbblb
+bbbbllbbbb
+.bbbbbbbb.
+..bbbbbb..
+....bb....
+"""
+G["ledger_quiet_mouth"] = """
+..........
+..........
+bbbbbbbbbb
+bblbllblbb
+bbbbbbbbbb
+bblblblbbb
+bbbbbbbbbb
+.bbbbbbbb.
+..........
+..........
+"""
+G["ledger_shot_caller"] = """
+bbbbbb....
+bbllbbbb..
+bbllllbbbb
+bbbbbbbb..
+bbbbbb....
+bb........
+bb........
+bb........
+bb........
+dd........
+"""
+G["ledger_haggler"] = """
+....bb....
+bbbbbbbbbb
+..b.bb.b..
+..b.bb.b..
+.b..bb..b.
+bbb.bb.bbb
+bbb.bb.bbb
+....bb....
+...bbbb...
+..bbbbbb..
+"""
+G["ledger_stash_pocket"] = """
+bbbbbbbbbb
+bbbbbbbbbb
+bddddddddb
+b.b....b.b
+b.b.ll.b.b
+b.b.ll.b.b
+b.b....b.b
+b.bbbbbb.b
+b........b
+.bbbbbbbb.
+"""
+G["ledger_clean_sheet"] = """
+.bbbbbbb..
+.bbbbbbbb.
+.bbbbbbbbb
+.bbbbbbbbb
+.bbbbblbbb
+.bbbblbbbb
+.bllblbbbb
+.bbbllbbbb
+.bbbbbbbbb
+.bbbbbbbbb
+"""
+G["ledger_scrip_sense"] = """
+..........
+b.bbbbbb.b
+.bblbbblb.
+bbllbbbllb
+bbbbbbbbbb
+bbbbbbbbbb
+bbllbbbllb
+.bblbbblb.
+b.bbbbbb.b
+..........
+"""
+G["ledger_model_prisoner"] = """
+..bbbbbb..
+.b......b.
+..bbbbbb..
+..bbbbbb..
+..bbbbbb..
+.bbbbbbbb.
+bbdbbdbbdb
+bbdbbdbbdb
+bbdbbdbbdb
+bbdbbdbbdb
+"""
+G["ledger_fence"] = """
+.b..b..b..
+bbb.bb.bb.
+bbbbbbbbbb
+bbbbbbbbbb
+dddddddddd
+bbbbbbbbbb
+bbbbbbbbbb
+dddddddddd
+bbbbbbbbbb
+bbbbbbbbbb
+"""
+G["ledger_trustee"] = """
+..bbbbb...
+.bb...bb..
+.b.....b..
+.bb...bb..
+..bbbbb...
+....bb....
+....bb....
+....bbbb..
+....bb....
+....bbbb..
+"""
+G["ledger_ghost_on_the_roll"] = """
+...bbbb...
+..bb..bb..
+.b..bb..b.
+.b.b..b.b.
+.b..bb..b.
+.b......b.
+.b.l..l.b.
+.b......b.
+.b.l.ll.b.
+..bbbbbb..
+"""
+G["key_clean_hands"] = """
+.l.b.b.b..
+...b.b.b..
+...b.b.b..
+.l.bbbbbb.
+bb.bbbbbbb
+bbbbbbbbb.
+.bbbbbbbb.
+..bbbbbb..
+..bbbbbb..
+...bbbb...
+"""
+G["key_tailings_eater"] = """
+.b.b.b.b.b
+bbbbbbbbbb
+bb......bb
+b..lllll.b
+b.lllllll.
+b..lllll.b
+bb......bb
+bbbbbbbbbb
+.b.b.b.b.b
+..........
+"""
+G["key_essence_smith"] = """
+....l.....
+...lll....
+bbbbbbbbbb
+.bbbbbbbbb
+bbbbbbbbb.
+...bbbb...
+...bbbb...
+..bbbbbb..
+.bbbbbbbb.
+.dddddddd.
+"""
+G["key_overclock"] = """
+...bbbb...
+.b.bbbb.b.
+.bbbbbbbb.
+bbbb.lbbbb
+bbb.ll.bbb
+bbb.llll.b
+bbbb.ll.bb
+bbbbl..bbb
+.bbbbbbbb.
+.b.bbbb.b.
+"""
+G["key_armourers_pride"] = """
+bbbbbbbbbb
+bbbbbbbbbb
+bblllbbllb
+bblllbbllb
+bbbbbbbbbb
+bbbbllbbbb
+.bbbllbbb.
+.bbbbbbbb.
+..bbbbbb..
+....bb....
+"""
+G["key_full_auto"] = """
+..........
+.b.b.b.b..
+bllbllblll
+bbbbbbbbbb
+bbbbbbbbbb
+bbbbbbbbbb
+bbbbbbbbbb
+dddddddddd
+bbbbbbbbbb
+..........
+"""
+G["key_walking_wounded"] = """
+..........
+.bbb..bbb.
+bbbbbbbbbb
+bbbbbllbbb
+bbbllbbbbb
+bbllbbbbbb
+.bbbbbbbb.
+..bbbbbb..
+...bbbb...
+....bb....
+"""
+G["key_stretcher_bearer"] = """
+..........
+..........
+bb......bb
+.bbbbbbbb.
+.bllllllb.
+.bllbbllb.
+.bbbbbbbb.
+bb......bb
+b........b
+..........
+"""
+G["key_chaplain"] = """
+....l.....
+...lll....
+...lll....
+....b.....
+...bbb....
+...bll....
+...bll....
+...bll....
+..bbbbb...
+.bbbbbbb..
+"""
+G["key_blood_debt"] = """
+....b.....
+....bb....
+...bbbb...
+..bbbbb.bb
+.bbbbbbbll
+.bbbbbbbll
+.bbbbbbbbb
+..bbbbbbb.
+...bbbbb..
+..........
+"""
+G["key_quota_hawk"] = """
+...bbbb...
+..bbbbbb..
+.bbbdbbbb.
+.bbbbbbbbb
+bbbbbbbbbl
+.bbbbbbll.
+..bbbbll..
+...bbbb...
+....bb....
+..........
+"""
+G["key_pocket_vein"] = """
+...b..b...
+....bb....
+...bbbb...
+..bbbbbb..
+.bbbllbbb.
+bbbllllbbb
+bbbblllbbb
+.bbbbbbbb.
+..bbbbbb..
+..........
+"""
+
+del G
+# (sprite name, detail, tier, legacy slot) — same order as data/passives_v2.json passives.
 PASSIVE_ICONS = [
     ("passive_pit_callouses", "pit", "minor", 0),
     ("passive_pit_yard_shoulders", "pit", "minor", 1),
@@ -1564,59 +2334,89 @@ PASSIVE_ICONS = [
     ("passive_ledger_fence", "ledger", "notable", 10),
     ("passive_ledger_trustee", "ledger", "keystone", "trustee"),
     ("passive_ledger_ghost_on_the_roll", "ledger", "keystone", "ghost_on_the_roll"),
-    ("passive_key_clean_hands", "key", "keystone", "clean_hands"),
-    ("passive_key_tailings_eater", "key", "keystone", "tailings_eater"),
-    ("passive_key_essence_smith", "key", "keystone", "essence_smith"),
-    ("passive_key_overclock", "key", "keystone", "overclock"),
-    ("passive_key_armourers_pride", "key", "keystone", "armourers_pride"),
-    ("passive_key_full_auto", "key", "keystone", "full_auto"),
-    ("passive_key_walking_wounded", "key", "keystone", "walking_wounded"),
-    ("passive_key_stretcher_bearer", "key", "keystone", "stretcher_bearer"),
-    ("passive_key_chaplain", "key", "keystone", "chaplain"),
-    ("passive_key_blood_debt", "key", "keystone", "blood_debt"),
-    ("passive_key_quota_hawk", "key", "keystone", "quota_hawk"),
-    ("passive_key_pocket_vein", "key", "keystone", "pocket_vein"),
+    ("passive_key_clean_hands", "pit+stacks", "keystone", "clean_hands"),
+    ("passive_key_tailings_eater", "pit+stacks", "keystone", "tailings_eater"),
+    ("passive_key_essence_smith", "stacks+shop", "keystone", "essence_smith"),
+    ("passive_key_overclock", "stacks+shop", "keystone", "overclock"),
+    ("passive_key_armourers_pride", "shop+yard", "keystone", "armourers_pride"),
+    ("passive_key_full_auto", "shop+yard", "keystone", "full_auto"),
+    ("passive_key_walking_wounded", "yard+infirmary", "keystone", "walking_wounded"),
+    ("passive_key_stretcher_bearer", "yard+infirmary", "keystone", "stretcher_bearer"),
+    ("passive_key_chaplain", "infirmary+ledger", "keystone", "chaplain"),
+    ("passive_key_blood_debt", "infirmary+ledger", "keystone", "blood_debt"),
+    ("passive_key_quota_hawk", "ledger+pit", "keystone", "quota_hawk"),
+    ("passive_key_pocket_vein", "ledger+pit", "keystone", "pocket_vein"),
 ]
 
 
-def _passive_frame(d, tier, col):
+def _mix(hex_a, hex_b, t):
+    a, b = rgba(hex_a), rgba(hex_b)
+    return "#%02x%02x%02x" % tuple(int(round(a[i] + (b[i] - a[i]) * t)) for i in range(3))
+
+
+def _passive_pal(col):
+    return {".": None, "b": col, "l": _mix(col, "#ffffff", 0.45), "d": _mix(col, "#000000", 0.5),
+            "w": "#ffffff", "q": PASSIVE_DARK}
+
+
+def _glyph_rows(text):
+    rows = [r for r in text.strip().split("\n")]
+    assert len(rows) == 10 and all(len(r) == 10 for r in rows), "glyph must be 10x10:\n" + text
+    return rows
+
+
+def _passive_frame(d, tier, col, col_r=None):
     base = rgba(col)
     dim = rgba(col, 110)
+    dark = rgba(PASSIVE_DARK)
     if tier == "minor":
-        d.rectangle([1, 1, 14, 14], outline=dim)
+        d.rectangle([1, 1, 14, 14], fill=dark, outline=dim)
         for cx, cy in ((1, 1), (14, 1), (1, 14), (14, 14)):
             d.point((cx, cy), (0, 0, 0, 0))
     elif tier == "notable":
-        d.rectangle([0, 0, 15, 15], outline=base)
+        d.rectangle([0, 0, 15, 15], fill=dark, outline=base)
         d.rectangle([2, 2, 13, 13], outline=dim)
     else:  # keystone: filled dark diamond (the silhouette reads on any background), bright rim
         pts = [(7, 0), (8, 0), (15, 7), (15, 8), (8, 15), (7, 15), (0, 8), (0, 7)]
-        d.polygon(pts, fill=rgba("#1a1420"), outline=base)
+        d.polygon(pts, fill=dark, outline=base)
+
+
+def passive_icon(name, detail, tier):
+    """One 16x16 passive icon. detail 'a+b' (seam keystone) splits colours left/right."""
+    cols = [PASSIVE_DETAIL_COLORS[x] for x in detail.split("+")]
+    col_l, col_r = cols[0], cols[-1]
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    _passive_frame(d, tier, col_l)
+    rows = _glyph_rows(PASSIVE_GLYPHS[name])
+    pal_l, pal_r = _passive_pal(col_l), _passive_pal(col_r)
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row):
+            c = (pal_l if x < 5 else pal_r)[ch]
+            if not c:
+                continue
+            px, py = x + 3, y + 3
+            if tier == "keystone" and abs(px - 7.5) + abs(py - 7.5) > 7.0:
+                continue  # keep the rim clear
+            img.putpixel((px, py), rgba(c))
+    if col_l != col_r:  # seam: right half of the rim in the second branch colour
+        for py in range(16):
+            for px in range(8, 16):
+                if img.getpixel((px, py))[3] and abs(px - 7.5) + abs(py - 7.5) >= 7.5:
+                    img.putpixel((px, py), rgba(col_r))
+    return img
+
+
+def passive_logo(detail):
+    pal = {".": None, "x": PASSIVE_LOGO_COLOR, "X": _mix(PASSIVE_LOGO_COLOR, "#000000", 0.4)}
+    return outline(grid(PASSIVE_LOGOS[detail], pal))
 
 
 def passives_v2_art():
-    for name, detail, tier, slot in PASSIVE_ICONS:
-        col = PASSIVE_DETAIL_COLORS[detail]
-        img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-        d = ImageDraw.Draw(img)
-        _passive_frame(d, tier, col)
-        pal = dict(PPAL)
-        pal["x"] = col
-        pal["X"] = "#f4f0e8"
-        if tier == "keystone":
-            rows = PASSIVE_KEY_GLYPHS[slot] if detail == "key" else PASSIVE_KEY_GLYPHS[detail + "_" + slot]
-            img.alpha_composite(grid(rows, pal), (2, 2))  # 12x12 silhouette, no outline: it sits on the dark fill
-            for py in range(16):  # clip to the diamond and redraw the rim so the frame always reads
-                for px in range(16):
-                    if abs(px - 7.5) + abs(py - 7.5) > 8.0:
-                        img.putpixel((px, py), (0, 0, 0, 0))
-            d.polygon([(7, 0), (8, 0), (15, 7), (15, 8), (8, 15), (7, 15), (0, 8), (0, 7)], outline=rgba(col))
-        else:
-            glyph = outline(grid(PASSIVE_GLYPHS[detail], pal))
-            img.alpha_composite(glyph, (3, 3))
-            d.rectangle([10, 10, 15, 15], fill=rgba("#1a1420"))
-            img.alpha_composite(grid(PASSIVE_SIGILS[slot], {".": None, "x": "#f4f0e8"}), (11, 11))
-        save(img, name)
+    for name, detail, tier, _slot in PASSIVE_ICONS:
+        save(passive_icon(name[len("passive_"):], detail, tier), name)
+    for detail in PASSIVE_LOGOS:
+        save(passive_logo(detail), "passive_logo_" + detail)
 # endregion
 
 
