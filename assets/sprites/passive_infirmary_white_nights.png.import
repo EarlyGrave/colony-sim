@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ynt6j8kjg5v5"
-path="res://.godot/imported/passive_stacks_second_skin.png-17aaca845847987e07d9b46841df60ac.ctex"
+uid="uid://4uldffablvs5"
+path="res://.godot/imported/passive_infirmary_white_nights.png-7a43ccf2086b3f3115843da4bfec75c4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/passive_stacks_second_skin.png"
-dest_files=["res://.godot/imported/passive_stacks_second_skin.png-17aaca845847987e07d9b46841df60ac.ctex"]
+source_file="res://assets/sprites/passive_infirmary_white_nights.png"
+dest_files=["res://.godot/imported/passive_infirmary_white_nights.png-7a43ccf2086b3f3115843da4bfec75c4.ctex"]
 
 [params]
 

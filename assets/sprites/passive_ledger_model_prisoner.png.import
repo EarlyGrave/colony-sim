@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0mhn0cns3etc"
-path="res://.godot/imported/passive_pit_lifers_back.png-752e2c60836c6290de1e20fe77fe0e4f.ctex"
+uid="uid://my6yabpujr2k"
+path="res://.godot/imported/passive_ledger_model_prisoner.png-734682ce244e57982f18a2588c879a41.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/passive_pit_lifers_back.png"
-dest_files=["res://.godot/imported/passive_pit_lifers_back.png-752e2c60836c6290de1e20fe77fe0e4f.ctex"]
+source_file="res://assets/sprites/passive_ledger_model_prisoner.png"
+dest_files=["res://.godot/imported/passive_ledger_model_prisoner.png-734682ce244e57982f18a2588c879a41.ctex"]
 
 [params]
 

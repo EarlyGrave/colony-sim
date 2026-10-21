@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b6bxrg10beug3"
-path="res://.godot/imported/passive_pit_ore_sense.png-ca4a51e4b051d2f0feb6bd1bab53e337.ctex"
+uid="uid://dml1sdxymqqpw"
+path="res://.godot/imported/passive_key_stretcher_bearer.png-5b230a431a27bfa766bd5b91c50586ce.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/passive_pit_ore_sense.png"
-dest_files=["res://.godot/imported/passive_pit_ore_sense.png-ca4a51e4b051d2f0feb6bd1bab53e337.ctex"]
+source_file="res://assets/sprites/passive_key_stretcher_bearer.png"
+dest_files=["res://.godot/imported/passive_key_stretcher_bearer.png-5b230a431a27bfa766bd5b91c50586ce.ctex"]
 
 [params]
 

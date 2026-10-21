@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cww3q46a2hgdl"
-path="res://.godot/imported/passive_infirmary_taint_watch.png-0ff523b0dbe5fb61fdac37ad5a77694e.ctex"
+uid="uid://dxqax88wruktf"
+path="res://.godot/imported/passive_ledger_fence.png-e6afdef37ffa8f3863c46e62e0148cc8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/passive_infirmary_taint_watch.png"
-dest_files=["res://.godot/imported/passive_infirmary_taint_watch.png-0ff523b0dbe5fb61fdac37ad5a77694e.ctex"]
+source_file="res://assets/sprites/passive_ledger_fence.png"
+dest_files=["res://.godot/imported/passive_ledger_fence.png-e6afdef37ffa8f3863c46e62e0148cc8.ctex"]
 
 [params]
 

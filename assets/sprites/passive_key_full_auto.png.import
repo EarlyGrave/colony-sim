@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://5s1lt4iygdh3"
-path="res://.godot/imported/passive_ledger_stoic.png-ba118491068bee1a7ccbab4de716e865.ctex"
+uid="uid://b8fljj5sjef1b"
+path="res://.godot/imported/passive_key_full_auto.png-249623780bb372d6ff95eecacbdc2060.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/passive_ledger_stoic.png"
-dest_files=["res://.godot/imported/passive_ledger_stoic.png-ba118491068bee1a7ccbab4de716e865.ctex"]
+source_file="res://assets/sprites/passive_key_full_auto.png"
+dest_files=["res://.godot/imported/passive_key_full_auto.png-249623780bb372d6ff95eecacbdc2060.ctex"]
 
 [params]
 
