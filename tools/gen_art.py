@@ -1573,8 +1573,6 @@ def trait_art():
         d = ImageDraw.Draw(img)
         d.rectangle([1, 1, 14, 14], fill=rgba(dark))
         d.rectangle([2, 2, 13, 13], fill=rgba(fill))
-        d.line([(2, 2), (13, 2)], fill=rgba(dark))  # bevel
-        d.line([(2, 2), (2, 13)], fill=rgba(dark))
         for cx, cy in ((1, 1), (14, 1), (1, 14), (14, 14)):
             img.putpixel((cx, cy), (0, 0, 0, 0))
         assert len(glyph) == 8, name
