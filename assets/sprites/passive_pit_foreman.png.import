@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://i3h83rm2cr33"
-path="res://.godot/imported/passive_ledger_wardens_ear.png-04b4bdcb1546cf33ca0e0693daac2b5f.ctex"
+uid="uid://cnpcis202tg5g"
+path="res://.godot/imported/passive_pit_foreman.png-ef1d348067bf796e587b74b476a0c12f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/passive_ledger_wardens_ear.png"
-dest_files=["res://.godot/imported/passive_ledger_wardens_ear.png-04b4bdcb1546cf33ca0e0693daac2b5f.ctex"]
+source_file="res://assets/sprites/passive_pit_foreman.png"
+dest_files=["res://.godot/imported/passive_pit_foreman.png-ef1d348067bf796e587b74b476a0c12f.ctex"]
 
 [params]
 

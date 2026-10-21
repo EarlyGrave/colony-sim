@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dft7x2jn3uhj5"
-path="res://.godot/imported/passive_yard_duck_and_cover.png-093fcb3408e3de4677cb3a5a9cabcadd.ctex"
+uid="uid://dylm5buus542v"
+path="res://.godot/imported/passive_shop_grease_monkey.png-f4ba168722b9e256cb5421f0bccdc19e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/passive_yard_duck_and_cover.png"
-dest_files=["res://.godot/imported/passive_yard_duck_and_cover.png-093fcb3408e3de4677cb3a5a9cabcadd.ctex"]
+source_file="res://assets/sprites/passive_shop_grease_monkey.png"
+dest_files=["res://.godot/imported/passive_shop_grease_monkey.png-f4ba168722b9e256cb5421f0bccdc19e.ctex"]
 
 [params]
 

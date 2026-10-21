@@ -1,7 +1,7 @@
 extends TestCase
-## Passives v2 (sim/perks/passive_tree_v2.gd): data validity, marks, allocation graph, undo,
-## respec, aggregation, dossier, determinism. The module is exercised directly (flag OFF: not
-## wired into the sim, see test_flag_off).
+## Passives v2 r2 (sim/perks/passive_tree_v2.gd): data validity, marks, allocation graph, keystone
+## excludes + limit, rule-flag aggregation, undo, respec, caps, dossier, determinism. The module is
+## exercised directly (flag OFF: not wired into the sim, see test_flag_off).
 
 const TPD := 1800
 
@@ -21,12 +21,16 @@ func _ctx(level := 10) -> Dictionary:
 		"shooting": level, "melee": level, "medicine": level}}
 
 
-## Allocates the whole Pit detail up to the three notables (entry gate: mining).
-func _pit_to_notables(tree: PassiveTreeV2, st: PassiveTreeV2.State) -> void:
-	for id in ["p_pit_callouses", "p_pit_yard_shoulders", "p_pit_pick_rhythm", "p_pit_scaffold_eye", "p_pit_the_mule",
-			"p_pit_ore_sense", "p_pit_salvage_habit", "p_pit_long_shift", "p_pit_quiet_pick", "p_pit_braced_walls",
-			"p_pit_vein_reader"]:
+func _alloc(tree: PassiveTreeV2, st: PassiveTreeV2.State, ids: Array) -> void:
+	for id: String in ids:
 		assert_true(tree.allocate(st, id, _ctx()), "allocate " + id + ": " + tree.can_allocate(st, id, _ctx()))
+
+
+## The whole Pit card up to the five notables (6 minors + 5 notables = 16 marks).
+func _pit_to_notables(tree: PassiveTreeV2, st: PassiveTreeV2.State) -> void:
+	_alloc(tree, st, ["p_pit_callouses", "p_pit_yard_shoulders", "p_pit_pick_rhythm", "p_pit_scaffold_eye",
+		"p_pit_the_mule", "p_pit_vein_reader", "p_pit_salvage_habit", "p_pit_long_shift", "p_pit_braced_walls",
+		"p_pit_quiet_pick", "p_pit_foreman"])
 
 
 func test_flag_off() -> void:
@@ -41,17 +45,45 @@ func test_data_valid_and_counts() -> void:
 	var tree := _tree()
 	assert_eq(tree.validate(), [] as Array[String])
 	var ids := tree.ids()
-	assert_eq(ids.size(), 78)
+	assert_eq(ids.size(), 90)
 	var tiers := {"minor": 0, "notable": 0, "keystone": 0}
 	for id in ids:
 		tiers[tree.tier_of(id)] += 1
 		assert_true(id.begins_with("p_"), id)
-	assert_eq(tiers["minor"], 48)
-	assert_eq(tiers["notable"], 18)
-	assert_eq(tiers["keystone"], 12)
+	assert_eq(tiers["minor"], 36)
+	assert_eq(tiers["notable"], 30)
+	assert_eq(tiers["keystone"], 24)
+	var bridges := 0
 	for det: String in tree.details():
-		assert_eq(tree.passives_of(det).size(), 12, det)
+		assert_eq(tree.passives_of(det).size(), 13, det)
+		var nxt := str(tree.details()[det]["next"])
+		assert_eq(tree.passives_of(det + "+" + nxt).size(), 2, det + "+" + nxt)
+		bridges += 2
+	assert_eq(bridges, 12)
 	assert_eq(tree.deeds().size(), 16)
+
+
+func test_keystones_are_rule_changes() -> void:
+	var tree := _tree()
+	for id in tree.ids():
+		if tree.tier_of(id) != "keystone":
+			assert_eq(tree.rules_of(id).size(), 0, id)
+			assert_eq(tree.excludes_of(id).size(), 0, id)
+			continue
+		assert_true(tree.rules_of(id).size() >= 1, id + " keystone without a rule flag")
+		for r in tree.rules_of(id):
+			assert_true(tree.rule_consumers().has(r), id + " rule " + r + " has no consumer")
+		var d := tree.def_of(id)
+		assert_true(str(d["drawback"]).length() > 0, id)
+	# the two keystones of one detail exclude each other
+	for det: String in tree.details():
+		var ks: Array[String] = []
+		for id in tree.passives_of(det):
+			if tree.tier_of(id) == "keystone":
+				ks.append(id)
+		assert_eq(ks.size(), 2, det)
+		assert_true(tree.excludes_of(ks[0]).has(ks[1]), det)
+		assert_true(tree.excludes_of(ks[1]).has(ks[0]), det)
 
 
 func test_icons_and_table_match() -> void:
@@ -63,6 +95,7 @@ func test_icons_and_table_match() -> void:
 		assert_true(tree.def_of(str(row["id"])).size() > 0, "table row without data: " + str(row["id"]))
 		assert_true(FileAccess.file_exists("res://" + str(row["icon"])), "missing icon " + str(row["icon"]))
 		assert_true(str(row["description"]).length() <= 70)
+		assert_eq(str(row["rule"]) != "", tree.tier_of(str(row["id"])) == "keystone", str(row["id"]))
 
 
 func test_milestone_marks_once() -> void:
@@ -108,26 +141,83 @@ func test_allocation_rules() -> void:
 	assert_eq(tree.can_allocate(st, "p_pit_the_mule", _ctx()), "no_marks")  # notable costs 2
 	tree.grant_deed(st, "d_first_installment")
 	assert_eq(tree.can_allocate(st, "p_ledger_count_the_coins", _ctx()), "")
+	# m5 opens from either n1 or n2
+	tree.earn(st, 10)
+	_alloc(tree, st, ["p_pit_pick_rhythm", "p_pit_vein_reader"])
+	assert_eq(tree.can_allocate(st, "p_pit_long_shift", _ctx()), "")
+	assert_eq(tree.can_allocate(st, "p_pit_braced_walls", _ctx()), "")
 
 
-func test_keystone_requirements_and_limit() -> void:
+func test_keystone_requirements_excludes_and_limit() -> void:
 	var tree := _tree()
-	var st := _rich(tree, 60)
-	assert_eq(tree.can_allocate(st, "p_pit_lifers_back", _ctx()), "requires")
-	_pit_to_notables(tree, st)
-	assert_eq(tree.can_allocate(st, "p_pit_lifers_back", _ctx()), "")
-	assert_true(tree.allocate(st, "p_pit_lifers_back", _ctx()))
+	var st := _rich(tree, 80)
+	assert_eq(tree.can_allocate(st, "p_pit_beast_of_burden", _ctx()), "requires")
+	# minimal path to a detail keystone: m1 m2 n1 m3 n2 = 7 marks, keystone 3 -> 10
+	_alloc(tree, st, ["p_pit_callouses", "p_pit_yard_shoulders", "p_pit_the_mule", "p_pit_pick_rhythm", "p_pit_vein_reader"])
+	assert_eq(st.marks_spent, 7)
+	assert_eq(tree.can_allocate(st, "p_pit_beast_of_burden", _ctx()), "")
+	assert_eq(tree.can_allocate(st, "p_pit_mole", _ctx()), "requires")  # needs 2 of n2 n3 n5
+	assert_true(tree.allocate(st, "p_pit_beast_of_burden", _ctx()))
+	assert_eq(st.marks_spent, 10)
+	_alloc(tree, st, ["p_pit_scaffold_eye", "p_pit_salvage_habit"])
+	assert_eq(tree.can_allocate(st, "p_pit_mole", _ctx()), "excluded")  # the other school's keystone
 	# bridge keystone needs a notable in BOTH details
 	assert_eq(tree.can_allocate(st, "p_key_clean_hands", _ctx()), "requires")
-	for id in ["p_stacks_rubber_gloves", "p_stacks_valve_feel", "p_stacks_slow_pour"]:
-		assert_true(tree.allocate(st, id, _ctx()))
+	_alloc(tree, st, ["p_stacks_rubber_gloves", "p_stacks_valve_feel", "p_stacks_slow_pour"])
 	assert_eq(tree.can_allocate(st, "p_key_clean_hands", _ctx()), "")
+	assert_eq(tree.can_allocate(st, "p_key_tailings_eater", _ctx()), "")
 	assert_true(tree.allocate(st, "p_key_clean_hands", _ctx()))
 	assert_eq(tree.keystones_of(st).size(), 2)
-	for id in ["p_ledger_count_the_coins", "p_ledger_quiet_mouth", "p_ledger_stash_pocket"]:
-		tree.grant_deed(st, "d_first_installment")
-		assert_true(tree.allocate(st, id, _ctx()), id)
+	assert_eq(tree.can_allocate(st, "p_key_tailings_eater", _ctx()), "keystone_limit")
+	tree.grant_deed(st, "d_first_installment")
+	_alloc(tree, st, ["p_ledger_count_the_coins", "p_ledger_block_voice", "p_ledger_shot_caller"])
 	assert_eq(tree.can_allocate(st, "p_key_quota_hawk", _ctx()), "keystone_limit")
+	# cross-detail excludes: Clean Hands never refines, so Essence Lung is out even with room
+	var st2 := _rich(tree, 80)
+	_alloc(tree, st2, ["p_pit_callouses", "p_pit_yard_shoulders", "p_pit_the_mule",
+		"p_stacks_rubber_gloves", "p_stacks_nose_plug", "p_stacks_lead_apron", "p_stacks_scrub_hands",
+		"p_stacks_flush_cycle", "p_key_clean_hands"])
+	assert_eq(tree.can_allocate(st2, "p_stacks_essence_lung", _ctx()), "excluded")
+
+
+func test_rule_flags_aggregate() -> void:
+	var tree := _tree()
+	var st := _rich(tree, 80)
+	assert_eq(tree.rules(st), {})
+	assert_false(tree.has_rule(st, "unlimited_carry"))
+	_alloc(tree, st, ["p_pit_callouses", "p_pit_yard_shoulders", "p_pit_the_mule", "p_pit_pick_rhythm", "p_pit_vein_reader"])
+	assert_eq(tree.rules(st), {})
+	assert_false(tree.summary(st).has("rules"))
+	assert_true(tree.allocate(st, "p_pit_beast_of_burden", _ctx(), 100))
+	assert_true(tree.has_rule(st, "unlimited_carry"))
+	assert_true(tree.has_rule(st, "no_armor"))
+	assert_false(tree.has_rule(st, "mining_only"))
+	assert_eq(tree.rules(st).size(), 2)
+	assert_true(is_equal_approx(tree.mod(st, "move_speed"), -0.25))
+	assert_eq(tree.summary(st)["rules"], ["no_armor", "unlimited_carry"] as Array[String])
+	# a second keystone adds its flags; undo clears the cache
+	_alloc(tree, st, ["p_stacks_rubber_gloves", "p_stacks_valve_feel", "p_stacks_slow_pour"])
+	assert_true(tree.allocate(st, "p_key_tailings_eater", _ctx(), 200))
+	assert_eq(tree.rules(st).size(), 4)
+	assert_true(tree.has_rule(st, "taint_immune"))
+	assert_eq(tree.undo(st, "p_key_tailings_eater", 300), 3)
+	assert_eq(tree.rules(st).size(), 2)
+	assert_false(tree.has_rule(st, "taint_mining"))
+	# respec clears every rule
+	tree.respec(st, 1000, TPD)
+	assert_eq(tree.rules(st), {})
+
+
+func test_uncapped_rule_skips_cap() -> void:
+	var tree := _tree()
+	var st := _rich(tree, 80)
+	_alloc(tree, st, ["p_stacks_rubber_gloves", "p_stacks_valve_feel", "p_stacks_slow_pour", "p_stacks_nose_plug",
+		"p_stacks_lead_apron", "p_stacks_still_air", "p_stacks_cold_hands"])
+	assert_true(is_equal_approx(tree.mod(st, "contamination_per_batch"), -0.4))  # -0.45 capped
+	assert_true(tree.allocate(st, "p_stacks_slow_hands", _ctx()))
+	assert_true(tree.has_rule(st, "uncapped_contamination_per_batch"))
+	assert_true(is_equal_approx(tree.mod(st, "contamination_per_batch"), -1.05))
+	assert_true(is_equal_approx(tree.mod(st, "operate_speed"), 0.1 - 0.05 - 0.1 - 0.5))
 
 
 func test_undo_grace_and_dependents() -> void:
@@ -149,15 +239,15 @@ func test_respec_cost_and_lockout() -> void:
 	var st := _rich(tree, 60)
 	assert_false(tree.can_respec(st))
 	_pit_to_notables(tree, st)
-	assert_true(tree.allocate(st, "p_pit_lifers_back", _ctx()))
-	assert_eq(st.marks_spent, 17)
+	assert_true(tree.allocate(st, "p_pit_mole", _ctx()))
+	assert_eq(st.marks_spent, 19)
 	var cost := tree.respec_cost(st, "fight")
 	assert_eq(cost["item"], "refined_essence")
-	assert_eq(cost["count"], 17)
+	assert_eq(cost["count"], 19)
 	assert_eq(cost["standing"], 5)
-	assert_eq(int(tree.respec_cost(st, "submit")["count"]), 9)
-	assert_eq(int(tree.respec_cost(st, "escape")["count"]), 26)
-	assert_eq(tree.respec(st, 1000, TPD), 17)
+	assert_eq(int(tree.respec_cost(st, "submit")["count"]), 10)
+	assert_eq(int(tree.respec_cost(st, "escape")["count"]), 29)
+	assert_eq(tree.respec(st, 1000, TPD), 19)
 	assert_eq(st.marks_free(), 60)
 	assert_eq(st.locked_until, 1000 + 3 * TPD)
 	assert_eq(tree.can_allocate(st, "p_pit_callouses", _ctx(), 1000 + TPD), "locked")
@@ -170,13 +260,13 @@ func test_mod_aggregation_and_caps() -> void:
 	var st := _rich(tree, 60)
 	assert_eq(tree.mod(st, "mining_speed"), 0.0)
 	_pit_to_notables(tree, st)
-	assert_true(is_equal_approx(tree.mod(st, "ore_yield"), 0.3))
-	assert_true(is_equal_approx(tree.mod(st, "carry"), 0.75))
-	assert_true(is_equal_approx(tree.xp_mult(st, "mining"), 1.15))
+	assert_true(is_equal_approx(tree.mod(st, "ore_yield"), 0.35))
+	assert_true(is_equal_approx(tree.mod(st, "carry"), 1.0))
+	assert_true(is_equal_approx(tree.xp_mult(st, "mining"), 1.25))
 	assert_true(is_equal_approx(tree.xp_mult(st, "melee"), 1.0))
-	assert_true(tree.allocate(st, "p_pit_lifers_back", _ctx()))
-	assert_true(is_equal_approx(tree.mod(st, "carry"), 1.75))
-	assert_true(is_equal_approx(tree.mod(st, "move_speed"), -0.2))
+	assert_true(tree.allocate(st, "p_pit_mole", _ctx()))
+	assert_true(is_equal_approx(tree.mod(st, "ore_yield"), 0.85))
+	assert_true(is_equal_approx(tree.mod(st, "mining_speed"), 1.1))
 	assert_true(tree.summary(st).has("hunger"))
 	# caps: a synthetic tree where waste stacks past the -0.4 floor
 	var d: Dictionary = PassiveTreeV2.load_default()
@@ -185,7 +275,7 @@ func test_mod_aggregation_and_caps() -> void:
 			p["effects"]["waste_mult"] = -0.9
 	var capped := PassiveTreeV2.new(d)
 	var s2 := _rich(capped)
-	for id in ["p_stacks_rubber_gloves", "p_stacks_scrub_hands", "p_stacks_second_skin", "p_stacks_flush_cycle"]:
+	for id in ["p_stacks_rubber_gloves", "p_stacks_scrub_hands", "p_stacks_flush_cycle"]:
 		assert_true(capped.allocate(s2, id, _ctx()), id)
 	assert_true(is_equal_approx(capped.mod(s2, "waste_mult"), -0.4))
 
@@ -194,15 +284,15 @@ func test_dossier_carry() -> void:
 	var tree := _tree()
 	var st := _rich(tree, 60)
 	_pit_to_notables(tree, st)
-	assert_true(tree.allocate(st, "p_pit_lifers_back", _ctx()))
+	assert_true(tree.allocate(st, "p_pit_beast_of_burden", _ctx()))
 	var carry := tree.dossier_carry(st)
 	assert_eq(carry["marks"], 4)
-	assert_eq(carry["known_for"], ["p_pit_lifers_back"] as Array[String])
+	assert_eq(carry["known_for"], ["p_pit_beast_of_burden"] as Array[String])
 	var vet := PassiveTreeV2.State.new()
 	tree.apply_dossier(vet, carry)
 	assert_eq(vet.marks_earned, 4)
-	assert_eq(tree.cost_of(vet, "p_pit_lifers_back"), 0)
-	assert_eq(tree.cost_of(st, "p_pit_lifers_back"), 3)
+	assert_eq(tree.cost_of(vet, "p_pit_beast_of_burden"), 0)
+	assert_eq(tree.cost_of(st, "p_pit_beast_of_burden"), 3)
 
 
 func test_save_roundtrip_and_determinism() -> void:
@@ -219,4 +309,4 @@ func test_save_roundtrip_and_determinism() -> void:
 	assert_eq(tree.state_hash(c), tree.state_hash(a))
 	assert_eq(c.deeds.has("d_first_blood"), true)
 	assert_eq(int(c.allocated_at["p_yard_brawler"]), 30)
-	assert_true(is_equal_approx(tree.mod(c, "unarmed_damage"), 0.3))
+	assert_true(is_equal_approx(tree.mod(c, "unarmed_damage"), 0.5))

@@ -5,8 +5,10 @@ extends RefCounted
 ## can be unit-tested directly. NOT wired into the live sim yet (balance.passives_v2_enabled =
 ## false). Design: docs/gdd/03-colony/passives-v2/. Integration plan: integration.md there.
 ##
-## Everything a consumer needs is read through mod()/has()/xp_mult(); the per-inmate state is a
-## plain PassiveTreeV2.State (serialisable with to_dict/from_dict).
+## Everything a consumer needs is read through mod()/has()/xp_mult() for numbers and
+## rules()/has_rule() for keystone rule flags (effects `rule_<x>`: 1 — a rule change the consumer
+## system implements, see data `rule_consumers`); the per-inmate state is a plain
+## PassiveTreeV2.State (serialisable with to_dict/from_dict).
 
 const DATA_PATH := "res://data/passives_v2.json"
 
@@ -63,6 +65,10 @@ var _deeds: Dictionary = {}     ## deed id -> def
 var _caps: Dictionary = {}
 var _marks: Dictionary = {}
 var _respec: Dictionary = {}
+var _rules: Dictionary = {}     ## rule id -> {rule, consumer, hook}
+
+const RULE_PREFIX := "rule_"
+const RULES_CACHE_KEY := "_rules"
 
 
 ## Reads data/passives_v2.json (Defs does not load it while the flag is off).
@@ -90,6 +96,7 @@ func _init(p_data: Dictionary = {}) -> void:
 	_caps = data.get("caps", {})
 	_marks = data.get("marks", {})
 	_respec = data.get("respec", {})
+	_rules = data.get("rule_consumers", {})
 
 
 # ---- data access -----------------------------------------------------------------
@@ -124,6 +131,28 @@ func passives_of(detail: String) -> Array[String]:
 
 func tier_of(id: String) -> String:
 	return str(_defs.get(id, {}).get("tier", ""))
+
+
+## Keystones that cannot coexist with `id` (data `excludes`, symmetric).
+func excludes_of(id: String) -> Array[String]:
+	var out: Array[String] = []
+	for x: Variant in _defs.get(id, {}).get("excludes", []):
+		out.append(str(x))
+	return out
+
+
+## Rule ids a passive carries (effects `rule_<x>`), e.g. ["no_medicine", "essence_heal"].
+func rules_of(id: String) -> Array[String]:
+	var out: Array[String] = []
+	for k: String in _defs.get(id, {}).get("effects", {}):
+		if k.begins_with(RULE_PREFIX):
+			out.append(k.trim_prefix(RULE_PREFIX))
+	return out
+
+
+## Known rule ids with their consumer (data `rule_consumers`).
+func rule_consumers() -> Dictionary:
+	return _rules
 
 
 ## Marks a passive costs this inmate (keystones remembered by the dossier are free).
@@ -241,7 +270,7 @@ func _groups_ok(st: State, p: Dictionary, without: String = "") -> bool:
 
 
 ## "" if the passive can be allocated now, otherwise a reason code: unknown, allocated, locked,
-## gate_skill, gate_deed, requires, keystone_limit, no_marks. `ctx.skills` = {skill: level}.
+## gate_skill, gate_deed, requires, excluded, keystone_limit, no_marks. `ctx.skills` = {skill: level}.
 func can_allocate(st: State, id: String, ctx: Dictionary = {}, now: int = 0) -> String:
 	if not _defs.has(id):
 		return "unknown"
@@ -263,6 +292,9 @@ func can_allocate(st: State, id: String, ctx: Dictionary = {}, now: int = 0) -> 
 		return "gate_deed"
 	if not _groups_ok(st, p):
 		return "requires"
+	for x: Variant in p.get("excludes", []):
+		if st.allocated.has(str(x)):
+			return "excluded"
 	if str(p["tier"]) == "keystone" and keystones_of(st).size() >= max_keystones():
 		return "keystone_limit"
 	if st.marks_free() < cost_of(st, id):
@@ -349,10 +381,31 @@ func mod(st: State, stat: String) -> float:
 	var total := 0.0
 	for id in st.allocated:
 		total += float(_defs[id].get("effects", {}).get(stat, 0.0))
-	if _caps.has(stat):
+	if _caps.has(stat) and not has_rule(st, "uncapped_" + stat):
 		total = maxf(total, float(_caps[stat]))
 	st.cache[stat] = total
 	return total
+
+
+## Rule flags of the allocated keystones: {rule id: true}, e.g. {"no_medicine": true}. Cached per
+## state until the allocation changes. A consumer system reads `has_rule(st, "no_medicine")` on
+## its hook line (data `rule_consumers` names the line); the module itself only aggregates.
+func rules(st: State) -> Dictionary:
+	if st == null or st.allocated.is_empty():
+		return {}
+	if st.cache.has(RULES_CACHE_KEY):
+		return st.cache[RULES_CACHE_KEY]
+	var out: Dictionary = {}
+	for id in st.allocated:
+		for k: String in _defs[id].get("effects", {}):
+			if k.begins_with(RULE_PREFIX):
+				out[k.trim_prefix(RULE_PREFIX)] = true
+	st.cache[RULES_CACHE_KEY] = out
+	return out
+
+
+func has_rule(st: State, rule: String) -> bool:
+	return rules(st).has(rule)
 
 
 ## 1 + xp_mult_all + xp_mult_<skill> (floored at 0).
@@ -360,12 +413,19 @@ func xp_mult(st: State, skill: String) -> float:
 	return maxf(0.0, 1.0 + mod(st, "xp_mult_all") + mod(st, "xp_mult_" + skill))
 
 
-## All non-zero summed stats of a state (for the sheet / tests).
+## All summed numeric stats of a state plus "rules": [ids] (for the sheet / tests).
 func summary(st: State) -> Dictionary:
 	var out: Dictionary = {}
 	for id in st.allocated:
 		for k: String in _defs[id].get("effects", {}):
-			out[k] = mod(st, k)
+			if not k.begins_with(RULE_PREFIX):
+				out[k] = mod(st, k)
+	var rl: Array[String] = []
+	for r: String in rules(st):
+		rl.append(r)
+	rl.sort()
+	if not rl.is_empty():
+		out["rules"] = rl
 	return out
 
 
@@ -406,8 +466,20 @@ func validate() -> Array[String]:
 		if p.get("effects", {}).is_empty():
 			errs.append(id + ": no effects")
 		for k: String in p.get("effects", {}):
-			if not consumers.has(k):
+			if k.begins_with(RULE_PREFIX):
+				if not _rules.has(k.trim_prefix(RULE_PREFIX)):
+					errs.append(id + ": rule without consumer " + k)
+				if str(p.get("tier", "")) != "keystone":
+					errs.append(id + ": only keystones carry rules")
+			elif not consumers.has(k):
 				errs.append(id + ": stat without consumer " + k)
+		for x: Variant in p.get("excludes", []):
+			if not _defs.has(str(x)):
+				errs.append(id + ": excludes unknown " + str(x))
+			elif not _defs[str(x)].get("excludes", []).has(id):
+				errs.append(id + ": excludes not symmetric with " + str(x))
+		if str(p.get("tier", "")) == "keystone" and (p.get("rule", "") == "" or p.get("drawback", "") == ""):
+			errs.append(id + ": keystone needs rule + drawback text")
 		for g: Dictionary in p.get("requires_groups", []):
 			for r: String in g["any"]:
 				if not _defs.has(r):

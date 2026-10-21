@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dedwruwca0jct"
-path="res://.godot/imported/passive_stacks_gauge_eye.png-48713119359f992d79b1d0a00554f80e.ctex"
+uid="uid://j0sdbaphm2ll"
+path="res://.godot/imported/passive_ledger_ghost_on_the_roll.png-efb5e0ac865cfd8f22924c3ff38467ae.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/passive_stacks_gauge_eye.png"
-dest_files=["res://.godot/imported/passive_stacks_gauge_eye.png-48713119359f992d79b1d0a00554f80e.ctex"]
+source_file="res://assets/sprites/passive_ledger_ghost_on_the_roll.png"
+dest_files=["res://.godot/imported/passive_ledger_ghost_on_the_roll.png-efb5e0ac865cfd8f22924c3ff38467ae.ctex"]
 
 [params]
 
