@@ -80,7 +80,9 @@ func _pouch_init(c: Colonist) -> void:
 func rifle_try_fire(c: Colonist) -> bool:
 	_pouch_init(c)
 	var st: CombatState = c.combat
-	var use := float(cfg["pouch"]["per_shot"]) * maxf(0.0, 1.0 + sim.perks.mod(c, "ammo_use"))
+	var use := float(cfg["pouch"]["per_shot"]) * maxf(0.0, 1.0 + sim.perks.mod(c, "ammo_use") + sim.passives.mod(c, "ammo_use"))  # F11W3
+	if sim.passives.rule(c, "no_ammo"):  # region F11W3
+		use = 0.0
 	var need := int(floor(st.ammo_debt + use))
 	if st.pouch < need:
 		_refill_pouch(c)

@@ -418,7 +418,7 @@ func _expose_colonists(n: int) -> void:
 	if sim.health == null:
 		return
 	for col in sim.colonists.list:
-		if not col.alive:
+		if not col.alive or sim.passives.rule(col, "taint_immune"):  # F11W3
 			continue
 		if not is_tainted(col.cell):
 			_exposure[col.id] = 0
@@ -426,5 +426,5 @@ func _expose_colonists(n: int) -> void:
 		_exposure[col.id] = int(_exposure.get(col.id, 0)) + n
 		if int(_exposure[col.id]) >= int(_cfg["exposure_ticks"]):
 			_exposure[col.id] = 0
-			if _rng.randf() < float(_cfg["illness_chance"]) * sim.traits.mutation_mult(col):  # region traits
+			if _rng.randf() < float(_cfg["illness_chance"]) * sim.traits.mutation_mult(col) * maxf(0.0, 1.0 + sim.passives.mod(col, "mutation_risk")):  # region traits + F11W3
 				sim.health.add_illness(col, str(_cfg["illness_id"]), float(_cfg["illness_severity"]), int(_cfg["illness_ticks"]))

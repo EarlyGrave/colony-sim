@@ -56,6 +56,13 @@ func equip(cid: int, item_id: int) -> bool:
 		return false
 	if not sim.defs.equipment["slots"].has(g.slot):
 		return false
+	# region F11W3: no_armor refuses every non-weapon slot; melee_only refuses ranged weapon bases
+	var who := sim.colonists.get_by_id(cid)
+	if g.slot != "weapon" and sim.passives.rule(who, "no_armor"):
+		return false
+	if g.slot == "weapon" and sim.passives.rule(who, "melee_only") and str(sim.defs.gear.get(g.base, {}).get("kind", "")) == "ranged":
+		return false
+	# endregion
 	var slots: Dictionary = equipped.get(cid, {})
 	if slots.get(g.slot, -1) == item_id:
 		return true
@@ -155,9 +162,10 @@ func _resum(cid: int) -> void:
 	var slots: Dictionary = equipped.get(cid, {})
 	var keys: Array = slots.keys()  # sorted: float sums stay deterministic
 	keys.sort()
+	var dbl := sim.passives.rule(sim.colonists.get_by_id(cid), "double_armor")  # region F11W3
 	for s in keys:
 		var g: GearItem = instances[slots[s]]
-		StatBlock.sum_into(p, g.stats, g.dur_mult(cfg))
+		StatBlock.sum_into(p, g.stats, g.dur_mult(cfg) * (2.0 if dbl and s != "weapon" else 1.0))  # F11W3: non-weapon totals x2
 	totals[cid] = p
 	resum_count += 1
 	# region E4: hand the summed vector to the combat caches (one resum per equip change)
@@ -257,7 +265,7 @@ func wear_hit_taken(cid: int) -> void:
 	for s in keys:
 		if s != "weapon":
 			var g: GearItem = instances[slots[s]]
-			set_durability(g.id, g.durability - loss)
+			set_durability(g.id, g.durability - loss * maxf(0.0, 1.0 + sim.passives.mod(sim.colonists.get_by_id(cid), "gear_wear")))  # F11W3
 
 
 ## A colonist attacked: the worn weapon loses `loss_per_attack`.
@@ -267,7 +275,7 @@ func wear_attack(cid: int) -> void:
 	var wid: int = equipped.get(cid, {}).get("weapon", -1)
 	if wid >= 0:
 		var g: GearItem = instances[wid]
-		set_durability(wid, g.durability - float(sim.defs.equipment["durability"].get("loss_per_attack", 0.0)))
+		set_durability(wid, g.durability - float(sim.defs.equipment["durability"].get("loss_per_attack", 0.0)) * maxf(0.0, 1.0 + sim.passives.mod(sim.colonists.get_by_id(cid), "gear_wear")))  # F11W3
 
 
 ## Plates needed to restore `item_id` to max: ceil(missing / max * repair_plates_full). 0 when undamaged or unknown.

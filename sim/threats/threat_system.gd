@@ -138,7 +138,7 @@ func _attract_mult() -> float:
 	var n := 0
 	for c in sim.colonists.list:
 		if c.alive:
-			sum += sim.perks.mod(c, "threat_attract")
+			sum += sim.perks.mod(c, "threat_attract") + sim.passives.mod(c, "threat_attract")  # F11W3
 			n += 1
 	return maxf(0.0, 1.0 + sum / float(n)) if n > 0 else 1.0
 
@@ -646,7 +646,7 @@ func _tick_enemy(e: Enemy) -> void:
 			elif e.attack_cd == 0:
 				e.attack_cd = int(e.def["attack_cooldown_ticks"])
 				# region perks: dodge_chance avoids melee hits
-				var dodge := sim.perks.mod(c, "dodge_chance")
+				var dodge := sim.perks.mod(c, "dodge_chance") + sim.passives.mod(c, "dodge_chance")  # F11W3
 				if dodge > 0.0 and not e.def.get("ranged", false) and sim.rng.randf() < dodge:
 					return
 				# endregion
@@ -1078,7 +1078,7 @@ func _c3_wind(e: Enemy) -> void:
 	for col in sim.colonists.list:
 		if not col.alive or not cells.has(col.cell) or _scripted("colonist_harmless"):
 			continue
-		var dodge := sim.perks.mod(col, "dodge_chance")
+		var dodge := sim.perks.mod(col, "dodge_chance") + sim.passives.mod(col, "dodge_chance")  # F11W3
 		if dodge > 0.0 and not e.def.get("ranged", false) and sim.rng.randf() < dodge:
 			continue
 		sim.health.apply_damage(col, sim.combat.resolve_hit(e.att_stats, sim.combat.def_of(col), dmg, str(e.def.get("dmg_type", "phys"))), "", str(e.def.get("damage_kind", "bite")))  # region E1
