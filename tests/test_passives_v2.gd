@@ -37,8 +37,7 @@ func test_flag_off() -> void:
 	var b: Dictionary = Defs.get_default().balance
 	assert_true(b.has("passives_v2_enabled"))
 	assert_false(bool(b["passives_v2_enabled"]))
-	assert_false("passives_v2" in Defs.get_default().get_property_list().map(func(p: Dictionary) -> String: return str(p["name"])),
-		"Defs must not load passives_v2.json while the flag is off")
+	assert_true(Defs.get_default().passives_v2.is_empty(), "Defs must not load passives_v2.json while the flag is off")  # F11: field exists since integration
 
 
 func test_data_valid_and_counts() -> void:
