@@ -56,12 +56,37 @@ func build(sim: Simulation, target: Dictionary, box: VBoxContainer) -> void:
 		add_bar(box, c.needs.rest, Color(0.4, 0.6, 0.95))
 	if c.mood != null:
 		add_line(box, "Mood %d / 100" % roundi(c.mood.value))
+	# region F11W4: Record button (hidden while passives v2 is off) + one line per rule flag
+	if sim.passives != null and sim.passives.enabled():
+		var pst := sim.passives.state_of(c)
+		var free := pst.marks_free() if pst != null else 0
+		var req: Callable = target.get("request_panel", Callable())
+		var pcid := c.id
+		var rb := Button.new()
+		rb.text = "Record%s" % ("  NEW +%d" % free if free > 0 else "")
+		rb.custom_minimum_size = Vector2(0, 64)
+		rb.focus_mode = Control.FOCUS_NONE
+		if free > 0:
+			rb.modulate = Color(0.95, 0.8, 0.3)
+		rb.pressed.connect(func() -> void:
+			if req.is_valid():
+				req.call("passives", pcid))
+		box.add_child(rb)
+		if pst != null:
+			var ptree := PassiveBoard.tree()
+			var rl: Array[String] = []
+			for r: String in ptree.rules(pst):
+				rl.append(str(ptree.rule_consumers().get(r, {}).get("rule", r)))
+			rl.sort()
+			for line in rl:
+				add_line(box, line, Color(1.0, 0.85, 0.6))
+	# endregion
 	# region PW3
-	var tl: Array = c.bio.get("traits", [])
-	for t: String in tl:
-		var td := sim.traits.def(t)
-		if not td.is_empty():
-			add_line(box, "%s - %s" % [td.get("name", t), td.get("desc", "")], Color(0.8, 0.85, 1.0))
+	var ts3 := TraitSheet.v3(sim)  # region F11W4: badge row + sheet when traits v3 is live, else the v2 text list
+	if ts3 != null:
+		TraitSheet.build_v3(ts3, c, box)
+	else:
+		TraitSheet.add_v2_list(sim, c, box)
 	if c.skills != null and not c.skills.levels.is_empty():
 		var ids: Array = c.skills.levels.keys()
 		ids.sort_custom(func(a: String, b: String) -> bool: return c.skills.level(a) > c.skills.level(b))

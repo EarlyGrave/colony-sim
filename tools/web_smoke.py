@@ -55,7 +55,7 @@ def main() -> int:
 	ok = True
 	with sync_playwright() as p:
 		br = p.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
-		for name, query in (("tutorial", ""), ("size250", "?size=250")):
+		for name, query in (("tutorial", ""), ("size250", "?size=250"), ("passives", "?passives=1")):  # F11W4: Record board open with flag on
 			ctx = br.new_context(viewport={"width": 844, "height": 390}, device_scale_factor=3, has_touch=True, is_mobile=True)
 			pg = ctx.new_page()
 			pg.on("console", lambda m, n=name: errors.append((n, m.text)) if m.type in ("error", "warning") and "GL Driver Message" not in m.text else None)

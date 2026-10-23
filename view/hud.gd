@@ -178,6 +178,10 @@ func _ready() -> void:
 		if pid == "petition" or pid == "dispatch" or pid == "shuttle" or pid == "beacons" or pid == "blocks" or pid == "ending" or pid == "orders":  # region W1  # region EV  # region S4  # region N4: blocks button appears with the first Standing change  # region E4: shown only while the sim exposes it
 			pb.visible = false
 
+	# region F11W4: the Record board opens from the colonist sheet only; its bar button stays hidden
+	if _panel_buttons.has("passives"):
+		_panel_buttons["passives"].visible = false
+	# endregion
 	_menu_btn = _button(speed_row, "More", Vector2(88, 64))
 	_menu_btn.pressed.connect(func() -> void: _menu_popup.visible = not _menu_popup.visible)
 	_menu_btn.visible = false
@@ -514,6 +518,7 @@ func bind(p_sim: Simulation) -> void:
 	_toasts.clear()
 	_message.text = ""
 	_letters.bind(p_sim, p_sim.bus)
+	_f11w4_bind(p_sim)  # region F11W4
 	if not _letters.letter_added.is_connected(_on_letter):
 		_letters.letter_added.connect(_on_letter)
 	_colonist_bar.bind(p_sim)
@@ -613,6 +618,8 @@ func open_panel_for(id: String, colonist_id: int, skill := "") -> void:
 		(p as PerkPanel).focus_colonist(colonist_id, skill)
 	elif p is GearScreen:  # region F8W2
 		(p as GearScreen).focus_colonist(colonist_id)
+	elif p is PassiveBoard:  # region F11W4
+		(p as PassiveBoard).focus_colonist(colonist_id)
 	_open_side(p, id)
 
 
@@ -1184,6 +1191,9 @@ func _o4_layout() -> void:
 	var wide := side_open and _side.has_meta("wide_sheet")  # region F8W2: gear screen takes the full width, thumb cluster hides
 	if wide:
 		sw = vp.x - O4_LEFT - 8.0
+	var full := side_open and _side.has_meta("full_screen")  # region F11W4: the Record board covers the whole screen
+	if full:
+		sw = vp.x - 16.0
 	_o4_cluster.visible = not wide
 	var limit := vp.x - 8.0 - ((sw + 8.0) if side_open else 0.0)  # right edge free for the thumb cluster
 	var menu_open := _menu_popup.visible
@@ -1229,6 +1239,9 @@ func _o4_layout() -> void:
 		_side.offset_right = -8.0
 		_side.offset_top = y0
 		_side.offset_bottom = -8.0
+		if full:  # region F11W4
+			_side.offset_top = 4.0
+			_side.offset_bottom = -4.0
 	# Top-left chip row: map chips, then the contract chip; the tutorial slot takes the rest.
 	var x := O4_LEFT
 	var slot_r := vp.x - 8.0 - ((sw + 8.0) if side_open else 0.0)
@@ -1910,4 +1923,21 @@ func _f10_opened(id: String) -> void:
 	if id == "gear_screen" or id == "petition" or id == "orders":
 		SeenFlags.mark("badge." + id)
 		_f10_badges(true)
+# endregion
+
+
+# region F11W4
+## Warden letter when an inmate is logged with a keystone (passives v2).
+func _f11w4_bind(p_sim: Simulation) -> void:
+	if p_sim.bus.has_signal("passive_allocated") and not p_sim.bus.is_connected("passive_allocated", _f11w4_on_passive):
+		p_sim.bus.connect("passive_allocated", _f11w4_on_passive)
+
+
+func _f11w4_on_passive(colonist_id: int, passive_id: String) -> void:
+	var d := PassiveBoard.tree().def_of(passive_id)
+	if sim == null or str(d.get("tier", "")) != "keystone":
+		return
+	var c := sim.colonists.get_by_id(colonist_id)
+	var who := c.display_name if c != null else "Inmate %d" % colonist_id
+	_letters.add("Warden: %s is logged as %s. %s" % [who, str(d.get("name", passive_id)), str(d.get("rule", ""))], "info")
 # endregion

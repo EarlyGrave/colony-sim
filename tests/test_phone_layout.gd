@@ -393,3 +393,49 @@ func test_new_badges_do_not_overlap_or_grow_buttons() -> void:
 	SeenFlags.reset()
 	SeenFlags.path = old_path
 # endregion
+
+
+# region F11W4
+func test_passive_board_fits_and_keystone_letter() -> void:
+	var game := _make_game()
+	game.sim.run_ticks(60)
+	var defs := game.sim.defs
+	var was: Variant = defs.balance.get("passives_v2_enabled", false)
+	defs.balance["passives_v2_enabled"] = true
+	var c: Colonist = game.sim.colonists.list[0]
+	c.skills.levels["mining"] = 3
+	game.sim.grant_passive_marks(c.id, 3, "test")
+	_each_size(func(size: Vector2i, sc: float) -> void:
+		var tag := "%dx%d@%.2f" % [size.x, size.y, sc]
+		game.hud.open_panel_for("passives", c.id)
+		_settle(game, size, sc)
+		var vp := game.hud.get_viewport().get_visible_rect().size
+		var sheet := game.hud._side.get_global_rect()
+		assert_true(sheet.position.x >= 0.0 and sheet.end.x <= vp.x + 1.0 and sheet.end.y <= vp.y + 1.0, "%s board %s in %s" % [tag, sheet, vp])
+		var pb := game.hud._side as PassiveBoard
+		pb._select("p_pit_beast_of_burden")
+		_settle(game, size, sc)
+		var inner := sheet.grow(-1.0)
+		if vp.y < 440.0:  # 844x390 at scale 1.0 is a stress size (a real phone is 993x459 logical); the board scrolls there
+			_drop_sheets(game)
+			return
+		for ctl: Control in [pb._left, pb._canvas]:
+			assert_true(inner.encloses(ctl.get_global_rect()), "%s %s %s inside %s (no vertical overflow)" % [tag, ctl.name, ctl.get_global_rect(), sheet])
+		assert_true(inner.encloses(pb._action_box.get_global_rect()), tag + " sheet actions visible")
+		for id: String in pb.node_buttons:
+			var b: Button = pb.node_buttons[id]
+			assert_true(b.size.x >= 63.5 and b.size.y >= 63.5, "%s node %s" % [tag, b.size])
+		_drop_sheets(game))
+	var n := game.hud._letters.entries.size()
+	game.hud._f11w4_on_passive(c.id, "p_pit_beast_of_burden")
+	assert_eq(game.hud._letters.entries.size(), n + 1, "keystone allocation posts a Warden letter")
+	game.hud._f11w4_on_passive(c.id, "p_pit_callouses")
+	assert_eq(game.hud._letters.entries.size(), n + 1, "minor passives post no letter")
+	defs.balance["passives_v2_enabled"] = was
+
+
+func test_record_bar_button_stays_hidden() -> void:
+	var game := _make_game()
+	var b: Button = game.hud._panel_buttons.get("passives")
+	assert_true(b != null and not b.visible, "Record bar button hidden (board opens from the colonist sheet)")
+# endregion

@@ -69,7 +69,9 @@ func _ready() -> void:
 	hud.o2_cell_rect = _r5x_cell_rect  # region R5X
 	EventBus.game_over.connect(_on_game_over_meta)  # region meta
 	EventBus.shuttle_won.connect(_sx_on_shuttle_won)  # region SX
+	_f11w4_web_flag()  # region F11W4
 	new_game(_initial_seed(), _web_size_opts(MetaStore.load_state().make_opts()))  # region meta
+	_f11w4_web_open()  # region F11W4
 	_setup_save_load()  # save-load
 	if not MetaStore.load_state().launched:  # region R5X: first ever launch shows the new-game dialog
 		_o3_open_dialog()
@@ -1085,4 +1087,27 @@ func _l2_tap(cell: Vector2i) -> bool:
 		splitter_panel.open(sim, cell, 8.0)
 		return true
 	return false
+# endregion
+
+
+# region F11W4
+## Web debug only: ?passives=1 turns passives v2 on for this session and opens the Record board on the first
+## inmate with 3 free marks (tools/web_smoke.py). No effect without the query parameter.
+var _f11w4_on := false
+
+
+func _f11w4_web_flag() -> void:
+	if OS.has_feature("web"):
+		var v: Variant = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('passives')")
+		if v != null and str(v) == "1":
+			_f11w4_on = true
+			Defs.get_default().balance["passives_v2_enabled"] = true
+
+
+func _f11w4_web_open() -> void:
+	if not _f11w4_on or sim == null or sim.colonists.list.is_empty():
+		return
+	var c: Colonist = sim.colonists.list[0]
+	sim.grant_passive_marks(c.id, 3, "debug")
+	hud.open_panel_for("passives", c.id)
 # endregion

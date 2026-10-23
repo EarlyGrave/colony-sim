@@ -23,6 +23,7 @@ const PANELS: Array = [
 	# slot 5
 	["research", "Research", "res://view/panels/research_panel.gd"],  # region R2d
 	# slot 6
+	["passives", "Record", "res://view/panels/passive_board.gd"],  # region F11W4 (opened from the colonist sheet; its bar button is hidden)
 	["gear_screen", "Gear", "res://view/panels/gear_screen.gd"],  # region F8
 	["orders", "Orders", "res://view/panels/regulation_card.gd"],  # region W1
 	["handbook", "?", "res://view/panels/handbook_panel.gd"],  # region O2
