@@ -6,4 +6,4 @@
 - `tests/test_bot_passives.gd`: 7 tests, green. `tests/qa_bot.gd` untouched (no change needed).
 - Results, flags ON, 60 days, seeds 1-3: 0 script errors, 161/169 marks spent (95%). Flag OFF: factory_bot_report seeds 1-3 identical to 9ad44f4.
 - Numbers: docs/balance/f11_passives_table.md. Bot rows are [STUB]: re-run after W2/W1/W3 land (0 keystones now because the stub has no deeds).
-- Not run here: quick/full suite (only test_bot_passives and the eval runs); run after merge.
+- Quick suite: 75 pass, 2 fail, both from the STUB command `allocate_passive` (test_qa_commands record check, test_contract_doc table row); W2 adds the real command + contract row, so they vanish when the stub is dropped. Full suite not run.
