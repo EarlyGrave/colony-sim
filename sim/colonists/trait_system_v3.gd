@@ -261,20 +261,18 @@ func event(c: Colonist, name: String, source := "") -> Array[String]:
 		return out
 	var counters: Dictionary = c.bio.get("trait_counters", {})
 	counters[name] = int(counters.get(name, 0)) + 1
-	for rule: Dictionary in cfg["acquire"]:
-		if str(rule.get("reset_on", "")) == name:
-			counters[str(rule["on"])] = 0
+	var ix: Dictionary = _rule_index().get(name, {})  # region F11W1: rules indexed by event name (perf at 250 inmates)
+	for rule: Dictionary in ix.get("reset", []):
+		counters[str(rule["on"])] = 0
 	c.bio["trait_counters"] = counters
-	for rule: Dictionary in cfg["lose"]:
-		if str(rule["on"]) != name or not has(c, str(rule["trait"])):
+	for rule: Dictionary in ix.get("lose", []):
+		if not has(c, str(rule["trait"])):
 			continue
 		if int(counters.get(name, 0)) >= int(rule.get("count", 1)):
 			if remove(c, str(rule["trait"]), source if source != "" else name):
 				out.append("-" + str(rule["trait"]))
 				counters[name] = 0 if rule.has("count") else int(counters.get(name, 0))
-	for rule: Dictionary in cfg["acquire"]:
-		if str(rule["on"]) != name:
-			continue
+	for rule: Dictionary in ix.get("acq", []):
 		var tid := str(rule["trait"])
 		if has(c, tid) or _superseded(c, tid) or int(counters.get(name, 0)) < int(rule.get("count", 1)):
 			continue
@@ -292,6 +290,32 @@ func event(c: Colonist, name: String, source := "") -> Array[String]:
 			add(c, removed, "ladder")  # could not step up: keep the lower rung
 	c.bio["trait_counters"] = counters
 	return out
+
+
+# region F11W1
+var _ix: Dictionary = {}
+
+
+## event name -> {reset: [acquire rules], lose: [lose rules], acq: [acquire rules]}, in file order.
+func _rule_index() -> Dictionary:
+	if not _ix.is_empty():
+		return _ix
+	for rule: Dictionary in cfg["acquire"]:
+		if rule.has("reset_on"):
+			_ix_list(str(rule["reset_on"]), "reset").append(rule)
+		_ix_list(str(rule["on"]), "acq").append(rule)
+	for rule: Dictionary in cfg["lose"]:
+		_ix_list(str(rule["on"]), "lose").append(rule)
+	return _ix
+
+
+func _ix_list(name: String, kind: String) -> Array:
+	if not _ix.has(name):
+		_ix[name] = {}
+	if not (_ix[name] as Dictionary).has(kind):
+		_ix[name][kind] = []
+	return _ix[name][kind]
+# endregion
 
 
 ## True when a higher rung of a ladder (`replaces` chain) is held: lower rungs never return.

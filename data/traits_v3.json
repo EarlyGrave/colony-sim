@@ -1,5 +1,33 @@
 {
 	"_comment": "Traits v3 (docs/gdd/03-colony/traits-v3/). NOT loaded by Defs unless balance.traits_v3_enabled is true. Effects are additive stats read via TraitSystemV3.mod(); every stat key must exist in `stats` (consumer registry). thought_<id>: -1.0 = ignore that thought, +1.0 = double. Rarity draw in file order, fixed rng draw count (see roll_birth).",
+	"aliases": {
+		"_comment": "v2 trait id -> v3 id (integration.md s4); empty string = dropped (skills carry over only).",
+		"strong": "t_hulking", "frail": "t_wiry", "handy": "", "careful": "t_methodical", "hasty": "t_reckless",
+		"slow_burner": "t_stoic", "lazy": "t_stoic", "green_thumb": "t_charge_poaching", "iron_stomach": "t_lean_years",
+		"delicate": "t_bleeder", "night_owl": "t_insomniac", "early_bird": "", "cold_blood": "t_dead_nerves",
+		"jittery": "t_paranoid", "done_time": "t_old_timer", "quick_study": "t_curious",
+		"essence_nose": "t_charge_essence_theft", "thick_hide": "t_second_skin", "loud_mouth": "t_agitator",
+		"ledger_eye": "t_charge_fraud", "scrapper": "t_charge_murder", "hardened": "t_hardened",
+		"resigned": "t_resigned", "settled": "t_settled"
+	},
+	"event_params": {
+		"_comment": "TraitEvents (sim/colonists/trait_events.gd) thresholds. sample_ticks: how often job types are sampled for needs/rival bonds.",
+		"despair_level": 80, "heavy_injury": 20, "standing_high": 70, "standing_low": 30,
+		"essence_radius": 6, "essence_items": ["essence_rounds", "essence_bloom"], "sample_ticks": 30,
+		"skill_seven": 7, "leaning_divisor": 4, "work_stats": {"mining": "mining_speed", "cleanup": "scrub_speed"}, "letter_title": "Warden", "bond_ids": ["t_cellmate", "t_rival"]
+	},
+	"letters": {
+		"_comment": "Warden voice, <= 70 chars. %s = inmate name, %s = trait name. special: ladder steps and legendary traits.",
+		"add": "%s is logged as %s.",
+		"remove": "%s: %s withdrawn.",
+		"special": {
+			"t_glowtouched": "%s glows faintly at night. Rations unchanged.",
+			"t_second_skin": "%s's skin has set hard. The file is amended.",
+			"t_hollow": "%s no longer answers to the count. Nothing is wrong.",
+			"t_echo": "%s repeats words nobody said. Noted.",
+			"t_old_timer": "%s has served longer than the Warden. Filed."
+		}
+	},
 	"schema": 3,
 	"rarity_weight": {"common": 30, "uncommon": 12, "rare": 5, "legendary": 1},
 	"slots": {

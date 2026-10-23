@@ -38,6 +38,7 @@ func add_thought(c: Colonist, id: String) -> bool:
 	var tv := float(def["value"])
 	if sim.traits != null:  # region PW2
 		tv *= maxf(0.0, 1.0 + sim.traits.mod(c, "thought_" + id))
+		tv *= sim.traits.thought_sign_mult(c, tv)  # region F11W1
 	m.thoughts.append({"id": id, "value": tv, "until": until})
 	_recalc(m, c)
 	sim.bus.thought_added.emit(c.id, id)
@@ -52,6 +53,7 @@ func _recalc(m: Mood, c: Colonist = null) -> void:
 	var v := float(cfg["base"])
 	if c != null and sim.traits != null:  # region PW2
 		v += sim.traits.mod(c, "mood_base")
+		v += sim.traits.aura(c, "mood")  # region F11W1: block mates' auras (0.0 with the flag off)
 	for t in m.thoughts:
 		v += float(t["value"])
 	m.value = clampf(v, 0.0, 100.0)
@@ -90,6 +92,7 @@ func _roll_break(c: Colonist, m: Mood) -> void:
 	var extreme := m.value < float(cfg["extreme_threshold"])
 	var chance := float(cfg["extreme_chance"] if extreme else cfg["minor_chance"])
 	chance *= maxf(0.0, 1.0 + sim.traits.mod(c, "break_chance"))  # region PW2
+	chance *= sim.traits.aura_break_mult(c)  # region F11W1
 	if sim.rng.randf() >= chance:
 		return
 	# region debt

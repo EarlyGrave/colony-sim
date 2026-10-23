@@ -53,6 +53,9 @@ func affinity(c: Colonist, role: String) -> float:
 	for t: String in c.bio.get("traits", []):
 		var tr: Dictionary = sim.defs.traits["traits"].get(t, {})
 		score += float((tr.get("role_affinity", {}) as Dictionary).get(role, 0.0)) * float(cfg["trait_weight"])
+	var v3r: Dictionary = cfg.get("v3_trait_roles", {})  # region F11W1: traits v3 ids
+	for t in sim.traits.ids_of(c):
+		score += float((v3r.get(t, {}) as Dictionary).get(role, 0.0)) * float(cfg["trait_weight"])
 	return score
 
 

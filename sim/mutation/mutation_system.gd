@@ -428,3 +428,5 @@ func _expose_colonists(n: int) -> void:
 			_exposure[col.id] = 0
 			if _rng.randf() < float(_cfg["illness_chance"]) * sim.traits.mutation_mult(col):  # region traits
 				sim.health.add_illness(col, str(_cfg["illness_id"]), float(_cfg["illness_severity"]), int(_cfg["illness_ticks"]))
+				if sim.trait_events != null:  # region F11W1: the essence ladder (Glowtouched -> Second Skin -> Hollow)
+					sim.trait_events.exposure_illness(col)

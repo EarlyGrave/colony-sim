@@ -27,7 +27,7 @@ static func speed(sim: Simulation, b: Building, op: Colonist) -> float:
 	if slot != "colonist":
 		return 0.0  # chip slot: deferred
 	var base := float(sim.defs.balance["research"]["bench_rate"])
-	return base * (0.5 + float(op.skills.level("crafting")) / 10.0)
+	return base * (0.5 + float(op.skills.level("crafting")) / 10.0) * sim.traits.research_mult(op)  # region F11W1
 
 
 static func add_progress(sim: Simulation, amount: float) -> void:

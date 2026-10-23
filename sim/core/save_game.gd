@@ -121,6 +121,8 @@ static func state_hash(sim: Simulation) -> int:
 	var pw: Array = sim.power.state_parts()  # region L3: only once a pole or generator exists
 	if not pw.is_empty():
 		parts.append(pw)
+	if sim.traits_v3 != null:  # region F11W1: trait ids/counters only when the flag is on
+		parts.append(sim.traits.state_parts())
 	if sim.tutorial != null:  # region O1: only in tutorial mode, so other hashes stay as they were
 		parts.append(sim.tutorial.state_parts())
 	if not sim.regulations.chosen.is_empty():  # region W1: absent until a slot was answered

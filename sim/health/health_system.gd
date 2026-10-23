@@ -27,6 +27,7 @@ func apply_damage(c: Colonist, amount: float, part := "", kind := "bite") -> Inj
 		return null
 	amount *= maxf(0.0, 1.0 + sim.perks.mod(c, "damage_taken"))  # region perks
 	amount *= sim.squads.role_mult(c.id, "dmg_taken_mult")  # region C1: Bulwark takes less
+	amount *= sim.traits.severity_mult(c, false)  # region F11W1
 	if amount <= 0.0:
 		return null
 	var h := state_of(c)
@@ -49,6 +50,7 @@ func apply_damage(c: Colonist, amount: float, part := "", kind := "bite") -> Inj
 func add_illness(c: Colonist, illness_id: String, severity: float, duration_ticks: int) -> Injury:
 	if not c.alive:
 		return null
+	severity *= sim.traits.severity_mult(c, true)  # region F11W1
 	var h := state_of(c)
 	var inj := Injury.new("illness", "torso", severity)
 	inj.heal_per_tick = severity / float(maxi(1, duration_ticks))
@@ -183,6 +185,7 @@ func _bleed_and_heal(c: Colonist, h: HealthState) -> void:
 	var rest_mult := float(cfg["doctor"]["bed_heal_mult"]) if h.bed_id >= 0 else 1.0  # region doctor
 	var keep: Array[Injury] = []
 	var own_heal := sim.perks.mod(c, "heal_speed")  # region perks: patient's own perk + tending doctor's
+	rest_mult *= sim.traits.heal_mult(c)  # region F11W1
 	for i in h.injuries:
 		var mult := 1.0 + i.tend_quality * bonus if i.tended else 1.0
 		mult *= maxf(0.0, 1.0 + own_heal + i.heal_bonus)

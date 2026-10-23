@@ -8,7 +8,14 @@
 	],
 	"affinity": {
 		"skill_weight": 1.0,
-		"trait_weight": 3.0
+		"trait_weight": 3.0,
+		"v3_trait_roles": {
+			"_comment": "F11W1: role affinity of traits v3 (x trait_weight). Read by SquadSystem.affinity when traits_v3_enabled.",
+			"t_hulking": {"bulwark": 1}, "t_dead_nerves": {"bulwark": 1}, "t_second_skin": {"bulwark": 1},
+			"t_reckless": {"lancer": 1}, "t_sharp_ears": {"lancer": 1}, "t_charge_murder": {"lancer": 1},
+			"t_shellshocked": {"lancer": 1}, "t_methodical": {"medic": 1}, "t_fast_healer": {"medic": 1},
+			"t_peacemaker": {"medic": 1}, "t_stoic": {"bulwark": 1}
+		}
 	},
 	"order": [
 		"bulwark",

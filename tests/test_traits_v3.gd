@@ -18,7 +18,7 @@ func test_flag_off_means_not_loaded() -> void:
 	var sim := make_sim(1, true, 24, 24, peaceful_defs())
 	assert_false(bool(sim.defs.balance.get("traits_v3_enabled", false)), "flag must be off")
 	assert_true(sim.defs.traits_v3.is_empty(), "Defs must not load traits_v3.json while the flag is off")
-	assert_false("traits_v3" in sim, "Simulation has no traits_v3 member yet")
+	assert_true(sim.traits_v3 == null, "Simulation.traits_v3 stays null while the flag is off")
 	for c in _gen(sim, 5):
 		assert_false(c.bio.has("traits_v3"), "generator untouched")
 

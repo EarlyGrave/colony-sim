@@ -5,21 +5,32 @@ extends RefCounted
 
 var sim: Simulation
 var cfg: Dictionary
+var v3: TraitSystemV3 = null  # region F11W1: set when balance.traits_v3_enabled (this class is then a facade)
+var _aura: Dictionary = {}  # region F11W1
+var _aura_bucket := -1
+var _passives: Object = null  # region F11W1: sim.passives (PassiveSystem), looked up lazily
 
 
 func _init(p_sim: Simulation) -> void:
 	sim = p_sim
 	cfg = sim.defs.traits
+	v3 = sim.traits_v3  # region F11W1
+	if v3 != null:  # region F11W1: TraitEvents owns acquisition, the v2 listeners stay off
+		return
 	sim.listen(sim.bus.colonist_rescued, _on_rescued)
 	sim.listen(sim.bus.day_started, _on_day)
 	sim.listen(sim.bus.mood_break_started, _on_break)
 
 
 func resolve(id: String) -> String:
+	if v3 != null:  # region F11W1: v2 ids map to v3 ids ("" = dropped)
+		return str(v3.cfg.get("aliases", {}).get(id, id))
 	return str(cfg.get("aliases", {}).get(id, id))
 
 
 func def(id: String) -> Dictionary:
+	if v3 != null:  # region F11W1
+		return v3.def(resolve(id))
 	return cfg["traits"].get(resolve(id), {})
 
 
@@ -27,6 +38,8 @@ func def(id: String) -> Dictionary:
 func mod(c: Colonist, stat: String) -> float:
 	if c == null:
 		return 0.0
+	if v3 != null:  # region F11W1: v3 traits + passives (passives are additive, 0.0 when off)
+		return v3.mod(c, stat) + passive_mod(c, stat)
 	var s := 0.0
 	for t: String in c.bio.get("traits", []):
 		s += float((def(t).get("effects", {}) as Dictionary).get(stat, 0.0))
@@ -36,6 +49,8 @@ func mod(c: Colonist, stat: String) -> float:
 func has_tag(c: Colonist, tag: String) -> bool:
 	if c == null:
 		return false
+	if v3 != null:  # region F11W1
+		return v3.has_tag(c, tag)
 	for t: String in c.bio.get("traits", []):
 		if (def(t).get("tags", []) as Array).has(tag):
 			return true
@@ -95,10 +110,14 @@ func move_bonus(c: Colonist) -> float:
 
 
 func has(c: Colonist, id: String) -> bool:
+	if v3 != null:  # region F11W1
+		return v3.has(c, resolve(id))
 	return c != null and (c.bio.get("traits", []) as Array).has(id)
 
 
 func acquired_count(c: Colonist) -> int:
+	if v3 != null:  # region F11W1
+		return v3.count_category(c, "scar") + v3.count_category(c, "mutation") + v3.count_category(c, "social")
 	var n := 0
 	for t: String in c.bio.get("traits", []):
 		if bool(def(t).get("acquired", false)):
@@ -108,6 +127,9 @@ func acquired_count(c: Colonist) -> int:
 
 ## Grants an acquired trait: false if unknown, already owned, or the acquired cap is reached.
 func grant(c: Colonist, id: String) -> bool:
+	if v3 != null:  # region F11W1: quests grant by id; v2 ids are aliased
+		var tid := resolve(id)
+		return tid != "" and v3.add(c, tid, "quest")
 	var d := def(id)
 	if c == null or not c.alive or d.is_empty() or not bool(d.get("acquired", false)) or has(c, id):
 		return false
@@ -183,3 +205,114 @@ func roll(rng: RandomNumberGenerator, block: String) -> Array[String]:
 				chosen.append(id)
 				break
 	return chosen
+
+
+# region F11W1
+## sim.passives.mod(c, stat) once PassiveSystem exists (F11W2), else 0.0. Object.get: no hard dependency.
+func passive_mod(c: Colonist, stat: String) -> float:
+	if _passives == null:
+		_passives = sim.get("passives")
+		if _passives == null:
+			return 0.0
+	return float(_passives.call("mod", c, stat))
+
+
+## Traits-v3-only stat (no passives): hooks for stats the passives worker adds on its own lines. 0.0 when off.
+func v3_mod(c: Colonist, stat: String) -> float:
+	return v3.mod(c, stat) if v3 != null and c != null else 0.0
+
+
+## v3 trait ids of `c` (empty when the flag is off).
+func ids_of(c: Colonist) -> Array[String]:
+	return v3.list(c) if v3 != null else ([] as Array[String])
+
+
+## Deterministic state for SaveGame.state_hash (only called with the flag on).
+func state_parts() -> Array:
+	var out: Array = []
+	for c in sim.colonists.list:
+		var counters: Dictionary = c.bio.get("trait_counters", {})
+		var keys := counters.keys()
+		keys.sort()
+		var cp: Array = []
+		for k in keys:
+			cp.append([k, counters[k]])
+		out.append([c.id, c.bio.get("traits_v3", []), cp])
+	return out
+
+# --- stat consumers added by F11W1: every helper returns the neutral value (1.0 / 0 / 0.0) with the flag off ---
+
+## Work-speed multiplier for a work type (mining_speed / scrub_speed); data: traits_v3.json event_params.work_stats.
+func work_mult(c: Colonist, work_type: String) -> float:
+	if v3 == null:
+		return 1.0
+	var stat := str((v3.cfg.get("event_params", {}).get("work_stats", {}) as Dictionary).get(work_type, ""))
+	return 1.0 if stat == "" else maxf(0.1, 1.0 + v3.mod(c, stat))
+
+
+func research_mult(c: Colonist) -> float:
+	return 1.0 if v3 == null else maxf(0.1, 1.0 + v3.mod(c, "research_speed"))
+
+
+func heal_mult(c: Colonist) -> float:
+	return 1.0 if v3 == null else v3.heal_mult(c)
+
+
+func severity_mult(c: Colonist, illness: bool) -> float:
+	return 1.0 if v3 == null else v3.severity_mult(c, illness)
+
+
+func target_weight_mult(c: Colonist) -> float:
+	return 1.0 if v3 == null else v3.target_weight_mult(c)
+
+
+## Multiplier on thoughts by sign (thought_neg / thought_pos), on top of the per-thought stat.
+func thought_sign_mult(c: Colonist, value: float) -> float:
+	if v3 == null:
+		return 1.0
+	return maxf(0.0, 1.0 + v3.mod(c, "thought_neg" if value < 0.0 else "thought_pos"))
+
+
+## False while the alarm has run for fewer than `alarm_delay` ticks (Heavy Sleeper reacts late).
+func alarm_ready(c: Colonist) -> bool:
+	if v3 == null or sim.trait_events == null:
+		return true
+	var d := v3.alarm_delay(c)
+	return d <= 0 or sim.tick - sim.trait_events.alarm_since >= d
+
+
+## Sum of `aura_<stat>` (mood / break) from the living block mates of `c`; cached per 30-tick bucket.
+func aura(c: Colonist, stat: String) -> float:
+	if v3 == null or sim.blocks == null:
+		return 0.0
+	var bucket := sim.tick / 30
+	if bucket != _aura_bucket:
+		_aura_bucket = bucket
+		_aura.clear()
+		for o in sim.colonists.list:
+			if not o.alive:
+				continue
+			var b := sim.blocks.block_of(o)
+			var d: Dictionary = _aura.get(b, {})
+			for st: String in ["mood", "break"]:
+				d[st] = float(d.get(st, 0.0)) + v3.mod(o, "aura_" + st)
+			_aura[b] = d
+	var own := v3.mod(c, "aura_" + stat)
+	return float((_aura.get(sim.blocks.block_of(c), {}) as Dictionary).get(stat, 0.0)) - own
+
+
+func aura_break_mult(c: Colonist) -> float:
+	return 1.0 if v3 == null else maxf(0.0, 1.0 + aura(c, "break"))
+
+
+## Block leaning (-2..2) for a path: the data value plus the members' leaning_<path> votes / divisor.
+func lean_adjust(block: String, path: String, l: int) -> int:
+	if v3 == null or sim.blocks == null:
+		return l
+	var votes := 0.0
+	for c in sim.colonists.list:
+		if c.alive and sim.blocks.block_of(c) == block:
+			votes += v3.mod(c, "leaning_" + path)
+	return clampi(l + roundi(votes / float(v3.cfg.get("event_params", {}).get("leaning_divisor", 4))), -2, 2)
+# endregion
+
