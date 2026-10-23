@@ -26,8 +26,10 @@ func tick() -> void:
 		if not c.alive:
 			continue
 		var n := state_of(c)
-		n.food = maxf(0.0, n.food - float(cfg["food"]["decay_per_tick"]) * maxf(0.0, 1.0 + sim.traits.mod(c, "hunger")))  # region PW2
-		if c.job == null or c.job.type != "sleep":
+		n.food = maxf(0.0, n.food - float(cfg["food"]["decay_per_tick"]) * maxf(0.0, 1.0 + sim.traits.mod(c, "hunger") + sim.passives.mod(c, "hunger")))  # region PW2 + F11W3
+		if sim.passives.rule(c, "no_sleep"):  # region F11W3: rest pinned at 1.0
+			n.rest = 1.0
+		elif c.job == null or c.job.type != "sleep":
 			n.rest = maxf(0.0, n.rest - float(cfg["rest"]["decay_per_tick"]))
 		_ration(c, n)
 		_starve(c, n)
@@ -38,7 +40,7 @@ func tick() -> void:
 func rest_tick(c: Colonist, in_bed: bool) -> void:
 	var n := state_of(c)
 	var key := "gain_bed" if in_bed else "gain_floor"
-	n.rest = minf(1.0, n.rest + float(cfg["rest"][key]))
+	n.rest = minf(1.0, n.rest + float(cfg["rest"][key]) * maxf(0.0, 1.0 + sim.passives.mod(c, "rest_gain")))  # F11W3
 
 
 func add_food(c: Colonist, nutrition: float) -> void:
@@ -97,7 +99,7 @@ func _decide(c: Colonist, n: NeedsState) -> void:
 		n.next_check = sim.tick + int(cfg["retry_ticks"])
 	if jt == "sleep":
 		return
-	if n.rest < sleep_threshold():
+	if n.rest < sleep_threshold() and not sim.passives.rule(c, "no_sleep"):  # F11W3
 		sim.jobs.request_override(c, _sleep_job(c))
 
 

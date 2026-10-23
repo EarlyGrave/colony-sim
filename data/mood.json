@@ -12,6 +12,7 @@
 		"quest_cheer": {"label": "Good news from Dispatch", "value": 5, "duration_days": 1.5},
 		"silenced_prayer": {"label": "Prayer silenced by the Warden", "value": -6, "duration_days": 2.0},
 		"injured": {"label": "Hurt", "value": -8, "duration_days": 0.0},
+		"night_terrors": {"label": "Night terrors", "value": -15, "duration_days": 1.0},
 		"colonist_died": {"label": "A colonist died", "value": -12, "duration_days": 3.0},
 		"wave_survived": {"label": "Survived the attack", "value": 6, "duration_days": 2.0},
 		"planet_doomed": {"label": "The planet is dying", "value": -5, "duration_days": 0.0},
