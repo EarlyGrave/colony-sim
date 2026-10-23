@@ -1,6 +1,6 @@
 # Passives v2 — earned passive abilities ("marks"), revision 2
 
-Status: `[DESIGNED]` + code done, not integrated. `data/passives_v2.json` (schema 3), `sim/perks/passive_tree_v2.gd`,
+Status: `[BUILT, flag OFF: passives_v2_enabled]` (code + data on main, not integrated). `data/passives_v2.json` (schema 3), `sim/perks/passive_tree_v2.gd`,
 `tests/test_passives_v2.gd` (15 tests), icons `assets/sprites/passive_*.png` (gen_art `# region passives_v2`).
 Flag `balance.passives_v2_enabled` = **false** (zero behaviour change, goldens byte-identical). Defs does **not**
 load the file; `PassiveTreeV2.load_default()` reads it (integration adds one line to `Defs.load_from`).

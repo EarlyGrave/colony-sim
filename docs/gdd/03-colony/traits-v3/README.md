@@ -1,6 +1,6 @@
 # Traits v3 — "The File" (design, code done, NOT integrated)
 
-Status: `[DESIGNED + MODULE]` — `data/traits_v3.json` (66 traits), `sim/colonists/trait_system_v3.gd`,
+Status: `[BUILT, flag OFF: traits_v3_enabled]` (module on main, not integrated) — `data/traits_v3.json` (66 traits), `sim/colonists/trait_system_v3.gd`,
 `tests/test_traits_v3.gd` (11 tests), icons `assets/sprites/trait_*.png` (`tools/gen_art.py`
 `# region traits_v3`). Gated by `balance.traits_v3_enabled = false`: Defs does not load the file, Simulation
 has no `traits_v3` member, goldens are byte-identical. Decided without owner, review.
