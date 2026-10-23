@@ -45,7 +45,7 @@ func has_tag(c: Colonist, tag: String) -> bool:
 # region traits F3c: one-line consumers for the stats that used to be text-only
 ## Carry capacity with the "carry" stat (+25% rounds to whole items, never below the base).
 func carry_cap(c: Colonist, base: int) -> int:
-	return maxi(base, roundi(float(base) * (1.0 + mod(c, "carry"))))
+	return maxi(base, roundi(float(base) * (1.0 + mod(c, "carry") + sim.passives.mod(c, "carry"))))  # F11W3
 
 
 ## Multiplier on xp gained in `skill`: xp_mult_all + xp_mult_<skill>.
@@ -85,7 +85,15 @@ func quality_shift(c: Colonist) -> int:
 
 ## F4e: debt installment size for this colonist (installment_pct -0.05 = 5% smaller), at least 1.
 func installment(c: Colonist, base: int) -> int:
-	return maxi(1, roundi(float(base) * maxf(0.0, 1.0 + mod(c, "installment_pct"))))
+	# region F11W3: no_installment / off_roll -> 0 (never overdue); installment_pct cap -0.4 on the traits + passives sum
+	if sim.passives.rule(c, "no_installment") or sim.passives.rule(c, "off_roll"):
+		return 0
+	var pct := mod(c, "installment_pct")
+	var pct_p := sim.passives.mod(c, "installment_pct")
+	if pct_p != 0.0:
+		pct = maxf(-0.4, pct + pct_p)
+	# endregion
+	return maxi(1, roundi(float(base) * maxf(0.0, 1.0 + pct)))
 
 
 ## F4e: extra movement gain per tick (move_speed +0.15 = 15% faster).

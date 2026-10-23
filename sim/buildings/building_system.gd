@@ -147,10 +147,12 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 		need = maxi(1, roundi(need / sim.traits.refine_speed(operator)))  # region traits
 	if b.progress < need:
 		return false
+	if _essence_craft_refused(b, operator):  # region F11W3: essence_craft needs +1 stored essence_ore
+		return false
 	b.progress = 0
 	# region perks
 	var saved_item := ""
-	var craft_save := -sim.perks.mod(operator, "craft_input")
+	var craft_save := -(sim.perks.mod(operator, "craft_input") + sim.passives.mod(operator, "craft_input"))  # F11W3
 	if craft_save > 0.0 and sim.rng.randf() < craft_save:
 		for item in b.recipe["inputs"]:  # first ingredient is spared one unit
 			saved_item = str(item)
@@ -171,7 +173,7 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 			if sim.perks.consume_flag(operator, "no_waste_next_batch"):
 				n = 0
 			else:
-				n = PerkHooks.scaled(operator, "waste_mult", float(n), 1.0 + sim.perks.mod(operator, "waste_mult"))
+				n = PerkHooks.scaled(operator, "waste_mult", float(n), 1.0 + sim.perks.mod(operator, "waste_mult") + sim.passives.mod(operator, "waste_mult"))  # F11W3
 				n = _research_waste(n)  # region R2a: finished techs add waste
 				n = sim.chips.scale_waste(b, n)  # region T4
 		elif b.recipe_id == "refine_essence":  # region crises
@@ -190,17 +192,52 @@ func work(b: Building, steps := 1, operator: Colonist = null) -> bool:
 	if b.recipe.has("gear_craft") and operator != null:  # region E5
 		sim.equipment.craft(operator.id, str(b.recipe["gear_craft"]))  # region E5
 	refined_batches += 1
-	wear(b, float(b.def.get("wear_per_batch", 0.0)) * sim.traits.breakage_mult(operator))  # region traits
+	wear(b, float(b.def.get("wear_per_batch", 0.0)) * sim.traits.breakage_mult(operator) * maxf(0.0, 1.0 + sim.passives.mod(operator, "machine_breakage")))  # region traits + F11W3
 	batch_operator = operator  # region perks
 	sim.bus.batch_refined.emit(b.id, b.recipe_id)
 	if operator != null:  # region F3
 		sim.colonists.rec(operator)["refined"] += 1
 		sim.colonists.record_changed(operator)
 	batch_operator = null
+	_passive_batch_rules(b, operator)  # region F11W3
 	if not first_refine_done:
 		first_refine_done = true
 		sim.bus.first_refine_done.emit()
 	return true
+
+
+# region F11W3: passive keystone rules essence_craft, burns
+func _is_craft(b: Building) -> bool:
+	return b.def_id == "workbench" or b.recipe.has("gear_craft")
+
+
+## True when `operator` holds essence_craft, runs a craft and has no stored essence_ore to add (batch refused).
+func craft_refused_for(b: Building, operator: Colonist) -> bool:
+	return operator != null and sim.passives.rule(operator, "essence_craft") and _is_craft(b) \
+		and sim.items.count_stored("essence_ore") <= 0
+
+
+func _essence_craft_refused(b: Building, operator: Colonist) -> bool:
+	if craft_refused_for(b, operator):
+		return true
+	if operator != null and sim.passives.rule(operator, "essence_craft") and _is_craft(b):
+		if sim.items.consume_stored("essence_ore", 1, b.cell):
+			sim.ledger.record_consumed("essence_ore", 1, "recipe")
+	return false
+
+
+func _passive_batch_rules(b: Building, operator: Colonist) -> void:
+	if operator == null or not sim.passives.enabled():
+		return
+	if sim.passives.rule(operator, "essence_craft") and _is_craft(b):
+		sim.contamination.add(0.25)
+	if sim.passives.rule(operator, "burns"):
+		var counters := sim.passives.state_of(operator).counters
+		var n := int(counters.get("burn_batches", 0)) + 1
+		counters["burn_batches"] = n
+		if n % 10 == 0:
+			sim.health.apply_damage(operator, 0.1 * operator.max_hp, "torso", "burn")
+# endregion
 
 
 ## Scales a waste amount by finished techs; the fraction is rolled on sim.rng (only when mult != 1).
@@ -424,7 +461,7 @@ func complete_blueprint(bp: Blueprint, builder: Colonist = null) -> Building:
 	for item: String in bp.def["cost"]:
 		var n := int(bp.def["cost"][item])
 		# region perks: build_cost spares a fraction of the materials (returned to the ground)
-		var save_frac := -sim.perks.mod(builder, "build_cost")
+		var save_frac := -(sim.perks.mod(builder, "build_cost") + sim.passives.mod(builder, "build_cost"))  # F11W3
 		var spared := mini(n, PerkHooks.scaled(builder, "build_cost", float(n), save_frac)) if save_frac > 0.0 else 0
 		refunds[item] = spared
 		# endregion
@@ -434,7 +471,8 @@ func complete_blueprint(bp: Blueprint, builder: Colonist = null) -> Building:
 	if b == null:  # cannot happen: the cells were reserved
 		return null
 	# region perks
-	b.max_hp *= 1.0 + sim.perks.mod(builder, "building_hp")
+	var hp_p := sim.passives.mod(builder, "building_hp")  # region F11W3 (clamped >= 0.2 once a passive moves it)
+	b.max_hp *= (1.0 + sim.perks.mod(builder, "building_hp")) if hp_p == 0.0 else maxf(0.2, 1.0 + sim.perks.mod(builder, "building_hp") + hp_p)
 	b.hp = b.max_hp
 	for item: String in refunds:
 		if int(refunds[item]) > 0:

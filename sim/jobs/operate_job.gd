@@ -25,7 +25,7 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.RUNNING
 	# region perks
 	var stat := "operate_speed" if work_type == "operating" else "craft_speed"
-	_acc += sim.jobs.work_tick(c, work_type) * maxf(0.0, 1.0 + sim.perks.mod(c, stat))
+	_acc += sim.jobs.work_tick(c, work_type) * maxf(0.0, 1.0 + sim.perks.mod(c, stat) + sim.passives.mod(c, stat))  # F11W3
 	# endregion
 	var steps := int(_acc)
 	_acc -= steps
