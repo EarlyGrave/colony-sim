@@ -291,16 +291,3 @@ func _remove(c: Colonist, reason: String) -> void:
 	c.hidden = true
 	gone[c.id] = reason
 
-
-# STUB F11W2 (drop on merge): books n units as paid without consuming items.
-func credit(c: Colonist, n: int) -> void:
-	var st := state_of(c) if c != null else null
-	if st == null or n <= 0 or st.remaining() <= 0:
-		return
-	n = mini(n, st.remaining())
-	st.paid += n
-	st.period_paid += n
-	if st.remaining() == 0:
-		st.pending_choice = true
-		st.despair = 0.0
-		sim.bus.debt_paid.emit(c.id)
