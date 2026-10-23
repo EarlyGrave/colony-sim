@@ -56,7 +56,7 @@ func test_flag_off_is_inert() -> void:
 	assert_eq(sim.passives.mod(c, "mining_speed"), 0.0)
 	assert_false(sim.passives.rule(c, "no_armor"))
 	assert_true(sim.passives.state_of(c) == null)
-	assert_true(c.passives == null, "no state is created while off")
+	assert_true(sim.passives.peek(c) == null, "no state is created while off")
 	assert_eq(sim.passives.can_allocate(c, "p_x"), "off")
 	assert_false(sim.allocate_passive(c.id, "p_x"))
 	assert_eq(sim.grant_passive_marks(c.id, 5), 0)
@@ -71,15 +71,15 @@ func test_milestones_and_baseline() -> void:
 	c.skills.levels[sk] = 6  # a veteran: joined at L6 -> milestones <= 6 count as credited
 	c.skills.mark_joined()
 	sim.passives.state_of(c)
-	assert_eq(c.passives.marks_earned, 0 + _others_credit(c, sk), "veteran earns no mark for old levels")
-	var before := c.passives.marks_earned
+	assert_eq(sim.passives.peek(c).marks_earned, 0 + _others_credit(c, sk), "veteran earns no mark for old levels")
+	var before := sim.passives.peek(c).marks_earned
 	sim.bus.skill_leveled.emit(c.id, sk, 7)
-	assert_eq(c.passives.marks_earned, before, "L7 is no milestone")
+	assert_eq(sim.passives.peek(c).marks_earned, before, "L7 is no milestone")
 	c.skills.levels[sk] = 10
 	sim.bus.skill_leveled.emit(c.id, sk, 10)
-	assert_eq(c.passives.marks_earned, before + 3, "L10 milestone = 3 marks")
+	assert_eq(sim.passives.peek(c).marks_earned, before + 3, "L10 milestone = 3 marks")
 	sim.bus.skill_leveled.emit(c.id, sk, 10)
-	assert_eq(c.passives.marks_earned, before + 3, "credited once")
+	assert_eq(sim.passives.peek(c).marks_earned, before + 3, "credited once")
 
 
 func _others_credit(c: Colonist, _skill: String) -> int:
@@ -106,12 +106,12 @@ func test_deeds_and_counters() -> void:
 	# quiet days: a break resets the counter
 	for i in 5:
 		sim.bus.day_started.emit(i + 1)
-	assert_eq(int(c.passives.counters["quiet_days"]), 5)
+	assert_eq(int(sim.passives.peek(c).counters["quiet_days"]), 5)
 	sim.bus.mood_break_started.emit(c.id, "wander")
-	assert_eq(int(c.passives.counters["quiet_days"]), 0)
+	assert_eq(int(sim.passives.peek(c).counters["quiet_days"]), 0)
 	for i in 30:
 		sim.bus.day_started.emit(i + 10)
-	assert_true(c.passives.deeds.has("d_thirty_quiet"))
+	assert_true(sim.passives.peek(c).deeds.has("d_thirty_quiet"))
 
 
 func test_debt_credit_clears_and_awards() -> void:
@@ -122,8 +122,8 @@ func test_debt_credit_clears_and_awards() -> void:
 	var m0 := sim.passives.marks_free(c)
 	assert_true(sim.debt.credit(c, st.remaining()), "credit books the whole debt without items")
 	assert_eq(st.remaining(), 0)
-	assert_true(c.passives.deeds.has("d_debt_cleared"), "Paid in Full")
-	assert_true(c.passives.deeds.has("d_first_installment"))
+	assert_true(sim.passives.peek(c).deeds.has("d_debt_cleared"), "Paid in Full")
+	assert_true(sim.passives.peek(c).deeds.has("d_first_installment"))
 	assert_gt(sim.passives.marks_free(c), m0 + 3)
 	assert_false(sim.debt.credit(c, 5), "nothing left to credit")
 
@@ -173,8 +173,8 @@ func test_respec_costs_essence_and_locks() -> void:
 	assert_gt(stock0, 0.0, "crate gives essence")
 	assert_true(sim.respec_passives(c.id))
 	assert_eq(sim.items.count_stored("refined_essence"), stock0 - int(cost["count"]))
-	assert_true(c.passives.allocated.is_empty())
-	assert_eq(sim.passives.marks_free(c), c.passives.marks_earned, "all marks back")
+	assert_true(sim.passives.peek(c).allocated.is_empty())
+	assert_eq(sim.passives.marks_free(c), sim.passives.peek(c).marks_earned, "all marks back")
 	assert_eq(sim.passives.can_allocate(c, id), "locked", "3-day retraining lockout")
 	assert_false(sim.respec_passives(c.id), "nothing to forget")
 	sim.tick += 3 * sim.ticks_per_day + 1
@@ -192,7 +192,7 @@ func test_respec_costs_essence_and_locks() -> void:
 	sim2.items._stored_valid = false
 	assert_eq(sim2.passives.can_respec(c2), "no_essence")
 	assert_false(sim2.respec_passives(c2.id))
-	assert_true(c2.passives.allocated.has(id2))
+	assert_true(sim2.passives.peek(c2).allocated.has(id2))
 
 
 func test_keystone_cap_and_exclusion() -> void:
@@ -280,13 +280,13 @@ func test_save_round_trip_keeps_marks_and_allocations() -> void:
 	var sim2: Simulation = res["sim"]
 	_sims.append(sim2)
 	var c2 := sim2.colonists.get_by_id(c.id)
-	assert_eq(c2.passives.allocated, c.passives.allocated)
-	assert_eq(c2.passives.marks_earned, c.passives.marks_earned)
+	assert_eq(sim2.passives.peek(c2).allocated, sim.passives.peek(c).allocated)
+	assert_eq(sim2.passives.peek(c2).marks_earned, sim.passives.peek(c).marks_earned)
 	assert_eq(SaveGame.state_hash(sim2), SaveGame.state_hash(sim))
 	assert_eq(sim2.passives.state_parts(), sim.passives.state_parts())
 	# to_dict / from_dict is lossless on its own too
-	var st2 := PassiveTreeV2.State.from_dict(c.passives.to_dict())
-	assert_eq(sim.passives.tree.state_hash(st2), sim.passives.tree.state_hash(c.passives))
+	var st2 := PassiveTreeV2.State.from_dict(sim.passives.peek(c).to_dict())
+	assert_eq(sim.passives.tree.state_hash(st2), sim.passives.tree.state_hash(sim.passives.peek(c)))
 
 
 func test_dossier_carry() -> void:
@@ -325,8 +325,8 @@ func test_earning_budget_three_seeds() -> void:
 				bot.after()
 			var best := 0
 			for c in sim.colonists.list:
-				if c.alive and c.passives != null:
-					best = maxi(best, c.passives.marks_earned)
+				if c.alive and sim.passives.peek(c) != null:
+					best = maxi(best, sim.passives.peek(c).marks_earned)
 			best_at[day] = best
 		sim.dispose()
 		if sim.game_over_reason != "":

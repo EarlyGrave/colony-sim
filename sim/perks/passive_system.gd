@@ -1,13 +1,15 @@
 class_name PassiveSystem
 extends RefCounted
 ## Passives v2 live system (docs/gdd/03-colony/passives-v2/). Thin wrapper over PassiveTreeV2:
-## per-inmate State on Colonist.passives, bus listeners that earn marks, allocation commands,
+## per-inmate State (kept in _states by colonist id), bus listeners that earn marks, allocation commands,
 ## keystone side effects. Event-driven (no tick), no rng. With balance.passives_v2_enabled off:
 ## mod() = 0.0, rule() = false, nothing listens, nothing is hashed.
 
 var sim: Simulation
 var tree: PassiveTreeV2 = null
 var _on := false
+## colonist id -> State. Kept here, not on Colonist: golden part dumps serialise every Colonist property.
+var _states: Dictionary = {}
 
 
 func _init(p_sim: Simulation) -> void:
@@ -34,16 +36,18 @@ func enabled() -> bool:
 
 ## Sum of passive effects for `stat` (0.0 when off / no state).
 func mod(c: Colonist, stat: String) -> float:
-	if not _on or c == null or c.passives == null:
+	if not _on or c == null:
 		return 0.0
-	return tree.mod(c.passives, stat)
+	var st: PassiveTreeV2.State = _states.get(c.id)
+	return tree.mod(st, stat) if st != null else 0.0
 
 
 ## True when the inmate holds a keystone carrying rule flag `x`.
 func rule(c: Colonist, x: String) -> bool:
-	if not _on or c == null or c.passives == null:
+	if not _on or c == null:
 		return false
-	return tree.has_rule(c.passives, x)
+	var st: PassiveTreeV2.State = _states.get(c.id)
+	return st != null and tree.has_rule(st, x)
 
 
 ## Per-inmate state; created on demand (milestones up to the current levels are credited).
@@ -51,23 +55,23 @@ func rule(c: Colonist, x: String) -> bool:
 func state_of(c: Colonist) -> PassiveTreeV2.State:
 	if not _on or c == null:
 		return null
-	if c.passives == null:
+	if not _states.has(c.id):
 		var st := PassiveTreeV2.State.new()
-		c.passives = st
+		_states[c.id] = st
 		if c.skills != null:
 			for sk: String in c.skills.levels:
 				tree.set_baseline(st, sk, c.skills.join_level(sk))
 				tree.on_skill_level(st, sk, c.skills.level(sk))
 		if sim.colonists != null:
 			tree.check_records(st, sim.colonists.rec(c))
-	return c.passives
+	return _states[c.id]
 
 
 func has_state() -> bool:
 	if not _on:
 		return false
-	for c in sim.colonists.list:
-		if _active(c):
+	for id: int in _states:
+		if _active(_states[id]):
 			return true
 	return false
 
@@ -77,8 +81,13 @@ func marks_free(c: Colonist) -> int:
 	return st.marks_free() if st != null else 0
 
 
-func _active(c: Colonist) -> bool:
-	return c.passives != null and (c.passives.marks_earned > 0 or not c.passives.allocated.is_empty())
+## The state of `c` if it exists, else null (never creates).
+func peek(c: Colonist) -> PassiveTreeV2.State:
+	return _states.get(c.id) if c != null else null
+
+
+func _active(st: PassiveTreeV2.State) -> bool:
+	return st.marks_earned > 0 or not st.allocated.is_empty()
 
 
 func _ctx(c: Colonist) -> Dictionary:
@@ -195,9 +204,10 @@ func grant_deed(c: Colonist, deed_id: String) -> int:
 # ---- NG+ dossier ---------------------------------------------------------------------
 
 func dossier_of(c: Colonist) -> Dictionary:
-	if not _on or c == null or c.passives == null:
+	var st := peek(c)
+	if not _on or st == null:
 		return {}
-	return tree.dossier_carry(c.passives)
+	return tree.dossier_carry(st)
 
 
 func apply_dossier(c: Colonist, d: Dictionary) -> void:
@@ -216,8 +226,9 @@ func state_parts() -> Array:
 	if not _on:
 		return out
 	for c in sim.colonists.list:
-		if _active(c):
-			out.append([c.id, c.passives.to_dict()])
+		var st := peek(c)
+		if st != null and _active(st):
+			out.append([c.id, st.to_dict()])
 	return out
 
 
@@ -227,8 +238,9 @@ func hash_parts() -> Array:
 	if not _on:
 		return out
 	for c in sim.colonists.list:
-		if _active(c):
-			out.append([c.id, tree.state_hash(c.passives)])
+		var st := peek(c)
+		if st != null and _active(st):
+			out.append([c.id, tree.state_hash(st)])
 	return out
 
 
@@ -238,7 +250,7 @@ func load_parts(parts: Array) -> void:
 	for p: Array in parts:
 		var c := sim.colonists.get_by_id(int(p[0]))
 		if c != null:
-			c.passives = PassiveTreeV2.State.from_dict(p[1])
+			_states[c.id] = PassiveTreeV2.State.from_dict(p[1])
 			_resum(c)
 
 
@@ -321,15 +333,15 @@ func _on_tended(_patient: int, doctor: int, _n: int) -> void:
 
 
 func _on_break(cid: int, _kind: String) -> void:
-	var c := sim.colonists.get_by_id(cid)
-	if c != null and c.passives != null:
-		c.passives.counters["quiet_days"] = 0
+	var st: PassiveTreeV2.State = _states.get(cid)
+	if st != null:
+		st.counters["quiet_days"] = 0
 
 
 func _on_batch(_building_id: int, _recipe: String) -> void:
-	var c: Colonist = sim.buildings.batch_operator
-	if c != null and c.passives != null:  # Overclock's burn counter
-		c.passives.counters["batches"] = int(c.passives.counters.get("batches", 0)) + 1
+	var st := peek(sim.buildings.batch_operator)
+	if st != null:  # Overclock's burn counter
+		st.counters["batches"] = int(st.counters.get("batches", 0)) + 1
 
 
 # ---- keystone side effects -------------------------------------------------------------
