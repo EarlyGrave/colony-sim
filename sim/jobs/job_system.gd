@@ -32,7 +32,7 @@ func tick_colonist(c: Colonist) -> void:
 	if _engineer_on_duty(c):
 		_tick_engineer(c)
 		return
-	if sim.alarm and sim.threats.in_lockdown(c.cell) and not c.hidden and sim.traits.mod(c, "flee_threshold") > -1.0 and (c.job == null or c.job.type != "flee") and not c.is_unreachable("flee", sim.tick):  # region LD + PW2 (Cold Blood never flees)
+	if sim.alarm and sim.threats.in_lockdown(c.cell) and not c.hidden and sim.traits.mod(c, "flee_threshold") + sim.passives.mod(c, "flee_threshold") > -1.0 and not sim.passives.rule(c, "ignore_pain") and not sim.passives.rule(c, "medic") and (c.job == null or c.job.type != "flee") and not c.is_unreachable("flee", sim.tick):  # region LD + PW2 (Cold Blood never flees) + F11W3
 		var shelter := sim.buildings.find_shelter(c.cell) if sim.buildings else null
 		# region B3: rule "evacuate_low_hq": a badly hurt shelter would collapse on its occupants, so nobody hides in it
 		if shelter != null and sim.milestones.b3_on() and sim.is_rule_on("evacuate_low_hq") and _b3_hurt(shelter):
@@ -162,7 +162,10 @@ func assign(c: Colonist) -> Job:
 		sim.items.drop(c.cell, c.carry_item, c.carry_count, c.carry_quality)
 		c.carry_item = ""
 		c.carry_count = 0
+	var craft_only := sim.passives.rule(c, "craft_only")  # region F11W3
 	for t in work_order(c):
+		if craft_only and str(sim.defs.work["types"][t]["skill"]) != "crafting":  # region F11W3
+			continue
 		for gid: String in sim.defs.work["types"][t]["givers"]:
 			var g: WorkGiver = givers.get(gid)
 			if g == null:
@@ -187,7 +190,9 @@ func work_order(c: Colonist) -> Array[String]:
 ## work-speed multiplier (1.0 for unskilled work).
 func work_tick(c: Colonist, work_type: String) -> float:
 	var skill: String = sim.defs.work["types"][work_type]["skill"]
-	var generic := maxf(0.0, 1.0 + sim.perks.mod(c, "work_speed")) * sim.traits.shift_mult(c)  # region perks + traits (night/day)
+	var generic := maxf(0.0, 1.0 + sim.perks.mod(c, "work_speed") + sim.passives.mod(c, "work_speed")) * sim.traits.shift_mult(c)  # region perks + traits (night/day) + F11W3
+	if work_type != "mining" and sim.passives.rule(c, "mining_only"):  # region F11W3
+		generic *= 0.4
 	if skill == "":
 		return generic
 	var mult := c.skills.speed_mult(sim.defs, skill)
