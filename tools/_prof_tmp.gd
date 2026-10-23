@@ -12,30 +12,32 @@ func _init() -> void:
 	for i in 250:
 		var c := ColonistGenerator.generate(sim, Vector2i(2 + i % 70, 2 + i / 70))
 		sim.colonists.add(c)
-	var v3 := sim.traits_v3
+	var te := sim.trait_events
+	te._on_day(1)
 	var t := Time.get_ticks_usec()
+	for i in 5:
+		te._on_day(2 + i)
+	print("full ", (Time.get_ticks_usec() - t) / 5000.0)
+	te._need_ids = {}
+	t = Time.get_ticks_usec()
+	for i in 5:
+		te._on_day(2 + i)
+	print("no needs ", (Time.get_ticks_usec() - t) / 5000.0)
+	t = Time.get_ticks_usec()
+	for i in 5:
+		te._bonds({"a": sim.colonists.list})
+	print("bonds ", (Time.get_ticks_usec() - t) / 5000.0)
+	t = Time.get_ticks_usec()
+	for i in 5:
+		te._essence_holders()
+	print("essence ", (Time.get_ticks_usec() - t) / 5000.0)
+	print("blocks ", sim.blocks.is_enabled(), " cn ", sim.colonists.list[0].bio["trait_counters"], " ", sim.colonists.list[0].bio["traits_v3"])
+	var n := 0
 	for c in sim.colonists.list:
-		sim.blocks.block_of(c)
-	print("block_of ", (Time.get_ticks_usec() - t) / 1000.0)
-	t = Time.get_ticks_usec()
-	for c in sim.colonists.list:
-		v3.event(c, "day_served")
-		v3.event(c, "calm_day")
-	print("events ", (Time.get_ticks_usec() - t) / 1000.0)
-	t = Time.get_ticks_usec()
-	for c in sim.colonists.list:
-		sim.debt.state_of(c)
-	print("debt state ", (Time.get_ticks_usec() - t) / 1000.0)
-	t = Time.get_ticks_usec()
-	for c in sim.colonists.list:
-		v3.can_add(c, "t_cellmate")
-	print("can_add ", (Time.get_ticks_usec() - t) / 1000.0)
-	t = Time.get_ticks_usec()
-	sim.trait_events._bonds({"a": sim.colonists.list})
-	print("bonds ", (Time.get_ticks_usec() - t) / 1000.0)
-	t = Time.get_ticks_usec()
-	sim.trait_events._on_day(1)
-	print("on_day ", (Time.get_ticks_usec() - t) / 1000.0)
+		for tid in c.bio["traits_v3"]:
+			if sim.traits_v3.cfg["needs"].has(tid):
+				n += 1
+	print("need holders ", n)
 	sim.dispose()
 	bus.free()
 	quit()

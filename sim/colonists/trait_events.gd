@@ -15,7 +15,12 @@ var _letter_today := false
 var _mined: Dictionary = {}  # id -> had a mine job today (sampled)
 var _last_type: Dictionary = {}  # id -> last sampled job type today
 var _prev_type: Dictionary = {}  # id -> job type at the previous day roll
-var _run: Dictionary = {}  # id -> [job type, consecutive days on it]
+var _run_t: Dictionary = {}  # id -> job type of the current run
+var _run_n: Dictionary = {}  # id -> consecutive days on that job type
+var _need_ids: Dictionary = {}
+var _despair_lvl := 80.0
+var _hi := 70.0
+var _lo := 30.0
 var _sample_n := 30
 var _min: Dictionary = {}  # event name -> smallest acquire threshold
 var _elig: Dictionary = {}  # id -> [trait-list hash, {bond id: can bond}]
@@ -31,6 +36,10 @@ func _init(p_sim: Simulation) -> void:
 	for n: String in ix:
 		if (ix[n] as Dictionary).has("min"):
 			_min[n] = int(ix[n]["min"])
+	_need_ids = v3.cfg.get("needs", {})
+	_despair_lvl = float(params.get("despair_level", 80))
+	_hi = float(params.get("standing_high", 70))
+	_lo = float(params.get("standing_low", 30))
 	var b := sim.bus
 	sim.listen(b.day_started, _on_day)
 	sim.listen(b.tick_advanced, _on_tick)
@@ -191,77 +200,82 @@ func _on_day(_day: int) -> void:
 	var blocks_on := sim.blocks != null
 	var standing_on := blocks_on and sim.blocks.is_enabled()
 	var by_block: Dictionary = {}
-	var live: Array[Colonist] = []
-	for c in sim.colonists.list:
+	var live: Array = []
+	for c: Colonist in sim.colonists.list:
 		if not c.alive:
 			continue
 		live.append(c)
-		var b := sim.blocks.block_of(c) if blocks_on else ""
-		if not by_block.has(b):
-			by_block[b] = [] as Array[Colonist]
-		(by_block[b] as Array[Colonist]).append(c)
-	var despair_lvl := float(params.get("despair_level", 80))
-	var hi := float(params.get("standing_high", 70))
-	var lo := float(params.get("standing_low", 30))
+		var b: String = sim.blocks.block_of(c) if blocks_on else ""
+		var arr: Variant = by_block.get(b)
+		if arr == null:
+			arr = []
+			by_block[b] = arr
+		arr.append(c)
 	var essence_cells := _essence_holders()
 	var debt := sim.debt
+	var has_debt := debt != null
+	var states: Dictionary = debt.states if has_debt else {}
+	var need_ids := _need_ids
+	var min_day: int = _min.get("day_served", 1)
+	var min_calm: int = _min.get("calm_day", 1)
+	var any_starving := not _starving.is_empty()
 	for b: String in by_block:
 		var mates: Array = by_block[b]
 		var st := sim.blocks.standing_of(b) if standing_on else 50.0
+		var n_mates := mates.size()
 		for c: Colonist in mates:
-			var cn: Dictionary = c.bio.get("trait_counters", {})
-			c.bio["trait_counters"] = cn
-			var held: Array = c.bio.get("traits_v3", [])
+			var bio := c.bio
+			var cn: Dictionary = bio.get("trait_counters", {})
+			bio["trait_counters"] = cn
+			var held: Array = bio.get("traits_v3", [])
 			# cheap counters: events below every rule threshold only bump the counter
 			if not held.has("t_old_timer"):
-				_bump(c, cn, "day_served")
+				var nd := int(cn.get("day_served", 0)) + 1
+				if nd < min_day:
+					cn["day_served"] = nd
+				else:
+					_fire(c, "day_served")
 			if not held.has("t_settled"):
-				_bump(c, cn, "calm_day")
-			var ds: DebtState = debt.state_of(c) if debt != null else null
-			if ds != null:
-				if ds.despair >= despair_lvl:
-					_fire(c, "despair_day")
-				elif int(cn.get("despair_day", 0)) > 0:
-					_fire(c, "despair_relief")
+				var nc := int(cn.get("calm_day", 0)) + 1
+				if nc < min_calm:
+					cn["calm_day"] = nc
+				else:
+					_fire(c, "calm_day")
+			if has_debt:
+				var ds: DebtState = states.get(c.id)
+				if ds != null:
+					if ds.despair >= _despair_lvl:
+						_fire(c, "despair_day")
+					elif cn.has("despair_day") and int(cn["despair_day"]) > 0:
+						_fire(c, "despair_relief")
 			if standing_on:
-				if st >= hi:
+				if st >= _hi:
 					_fire(c, "high_standing_day")
-				elif st <= lo:
+				elif st <= _lo:
 					_fire(c, "low_standing_day")
-			if not _starving.is_empty() and _starving.has(c.id):
+			if any_starving and _starving.has(c.id):
 				_fire(c, "starving_day")
-			_needs(c, held, mates.size(), essence_cells)
+			for t in held:
+				if need_ids.has(t):
+					_needs(c, held, n_mates, essence_cells)
+					break
 	_starving.clear()
 	_bonds(by_block)
 	# job-type memory for next day's "same job" need and rival runs
-	for c in live:
+	for c: Colonist in live:
 		var t: String = _last_type.get(c.id, "")
-		var run: Array = _run.get(c.id, ["", 0])
-		_run[c.id] = [t, int(run[1]) + 1 if run[0] == t and t != "" else (1 if t != "" else 0)]
+		if t != "" and _run_t.get(c.id, "") == t:
+			_run_n[c.id] = int(_run_n.get(c.id, 0)) + 1
+		else:
+			_run_n[c.id] = 1 if t != "" else 0
+		_run_t[c.id] = t
 		_prev_type[c.id] = t
 	_mined.clear()
 	_last_type.clear()
 	_letter_today = false
 
 
-## Counter-only fast path: below the smallest rule threshold the event cannot change any trait.
-func _bump(c: Colonist, cn: Dictionary, name: String) -> void:
-	var n := int(cn.get(name, 0)) + 1
-	if n < int(_min.get(name, 1)):
-		cn[name] = n
-	else:
-		_fire(c, name)
-
-
 func _needs(c: Colonist, held: Array, mates_n: int, essence_cells: Array) -> void:
-	var needs: Dictionary = v3.cfg.get("needs", {})
-	var any := false
-	for t: String in held:
-		if needs.has(t):
-			any = true
-			break
-	if not any:
-		return
 	var cur: String = _last_type.get(c.id, "")
 	var ctx := {
 		"mined_today": _mined.has(c.id),
@@ -320,7 +334,7 @@ func _bonds(by_block: Dictionary) -> void:
 				continue
 			var groups: Dictionary = {}  # job type -> members (block order)
 			for c: Colonist in arr:
-				var t: String = _run.get(c.id, ["", 0])[0]
+				var t: String = _run_t.get(c.id, "")
 				if t != "":
 					if not groups.has(t):
 						groups[t] = []
@@ -363,6 +377,6 @@ func _can_bond(c: Colonist, id: String) -> bool:
 
 func _days(c: Colonist, job_pair: bool) -> int:
 	if job_pair:
-		return int(_run.get(c.id, ["", 0])[1])
+		return int(_run_n.get(c.id, 0))
 	return v3.counter(c, "day_served")
 # endregion
