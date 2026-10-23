@@ -146,7 +146,18 @@ func test_allocate_undo_respec_through_commands() -> void:
 	assert_false(sim.passives.state_of(c).allocated.has(entry), "undone through sim.undo_passive")
 	board._select(entry)
 	board.allocate_button.pressed.emit()
-	assert_true(board.respec_button != null and not board.respec_button.disabled, "respec enabled with an allocation")
+	assert_true(board.respec_button != null and board.respec_button.disabled, "respec disabled without essence to pay")
+	var cost := sim.passives.respec_cost(c)
+	var cell := c.cell
+	for off: Vector2i in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(0, -1), Vector2i(2, 0), Vector2i(0, 2)]:
+		if sim.set_zone(c.cell + off, "stockpile"):
+			cell = c.cell + off
+			break
+	assert_ne(cell, c.cell, "found a stockpile cell")
+	sim.items.drop(cell, str(cost["item"]), int(cost["count"]))
+	board._sig = ""
+	board.refresh()
+	assert_true(board.respec_button != null and not board.respec_button.disabled, "respec enabled with an allocation and essence")
 	board.respec_button.pressed.emit()
 	assert_true(board.respec_button.text.begins_with("Tap again"), "respec asks twice")
 	board.respec_button.pressed.emit()

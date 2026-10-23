@@ -493,5 +493,5 @@ func _build_actions(c: Colonist, st: PassiveTreeV2.State) -> void:
 		refresh())
 	respec_button.add_theme_font_size_override("font_size", 14)
 	respec_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	respec_button.disabled = not tree().can_respec(st)
+	respec_button.disabled = sim.passives.can_respec(c) != ""  # orchestrator F11: includes the essence cost
 # endregion
