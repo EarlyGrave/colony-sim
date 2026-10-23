@@ -127,6 +127,7 @@ func report() -> void:
 				line += "%9.1f" % survive_s(defs, id, float(row[1]), v)
 		print(line)
 	_f3a_armour_table()  # region F3a
+	f11_report(defs)  # region F11W5
 	print("\n== 3. targets ==")
 	var bm := float(defs.roles["roles"]["bulwark"]["dmg_taken_mult"])
 	print("Bulwark lasts %.2fx an unsquadded inmate (target >= 2.0): %s" % [1.0 / bm, "OK" if 1.0 / bm >= 2.0 else "FAIL"])
@@ -185,4 +186,109 @@ func _f3a_armour_table() -> void:
 			line += "%18.1f" % survive_armored_s(defs, id, b)
 		line += "%9.2fx" % (survive_armored_s(defs, id, "kevlar_vest") / survive_armored_s(defs, id, ""))
 		print(line)
+# endregion
+
+
+# region F11W5
+## F11W5: keystone power rows + per-passive model value (data/passives_v2.json), all analytic.
+const F11_LOWER_BETTER: Array[String] = ["damage_taken", "hunger", "build_cost", "craft_input", "waste_mult", "contamination_per_batch", "installment_pct", "suspicion_gain", "gear_wear", "ammo_use", "machine_breakage", "mutation_risk", "infection_chance", "bleed_rate", "break_chance", "threat_attract", "target_weight", "despair_mult", "flee_threshold", "thought_injured"]
+## Model weight per unit of a stat (1.0 = a +100% multiplier). Flat stats are scaled to "fraction of a typical value".
+const F11_SCALE: Dictionary = {"mood_base": 0.01, "quality_tier": 0.2, "stash_cap": 0.05, "armor_flat": 0.05, "building_hp": 1.0, "flee_threshold": 0.25, "standing_gain": 1.0}
+const F11_OUTLIER := 1.5
+
+
+## Short Fuse damage multiplier at a mood level (rule_rage: +1% per point under 50, cap +50%; x0.75 above 50).
+static func short_fuse_mult(mood: float) -> float:
+	if mood > 50.0:
+		return 0.75
+	return 1.0 + minf(0.5, 0.01 * (50.0 - mood))
+
+
+## Dead Man Walking: damage taken x0.7, hit +0.15 (rifle at skill `lvl`, distance `d`).
+static func dead_man_row(defs_: Defs, lvl: int, d: float) -> Dictionary:
+	var w: Dictionary = defs_.weapons["weapons"]["rifle"]
+	var base_p := hit_chance(defs_, w, lvl, d)
+	var p := clampf(base_p + 0.15, 0.05, 0.95)
+	return {"dps": p / base_p, "survive": 1.0 / 0.7, "power": p / base_p / 0.7}
+
+
+## Armour doubled on a full non-weapon kit; Armourer's Pride is melee only, so the offence side drops to the shiv.
+static func armourers_row(defs_: Defs, creature_id: String, lvl: int, d: float) -> Dictionary:
+	var arm := 0.0
+	var flat := 0.0
+	for b: String in ["underlay", "helmet", "kevlar_vest", "greaves", "work_gloves"]:
+		var ga := gear_armor(defs_, b)
+		arm += float(ga["armor"])
+		flat += float(ga["flat"])
+	var cr := creature(defs_, creature_id)
+	var base := resolve(float(cr["damage"]), arm, flat)
+	var dbl := resolve(float(cr["damage"]), arm * 2.0, flat * 2.0)
+	var rifle: Dictionary = defs_.weapons["weapons"]["rifle"]
+	var shiv: Dictionary = defs_.weapons["weapons"]["prison_shiv"]
+	var dps_r := resolve(float(rifle["damage"])) * hit_chance(defs_, rifle, lvl, d) / float(rifle["cooldown_ticks"])
+	var dps_s := resolve(float(shiv["damage"])) * hit_chance(defs_, shiv, lvl, d) / float(shiv["cooldown_ticks"])
+	return {"survive": base / dbl, "dps": dps_s / dps_r, "power": base / dbl * dps_s / dps_r}
+
+
+## Full Auto: attacks +25% faster, but the inmate draws x2 target weight in a squad of `n` equal inmates.
+static func full_auto_row(n: int) -> Dictionary:
+	var share := 2.0 / (float(n) + 1.0) * float(n)
+	return {"dps": 1.25, "taken": share, "power": 1.25 / share}
+
+
+## Model value of a numeric effect set: sum of polarity * effect * scale. Rule flags are not valued.
+static func passive_value(effects: Dictionary) -> float:
+	var v := 0.0
+	for k: String in effects:
+		if k.begins_with("rule_"):
+			continue
+		var sgn := -1.0 if F11_LOWER_BETTER.has(k) else 1.0
+		v += sgn * float(effects[k]) * float(F11_SCALE.get(k, 1.0))
+	return v
+
+
+## Rows {id, name, detail, tier, cost, value, per_mark, median, ratio, outlier}; median = per-mark median of the passive's detail (school card).
+static func passive_rows() -> Array:
+	var tree := PassiveTreeV2.new(PassiveTreeV2.load_default())
+	var by_detail: Dictionary = {}
+	var rows: Array = []
+	for id in tree.ids():
+		var d := tree.def_of(id)
+		var v := passive_value(d.get("effects", {}))
+		var cost := float(d["cost"])
+		var row := {"id": id, "name": d["name"], "detail": str(d["detail"]), "tier": str(d["tier"]), "cost": cost, "value": v, "per_mark": v / cost}
+		rows.append(row)
+		if v != 0.0:
+			if not by_detail.has(row["detail"]):
+				by_detail[row["detail"]] = []
+			(by_detail[row["detail"]] as Array).append(row["per_mark"])
+	for row: Dictionary in rows:
+		var arr: Array = by_detail.get(row["detail"], [])
+		arr.sort()
+		var med := 0.0 if arr.is_empty() else float(arr[arr.size() / 2])
+		row["median"] = med
+		row["ratio"] = row["per_mark"] / med if med > 0.0 else 0.0
+		row["outlier"] = med > 0.0 and row["per_mark"] > F11_OUTLIER * med
+	return rows
+
+
+static func f11_report(defs_: Defs, lvl := 3, d := 5.0) -> void:
+	print("\n== 4. F11W5 keystone rows (skill %d, dist %.0f; ratios vs the same inmate without the keystone) ==" % [lvl, d])
+	var dm := dead_man_row(defs_, lvl, d)
+	print("Dead Man Walking: dps x%.2f, survive x%.2f, power x%.2f (no downed / no flee not modelled; heal -50%%, mood -10)" % [dm["dps"], dm["survive"], dm["power"]])
+	for m in [20, 50, 80]:
+		print("Short Fuse mood %d: damage x%.2f (break chance x2)" % [m, short_fuse_mult(float(m))])
+	for id: String in ["crawler", "burrower", "mimic"]:
+		if defs_.enemies.has(id):
+			var ar := armourers_row(defs_, id, lvl, d)
+			print("Armourer's Pride vs %s: survive x%.2f, dps x%.2f (shiv vs rifle), power x%.2f" % [id, ar["survive"], ar["dps"], ar["power"]])
+	var fa := full_auto_row(8)
+	print("Full Auto (squad of 8): dps x%.2f, damage taken x%.2f (target weight x2), power x%.2f; ammo use 0" % [fa["dps"], fa["taken"], fa["power"]])
+	var out: Array = []
+	for r: Dictionary in passive_rows():
+		if r["outlier"]:
+			out.append("%s %.3f/mark = x%.2f of %s median" % [r["id"], r["per_mark"], r["ratio"], r["detail"]])
+	print("passives > %.1fx their school median per mark: %d" % [F11_OUTLIER, out.size()])
+	for l: String in out:
+		print("  ", l)
 # endregion

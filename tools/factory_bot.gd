@@ -114,6 +114,8 @@ func act() -> void:
 		_reg_act()  # region W1
 	if sim.fixation.offered:
 		_w3_fixation()  # region W3
+	if sim.tick % 600 == 120 and sim.passives.enabled():
+		f11_pick(sim)  # region F11W5
 
 
 # region W3
@@ -411,7 +413,7 @@ func _research_reserve() -> int:
 ## Crew management: two researchers (the tutorial bot's choice), two farmers, the rest build, haul and mine.
 func _priorities() -> void:
 	var i := 0
-	for c in sim.colonists.list:
+	for c in _f11_order():  # region F11W5
 		if not c.alive:
 			continue
 		if i == 2 or i == 3:  # farmers: food was the first thing to fail when everybody built
@@ -1042,6 +1044,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 	var own_bus := bus == null
 	if own_bus:
 		bus = load("res://autoload/event_bus.gd").new()
+	f11_apply_env(Defs.get_default())  # region F11W5
 	var sim_opts := {"tutorial": true, "research_locked": true}
 	sim_opts.merge(opts.get("sim_opts", {}), true)  # region N3: Next Sentence chain passes StartOpts here
 	var sim := Simulation.new(seed_value, bus, null, sim_opts)
@@ -1083,6 +1086,7 @@ static func play(seed_value: int, days: int, opts := {}, bus: Node = null) -> Di
 		"esc": [sim.fight_escape.paid, sim.fight_escape.extracted, sim.contraband.escape_credit, sim.contraband.sales, sim.contraband.inspections, sim.contraband.raids, sim.fight_escape.contacted],  # region F4a
 		"ending_won": ",".join(PackedStringArray(sim.endings.path_ids().filter(func(i: String) -> bool: return sim.endings.won(i)))),
 	}
+	r["f11"] = f11_stats(sim)  # region F11W5
 	r["regs"] = ",".join(PackedStringArray(range(3).filter(func(i: int) -> bool: return sim.regulations.chosen.has(i)).map(func(i: int) -> String: return str(sim.regulations.chosen[i]))))  # region W1
 	for b in sim.buildings.list:
 		r["built"][b.def_id] = int(r["built"].get(b.def_id, 0)) + 1
@@ -1143,4 +1147,88 @@ func _w2_alt(p: int, day: float) -> bool:
 		return false
 	var alt_id := str(sim.petition.alt_def(p).get("id", ""))
 	return sim.deliver_petition_alt(p, alt_id)
+# endregion
+
+
+# region F11W5
+## Env knobs (default OFF, bot output unchanged): TRAITS_V3=1 / PASSIVES_V2=1 set the balance flags; TRAIT_ASSIGN=1 (implied by TRAITS_V3)
+## orders the crew by sim.traits.mod(c, "work_speed") so the best workers take the builder slots.
+static var _f11_tree: PassiveTreeV2 = null
+
+
+static func f11_apply_env(d: Defs) -> void:
+	if OS.get_environment("TRAITS_V3") == "1":
+		d.balance["traits_v3_enabled"] = true
+	if OS.get_environment("PASSIVES_V2") == "1":
+		d.balance["passives_v2_enabled"] = true
+
+
+func _f11_order() -> Array:
+	var out: Array = sim.colonists.list.duplicate()
+	if OS.get_environment("TRAIT_ASSIGN") == "1" or OS.get_environment("TRAITS_V3") == "1":
+		out.sort_custom(func(a: Colonist, b: Colonist) -> bool: return sim.traits.mod(a, "work_speed") > sim.traits.mod(b, "work_speed"))  # stable enough: ties keep list order via id
+	return out
+
+
+## Spend free marks: best skill -> its detail card; keystone first (when allowed on that card, consistent with the
+## school already taken), then notables, then minors, in data order. Only Simulation.allocate_passive; reads via sim.passives.
+static func f11_pick(sim: Simulation) -> int:
+	if _f11_tree == null:
+		_f11_tree = PassiveTreeV2.new(PassiveTreeV2.load_default())
+	var tree := _f11_tree
+	var n := 0
+	for c in sim.colonists.list:
+		if not c.alive:
+			continue
+		var st: PassiveTreeV2.State = sim.passives.state_of(c)
+		if st == null or st.marks_free() <= 0:
+			continue
+		var best := ""
+		for sk: String in c.skills.levels:
+			if best == "" or c.skills.level(sk) > c.skills.level(best):
+				best = sk
+		var cards: Array[String] = []
+		for dn: String in tree.details():
+			var gate: Dictionary = tree.details()[dn].get("gate", {})
+			if gate.has("skills") and (gate["skills"] as Dictionary).has(best):
+				cards.append(dn)
+		if cards.is_empty():
+			cards.append("ledger")
+		var again := true
+		while again and st.marks_free() > 0:
+			again = false
+			for tier in ["keystone", "notable", "minor"]:
+				for dn in cards:
+					for id in tree.passives_of(dn):
+						if tree.tier_of(id) == tier and sim.passives.can_allocate(c, id) == "" and sim.allocate_passive(c.id, id):
+							n += 1
+							again = true
+							break
+					if again:
+						break
+				if again:
+					break
+	return n
+
+
+static func f11_stats(sim: Simulation) -> Dictionary:
+	var out := {"earned": 0, "spent": 0, "keystones": 0, "rules": [], "allocated": 0, "inmates": 0}
+	if sim.passives == null or not sim.passives.enabled():
+		return out
+	if _f11_tree == null:
+		_f11_tree = PassiveTreeV2.new(PassiveTreeV2.load_default())
+	for c in sim.colonists.list:
+		var st: PassiveTreeV2.State = sim.passives.state_of(c)
+		if st == null:
+			continue
+		out["inmates"] += 1
+		out["earned"] += st.marks_earned
+		out["spent"] += st.marks_spent
+		out["allocated"] += st.allocated.size()
+		out["keystones"] += _f11_tree.keystones_of(st).size()
+		for r: String in _f11_tree.rules(st):
+			if not (out["rules"] as Array).has(r):
+				(out["rules"] as Array).append(r)
+	(out["rules"] as Array).sort()
+	return out
 # endregion

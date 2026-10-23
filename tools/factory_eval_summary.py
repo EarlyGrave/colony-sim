@@ -51,3 +51,12 @@ print("regs (W1):", [r.get("regs", "") or "-" for r in ok])
 mr = [r.get("metro", 0) for r in ok]
 print(f"metro raids per seed: {mr}  seeds>=2: {sum(1 for x in mr if x >= 2)}/{n}  seeds==0: {sum(1 for x in mr if x == 0)}/{n}")
 print("defiance end:", [r.get("defiance", 0) for r in ok])
+# F11W5: passives / traits columns (blank unless PASSIVES_V2=1)
+if any(r.get("f11", {}).get("inmates", 0) for r in ok):
+    print("seed marks earned/spent  spend%  keystones allocated rules")
+    for r in ok:
+        f = r.get("f11", {})
+        e, sp = f.get("earned", 0), f.get("spent", 0)
+        print(f"{r['seed']:>4} {e:>6}/{sp:<6} {100*sp/e if e else 0:>6.0f} {f.get('keystones', 0):>9} {f.get('allocated', 0):>9} {','.join(f.get('rules', []))}")
+    te, ts = sum(r.get("f11", {}).get("earned", 0) for r in ok), sum(r.get("f11", {}).get("spent", 0) for r in ok)
+    print(f"spent {ts}/{te} = {100*ts/te if te else 0:.0f}%  need >=80%  {'PASS' if te and ts >= 0.8*te else 'FAIL'}")
