@@ -49,7 +49,8 @@ waves, wear & repair, HUD, storyteller, rules, balance; generated pixel art.
 | `f8_plan.md` | gear screen: icons, grid inventory, item card | main 1a71dac |
 | F9 | path effects, socket cost, gear wear flag OFF + repair | main 0f11434 |
 | F10 | contextual hints + SeenFlags, late-game perf budget, NEW badges | main ad385e1 |
-| traits v3 + passives v2 | traits v3 module (66 traits), passive board r2 + icons r3, side-quest/events v2 GDD; all flags OFF | main (2026-10-23, see `docs/rollback_points.md`) |
+| traits v3 + passives v2 | traits v3 module (66 traits), passive board r2 + icons r3, side-quest/events v2 GDD; all flags OFF | main 5877880 |
+| `f11_plan.md` | traits v3 + passives v2 integration (sim wiring, rule guards, Record board, bot); flags OFF | main (2026-10-23, see `docs/rollback_points.md`) |
 
 Other docs: `docs/roadmap_after_automation.md`, `docs/prompter_inbox.md`, `docs/design_review_s4.md`,
 `docs/batch_rimworld_constraints.md`, `docs/handoff/` (session 2026-10-17 files).
