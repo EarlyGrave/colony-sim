@@ -22,6 +22,10 @@ var _despair_lvl := 80.0
 var _hi := 70.0
 var _lo := 30.0
 var _sample_n := 30
+var _max_served := 0
+var _max_run := 0
+var _essence: Array = []
+var _essence_ready := false
 var _min: Dictionary = {}  # event name -> smallest acquire threshold
 var _elig: Dictionary = {}  # id -> [trait-list hash, {bond id: can bond}]
 var alarm_since := 0  # tick the current alarm started (alarm_delay)
@@ -211,7 +215,8 @@ func _on_day(_day: int) -> void:
 			arr = []
 			by_block[b] = arr
 		arr.append(c)
-	var essence_cells := _essence_holders()
+	_essence = []
+	_essence_ready = false
 	var debt := sim.debt
 	var has_debt := debt != null
 	var states: Dictionary = debt.states if has_debt else {}
@@ -219,6 +224,7 @@ func _on_day(_day: int) -> void:
 	var min_day: int = _min.get("day_served", 1)
 	var min_calm: int = _min.get("calm_day", 1)
 	var any_starving := not _starving.is_empty()
+	_max_served = 0
 	for b: String in by_block:
 		var mates: Array = by_block[b]
 		var st := sim.blocks.standing_of(b) if standing_on else 50.0
@@ -241,6 +247,9 @@ func _on_day(_day: int) -> void:
 					cn["calm_day"] = nc
 				else:
 					_fire(c, "calm_day")
+			var sv := int(cn.get("day_served", 0))
+			if sv > _max_served:
+				_max_served = sv
 			if has_debt:
 				var ds: DebtState = states.get(c.id)
 				if ds != null:
@@ -257,10 +266,11 @@ func _on_day(_day: int) -> void:
 				_fire(c, "starving_day")
 			for t in held:
 				if need_ids.has(t):
-					_needs(c, held, n_mates, essence_cells)
+					_needs(c, held, n_mates)
 					break
 	_starving.clear()
 	_bonds(by_block)
+	_max_run = 0
 	# job-type memory for next day's "same job" need and rival runs
 	for c: Colonist in live:
 		var t: String = _last_type.get(c.id, "")
@@ -269,13 +279,14 @@ func _on_day(_day: int) -> void:
 		else:
 			_run_n[c.id] = 1 if t != "" else 0
 		_run_t[c.id] = t
+		_max_run = maxi(_max_run, int(_run_n[c.id]))
 		_prev_type[c.id] = t
 	_mined.clear()
 	_last_type.clear()
 	_letter_today = false
 
 
-func _needs(c: Colonist, held: Array, mates_n: int, essence_cells: Array) -> void:
+func _needs(c: Colonist, held: Array, mates_n: int) -> void:
 	var cur: String = _last_type.get(c.id, "")
 	var ctx := {
 		"mined_today": _mined.has(c.id),
@@ -283,22 +294,18 @@ func _needs(c: Colonist, held: Array, mates_n: int, essence_cells: Array) -> voi
 		"letter_today": _letter_today,
 		"same_job": cur == "" or not _prev_type.has(c.id) or _prev_type[c.id] == "" or _prev_type[c.id] == cur,
 		"block_mate_alive": mates_n > 1,
-		"near_essence": held.has("t_essence_hum") and _near(c.cell, essence_cells),
+		"near_essence": held.has("t_essence_hum") and _near(c.cell, _essence_cells()),
 	}
 	for tid in v3.daily_needs(c, ctx):
 		sim.mood.add_thought(c, tid)
 
 
-## Cells holding refined essence (only scanned when someone has Hums).
-func _essence_holders() -> Array:
-	var hum := false
-	for c in sim.colonists.list:
-		if c.alive and v3.has(c, "t_essence_hum"):
-			hum = true
-			break
-	var out: Array = []
-	if not hum:
-		return out
+## Cells holding refined essence, scanned at most once per day and only when a Hums holder needs it.
+func _essence_cells() -> Array:
+	if _essence_ready:
+		return _essence
+	_essence_ready = true
+	var out: Array = _essence
 	var items: Array = params.get("essence_items", [])
 	for cell: Vector2i in sim.items.stacks:
 		if items.has(sim.items.item_at(cell)):
@@ -327,6 +334,9 @@ func _bonds(by_block: Dictionary) -> void:
 		if not bonds.has(id):
 			continue
 		var job_pair := (bonds[id] as Dictionary).has("days_same_job")
+		var bd: Dictionary = bonds[id]
+		if (_max_run if job_pair else _max_served) < int(bd.get("days_same_block", bd.get("days_same_job", 9999))):
+			continue  # nobody has served / worked together long enough yet
 		for b in blocks:
 			var arr: Array = by_block[b]
 			if not job_pair:
