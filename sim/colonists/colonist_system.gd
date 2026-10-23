@@ -120,6 +120,8 @@ func add_kill(c: Colonist, species: String) -> void:
 
 
 func record_changed(c: Colonist) -> void:
+	if sim.passives != null and sim.passives.enabled():  # region F11W2
+		sim.passives.on_record_changed(c)
 	var r := rec(c)
 	if r["nick_stat"] != "":
 		return

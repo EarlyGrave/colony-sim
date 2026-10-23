@@ -114,6 +114,8 @@ static func state_hash(sim: Simulation) -> int:
 			parts.append([b.id, b.decoy])
 	parts.append(hash(sim.mutation.field))  # region mutation
 	parts.append(sim.logistics.state_parts())  # region A1d
+	if sim.passives.has_state():  # region F11W2: only with the flag on and a mark earned
+		parts.append(sim.passives.hash_parts())
 	parts.append(sim.research.state_parts())  # region R2a
 	parts.append(sim.milestones.state_parts())  # region R2b
 	if sim.beacons.has_state():  # region S2: absent until a beacon was launched

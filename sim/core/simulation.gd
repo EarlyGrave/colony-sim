@@ -85,6 +85,7 @@ var blocks: BlockSystem  # region I1
 # region perks
 var traits: TraitSystem  # region PW2
 var perks: PerkSystem
+var passives: PassiveSystem  # region F11W2
 var quality: QualitySystem  # region quality
 var ammo: AmmoSystem  # region ammo
 # endregion
@@ -311,6 +312,7 @@ func _init_systems() -> void:
 	# endregion
 	traits = TraitSystem.new(self)  # region PW2
 	perks = PerkSystem.new(self)  # region perks
+	passives = PassiveSystem.new(self)  # region F11W2
 	contracts = ContractSystem.new(self)  # region contracts
 	quality = QualitySystem.new(self)  # region quality
 	progression = ProgressionSystem.new(self)  # region progression
@@ -963,6 +965,28 @@ func choose_branch(colonist_id: int, skill: String, branch: String) -> bool:  # 
 func respec_perks(colonist_id: int) -> bool:
 	_record("respec_perks", [colonist_id])  # save-load
 	return perks.respec(colonists.get_by_id(colonist_id))
+# endregion
+
+
+# region F11W2
+func allocate_passive(colonist_id: int, passive_id: String) -> bool:
+	_record("allocate_passive", [colonist_id, passive_id])  # save-load
+	return passives.allocate(colonists.get_by_id(colonist_id), passive_id)
+
+
+func undo_passive(colonist_id: int, passive_id: String) -> bool:
+	_record("undo_passive", [colonist_id, passive_id])  # save-load
+	return passives.undo(colonists.get_by_id(colonist_id), passive_id)
+
+
+func respec_passives(colonist_id: int) -> bool:
+	_record("respec_passives", [colonist_id])  # save-load
+	return passives.respec(colonists.get_by_id(colonist_id))
+
+
+func grant_passive_marks(colonist_id: int, n: int, reason: String = "") -> int:
+	_record("grant_passive_marks", [colonist_id, n, reason])  # save-load
+	return passives.grant_marks(colonists.get_by_id(colonist_id), n, reason)
 # endregion
 
 

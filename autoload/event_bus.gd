@@ -192,3 +192,10 @@ signal fixation_offered(colonist_id: int, item_id: String)
 signal fixation_done(colonist_id: int, item_id: String)
 signal fixation_failed(colonist_id: int)
 # endregion
+
+# region F11W2
+signal passive_allocated(colonist_id: int, passive_id: String)
+signal passive_removed(colonist_id: int, passive_id: String)
+signal passive_marks_changed(colonist_id: int, free: int)
+signal passive_deed(colonist_id: int, deed_id: String)
+# endregion

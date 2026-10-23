@@ -65,6 +65,8 @@ static func ng_snapshot(sim: Simulation, result: String, preset_id := "") -> Dic
 		cols.append({"id": c.id, "name": c.display_name, "skills": c.skills.levels.duplicate(),
 			"perks": (c.perks.learned.duplicate() if c.perks != null else []),
 			"traits": (c.bio.get("traits", []) as Array).duplicate()})
+		if sim.passives.enabled():  # region F11W2: key absent while the flag is off (snapshots unchanged)
+			cols[cols.size() - 1]["passives"] = sim.passives.dossier_of(c)
 	return {"seed": sim.seed_value, "days": sim.day(), "result": result, "preset": preset_id,
 		"debt_left": left, "debt_paid": paid, "colonists": cols, "techs": sim.research.done.duplicate(),
 		"ending": won_ending(sim), "credits": sim.contraband.escape_credit}  # region F4b

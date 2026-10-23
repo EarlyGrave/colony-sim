@@ -148,6 +148,8 @@ func _load_ng(v: Variant) -> void:
 				sk[str(k)] = int(raw[k])
 		ng["dossier"] = {"name": str(dos.get("name", "")), "skills": sk, "perk_id": str(dos.get("perk_id", "")),
 			"traits": _str_list(dos.get("traits", []))}
+		if dos.has("passives"):  # region F11W2
+			ng["dossier"]["passives"] = _passives_dossier(dos["passives"])
 	var techs: Array = []
 	var traw: Variant = d.get("techs", [])
 	if traw is Array:
@@ -213,6 +215,8 @@ func finish_sentence(summary: Dictionary) -> void:
 		ng["dossier"] = {"name": str(best.get("name", "")), "skills": sk,
 			"perk_id": str(perks[0]) if not perks.is_empty() else "",
 			"traits": _str_list(best.get("traits", []))}
+		if best.has("passives"):  # region F11W2: {marks, known_for}
+			ng["dossier"]["passives"] = _passives_dossier(best["passives"])
 		if bool(rule.get("rename", false)):
 			ng["dossier"]["name"] = new_name(str(ng["dossier"]["name"]), int(summary.get("seed", 0)))  # region F4b
 	var cand: Array = []
@@ -295,4 +299,11 @@ func make_ng_opts() -> Dictionary:
 		o["start_techs"] = (ng["techs"] as Array).duplicate()
 	o["sentence"] = int(ng["sentence"])
 	return {"seed": ng_seed(), "opts": o}
+# endregion
+
+
+# region F11W2
+static func _passives_dossier(raw: Variant) -> Dictionary:
+	var d: Dictionary = raw if raw is Dictionary else {}
+	return {"marks": maxi(0, int(d.get("marks", 0))), "known_for": _str_list(d.get("known_for", []))}
 # endregion

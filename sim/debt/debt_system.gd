@@ -88,6 +88,24 @@ func _pay(c: Colonist, st: DebtState, n: int) -> bool:
 	return true
 
 
+# region F11W2
+## Books `n` units as paid without consuming items (Quota Hawk, Blood Debt); emits debt_paid when it clears.
+func credit(c: Colonist, n: int) -> bool:
+	var st := state_of(c) if c != null else null
+	if st == null or not c.alive or st.remaining() <= 0 or n <= 0:
+		return false
+	n = mini(n, st.remaining())
+	st.paid += n
+	st.period_paid += n
+	st.despair = maxf(0.0, st.despair - n * float(cfg["despair_relief_per_unit"]))
+	if st.remaining() == 0:
+		st.pending_choice = true
+		st.despair = 0.0
+		sim.bus.debt_paid.emit(c.id)
+	return true
+# endregion
+
+
 func set_quota(c: Colonist, per_day: int) -> bool:
 	var st := state_of(c) if c != null else null
 	if st == null or per_day < 0:

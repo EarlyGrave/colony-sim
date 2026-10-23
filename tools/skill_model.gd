@@ -15,11 +15,14 @@ func _init() -> void:
 	var days := 40
 	var work := 0.5
 	var run_bot := true
+	var marks_days := 0  # region F11W2: --marks=60 prints passive marks at day 10/25/45/60 (3 seeds)
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--days="):
 			days = int(a.get_slice("=", 1))
 		elif a.begins_with("--work="):
 			work = float(a.get_slice("=", 1))
+		elif a.begins_with("--marks="):  # region F11W2
+			marks_days = int(a.get_slice("=", 1))
 		elif a.begins_with("--bot="):
 			run_bot = int(a.get_slice("=", 1)) == 1
 	var defs := Defs.get_default()
@@ -39,6 +42,8 @@ func _init() -> void:
 			var fx: Dictionary = bs[skill][b]["effects"]
 			for k: String in fx:
 				print("%-9s %-10s %-15s %+.2f -> %s" % [skill, b, k, float(fx[k]), CONSUMERS.get(k, "MISSING")])
+	if marks_days > 0:  # region F11W2
+		marks_table(marks_days)
 	if run_bot:
 		print("== bot, %d days, seeds 1..3 ==" % days)
 		for pick in [0, 1]:
@@ -57,3 +62,43 @@ static func days_to(sk: Dictionary, target: int, passion_mult: float, work_ticks
 	for l in target:
 		xp += float(sk["xp_table"][l])
 	return xp / (float(sk["xp_per_work_tick"]) * passion_mult * work_ticks_per_day)
+
+
+# region F11W2
+## Marks earned with the factory bot (flag on, default knobs) vs the earning.md budget: day 10 ~4,
+## 25 ~9-10, 45 ~16-19, 60 ~22-26 for the best inmate. Prints best / mean marks per seed.
+func marks_table(days: int) -> void:
+	print("== passive marks (flag on, bot, seeds 1..3, best / mean over living inmates) ==")
+	var base := Defs.get_default()
+	var was: Variant = base.balance.get("passives_v2_enabled", false)
+	base.balance["passives_v2_enabled"] = true
+	base.passives_v2 = PassiveTreeV2.load_default()
+	for sv in [1, 2, 3]:
+		var bus: Node = load("res://autoload/event_bus.gd").new()
+		var sim := Simulation.new(sv, bus, null, {"tutorial": true, "research_locked": true})
+		sim.start_new_game()
+		var bot: RefCounted = (load("res://tools/factory_bot.gd") as GDScript).new(sim)
+		var row := "seed %d" % sv
+		for day in [10, 25, 45, 60]:
+			if day > days:
+				break
+			while sim.tick < day * sim.ticks_per_day and sim.game_over_reason == "":
+				bot.act()
+				sim.run_ticks(FactoryBot.Bot.STEP_TICKS)
+				bot.after()
+			var best := 0
+			var sum := 0
+			var n := 0
+			for c in sim.colonists.list:
+				if c.alive:
+					var m := sim.passives.state_of(c).marks_earned
+					best = maxi(best, m)
+					sum += m
+					n += 1
+			row += "  d%d: %d/%.1f" % [day, best, float(sum) / maxf(1.0, n)]
+		print(row)
+		sim.dispose()
+		bus.free()
+	base.balance["passives_v2_enabled"] = was
+	base.passives_v2 = {}
+# endregion

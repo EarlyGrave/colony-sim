@@ -32,6 +32,7 @@ var needs: NeedsState = null
 
 # region perks
 var perks: ColonistPerks = null
+var passives: PassiveTreeV2.State = null  # region F11W2: created on demand when passives_v2_enabled
 ## Fractional remainders of perk-scaled integer amounts (stat key -> float).
 var perk_carry: Dictionary = {}
 # endregion

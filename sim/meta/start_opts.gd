@@ -86,6 +86,7 @@ static func _apply_ng(sim: Simulation, opts: Dictionary) -> void:
 			c.bio["traits"] = have
 			c.bio["work_speed"] = float(c.bio.get("work_speed", 1.0)) + float(td.get("effects", {}).get("work_speed", 0.0))
 		# endregion
+		sim.passives.apply_dossier(c, vet.get("passives", {}))  # region F11W2: banked marks + free keystones
 		var pid := str(vet.get("perk_id", ""))
 		if pid != "" and not sim.perks.perk_def(pid).is_empty():
 			var cp := sim.perks.state_of(c)
