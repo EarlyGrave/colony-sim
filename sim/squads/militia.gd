@@ -101,6 +101,8 @@ func tick() -> void:
 			break
 		if not c.alive or c.combat == null or c.combat.drafted or c.id in spent or in_squad(c.id):
 			continue
+		if sim.passives.rule(c, "no_draft") or sim.passives.rule(c, "pacifist"):  # region F11W3
+			continue
 		if c.health != null and c.health.downed:
 			continue
 		if c.hp < c.max_hp * min_hp:

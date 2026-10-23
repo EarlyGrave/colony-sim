@@ -63,14 +63,15 @@ func despair_mult(c: Colonist) -> float:
 	if not standing.has(b):
 		return 1.0
 	var s := standing_of(b)
-	var wk := sim.quests.mod("weak_despair_mult") if (s < float(cfg.get("thought_low", 30.0)) and sim.quests != null) else 1.0  # region W3: S2 Look away
+	var chap := 0.5 if _chaplain_blocks.has(b) else 1.0  # region F11W3: chaplain halves the block's despair
+	var wk := chap * sim.quests.mod("weak_despair_mult") if (s < float(cfg.get("thought_low", 30.0)) and sim.quests != null) else 1.0  # region W3: S2 Look away
 	if s < 50.0:
 		return wk * (1.0 + (50.0 - s) / 50.0 * (float(cfg["despair_mult_low_standing"]) - 1.0))
 	return wk * (1.0 - (s - 50.0) / 50.0 * (1.0 - float(cfg["despair_mult_high_standing"])))
 
 
 func on_installment_paid(c: Colonist) -> void:
-	_change(block_of(c), float(cfg["paid_gain"]) * maxf(0.0, 1.0 + sim.traits.mod(c, "standing_gain")), false)  # region traits
+	_change(block_of(c), float(cfg["paid_gain"]) * maxf(0.0, 1.0 + sim.traits.mod(c, "standing_gain") + sim.passives.mod(c, "standing_gain")), false)  # region traits + F11W3
 
 
 func on_installment_missed(c: Colonist) -> void:
@@ -120,6 +121,7 @@ func state_parts() -> Array:
 func tick() -> void:
 	if not is_enabled() or sim.tick % sim.ticks_per_day != 0:
 		return
+	_scan_chaplains()  # region F11W3
 	_pick_informant()
 	_succession()  # region N3
 	_walkouts()  # region N3
@@ -139,6 +141,35 @@ func tick() -> void:
 			quiet[b] = 0
 			sim.bus.letter_received.emit(str(cfg["cohesion_title"]),
 					str(cfg["cohesion_text"]).replace("{block}", str(cfg["blocks"][b]["name"])))
+
+
+# region F11W3
+var _chaplain_blocks: Dictionary = {}  ## block id -> true while a living chaplain (not in a break) is a member; rebuilt daily
+
+
+func _scan_chaplains() -> void:
+	_chaplain_blocks.clear()
+	if not sim.passives.enabled():
+		return
+	for c in sim.colonists.list:
+		if c.alive and sim.passives.rule(c, "block_chaplain") and sim.mood.state_of(c).break_kind == "":
+			_chaplain_blocks[block_of(c)] = true
+
+
+## always_informant: the holder (lowest id) becomes the Informant while alive; no rng. True when handled.
+func _pick_passive_informant() -> bool:
+	if not sim.passives.enabled():
+		return false
+	for c in sim.colonists.list:
+		if c.alive and sim.passives.rule(c, "always_informant"):
+			if _informant_id != c.id:
+				if _informant_id != 0:
+					member_of.erase(_informant_id)
+				member_of[c.id] = "informant"
+				_informant_id = c.id
+			return true
+	return false
+# endregion
 
 
 func _members(b: String) -> Array[Colonist]:
@@ -164,6 +195,8 @@ func _member_thoughts(b: String) -> void:
 
 ## Exactly one Informant per run, chosen once the cell holds enough inmates (prefers a Fresh Fish).
 func _pick_informant() -> void:
+	if standing.has("informant") and _pick_passive_informant():  # region F11W3
+		return
 	if _informant_id != 0 or not standing.has("informant"):
 		return
 	var alive: Array[Colonist] = []

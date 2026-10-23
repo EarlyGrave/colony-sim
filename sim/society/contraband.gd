@@ -49,7 +49,7 @@ func stash_total() -> int:
 ## Units still allowed to be skimmed: cap_pct of everything refined so far, minus what was skimmed.
 func skim_budget() -> int:
 	var out := sim.ledger.get_count("recipe:" + str(cfg["item"]))
-	return maxi(0, int(floor(out * float(cfg["skim_cap_pct"]) / 100.0)) - skimmed)
+	return maxi(0, int(floor(out * float(cfg["skim_cap_pct"]) / 100.0)) - skimmed + _passive_stash_cap())  # F11W3
 
 
 ## Threat multiplier for raid points: exactly 1.0 unless a black-market bump is active.
@@ -195,12 +195,16 @@ func covert_sale(n: int) -> bool:
 	if can_covert_sale(n) != "":
 		return false
 	var item := str(cfg["item"])
+	var seller0 := _seller()  # region F11W3
 	if not sim.items.consume_stored(item, n, sim.map_center()):
 		return false
 	sim.ledger.record_consumed(item, n, "covert_sale")
-	escape_credit += n
+	escape_credit += n if seller0 == null else maxi(0, roundi(float(n) * maxf(0.0, 1.0 + sim.passives.mod(seller0, "sale_price"))))  # F11W3
 	sales += 1
 	var gain := float(cfg["suspicion_per_unit"]) * n
+	var seller := _seller()  # region F11W3
+	if seller != null:
+		gain = 0.0 if sim.passives.rule(seller, "off_roll") else gain * maxf(0.0, 1.0 + sim.passives.mod(seller, "suspicion_gain"))
 	if SocietyConds.informant_alive(sim):
 		gain *= float(cfg["informant_suspicion_mult"])
 	suspicion = minf(float(cfg.get("suspicion_cap", 100.0)), suspicion + gain)  # region F4: the Warden never gets a sure thing (cap < 100)
@@ -236,10 +240,94 @@ func _check_suspicion() -> void:
 func _confiscate(n: int) -> void:
 	var item := str(cfg["item"])
 	var st := stash_total()
+	if st > 0 and _passive_raid_applies():  # region F11W3
+		st = 0
+		_passive_confiscate(n)
 	if st > 0:
 		recovered += st
 		stash.clear()
 	var take := mini(n, sim.items.count_stored(item))
 	if take > 0 and sim.items.consume_stored(item, take, sim.map_center()):
 		sim.ledger.record_consumed(item, take, "confiscated")
+# endregion
+
+
+# region F11W3: passive hooks (no rng; stable id order)
+## stash_cap: + roundi(sum of the passive stat over living inmates).
+func _passive_stash_cap() -> int:
+	if not sim.passives.enabled():
+		return 0
+	var sum := 0.0
+	for c in sim.colonists.list:
+		if c.alive:
+			sum += sim.passives.mod(c, "stash_cap")
+	return roundi(sum)
+
+
+## The inmate who handles covert sales: an off_roll holder first, else the best (sale_price - suspicion_gain),
+## lowest id on ties. null when no inmate has any of these passives (so flag-off sales are untouched).
+func _seller() -> Colonist:
+	if not sim.passives.enabled():
+		return null
+	var best: Colonist = null
+	var best_s := 0.0
+	for c in sim.colonists.list:
+		if not c.alive:
+			continue
+		if sim.passives.rule(c, "off_roll"):
+			return c
+		var s := sim.passives.mod(c, "sale_price") - sim.passives.mod(c, "suspicion_gain")
+		if s != 0.0 and (best == null or s > best_s):
+			best = c
+			best_s = s
+	return best
+
+
+## True when some stash holder has off_roll or raid_first (then _confiscate uses the ordered path).
+func _passive_raid_applies() -> bool:
+	if not sim.passives.enabled():
+		return false
+	for id: int in stash:
+		var c := sim.colonists.get_by_id(id)
+		if sim.passives.rule(c, "off_roll") or sim.passives.rule(c, "raid_first"):
+			return true
+	return false
+
+
+## Takes the stashes of at most `n` units: raid_first holders first, then by size (_top_holder order), skipping off_roll.
+func _passive_confiscate(n: int) -> void:
+	var order: Array = []
+	var ids: Array = stash.keys()
+	ids.sort()
+	var first: Array = []
+	var rest: Array = []
+	for id: int in ids:
+		var c := sim.colonists.get_by_id(id)
+		if sim.passives.rule(c, "off_roll"):
+			continue
+		(first if sim.passives.rule(c, "raid_first") else rest).append(id)
+	rest.sort_custom(func(a: int, b: int) -> bool: return int(stash[a]) > int(stash[b]) or (int(stash[a]) == int(stash[b]) and a < b))
+	order = first + rest
+	var budget := n if first.size() > 0 else 1 << 30  # raid_first: the raid is capped at its normal size
+	for id: int in order:
+		if budget <= 0:
+			break
+		var take := mini(int(stash[id]), budget)
+		recovered += take
+		budget -= take
+		stash[id] = int(stash[id]) - take
+		if int(stash[id]) <= 0:
+			stash.erase(id)
+
+
+## ore_skim: the miner keeps `n` units out of the ore (within skim_budget). Returns the ore units taken.
+func skim_ore(c: Colonist, n: int) -> int:
+	if not is_enabled() or n <= 0:
+		return 0
+	var take := mini(n, skim_budget())
+	if take <= 0:
+		return 0
+	stash[c.id] = int(stash.get(c.id, 0)) + take
+	skimmed += take
+	return take
 # endregion

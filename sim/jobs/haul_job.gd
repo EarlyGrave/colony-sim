@@ -59,6 +59,8 @@ func _pick_up(c: Colonist, sim: Simulation) -> bool:
 		return false
 	var q := ""
 	var cap := sim.traits.carry_cap(c, int(sim.defs.balance["colonist"]["carry_capacity"])) - c.carry_count  # region traits
+	if sim.passives.rule(c, "unlimited_carry"):  # region F11W3
+		cap = 1 << 30
 	want = mini(want, cap)
 	var got := 0
 	if src == Src.GROUND:

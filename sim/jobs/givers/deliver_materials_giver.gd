@@ -11,6 +11,8 @@ func _init(p_sim: Simulation) -> void:
 
 # region W1d
 func find(c: Colonist) -> Job:
+	if sim.passives.rule(c, "no_haul"):  # region F11W3
+		return null
 	var js := sim.jobs
 	var best: Job = null
 	var best_d := 1 << 30

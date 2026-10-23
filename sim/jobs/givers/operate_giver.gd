@@ -15,9 +15,18 @@ func find(c: Colonist) -> Job:
 		return null
 	var best: Building = null
 	var best_d := 1 << 30
+	# region F11W3: Clean Hands never refines; Slow Hands strikes while the planet is > 50 % contaminated
+	var no_refine := sim.passives.rule(c, "no_refinery")
+	var strike := sim.passives.rule(c, "refine_strike") and sim.contamination.fraction() > 0.5
+	var ess := sim.passives.rule(c, "essence_craft")
+	# endregion
 	for b: Building in sim.buildings.list:
 		var key := "op:%d" % b.id
 		if str(b.def.get("work_type", "operating")) != work_type:
+			continue
+		if (no_refine or strike) and sim.buildings._is_refining(b):  # region F11W3
+			continue
+		if ess and sim.buildings.craft_refused_for(b, c):  # region F11W3 (essence_craft without stored essence_ore)
 			continue
 		if not sim.buildings.may_operate(b) or not sim.jobs._free(c, key) or not sim.pathfinder.reachable(c.cell, b.cell):
 			continue
