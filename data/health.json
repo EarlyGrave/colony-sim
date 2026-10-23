@@ -68,6 +68,13 @@
 			"heal": 0.003,
 			"infectable": true
 		},
+		"letting": {
+			"name": "Letting",
+			"bleed": 0.0,
+			"pain": 0.6,
+			"heal": 0.004,
+			"infectable": false
+		},
 		"illness": {
 			"name": "Illness",
 			"bleed": 0.0,

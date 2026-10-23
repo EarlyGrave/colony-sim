@@ -25,7 +25,22 @@ func _on_batch_refined(_building_id: int, _recipe_id: String) -> void:
 	if rdef.has("outputs") and not bool(rdef.get("pollutes", false)):
 		return  # only recipes marked "pollutes" add per_batch (owner rule 2026-10-19)
 	var rmult := float(rdef.get("contam_mult", 1.0))  # PL: smelting pollutes less than refining
-	level += float(_cfg["per_batch"]) * rmult * maxf(0.0, 1.0 + sim.perks.mod(sim.buildings.batch_operator, "contamination_per_batch")) * sim.crises.mult("refine_contam_mult")  # region perks
+	var op := sim.buildings.batch_operator
+	var cpb := sim.perks.mod(op, "contamination_per_batch")  # region perks + F11W3 (-0.4 cap on the perks + passives sum)
+	var cpb_p := sim.passives.mod(op, "contamination_per_batch")
+	if cpb_p != 0.0:
+		cpb += cpb_p
+		if not sim.passives.rule(op, "uncapped_contamination_per_batch"):
+			cpb = maxf(cpb, -0.4)
+	level += float(_cfg["per_batch"]) * rmult * maxf(0.0, 1.0 + cpb) * sim.crises.mult("refine_contam_mult")
+
+
+# region F11W3
+## Adds `batches` batch-equivalents of contamination (passive rules taint_mining, essence_craft).
+func add(batches: float) -> void:
+	if batches > 0.0:
+		level += float(_cfg["per_batch"]) * batches
+# endregion
 
 
 func _on_first_refine() -> void:

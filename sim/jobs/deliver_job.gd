@@ -29,7 +29,10 @@ func tick(c: Colonist, sim: Simulation) -> int:
 			return Status.RUNNING
 		if c.carry_count > 0 and c.carry_item != item:
 			return Status.FAILED
-		var want := mini(mini(amount, bp.missing(item)), sim.traits.carry_cap(c, int(sim.defs.balance["colonist"]["carry_capacity"])) - c.carry_count)  # region traits
+		var cap := sim.traits.carry_cap(c, int(sim.defs.balance["colonist"]["carry_capacity"])) - c.carry_count  # region traits
+		if sim.passives.rule(c, "unlimited_carry"):  # region F11W3
+			cap = 1 << 30
+		var want := mini(mini(amount, bp.missing(item)), cap)
 		if sim.items.item_at(src_cell) != item or want <= 0:
 			return Status.FAILED
 		var got := sim.items.take_at(src_cell, want)

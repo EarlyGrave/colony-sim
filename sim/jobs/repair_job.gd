@@ -27,7 +27,7 @@ func _tick_belt(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	_work += sim.jobs.work_tick(c, "repair")
+	_work += sim.jobs.work_tick(c, "repair") * maxf(0.0, 1.0 + sim.passives.mod(c, "repair_speed"))  # F11W3
 	if _work < int(sim.defs.balance["line_damage"]["repair_ticks"]):
 		return Status.RUNNING
 	if sim.logistics.repair_belt(belt_cell):
@@ -52,7 +52,7 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	_work += sim.jobs.work_tick(c, "repair")
+	_work += sim.jobs.work_tick(c, "repair") * maxf(0.0, 1.0 + sim.passives.mod(c, "repair_speed"))  # F11W3
 	if _work < int(sim.defs.balance["repair"]["work_ticks"]):
 		return Status.RUNNING
 	# region T3: structural damage costs materials (data: line_damage); wear-only repair stays free

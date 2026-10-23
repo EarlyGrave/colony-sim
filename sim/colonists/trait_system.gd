@@ -8,7 +8,6 @@ var cfg: Dictionary
 var v3: TraitSystemV3 = null  # region F11W1: set when balance.traits_v3_enabled (this class is then a facade)
 var _aura: Dictionary = {}  # region F11W1
 var _aura_bucket := -1
-var _passives: Object = null  # region F11W1: sim.passives (PassiveSystem), looked up lazily
 
 
 func _init(p_sim: Simulation) -> void:
@@ -38,8 +37,8 @@ func def(id: String) -> Dictionary:
 func mod(c: Colonist, stat: String) -> float:
 	if c == null:
 		return 0.0
-	if v3 != null:  # region F11W1: v3 traits + passives (passives are additive, 0.0 when off)
-		return v3.mod(c, stat) + passive_mod(c, stat)
+	if v3 != null:  # region F11W1: v3 traits only; passives are added by explicit F11W3 hooks (no double count)
+		return v3.mod(c, stat)
 	var s := 0.0
 	for t: String in c.bio.get("traits", []):
 		s += float((def(t).get("effects", {}) as Dictionary).get(stat, 0.0))
@@ -60,7 +59,7 @@ func has_tag(c: Colonist, tag: String) -> bool:
 # region traits F3c: one-line consumers for the stats that used to be text-only
 ## Carry capacity with the "carry" stat (+25% rounds to whole items, never below the base).
 func carry_cap(c: Colonist, base: int) -> int:
-	return maxi(base, roundi(float(base) * (1.0 + mod(c, "carry"))))
+	return maxi(base, roundi(float(base) * (1.0 + mod(c, "carry") + sim.passives.mod(c, "carry"))))  # F11W3
 
 
 ## Multiplier on xp gained in `skill`: xp_mult_all + xp_mult_<skill>.
@@ -100,7 +99,15 @@ func quality_shift(c: Colonist) -> int:
 
 ## F4e: debt installment size for this colonist (installment_pct -0.05 = 5% smaller), at least 1.
 func installment(c: Colonist, base: int) -> int:
-	return maxi(1, roundi(float(base) * maxf(0.0, 1.0 + mod(c, "installment_pct"))))
+	# region F11W3: no_installment / off_roll -> 0 (never overdue); installment_pct cap -0.4 on the traits + passives sum
+	if sim.passives.rule(c, "no_installment") or sim.passives.rule(c, "off_roll"):
+		return 0
+	var pct := mod(c, "installment_pct")
+	var pct_p := sim.passives.mod(c, "installment_pct")
+	if pct_p != 0.0:
+		pct = maxf(-0.4, pct + pct_p)
+	# endregion
+	return maxi(1, roundi(float(base) * maxf(0.0, 1.0 + pct)))
 
 
 ## F4e: extra movement gain per tick (move_speed +0.15 = 15% faster).
@@ -208,15 +215,6 @@ func roll(rng: RandomNumberGenerator, block: String) -> Array[String]:
 
 
 # region F11W1
-## sim.passives.mod(c, stat) once PassiveSystem exists (F11W2), else 0.0. Object.get: no hard dependency.
-func passive_mod(c: Colonist, stat: String) -> float:
-	if _passives == null:
-		_passives = sim.get("passives")
-		if _passives == null:
-			return 0.0
-	return float(_passives.call("mod", c, stat))
-
-
 ## Traits-v3-only stat (no passives): hooks for stats the passives worker adds on its own lines. 0.0 when off.
 func v3_mod(c: Colonist, stat: String) -> float:
 	return v3.mod(c, stat) if v3 != null and c != null else 0.0

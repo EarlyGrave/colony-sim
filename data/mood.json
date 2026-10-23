@@ -18,6 +18,7 @@
 		"routine_broken": {"label": "They moved my shift", "value": -5, "duration_days": 1.0},
 		"no_audience": {"label": "Nobody left to laugh", "value": -4, "duration_days": 1.0},
 		"hum_fades": {"label": "The hum is going quiet", "value": -6, "duration_days": 1.0},
+		"night_terrors": {"label": "Night terrors", "value": -15, "duration_days": 1.0},
 		"colonist_died": {"label": "A colonist died", "value": -12, "duration_days": 3.0},
 		"wave_survived": {"label": "Survived the attack", "value": 6, "duration_days": 2.0},
 		"planet_doomed": {"label": "The planet is dying", "value": -5, "duration_days": 0.0},

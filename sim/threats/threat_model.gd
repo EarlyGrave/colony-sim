@@ -111,6 +111,7 @@ func colonist_value(c: Colonist) -> float:
 	if c.job != null:
 		v *= float(m["working"])
 	v *= sim.squads.role_mult(c.id, "threat_mult")  # region C1: Bulwark draws, Medic hides
+	v *= maxf(0.05, 1.0 + sim.passives.mod(c, "target_weight"))  # region F11W3 (cache refreshes with the candidate epoch)
 	var cf := sim.abilities.flags_of(c.id)  # region C2: insertion order is set by Abilities
 	for f: String in cf:
 		v *= float(cf[f][1])

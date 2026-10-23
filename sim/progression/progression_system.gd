@@ -27,7 +27,7 @@ func award(c: Colonist, skill: String, amount: float, reason: String, report: bo
 		return false
 	var before := c.skills.xp_total(sim.defs, skill)
 	var lvl_before := c.skills.level(skill)
-	c.skills.add_xp(sim.defs, skill, amount * sim.traits.xp_mult(c, skill))  # region traits
+	c.skills.add_xp(sim.defs, skill, amount * sim.traits.xp_mult(c, skill) * maxf(0.0, 1.0 + sim.passives.mod(c, "xp_mult_all") + sim.passives.mod(c, "xp_mult_" + skill)) * (0.0 if skill == "shooting" and sim.passives.rule(c, "melee_only") else 1.0))  # region traits + F11W3
 	if report:
 		sim.bus.xp_awarded.emit(c.id, skill, c.skills.xp_total(sim.defs, skill) - before, reason)
 	for l in range(lvl_before + 1, c.skills.level(skill) + 1):

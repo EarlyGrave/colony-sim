@@ -27,11 +27,11 @@ func hit_chance(c: Colonist, w: Dictionary, dist: float) -> float:
 		p -= float(cfg["range_penalty"]) * maxf(0.0, dist - 1.0)
 	if c.health != null:
 		p *= clampf(c.health.manipulation, 0.0, 1.0)
-	p += sim.perks.mod(c, "hit_chance") + sim.traits.mod(c, "hit")  # region perks + traits
+	p += sim.perks.mod(c, "hit_chance") + sim.traits.mod(c, "hit") + sim.passives.mod(c, "hit_chance")  # region perks + traits + F11W3
 	if c.combat != null:
 		p += att_of(c)[StatBlock.ACC]  # region E1
 	if str(w["kind"]) == "melee" and _wdef.get(c.id) == null:
-		p += sim.traits.unarmed_hit(c)  # region traits
+		p += sim.traits.unarmed_hit(c) + sim.passives.mod(c, "unarmed_hit")  # region traits + F11W3
 	return clampf(p, float(cfg["hit_min"]), float(cfg["hit_max"]))
 
 
@@ -103,12 +103,12 @@ func resum(c: Colonist) -> void:
 	if sim.equipment != null and sim.equipment.totals.has(c.id):  # region E4: gear totals feed both vectors
 		_att[c.id] = (sim.equipment.totals[c.id] as PackedFloat64Array).duplicate()
 		_def[c.id] = (sim.equipment.totals[c.id] as PackedFloat64Array).duplicate()
-		_def[c.id][StatBlock.FLAT_PHYS] += sim.traits.mod(c, "armor_flat")  # region traits
+		_def[c.id][StatBlock.FLAT_PHYS] += sim.traits.mod(c, "armor_flat") + sim.passives.mod(c, "armor_flat")  # region traits + F11W3
 		resum_count += 1
 		return
 	_att[c.id] = StatBlock.make()
 	_def[c.id] = StatBlock.make()
-	_def[c.id][StatBlock.FLAT_PHYS] += sim.traits.mod(c, "armor_flat")  # region traits
+	_def[c.id][StatBlock.FLAT_PHYS] += sim.traits.mod(c, "armor_flat") + sim.passives.mod(c, "armor_flat")  # region traits + F11W3
 	resum_count += 1
 
 
@@ -155,6 +155,8 @@ func try_attack(c: Colonist, e: Enemy) -> bool:
 
 
 func _try_attack(c: Colonist, e: Enemy) -> bool:
+	if sim.passives.rule(c, "pacifist"):  # region F11W3
+		return false
 	if sim.tick < c.combat.next_attack_tick:
 		return false
 	var w := weapon_def(c)
@@ -165,7 +167,7 @@ func _try_attack(c: Colonist, e: Enemy) -> bool:
 		return true
 	if str(w["kind"]) == "ranged" and not sim.ammo.rifle_try_fire(c):  # region ammo
 		return false
-	c.combat.next_attack_tick = sim.tick + maxi(1, roundi(float(w["cooldown_ticks"]) / maxf(0.1, 1.0 + sim.perks.mod(c, "attack_speed"))))  # region perks
+	c.combat.next_attack_tick = sim.tick + maxi(1, roundi(float(w["cooldown_ticks"]) / maxf(0.1, 1.0 + sim.perks.mod(c, "attack_speed") + sim.passives.mod(c, "attack_speed"))))  # region perks + F11W3
 	if w.has("burst"):  # region E4
 		_burst_step(c, w)
 	var skill := str(w["skill"])
@@ -174,16 +176,17 @@ func _try_attack(c: Colonist, e: Enemy) -> bool:
 	# region perks
 	var dmg := float(w["damage"])
 	if str(w["kind"]) == "melee":
-		dmg *= 1.0 + sim.perks.mod(c, "melee_damage")
+		dmg *= 1.0 + sim.perks.mod(c, "melee_damage") + sim.passives.mod(c, "melee_damage")  # F11W3
 		dmg *= maxf(0.0, 1.0 + sim.traits.v3_mod(c, "melee_damage"))  # region F11W1
 	if str(w["kind"]) == "melee" and _wdef.get(c.id) == null:  # region PW4: monk, unarmed (no equipped weapon)
-		dmg *= 1.0 + sim.perks.mod(c, "unarmed_damage")
-	var crit_b := sim.perks.mod(c, "crit_chance")  # region PW4: rng drawn only with the branch
+		dmg *= 1.0 + sim.perks.mod(c, "unarmed_damage") + sim.passives.mod(c, "unarmed_damage")  # F11W3
+	var crit_b := sim.perks.mod(c, "crit_chance") + sim.passives.mod(c, "crit_chance")  # region PW4 + F11W3: rng drawn only with the branch
 	if crit_b > 0.0 and sim.rng.randf() < crit_b:
 		dmg *= 1.5
 	var aimed := sim.perks.consume_flag(c, "aimed_shot")
 	if aimed:
 		dmg *= 1.5
+	dmg *= rage_mult(c)  # region F11W3
 	# endregion
 	# region C2
 	var vm := sim.abilities.take_volley(c.id)
@@ -203,7 +206,21 @@ func _try_attack(c: Colonist, e: Enemy) -> bool:
 	return true
 
 
+# region F11W3
+## Short Fuse: damage x (1 + 0.01 x clamp(50 - mood, 0, 50)), x0.75 while mood > 50. 1.0 without the rule.
+func rage_mult(c: Colonist) -> float:
+	if not sim.passives.rule(c, "rage"):
+		return 1.0
+	var mood := sim.mood.mood_of(c)
+	if mood > 50.0:
+		return 0.75
+	return 1.0 + 0.01 * clampf(50.0 - mood, 0.0, 50.0)
+# endregion
+
+
 func is_low_hp(c: Colonist) -> bool:
+	if sim.passives.rule(c, "ignore_pain"):  # region F11W3
+		return false
 	return c.hp < c.max_hp * float(cfg["flee_hp_fraction"])
 
 
@@ -211,6 +228,8 @@ func is_low_hp(c: Colonist) -> bool:
 
 func set_drafted(c: Colonist, on: bool) -> bool:
 	if c == null or not c.alive:
+		return false
+	if on and (sim.passives.rule(c, "no_draft") or sim.passives.rule(c, "pacifist")):  # region F11W3
 		return false
 	if c.combat.drafted == on:
 		return true

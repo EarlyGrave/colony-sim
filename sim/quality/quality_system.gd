@@ -48,19 +48,21 @@ func roll(item_id: String, operator: Colonist, bench_id: String) -> String:
 	if not tracked(item_id):
 		return ""
 	if sim.perks.consume_flag(operator, "masterwork"):
-		return _store("masterwork")
+		return _store(_ids[0] if sim.passives.rule(operator, "quality_cap_common") else "masterwork")  # F11W3
 	var lvl := 0
 	if operator != null and operator.skills != null:
 		lvl = operator.skills.level(str(_cfg["skill"]))
 	var noise := (sim.rng.randf() + sim.rng.randf() - 1.0) * float(_cfg["noise"])
 	var score := float(_cfg["base"]) + lvl * float(_cfg["per_level"]) \
-		+ sim.perks.mod(operator, "craft_quality") * float(_cfg["perk_scale"]) \
+		+ (sim.perks.mod(operator, "craft_quality") + sim.passives.mod(operator, "craft_quality")) * float(_cfg["perk_scale"]) \
 		+ float(_cfg["bench_bonus"].get(bench_id, 0.0)) + noise
 	var idx := 0
 	for t: float in _cfg["thresholds"]:
 		if score >= t:
 			idx += 1
-	idx = clampi(idx + sim.traits.quality_shift(operator), 0, _ids.size() - 1)  # region traits
+	idx = clampi(idx + sim.traits.quality_shift(operator) + roundi(sim.passives.mod(operator, "quality_tier")), 0, _ids.size() - 1)  # region traits + F11W3
+	if sim.passives.rule(operator, "quality_cap_common"):  # region F11W3: clamp to the lowest tier after the shifts
+		idx = 0
 	return _store(_ids[idx])
 
 

@@ -22,7 +22,7 @@ func tick(c: Colonist, sim: Simulation) -> int:
 		return Status.FAILED
 	if m == GridMover.Move.MOVING:
 		return Status.RUNNING
-	bp.work_done += sim.jobs.work_tick(c, "construction") * maxf(0.0, 1.0 + sim.perks.mod(c, "build_speed"))  # region perks
+	bp.work_done += sim.jobs.work_tick(c, "construction") * maxf(0.0, 1.0 + sim.perks.mod(c, "build_speed") + sim.passives.mod(c, "build_speed"))  # region perks + F11W3
 	if bp.work_done < bp.work_total:
 		return Status.RUNNING
 	sim.buildings.complete_blueprint(bp, c)

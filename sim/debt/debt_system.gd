@@ -67,6 +67,8 @@ func is_overdue(c: Colonist) -> bool:
 # --- Commands (called from Simulation) ---------------------------------------------
 
 func pay(c: Colonist, amount: int) -> bool:
+	if sim.passives.rule(c, "off_roll"):  # region F11W3
+		return false
 	var st := state_of(c) if c != null else null
 	if st == null or not c.alive or st.remaining() <= 0 or amount <= 0:
 		return false
@@ -157,11 +159,18 @@ func tick() -> void:
 func _daily(c: Colonist, st: DebtState) -> void:
 	if st.remaining() <= 0:
 		return
+	if sim.passives.rule(c, "off_roll"):  # region F11W3: no installments, no interest, nothing to miss
+		return
 	if st.quota > 0:
 		_pay(c, st, mini(st.quota, st.remaining()))
 		if st.remaining() == 0:
 			return
 	var inst := sim.traits.installment(c, int(cfg["installment"]))  # region traits
+	# region F11W3: debt_in_hp pays the installment in blood on the due day (missed while downed)
+	if sim.passives.rule(c, "debt_in_hp") and sim.day() >= st.due_day and st.period_paid < inst and not sim.health.is_downed(c):
+		credit(c, inst - st.period_paid)
+		sim.health.apply_damage(c, 0.2 * c.max_hp, "torso", "letting")
+	# endregion
 	if sim.day() >= st.due_day and st.period_paid < inst:
 		# Grace period, then despair grows in proportion to the unpaid share.
 		if sim.day() >= st.due_day + int(cfg.get("grace_days", 0)) + int(sim.endings.effect("grace_days", 0.0)):  # region F9W2
@@ -170,8 +179,8 @@ func _daily(c: Colonist, st: DebtState) -> void:
 			var short := float(inst - st.period_paid) / float(maxi(1, inst))
 			var bm := sim.blocks.despair_mult(c) if sim.blocks != null else 1.0  # region I1
 			var dm := sim.quests.mod("despair_mult") if sim.quests != null else 1.0  # region CD
-			var tm := maxf(0.0, 1.0 + sim.traits.mod(c, "despair_mult"))  # region PW2
-			if sim.traits.has_tag(c, "despair_frozen"):
+			var tm := maxf(0.0, 1.0 + sim.traits.mod(c, "despair_mult") + sim.passives.mod(c, "despair_mult"))  # region PW2 + F11W3
+			if sim.traits.has_tag(c, "despair_frozen") or sim.passives.rule(c, "despair_frozen"):  # F11W3
 				tm = 0.0
 			st.despair = minf(100.0, st.despair + float(cfg["despair_per_day"]) * short * bm * dm * tm)
 			if sim.blocks != null and not (sim.quests != null and sim.quests.flag("path_fight")):  # region I1 (N3: fight path: not counted as missed)
@@ -299,3 +308,4 @@ func _remove(c: Colonist, reason: String) -> void:
 	c.alive = false
 	c.hidden = true
 	gone[c.id] = reason
+

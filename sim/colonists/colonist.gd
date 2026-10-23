@@ -59,7 +59,7 @@ func _init(p_id: int, p_name: String, p_cell: Vector2i, cfg: Dictionary) -> void
 
 ## Perk move_speed: extra movement progress per tick (region perks).
 func move_gain(sim: Simulation) -> float:
-	return 1.0 + sim.perks.mod(self, "move_speed") + sim.traits.move_bonus(self)  # region traits
+	return 1.0 + sim.perks.mod(self, "move_speed") + sim.traits.move_bonus(self) + sim.passives.mod(self, "move_speed")  # region traits + F11W3
 
 
 func is_sick(now: int) -> bool:
