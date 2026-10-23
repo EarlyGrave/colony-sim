@@ -25,7 +25,11 @@ func state_of(c: Colonist) -> HealthState:
 func apply_damage(c: Colonist, amount: float, part := "", kind := "bite") -> Injury:
 	if not c.alive or amount <= 0.0:
 		return null
-	amount *= maxf(0.0, 1.0 + sim.perks.mod(c, "damage_taken"))  # region perks
+	var dmg_taken := sim.perks.mod(c, "damage_taken")  # region perks + F11W3 (cap -0.5 on the perks + passives sum)
+	var dmg_taken_p := sim.passives.mod(c, "damage_taken")
+	if dmg_taken_p != 0.0:
+		dmg_taken = maxf(-0.5, dmg_taken + dmg_taken_p)
+	amount *= maxf(0.0, 1.0 + dmg_taken)
 	amount *= sim.squads.role_mult(c.id, "dmg_taken_mult")  # region C1: Bulwark takes less
 	if amount <= 0.0:
 		return null
@@ -65,18 +69,22 @@ func add_illness(c: Colonist, illness_id: String, severity: float, duration_tick
 func tend(patient: Colonist, doctor: Object = null, quality_mult := 1.0) -> int:
 	if patient == null or not patient.alive or patient.health == null:
 		return 0
+	if sim.passives.rule(patient, "no_medicine"):  # region F11W3
+		return 0
 	var q := clampf(tend_quality(doctor) * quality_mult, 0.0, 1.0)
 	# region perks: the doctor's perks (heal_speed, infection_chance, tend_quality)
 	var doc: Colonist = doctor as Colonist
-	q = clampf(q * (1.0 + sim.perks.mod(doc, "tend_quality")), 0.0, 1.0)
+	q = clampf(q * (1.0 + sim.perks.mod(doc, "tend_quality") + sim.passives.mod(doc, "tend_quality")), 0.0, 1.0)  # F11W3
 	# endregion
 	var n := 0
 	for i in patient.health.injuries:
 		if not i.tended:
 			i.tended = true
 			i.tend_quality = q
-			i.heal_bonus = sim.perks.mod(doc, "heal_speed")  # region perks
-			i.infection_bonus = sim.perks.mod(doc, "infection_chance")
+			i.heal_bonus = sim.perks.mod(doc, "heal_speed") + sim.passives.mod(doc, "heal_speed")  # region perks + F11W3
+			i.infection_bonus = sim.perks.mod(doc, "infection_chance") + sim.passives.mod(doc, "infection_chance")
+			if doc != null and sim.passives.rule(doc, "field_tend"):  # region F11W3 (meta: no new Injury field, keeps golden dumps equal)
+				i.set_meta("tended_by", doc.id)
 			n += 1
 	_refresh(patient, patient.health)
 	return n
@@ -146,6 +154,8 @@ func can_act(c: Colonist) -> bool:
 	var h := c.health
 	if h == null or h.injuries.is_empty():
 		return true
+	if sim.passives.rule(c, "ignore_pain"):  # region F11W3
+		return true
 	if sim.alarm or (c.job != null and c.job.type == "flee"):
 		return true
 	h.work_acc += maxf(float(cfg["min_work_speed"]), h.manipulation * h.consciousness)
@@ -175,6 +185,9 @@ func tick() -> void:
 
 func _bleed_and_heal(c: Colonist, h: HealthState) -> void:
 	var rate := h.bleed_rate()
+	rate *= maxf(0.0, 1.0 + sim.passives.mod(c, "bleed_rate"))  # region F11W3
+	if h.carrier_id >= 0 and sim.passives.rule(sim.colonists.get_by_id(h.carrier_id), "medic"):  # region F11W3: carried by a medic
+		rate = 0.0
 	if rate > 0.0:
 		h.blood = maxf(0.0, h.blood - rate)
 	elif h.blood < 1.0:
@@ -182,16 +195,23 @@ func _bleed_and_heal(c: Colonist, h: HealthState) -> void:
 	var bonus := float(cfg["tended_heal_bonus"])
 	var rest_mult := float(cfg["doctor"]["bed_heal_mult"]) if h.bed_id >= 0 else 1.0  # region doctor
 	var keep: Array[Injury] = []
-	var own_heal := sim.perks.mod(c, "heal_speed")  # region perks: patient's own perk + tending doctor's
+	var own_heal := sim.perks.mod(c, "heal_speed") + sim.passives.mod(c, "heal_speed")  # region perks + F11W3: patient's own perk + tending doctor's
+	var essence_heal := sim.passives.rule(c, "essence_heal")  # region F11W3
+	var on_taint := essence_heal and sim.mutation != null and sim.mutation.is_tainted(c.cell)
 	for i in h.injuries:
 		var mult := 1.0 + i.tend_quality * bonus if i.tended else 1.0
+		if essence_heal:  # region F11W3
+			mult *= 3.0 if on_taint else 0.0
+		var rm := rest_mult
+		if h.bed_id < 0 and i.has_meta("tended_by"):  # region F11W3
+			rm = float(cfg["doctor"]["bed_heal_mult"])
 		mult *= maxf(0.0, 1.0 + own_heal + i.heal_bonus)
 		if i.is_illness():
-			i.severity -= i.heal_per_tick * mult * rest_mult
+			i.severity -= i.heal_per_tick * mult * rm
 		else:
 			if not i.tended:
 				mult = float(cfg["untended_heal_mult"])
-			i.severity -= float(cfg["kinds"][i.kind]["heal"]) * mult * rest_mult
+			i.severity -= float(cfg["kinds"][i.kind]["heal"]) * mult * rm
 		if i.severity > 0.0:
 			keep.append(i)
 	h.injuries = keep
@@ -205,7 +225,7 @@ func _infection_check(c: Colonist, h: HealthState) -> void:
 			return
 		if cfg["kinds"][i.kind]["infectable"]:
 			chance += float(inf["chance"]) * ((1.0 - i.tend_quality) if i.tended else 1.0) \
-				* maxf(0.0, 1.0 + sim.perks.mod(c, "infection_chance") + i.infection_bonus)  # region perks
+				* maxf(0.0, 1.0 + sim.perks.mod(c, "infection_chance") + sim.passives.mod(c, "infection_chance") + i.infection_bonus)  # region perks + F11W3
 	if chance <= 0.0:
 		return
 	if sim.rng.randf() < minf(1.0, chance):
@@ -251,6 +271,10 @@ func _refresh(c: Colonist, h: HealthState) -> void:
 		return
 	var now_downed := h.consciousness < float(cfg["downed_consciousness"]) \
 		or h.moving < float(cfg["downed_moving"])
+	if now_downed and sim.passives.rule(c, "no_downed"):  # region F11W3: dies instead of going down
+		c.hp = 0.0
+		sim.colonists.kill(c)
+		return
 	if now_downed and not h.downed:
 		h.downed = true
 		_on_downed(c)
