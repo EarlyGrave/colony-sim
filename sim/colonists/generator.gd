@@ -23,7 +23,9 @@ static func generate(sim: Simulation, cell: Vector2i) -> Colonist:
 	var story := str(stories[rng.randi_range(0, stories.size() - 1)])
 	# region PW2: block first (data only), then the weighted trait draw (fixed rng draw count)
 	var v3 := sim.traits_v3  # region F11W1: traits v3 replaces the v2 roll (innate_max + 4 draws)
-	var chosen: Array[String] = [] if v3 != null else sim.traits.roll(rng, sim.blocks.block_of(c))
+	var chosen: Array[String] = []
+	if v3 == null:
+		chosen = sim.traits.roll(rng, sim.blocks.block_of(c))
 	var speed := 1.0
 	var max_level := int(defs.skills["max_level"])
 	for t in chosen:

@@ -17,6 +17,8 @@ var _last_type: Dictionary = {}  # id -> last sampled job type today
 var _prev_type: Dictionary = {}  # id -> job type at the previous day roll
 var _run: Dictionary = {}  # id -> [job type, consecutive days on it]
 var _sample_n := 30
+var _min: Dictionary = {}  # event name -> smallest acquire threshold
+var _elig: Dictionary = {}  # id -> [trait-list hash, {bond id: can bond}]
 var alarm_since := 0  # tick the current alarm started (alarm_delay)
 
 
@@ -25,6 +27,10 @@ func _init(p_sim: Simulation) -> void:
 	v3 = sim.traits_v3
 	params = v3.cfg.get("event_params", {})
 	_sample_n = maxi(1, int(params.get("sample_ticks", 30)))
+	var ix := v3._rule_index()
+	for n: String in ix:
+		if (ix[n] as Dictionary).has("min"):
+			_min[n] = int(ix[n]["min"])
 	var b := sim.bus
 	sim.listen(b.day_started, _on_day)
 	sim.listen(b.tick_advanced, _on_tick)
@@ -182,42 +188,49 @@ func _on_gone(cid: int) -> void:
 
 # region daily
 func _on_day(_day: int) -> void:
-	var live: Array[Colonist] = []
-	var blocks_n: Dictionary = {}
-	for c in sim.colonists.list:
-		if c.alive:
-			live.append(c)
-			var b := sim.blocks.block_of(c) if sim.blocks != null else ""
-			blocks_n[b] = int(blocks_n.get(b, 0)) + 1
+	var blocks_on := sim.blocks != null
+	var standing_on := blocks_on and sim.blocks.is_enabled()
 	var by_block: Dictionary = {}
+	var live: Array[Colonist] = []
+	for c in sim.colonists.list:
+		if not c.alive:
+			continue
+		live.append(c)
+		var b := sim.blocks.block_of(c) if blocks_on else ""
+		if not by_block.has(b):
+			by_block[b] = [] as Array[Colonist]
+		(by_block[b] as Array[Colonist]).append(c)
 	var despair_lvl := float(params.get("despair_level", 80))
 	var hi := float(params.get("standing_high", 70))
 	var lo := float(params.get("standing_low", 30))
 	var essence_cells := _essence_holders()
-	for c in live:
-		var b := sim.blocks.block_of(c) if sim.blocks != null else ""
-		if not by_block.has(b):
-			by_block[b] = [] as Array[Colonist]
-		(by_block[b] as Array[Colonist]).append(c)
-		if not v3.has(c, "t_old_timer"):
-			_fire(c, "day_served")
-		if not v3.has(c, "t_settled"):
-			_fire(c, "calm_day")
-		var ds: DebtState = sim.debt.state_of(c) if sim.debt != null else null
-		if ds != null:
-			if ds.despair >= despair_lvl:
-				_fire(c, "despair_day")
-			elif v3.counter(c, "despair_day") > 0:
-				_fire(c, "despair_relief")
-		if sim.blocks != null and sim.blocks.is_enabled():
-			var st := sim.blocks.standing_of(b)
-			if st >= hi:
-				_fire(c, "high_standing_day")
-			elif st <= lo:
-				_fire(c, "low_standing_day")
-		if _starving.has(c.id):
-			_fire(c, "starving_day")
-		_needs(c, b, int(blocks_n.get(b, 0)), essence_cells)
+	var debt := sim.debt
+	for b: String in by_block:
+		var mates: Array = by_block[b]
+		var st := sim.blocks.standing_of(b) if standing_on else 50.0
+		for c: Colonist in mates:
+			var cn: Dictionary = c.bio.get("trait_counters", {})
+			c.bio["trait_counters"] = cn
+			var held: Array = c.bio.get("traits_v3", [])
+			# cheap counters: events below every rule threshold only bump the counter
+			if not held.has("t_old_timer"):
+				_bump(c, cn, "day_served")
+			if not held.has("t_settled"):
+				_bump(c, cn, "calm_day")
+			var ds: DebtState = debt.state_of(c) if debt != null else null
+			if ds != null:
+				if ds.despair >= despair_lvl:
+					_fire(c, "despair_day")
+				elif int(cn.get("despair_day", 0)) > 0:
+					_fire(c, "despair_relief")
+			if standing_on:
+				if st >= hi:
+					_fire(c, "high_standing_day")
+				elif st <= lo:
+					_fire(c, "low_standing_day")
+			if not _starving.is_empty() and _starving.has(c.id):
+				_fire(c, "starving_day")
+			_needs(c, held, mates.size(), essence_cells)
 	_starving.clear()
 	_bonds(by_block)
 	# job-type memory for next day's "same job" need and rival runs
@@ -231,10 +244,19 @@ func _on_day(_day: int) -> void:
 	_letter_today = false
 
 
-func _needs(c: Colonist, _block: String, mates_n: int, essence_cells: Array) -> void:
+## Counter-only fast path: below the smallest rule threshold the event cannot change any trait.
+func _bump(c: Colonist, cn: Dictionary, name: String) -> void:
+	var n := int(cn.get(name, 0)) + 1
+	if n < int(_min.get(name, 1)):
+		cn[name] = n
+	else:
+		_fire(c, name)
+
+
+func _needs(c: Colonist, held: Array, mates_n: int, essence_cells: Array) -> void:
 	var needs: Dictionary = v3.cfg.get("needs", {})
 	var any := false
-	for t in v3.list(c):
+	for t: String in held:
 		if needs.has(t):
 			any = true
 			break
@@ -247,7 +269,7 @@ func _needs(c: Colonist, _block: String, mates_n: int, essence_cells: Array) -> 
 		"letter_today": _letter_today,
 		"same_job": cur == "" or not _prev_type.has(c.id) or _prev_type[c.id] == "" or _prev_type[c.id] == cur,
 		"block_mate_alive": mates_n > 1,
-		"near_essence": v3.has(c, "t_essence_hum") and _near(c.cell, essence_cells),
+		"near_essence": held.has("t_essence_hum") and _near(c.cell, essence_cells),
 	}
 	for tid in v3.daily_needs(c, ctx):
 		sim.mood.add_thought(c, tid)
@@ -278,7 +300,8 @@ func _near(cell: Vector2i, cells: Array) -> bool:
 	return false
 
 
-## Pair bonds: ONE child-rng draw per eligible inmate (partner = next eligible block mate in id order).
+## Pair bonds: ONE child-rng draw per eligible inmate (partner = next eligible mate in id order; a rival must
+## share the job type and the block).
 func _bonds(by_block: Dictionary) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = sim.rng.randi()
@@ -292,21 +315,50 @@ func _bonds(by_block: Dictionary) -> void:
 		var job_pair := (bonds[id] as Dictionary).has("days_same_job")
 		for b in blocks:
 			var arr: Array = by_block[b]
-			for i in arr.size():
-				var a: Colonist = arr[i]
-				if not a.alive or v3.has(a, id) or v3.can_add(a, id) != "":
-					continue
-				var days_a := _days(a, job_pair)
-				for j in range(i + 1, arr.size()):
-					var o: Colonist = arr[j]
-					if not o.alive or v3.has(o, id) or v3.can_add(o, id) != "":
-						continue
-					if job_pair and (_run.get(o.id, ["", 0])[0] != _run.get(a.id, ["", 1])[0] or _run.get(a.id, ["", 0])[0] == ""):
-						continue
-					if v3.try_bond(a, o, id, mini(days_a, _days(o, job_pair)), rng):
-						_letters(a, ["+" + id] as Array[String])
-					break
-		# loop ends; both partners carry the trait
+			if not job_pair:
+				_pair_seq(arr, id, false, rng)
+				continue
+			var groups: Dictionary = {}  # job type -> members (block order)
+			for c: Colonist in arr:
+				var t: String = _run.get(c.id, ["", 0])[0]
+				if t != "":
+					if not groups.has(t):
+						groups[t] = []
+					(groups[t] as Array).append(c)
+			var types: Array = groups.keys()
+			types.sort()
+			for t in types:
+				_pair_seq(groups[t], id, true, rng)
+
+
+func _pair_seq(arr: Array, id: String, job_pair: bool, rng: RandomNumberGenerator) -> void:
+	var bd: Dictionary = v3.cfg["bonds"][id]
+	var need := int(bd.get("days_same_block", bd.get("days_same_job", 9999)))
+	var n := arr.size()
+	for i in n:
+		var a: Colonist = arr[i]
+		if not a.alive or _days(a, job_pair) < need or not _can_bond(a, id):
+			continue
+		for j in range(i + 1, n):
+			var o: Colonist = arr[j]
+			if not o.alive or _days(o, job_pair) < need or not _can_bond(o, id):
+				continue
+			if v3.try_bond(a, o, id, mini(_days(a, job_pair), _days(o, job_pair)), rng):
+				_letters(a, ["+" + id] as Array[String])
+			break
+
+
+## Cached `can_add(c, id) == ""`, keyed by a hash of the trait list (changes only when traits change).
+func _can_bond(c: Colonist, id: String) -> bool:
+	var h := (c.bio.get("traits_v3", []) as Array).hash()
+	var e: Variant = _elig.get(c.id)
+	if e == null or e[0] != h:
+		e = [h, {}]
+		_elig[c.id] = e
+	var m: Dictionary = e[1]
+	if not m.has(id):
+		m[id] = v3.can_add(c, id) == ""
+	return m[id]
 
 
 func _days(c: Colonist, job_pair: bool) -> int:
