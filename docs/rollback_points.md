@@ -34,3 +34,4 @@ Restore: `git checkout -b restore <sha>` (or reset a branch to it).
 | 2026-10-20 | 0f11434 | F9 (path effects, socket cost, gear wear flag OFF + repair, ng_new_names removed) | 1205 green, smoke PASS, bot alive>=8 7/10 |
 | 2026-10-20 | ad385e1 | F10 (hints + SeenFlags, late-game perf bench/budget, NEW badges, test isolation) | 1222 green x2, smoke PASS, bot alive>=8 7/10 |
 | 2026-10-23 | 5877880 | traits v3 + passives v2 r2 + passive icons r3 + side-quest/events v2 GDD (all flags OFF) | 1249 green sharded; test_perf_budget 300-enemy wall-clock red on this host (identical on main ad385e1), smoke PASS, bot alive>=8 7/10 |
+| 2026-10-23 | 2d03710 | F11 traits v3 + passives v2 integration (flags OFF) | 1299 green sharded, smoke PASS (incl. passives pass), bot OFF alive>=8 7/10 (ON 6/10) |
