@@ -84,6 +84,10 @@ var blocks: BlockSystem  # region I1
 # endregion
 # region perks
 var traits: TraitSystem  # region PW2
+# region F11W1
+var traits_v3: TraitSystemV3 = null  # only when balance.traits_v3_enabled
+var trait_events: TraitEvents = null
+# endregion
 var perks: PerkSystem
 var passives: PassiveSystem  # region F11W2
 var quality: QualitySystem  # region quality
@@ -310,6 +314,10 @@ func _init_systems() -> void:
 	needs = NeedsSystem.new(self)
 	farming = FarmingSystem.new(self)
 	# endregion
+	# region F11W1: v3 core before the v2 facade (the facade forwards to it)
+	if TraitSystemV3.enabled_in(defs):
+		traits_v3 = TraitSystemV3.new(self)
+	# endregion
 	traits = TraitSystem.new(self)  # region PW2
 	perks = PerkSystem.new(self)  # region perks
 	passives = PassiveSystem.new(self)  # region F11W2
@@ -346,6 +354,8 @@ func _init_systems() -> void:
 	if bool(opts.get("tutorial", false)):  # region O1
 		tutorial = TutorialSystem.new(self)
 	militia = Militia.new(self)  # region C5
+	if traits_v3 != null:  # region F11W1: bus adapter (day_served, scars, needs, bonds)
+		trait_events = TraitEvents.new(self)
 
 
 func _place_starting_colony() -> void:

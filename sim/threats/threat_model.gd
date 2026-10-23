@@ -114,6 +114,7 @@ func colonist_value(c: Colonist) -> float:
 	var cf := sim.abilities.flags_of(c.id)  # region C2: insertion order is set by Abilities
 	for f: String in cf:
 		v *= float(cf[f][1])
+	v *= sim.traits.target_weight_mult(c)  # region F11W1: Glowtouched / Hulking draw creatures, Hollow does not
 	return v
 
 

@@ -261,20 +261,21 @@ func event(c: Colonist, name: String, source := "") -> Array[String]:
 		return out
 	var counters: Dictionary = c.bio.get("trait_counters", {})
 	counters[name] = int(counters.get(name, 0)) + 1
-	for rule: Dictionary in cfg["acquire"]:
-		if str(rule.get("reset_on", "")) == name:
-			counters[str(rule["on"])] = 0
+	var ix: Dictionary = _rule_index().get(name, {})  # region F11W1: rules indexed by event name (perf at 250 inmates)
+	if not ix.has("reset") and not ix.has("lose") and int(counters[name]) < int(ix.get("min", 1)):
+		c.bio["trait_counters"] = counters  # fast path: below every threshold, nothing can change
+		return out
+	for rule: Dictionary in ix.get("reset", []):
+		counters[str(rule["on"])] = 0
 	c.bio["trait_counters"] = counters
-	for rule: Dictionary in cfg["lose"]:
-		if str(rule["on"]) != name or not has(c, str(rule["trait"])):
+	for rule: Dictionary in ix.get("lose", []):
+		if not has(c, str(rule["trait"])):
 			continue
 		if int(counters.get(name, 0)) >= int(rule.get("count", 1)):
 			if remove(c, str(rule["trait"]), source if source != "" else name):
 				out.append("-" + str(rule["trait"]))
 				counters[name] = 0 if rule.has("count") else int(counters.get(name, 0))
-	for rule: Dictionary in cfg["acquire"]:
-		if str(rule["on"]) != name:
-			continue
+	for rule: Dictionary in ix.get("acq", []):
 		var tid := str(rule["trait"])
 		if has(c, tid) or _superseded(c, tid) or int(counters.get(name, 0)) < int(rule.get("count", 1)):
 			continue
@@ -294,13 +295,45 @@ func event(c: Colonist, name: String, source := "") -> Array[String]:
 	return out
 
 
+# region F11W1
+var _ix: Dictionary = {}
+var _up: Dictionary = {}  # trait id -> ids of the rungs that replace it
+
+
+## event name -> {reset: [acquire rules], lose: [lose rules], acq: [acquire rules]}, in file order.
+func _rule_index() -> Dictionary:
+	if not _ix.is_empty():
+		return _ix
+	for rule: Dictionary in cfg["acquire"]:
+		if rule.has("reset_on"):
+			_ix_list(str(rule["reset_on"]), "reset").append(rule)
+		_ix_list(str(rule["on"]), "acq").append(rule)
+		var ixr: Dictionary = _ix[str(rule["on"])]
+		ixr["min"] = mini(int(ixr.get("min", 9999)), int(rule.get("count", 1)))
+		if rule.has("replaces"):
+			if not _up.has(str(rule["replaces"])):
+				_up[str(rule["replaces"])] = []
+			(_up[str(rule["replaces"])] as Array).append(str(rule["trait"]))
+	for rule: Dictionary in cfg["lose"]:
+		_ix_list(str(rule["on"]), "lose").append(rule)
+	return _ix
+
+
+func _ix_list(name: String, kind: String) -> Array:
+	if not _ix.has(name):
+		_ix[name] = {}
+	if not (_ix[name] as Dictionary).has(kind):
+		_ix[name][kind] = []
+	return _ix[name][kind]
+# endregion
+
+
 ## True when a higher rung of a ladder (`replaces` chain) is held: lower rungs never return.
 func _superseded(c: Colonist, tid: String) -> bool:
-	for rule: Dictionary in cfg["acquire"]:
-		if str(rule.get("replaces", "")) == tid:
-			var up := str(rule["trait"])
-			if has(c, up) or _superseded(c, up):
-				return true
+	_rule_index()  # region F11W1: replace chains are indexed (_up)
+	for up: String in _up.get(tid, []):
+		if has(c, up) or _superseded(c, up):
+			return true
 	return false
 
 

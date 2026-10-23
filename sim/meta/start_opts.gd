@@ -78,6 +78,10 @@ static func _apply_ng(sim: Simulation, opts: Dictionary) -> void:
 		# region PW3
 		for t: Variant in vet.get("traits", []):
 			var tid := sim.traits.resolve(str(t))
+			if sim.traits_v3 != null:  # region F11W1: dossier ids (v2 aliased, v3 as is) are re-applied as v3 traits
+				if tid != "" and not sim.traits_v3.has(c, tid):
+					sim.traits_v3.add(c, tid, "dossier")
+				continue
 			var td := sim.traits.def(tid)
 			var have: Array = c.bio.get("traits", [])
 			if td.is_empty() or have.has(tid):

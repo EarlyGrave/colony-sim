@@ -175,6 +175,7 @@ func _try_attack(c: Colonist, e: Enemy) -> bool:
 	var dmg := float(w["damage"])
 	if str(w["kind"]) == "melee":
 		dmg *= 1.0 + sim.perks.mod(c, "melee_damage")
+		dmg *= maxf(0.0, 1.0 + sim.traits.v3_mod(c, "melee_damage"))  # region F11W1
 	if str(w["kind"]) == "melee" and _wdef.get(c.id) == null:  # region PW4: monk, unarmed (no equipped weapon)
 		dmg *= 1.0 + sim.perks.mod(c, "unarmed_damage")
 	var crit_b := sim.perks.mod(c, "crit_chance")  # region PW4: rng drawn only with the branch

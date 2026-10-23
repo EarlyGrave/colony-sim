@@ -29,6 +29,9 @@ func tick() -> void:
 		n.food = maxf(0.0, n.food - float(cfg["food"]["decay_per_tick"]) * maxf(0.0, 1.0 + sim.traits.mod(c, "hunger")))  # region PW2
 		if c.job == null or c.job.type != "sleep":
 			n.rest = maxf(0.0, n.rest - float(cfg["rest"]["decay_per_tick"]))
+			var f11_rd := sim.traits.v3_mod(c, "rest_decay")  # region F11W1
+			if f11_rd != 0.0:
+				n.rest = clampf(n.rest - float(cfg["rest"]["decay_per_tick"]) * f11_rd, 0.0, 1.0)
 		_ration(c, n)
 		_starve(c, n)
 		_decide(c, n)
@@ -39,6 +42,9 @@ func rest_tick(c: Colonist, in_bed: bool) -> void:
 	var n := state_of(c)
 	var key := "gain_bed" if in_bed else "gain_floor"
 	n.rest = minf(1.0, n.rest + float(cfg["rest"][key]))
+	var f11_rg := sim.traits.v3_mod(c, "rest_gain")  # region F11W1
+	if f11_rg != 0.0:
+		n.rest = clampf(n.rest + float(cfg["rest"][key]) * f11_rg, 0.0, 1.0)
 
 
 func add_food(c: Colonist, nutrition: float) -> void:

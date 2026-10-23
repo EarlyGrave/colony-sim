@@ -197,6 +197,7 @@ func apply_path(id: String) -> void:
 	ids.sort()
 	for b: String in ids:
 		var l := int((lean.get(b, {}) as Dictionary).get(id, 0))
+		l = sim.traits.lean_adjust(b, id, l)  # region F11W1: members' leaning_<path> votes
 		if l != 0:
 			_change(b, l * float(cfg.get("leaning_delta", 15.0)), l < 0)
 
