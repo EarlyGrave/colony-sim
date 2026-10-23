@@ -200,9 +200,9 @@ func _bleed_and_heal(c: Colonist, h: HealthState) -> void:
 	var on_taint := essence_heal and sim.mutation != null and sim.mutation.is_tainted(c.cell)
 	for i in h.injuries:
 		var mult := 1.0 + i.tend_quality * bonus if i.tended else 1.0
-		if essence_heal:  # region F11W3
-			mult *= 3.0 if on_taint else 0.0
 		var rm := rest_mult
+		if essence_heal:  # region F11W3
+			rm *= 3.0 if on_taint else 0.0
 		if h.bed_id < 0 and i.has_meta("tended_by"):  # region F11W3
 			rm = float(cfg["doctor"]["bed_heal_mult"])
 		mult *= maxf(0.0, 1.0 + own_heal + i.heal_bonus)
